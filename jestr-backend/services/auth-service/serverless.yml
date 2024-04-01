@@ -1,0 +1,29 @@
+service: meme-service
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: us-east-1
+
+functions:
+  createMeme:
+    handler: handler.create
+    events:
+      - http:
+          path: memes/create
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    MemesTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: Memes
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
