@@ -1,0 +1,125 @@
+/* LandingPage.css */
+.landing-page-container {
+    width: 375px; /* iPhone width */
+    height: 667px; /* iPhone height */
+    margin: 0 auto; /* Center the container */
+    border-radius: 36px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background: #ffffff;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content horizontally */
+    justify-content: center; /* Center content vertically */
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: radial-gradient(circle, #0c8d0c, #000000);
+  }
+  
+  @media (min-width: 768px) {
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #68df7f, #000000);
+      padding: 20px;
+    }
+  }
+  
+  .auth-form-container {
+    display: flex;
+    flex-direction: column;
+    /* Rest of your styles */
+  }
+  
+  .google-btn {
+    margin-top: 15px;
+}
+
+.sign-up-form, .login-form {
+    width: 90%; /* Adjust based on your design */
+    margin: 20px auto; /* Center and provide spacing */
+}
+
+input[type="text"], input[type="password"] {
+    width: 100%; /* Make input fields full width */
+    padding: 10px;
+    margin: 10px 0;
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50; /* Example button color */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease; 
+}
+
+button:hover {
+    background-color: #367c36; /* A darker shade for hover */
+  }
+
+/* LandingPage.css */
+
+.title {
+    font-weight: bold;
+    font-size: 3em; /* Adjust size as needed */
+    color: #fff; /* Choose a color that stands out against your background */
+    margin-bottom: .5em;
+  }
+
+/* LandingPage.css */
+.form-container {
+  background-color: rgba(0, 0, 0, 0.316); /* Light background for the container */
+  padding: 2em; /* Padding around the form */
+  border-radius: 20px; /* Rounded corners for the container */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Shadow for depth */
+  margin: 1em 1em; /* Margin above and below the form */
+  
+}
+
+  
+  .login-toggle {
+    color: #fff;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 0.9em;
+    text-align: center;
+  }
+  
+
+  .toggle-form {
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-align: center;
+    margin-top: 1em; /* Space from the button */
+    text-decoration: underline; /* Suggests clickability */
+  }
+  
+  .input-container {
+    margin-bottom: 1em; /* Spacing between input fields */
+  }
+
+  .input-label {
+    display: block; /* Make the label take the full width */
+    color: #fff; /* White color for the text */
+    margin-bottom: 0.5em; /* Spacing between label and input */
+  }
+
+  .google-btn {
+    background-color: #db4437; /* Google's brand color */
+    margin-top: 1.5em; /* More space from the toggle text */
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+  }
+  
+  .google-btn:hover {
+    background-color: #c1351d; /* A darker shade for hover */
+  }

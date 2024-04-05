@@ -7,11 +7,19 @@ function Comment({ id, text, netLikes, onLike, onDislike }) {
     <div className="comment">
       <p className="comment-text">{text}</p>
       <div className="comment-reactions">
-        <button onClick={() => onLike(id)} className={`comment-like ${netLikes > 0 ? 'liked' : ''}`}>
+        <button
+          onClick={() => onLike(id)}
+          className={`comment-like ${netLikes > 0 ? 'liked' : ''}`}
+        >
           <FontAwesomeIcon icon={faThumbsUp} />
         </button>
-        <span className="reactions-count">{netLikes !== 0 ? (netLikes > 0 ? `+${netLikes}` : netLikes) : ''}</span>
-        <button onClick={() => onDislike(id)} className={`comment-dislike ${netLikes < 0 ? 'disliked' : ''}`}>
+        <span className="reactions-count">
+          {netLikes !== 0 ? (netLikes > 0 ? `+${netLikes}` : netLikes) : ''}
+        </span>
+        <button
+          onClick={() => onDislike(id)}
+          className={`comment-dislike ${netLikes < 0 ? 'disliked' : ''}`}
+        >
           <FontAwesomeIcon icon={faThumbsDown} />
         </button>
       </div>
