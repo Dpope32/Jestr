@@ -13,7 +13,7 @@
     align-items: center; /* Center content horizontally */
     justify-content: center; /* Center content vertically */
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: radial-gradient(circle, #0c8d0c, #000000);
+    background: radial-gradient(circle, #19ab31a7, #000000);
   }
   
   @media (min-width: 768px) {
@@ -52,7 +52,6 @@ input[type="text"], input[type="password"] {
 }
 
 button {
-    width: 100%;
     padding: 10px;
     background-color: #4CAF50; /* Example button color */
     color: white;
@@ -61,10 +60,6 @@ button {
     cursor: pointer;
     transition: background-color 0.3s ease; 
 }
-
-button:hover {
-    background-color: #367c36; /* A darker shade for hover */
-  }
 
 /* LandingPage.css */
 

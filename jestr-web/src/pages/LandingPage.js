@@ -1,21 +1,46 @@
 import React, { useState } from 'react';
 import './LandingPage.css';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 function LandingPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(false); // Start with the 'Sign Up' form
+  const [isLogin, setIsLogin] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSignup = () => {
-    // Implement sign-up logic here
-    console.log('Signing up with', username, password);
+  // Hardcoded accounts for testing
+  const accounts = [
+    { username: 'DeeDaw22', password: '1' },
+    { username: 'Poperevo', password: '2' },
+  ];
+
+  const handleSignup = (event) => {
+    event.preventDefault();
+    const accountExists = accounts.some(
+      (account) => account.username === username && account.password === password
+    );
+    if (accountExists) {
+      alert("You already have an account. Would you like to sign in instead?");
+      setIsLogin(true); // Switch to the login form
+    } else {
+      // Proceed with account creation logic
+      console.log('Creating new account with', username, password);
+    }
   };
 
-  const handleLogin = () => {
-    setIsLogin(!isLogin);
-    console.log('Logging in with', username, password);
+  const handleLogin = (event) => {
+    event.preventDefault();
+    const accountExists = accounts.some(
+      (account) => account.username === username && account.password === password
+    );
+    if (accountExists) {
+      // Redirect to Feed.js or change the state of the application to be "logged in"
+      navigate('/feed');
+    } else {
+      alert("Incorrect username or password. Please try again or create an account.");
+    }
   };
 
   const toggleForm = () => {
@@ -42,18 +67,6 @@ function LandingPage() {
       opacity: 1,
       transition: { delay: custom * 0.5 }, // Delay each letter based on its order
     })
-  };
-
-  // Variants for container to stagger the child animations
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.5, // Increase the time between each child's animation
-        when: "beforeChildren", // Start animating children after the parent has animated
-      }
-    }
   };
 
   // Individual item transitions

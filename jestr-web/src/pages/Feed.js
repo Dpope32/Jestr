@@ -7,6 +7,11 @@ import CommentFeed from '../components/CommentFeed';
 import Comment from '../components/Comment';
 import  '../components/CommentFeed.css';
 import { faFlag } from '@fortawesome/free-solid-svg-icons';
+import ProfileIcon from '../components/ProfileIcon';
+import ProfilePanel from '../components/ProfilePanel';
+import TopPanel from '../components/TopPanel';
+import BottomPanel from '../components/BottomPanel';
+import AnonImage from '../assets/images/Jestr4.jpg'; // Update the path if necessary
 
 
 const LOAD_MORE_THRESHOLD = 300; // Distance from bottom to load more items
@@ -34,6 +39,8 @@ const Feed = () => {
   const [savedPosts, setSavedPosts] = useState([]);
   const [dislikedIndices, setDislikedIndices] = useState(new Set());
   const [shuffledMedia, setShuffledMedia] = useState([]);
+  const [isProfilePanelVisible, setIsProfilePanelVisible] = useState(false);
+  const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const toggleCommentFeed = () => {
     setIsCommentFeedVisible(!isCommentFeedVisible);
@@ -56,6 +63,19 @@ const Feed = () => {
     setViewedIndices(new Set([0])); // Start with the first item as viewed
   }, []);
 
+
+  const getUsername = () => {
+    // Implement the logic to retrieve the actual username
+    // If username is unknown or not provided, return 'Anon'
+    return "Anon";
+  };
+
+  const getProfilePic = () => {
+    // Implement the logic to retrieve the actual profile picture
+    // If the profile picture is unknown, return the Anon image
+    return AnonImage; // Assuming this is a default image
+  };
+  
 
   useEffect(() => {
     const shuffledMediaArray = media.sort(() => Math.random() - 0.5);
@@ -228,10 +248,16 @@ const handleSave = (index) => {
   
   return (
     <div className="feed-container">
-      <animated.div style={fade} className="card">
+      <TopPanel onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)} />
+      <div className="user-info">
+        <img src={getProfilePic()} alt="User" className="profile-pic" />
+        <span className="username">{getUsername()}</span>
+      </div>
+    <animated.div style={fade} className="card">
         <button onClick={goToPrevMedia} className="prev">&#x3c;</button>
           {MediaElement}
           <button onClick={goToNextMedia} className="next">&#x3e;</button>
+          <div className="caption">Caption goes here...</div>
             <div className="buttons">
               <button
                 className={`like ${likedIndices.has(currentMediaIndex) ? 'liked' : ''}`}
@@ -260,6 +286,7 @@ const handleSave = (index) => {
                   <FontAwesomeIcon icon={faShare} />
                 </button>
           </div>
+          <BottomPanel />
           </animated.div>
       {isCommentFeedVisible && (
           <div className="modal-background" onClick={() => setIsCommentFeedVisible(false)}>
@@ -269,8 +296,7 @@ const handleSave = (index) => {
           </div>
         </div>
       )}
-    
-  </div>
+    </div>
 );
       }
 

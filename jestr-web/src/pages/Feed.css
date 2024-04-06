@@ -1,7 +1,7 @@
 /* Feed.css */
 .feed-container {
-    width: 375px;
-    height: 667px;
+    width: 320px;
+    height: 620px;
     margin: 0 auto;
     border-radius: 36px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -9,7 +9,9 @@
     background: #ffffff;
     position: relative;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Stack children vertically */
+    justify-content: flex-start; 
+    position: relative; /* Context for absolute positioning */
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
   
@@ -19,7 +21,7 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: radial-gradient(circle at top, #68df7f, #000000);
+      background: radial-gradient(circle at top, #f2f2f2, #000000);
       padding: 20px;
     }
   }
@@ -30,24 +32,20 @@
   
   .card {
     width: 100%;
-    max-height: 600px;
-    flex-grow: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start; /* Align content to the top of the card */
     position: relative;
-  }
-
-  .card video {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: cover;
+    background-color: #ffffff; /* Card background color */
+    flex-grow: 1; /* Allow the card to grow and fill available space */
   }
   
-  .prev,
-  .next {
+  
+  .prev {
     position: absolute;
     top: 50%;
+    left: 16px;
     transform: translateY(-50%);
     background: none;
     color: #333;
@@ -57,38 +55,59 @@
     z-index: 2;
   }
   
-  .prev {
-    left: 16px;
-  }
-  
   .next {
-    right: 16px;
-  }
-  
-  .card img {
-    width: auto;
-    height: auto;
-    max-width: 100%;
-    max-height: 100%;
-    transition: transform 0.5s ease;
-  }
-  
-  .buttons {
     position: absolute;
-    bottom: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    background: none;
+    color: #333;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 2;
   }
+
+  
+  .card img,
+  .card video {
+    max-width: 100%; /* Maximum width */
+    height: 510px; /* Defined height for consistency */
+    object-fit: contain; /* Ensure full media visibility */
+    background-color: #000; /* Backdrop for media */
+    margin-bottom: 0px; /* Create space at the bottom for video controls */
+  }
+  
+.buttons {
+  display: flex; /* Use flexbox for horizontal alignment */
+  position: absolute; /* Position absolutely to place within the card */
+  bottom: 20px; /* Adjust to create space above the bottom-panel */
+  left: 50%; /* Center the buttons container horizontally */
+  transform: translateX(-50%); /* Align the center of the buttons with the center of the card */
+  gap: 10px; /* Space between each button */
+  z-index: 2; /* Above the image, but below the user-info and bottom-panel */
+}
   
   .buttons button {
-    background: none;
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background for visibility */
+    border-radius: 50%; /* Make buttons circular */
     border: none;
     color: #333;
     font-size: 20px;
+    width: 40px; /* Define a fixed width for uniformity */
+    align-items: center; /* Center the icon vertically */
+   justify-content: center; /* Center the icon horizontally */
+   height: 40px;
     margin: 0 12px;
+    background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white background */
+    padding: 8px; /* Spacing around the icon */
+    margin: 0 8px; /* Space between icons */
+    /* Optional: add a shadow to make icons pop out more */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); 
     cursor: pointer;
+    position: relative; /* Use relative instead of absolute */
+    padding: 0; /* Remove padding */
+    bottom: 60px; /* Place it above the bottom-panel */
   }
   
   /* Icon specific styling */
@@ -111,6 +130,19 @@
     from { opacity: 0; }
     to { opacity: 1; }
   }
+
+  .like-counter {
+    position: absolute;
+    bottom: 72px; /* Adjust this value based on your bottom-panel height */
+    margin-left: 56px;
+    width: 100%;
+    text-align: left;
+    font-style: italic;
+    z-index: 1;
+    font-size: 18px; /* Make sure the font size is readable */
+    font-weight: normal; /* Adjust weight as needed */
+    color: #ffffff; /* Adjust for readability on all backgrounds */
+  }
   
   .liked {
     color: green;
@@ -119,3 +151,86 @@
   .disliked {
     color: red;
   }
+
+  /* Feed.css */
+.top-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #179355; /* A modern green color; adjust as necessary */
+}
+
+.profile-icon {
+  cursor: pointer;
+  padding: 12px;
+}
+
+.search-settings {
+  display: right;
+  width: 50px; /* Adjust the space between the icons */
+}
+
+.bottom-panel {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 20px;
+  background-color: #179355; /* A modern green color; adjust as necessary */
+  color: white; /* Ensures icons are visible on a dark background */
+  position: absolute; /* Positioned absolutely within feed-container */
+  bottom: 0; /* Stick to the bottom */
+  left: 0; /* Align to the left edge */
+  right: 0; /* Align to the right edge */
+  z-index: 3; /* Above other content */
+}
+
+
+.bottom-panel .fa-icon {
+  padding: 10px; /* Add some padding around the icons */
+  cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+/* Additional hover effects for interactive elements */
+.bottom-panel .fa-icon:hover {
+  background-color: #367c39; /* Slightly darker green on hover */
+  border-radius: 50%; /* Round effect on icons when hovered */
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: 64px; /* Adjust the top position to bring the user info over the media */
+  left: 10px; /* Adjust the left position to align with the content padding */
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  color: white;
+  padding: 8px;
+  border-radius: 18px; /* Soften the corners */
+  z-index: 2; /* Ensure it's above the media content */
+}
+
+.profile-pic {
+  width: 40px; /* Adjust size as needed */
+  height: 40px; /* Adjust size as needed */
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.username {
+  font-size: 18px; /* Match to your design */
+  font-weight: bold;
+  color: white;
+}
+
+.caption {
+  position: absolute;
+  bottom: 130px; /* Adjust this value based on your bottom-panel height */
+  width: 98%;
+  text-align: left;
+  font-style: italic;
+  z-index: 1;
+  font-size: 14px; /* Make sure the font size is readable */
+  font-weight: normal; /* Adjust weight as needed */
+  color: #ffffff; /* Adjust for readability on all backgrounds */
+}
