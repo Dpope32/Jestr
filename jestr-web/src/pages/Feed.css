@@ -21,7 +21,7 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: radial-gradient(circle at top, #f2f2f2, #000000);
+      background: radial-gradient(circle at top, #f2f2f2ad, #000000);
       padding: 20px;
     }
   }
