@@ -3,7 +3,11 @@ import './LandingPage.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
+import { uploadToS3, getFromS3 } from '../utils/s3Util';
+
+
 import 'react-toastify/dist/ReactToastify.css';
+
 
 function LandingPage() {
   const [email, setEmail] = useState('');
@@ -62,29 +66,23 @@ function LandingPage() {
       profilePic: profilePic, // This is expected to be a URL
     };
   
-    // First, log the original data
-    console.log("Original data being sent:", profileData);
-  
-    const userData = JSON.stringify(profileData);
-  
-    // Then, log the stringified data
-    console.log("Stringified userData:", userData);
-  
-    const requestData = JSON.stringify({ body: userData });
-  
-    // Finally, log the requestData which is the actual body of the fetch request
-    console.log("Request data being sent to the server:", requestData);
-  
     try {
+      // First, upload the profile picture to S3
+      if (profilePic !== defaultProfilePic) {
+        console.log('Uploading profile picture to S3...');
+        await uploadToS3(profilePic, `${email}-profilePic.jpg`);
+        console.log('Profile picture uploaded to S3 successfully');
+      }
+  
+      // Then, complete the profile using the existing completeProfile function
       const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: requestData,
+        body: JSON.stringify(profileData),
       });
   
-      // Additional logs can be placed here to log the response
       if (response.ok) {
         const data = await response.json();
         console.log('Profile completed response:', data);
@@ -99,6 +97,7 @@ function LandingPage() {
       toast.error('An error occurred while completing your profile. Please try again.');
     }
   };
+
   
   
   const handleLogin = async (event) => {
@@ -175,27 +174,22 @@ function LandingPage() {
   };
 
   const handleUsernameChange = async (e) => {
-    setUsername(e.target.value);
-    if (e.target.value.length > 0) {
-      // Check if the username is available
-      // You'll need to implement this logic on the server-side
+    const usernameInput = e.target.value;
+    const usernameRegex = /^[a-zA-Z0-9]+$/;
+    if (usernameRegex.test(usernameInput)) {
+      setUsername(usernameInput);
       setIsUsernameAvailable(true);
     } else {
       setIsUsernameAvailable(false);
     }
   };
 
-//  const handleProfilePicChange = (e) => {
-//    const file = e.target.files && e.target.files[0];
-//    if (file) {
-//      setProfilePic(URL.createObjectURL(file));
-//    }
-//  };
-
-const handleProfilePicClick = () => {
-  // This sets the default image when the icon is clicked
-  setProfilePic(defaultProfilePic);
-};
+  const handleProfilePicChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      setProfilePic(URL.createObjectURL(file));
+    }
+  };
 
   return (
     <div className="landing-page-container">
@@ -226,21 +220,24 @@ const handleProfilePicClick = () => {
               <AnimatePresence>
                 {(!isSignedUp || isLogin) && (
                   <>
-                    <motion.div variants={itemVariants} className="input-container">
-                      <label className="input-label">Email:</label>
+                    <motion.div key="email" variants={itemVariants} className="input-container">
+                      <label className="input-label"> Email:</label>  
                       <motion.input
                         type="email"
+                        placeholder="Enter Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         variants={itemVariants}
                       />
                     </motion.div>
-                    <motion.div variants={itemVariants} className="input-container">
+                    <motion.div key="password" variants={itemVariants} className="input-container">
                       <label className="input-label">Password:</label>
                       <motion.input
                         type="password"
+                        placeholder="Enter Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        
                         variants={itemVariants}
                       />
                     </motion.div>
@@ -255,10 +252,29 @@ const handleProfilePicClick = () => {
               {isSignedUp && (
                 <AnimatePresence>
                   {/* Complete profile section */}
-                  <motion.div variants={itemVariants} className="input-container">
-                  <div className="profile-pic-btn" onClick={handleProfilePicClick}>
-  <span className="plus-icon">+</span>
-</div>
+                  <motion.div key="username" variants={itemVariants} className="input-container">
+                  <div className="profile-pic-btn">
+                  <label htmlFor="profilePicInput">
+                    {profilePic ? (
+                      <img src={profilePic} alt="Profile" />
+                    ) : (
+                    <span
+                      className="plus-icon"
+                      style={{ cursor: 'pointer' }}
+                      onClick={handleProfilePicChange}
+                    >
+                      +
+                    </span>
+                    )}
+                  </label>
+                  <input
+                    id="profilePicInput"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePicChange}
+                    style={{ display: 'none' }}
+                  />
+                </div>
                     <label className="input-label">Username:</label>
                     <motion.input
                       type="text"
@@ -266,23 +282,19 @@ const handleProfilePicClick = () => {
                       onChange={handleUsernameChange}
                       variants={itemVariants}
                     />
-                    {isUsernameAvailable ? (
-                      <span style={{ color: 'green' }}>Username available!</span>
-                    ) : (
-                      <span style={{ color: 'red' }}>Username unavailable!</span>
-                    )}
+                   {username.length > 0 && (
+  <span style={{ color: isUsernameAvailable ? 'green' : 'red' }}>
+    {isUsernameAvailable ? 'Username available!' : 'Username unavailable!'}
+  </span>
+)}
                   </motion.div>
-                  <motion.button
-                    variants={itemVariants}
-                    type="button"
-                    className="complete-profile-btn"
-                    onClick={handleCompleteProfile}
-                  >
-                    Complete Profile
-                  </motion.button>
+                  <motion.button key="completeProfile" variants={itemVariants} type="button" className="complete-profile-btn" onClick={handleCompleteProfile}>
+        Complete Profile
+      </motion.button>
                 </AnimatePresence>
               )}
             </motion.form>
+            
 
             {!isSignedUp && (
               <motion.div
@@ -302,6 +314,9 @@ const handleProfilePicClick = () => {
           </motion.div>
         )}
       </motion.div>
+      <footer className="landing-page-footer">
+  <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a> | <a href="#">Contact Us</a>
+</footer>
     </div>
   );
   }

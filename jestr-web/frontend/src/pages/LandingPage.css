@@ -1,4 +1,7 @@
 /* LandingPage.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
 .landing-page-container {
     width: 375px; /* iPhone width */
     height: 667px; /* iPhone height */
@@ -12,7 +15,7 @@
     flex-direction: column;
     align-items: center; /* Center content horizontally */
     justify-content: center; /* Center content vertically */
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
     background-color:hsla(132,100%,59%,1);
     background-image:
     radial-gradient(at 99% 2%, hsla(138,100%,51%,1) 0px, transparent 50%),
@@ -83,6 +86,7 @@ button {
     transition: background-color 0.3s ease; 
 }
 
+
 /* LandingPage.css */
 
 .title {
@@ -142,7 +146,28 @@ input[type="password"] {
   box-sizing: border-box; /* Include padding and border in element's total width and height */
   border: 1px solid #ccc;
   border-radius: 4px;
+  opacity: 0.7 !important;
+  transition: opacity 0.3s ease;
 }
+
+input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus {
+  opacity: 1.0 !important;
+  border: 2px solid #4CAF50; /* Highlight the input border when focused */
+}
+
+input[type="username"] {
+  width: 90%; /* Make input fields full width */
+  padding: 10px;
+  margin: 10px 0;
+  box-sizing: border-box; /* Include padding and border in element's total width and height */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  opacity: 0.7 !important;
+  transition: opacity 0.3s ease;
+  align-items: center;
+  text-align: center;
+}
+
 
 .google-btn {
   background-color: #db4437; /* Google's brand color */
@@ -169,4 +194,63 @@ input[type="password"] {
   cursor: pointer;
   transition: background-color 0.3s ease;
   width: 50%; /* Make input fields full width */
+}
+
+.signup-btn:hover {
+  background-color: darken(#225424, 10%);
+}
+
+.profile-pic-btn:hover {
+  cursor: pointer;
+}
+
+.profile-pic-btn img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Style the footer */
+.landing-page-footer {
+  position: absolute;
+  bottom: 10px;
+  text-align: center;
+  width: 100%;
+  font-size: 0.8em;
+}
+.landing-page-footer a {
+  color: #fff; /* Or any other color that matches your design */
+  text-decoration: none;
+  margin: 0 5px;
+}
+.landing-page-footer a:hover {
+  text-decoration: underline;
+}
+
+.complete-profile-btn {
+  background-color:hsla(132,100%,59%,1);
+  background-image:
+  radial-gradient(at 99% 2%, hsla(138,100%,51%,1) 0px, transparent 50%),
+  radial-gradient(at 1% 1%, rgb(20, 116, 50) 0px, transparent 50%),
+  radial-gradient(at 50% 50%, rgba(64, 206, 107, 0.533) 0px, transparent 50%),
+  radial-gradient(at 1% 16%, hsla(33,0%,0%,1) 0px, transparent 50%),
+  radial-gradient(at 35% 18%, hsla(160,92%,42%,1) 0px, transparent 50%);
+  margin-top: 1.5em; /* More space from the toggle text */
+  transition: background-color 0.3s ease;
+  padding: 10px;
+  color: white;
+  border: none;
+
+  border-radius: 4px;
+  cursor: pointer;
+  width: 70%; /* Make input fields full width */
+}
+
+.complete-profile-btn:hover {
+  opacity: 0.5;
+}
+
+.plus-icon:hover {
+  cursor: pointer;
 }
