@@ -155,6 +155,44 @@ input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focu
   border: 2px solid #4CAF50; /* Highlight the input border when focused */
 }
 
+.error-message {
+  color: red;
+  font-size: 0.9em;
+  margin-top: 0.5em;
+}
+
+.availability-message {
+  margin-top: 0.5em;
+  font-size: 0.9em;
+}
+
+.availability-message.unavailable {
+  color: red;
+}
+
+.availability-message.available {
+  color: green;
+}
+
+.Toastify__toast {
+  border-radius: 8px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.9em;
+  padding: 12px 20px;
+}
+
+.Toastify__toast--success {
+  background-color: #4caf50;
+}
+
+.Toastify__toast--error {
+  background-color: #f44336;
+}
+
+.Toastify__progress-bar {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
 input[type="username"] {
   width: 90%; /* Make input fields full width */
   padding: 10px;

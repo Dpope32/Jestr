@@ -2,11 +2,10 @@ import React, { useState, useRef } from 'react';
 import './LandingPage.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
 import { uploadToS3, getFromS3 } from '../utils/s3Util';
-
-
+import LoadingScreen from '../components/LoadingScreen';
 import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
 
 
 function LandingPage() {
@@ -14,6 +13,8 @@ function LandingPage() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const fileInputRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showLoginForm, setShowLoginForm] = useState(false);
   const [profilePic, setProfilePic] = useState('');
   const [isLogin, setIsLogin] = useState(false);
   const [isEmailTaken, setIsEmailTaken] = useState(false);
@@ -25,6 +26,14 @@ function LandingPage() {
 
   const handleSignup = async (event) => {
     event.preventDefault();
+  
+    // Check email availability
+    const emailCheckResponse = await fetch(`https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/checkEmail?email=${email}`);
+    const emailCheckData = await emailCheckResponse.json();
+    if (emailCheckData.emailExists) {
+      setIsEmailTaken(true);
+      return;
+    }
 
     const userData = {
       operation: 'signup',
@@ -86,7 +95,8 @@ function LandingPage() {
       if (response.ok) {
         const data = await response.json();
         console.log('Profile completed response:', data);
-        navigate('/feed');
+        // Pass the logged-in user's information to the Feed component
+        navigate('/feed', { state: { user: data.user } });
       } else {
         const errorData = await response.json();
         console.error('Complete profile error response:', errorData);
@@ -98,18 +108,18 @@ function LandingPage() {
     }
   };
 
-  
-  
   const handleLogin = async (event) => {
     event.preventDefault();
-
+    setIsLoading(true);
+  
     const userData = {
       operation: 'signin',
       email: email,
       password: password,
     };
-
+  
     try {
+      console.log('Sending login request...');
       const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/signin', {
         method: 'POST',
         headers: {
@@ -117,16 +127,35 @@ function LandingPage() {
         },
         body: JSON.stringify(userData),
       });
-
+  
       const data = await response.json();
-      if (response.ok && data.signInSuccess) {
-        navigate('/feed');
+      console.log('Login response:', data);
+      if (response.ok && data.message === 'Sign-in successful.') {
+        console.log('Sign-in successful');
+        toast.success('Sign-in successful!', {
+          position: "top-center",
+          autoClose: 1000,
+          onClose: () => {
+            console.log('Toast closed, navigating to /feed');
+            navigate('/feed');
+            setIsLoading(false);
+          },
+        });
       } else {
-        alert(data.message || 'Sign-in failed.');
+        console.log('Sign-in failed');
+        setIsLoading(false);
+        toast.error(data.message || 'Sign-in failed.', {
+          position: "top-center",
+          autoClose: 2000,
+        });
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('An error occurred during sign-in. Please try again.');
+      setIsLoading(false);
+      toast.error('An error occurred during sign-in. Please try again.', {
+        position: "top-center",
+        autoClose: 2000,
+      });
     }
   };
 
@@ -193,7 +222,7 @@ function LandingPage() {
 
   return (
     <div className="landing-page-container">
-      <ToastContainer position="top-center" autoClose={2000} />
+      <ToastContainer />
       <motion.div initial="hidden" animate="visible" className="landing-page">
         <div className="title">
           {['J', 'e', 's', 't', 'r'].map((letter, index) => (
@@ -221,14 +250,26 @@ function LandingPage() {
                 {(!isSignedUp || isLogin) && (
                   <>
                     <motion.div key="email" variants={itemVariants} className="input-container">
-                      <label className="input-label"> Email:</label>  
+                      <label className="input-label">Email:</label>
                       <motion.input
                         type="email"
                         placeholder="Enter Email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (e.target.value.length >= 6) {
+                            // Check email availability
+                            fetch(`https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/checkEmail?email=${e.target.value}`)
+                              .then((response) => response.json())
+                              .then((data) => setIsEmailTaken(data.emailExists))
+                              .catch((error) => console.error('Error checking email:', error));
+                          } else {
+                            setIsEmailTaken(false);
+                          }
+                        }}
                         variants={itemVariants}
                       />
+                      {isEmailTaken && <span className="error-message">Email already taken!</span>}
                     </motion.div>
                     <motion.div key="password" variants={itemVariants} className="input-container">
                       <label className="input-label">Password:</label>
@@ -237,13 +278,17 @@ function LandingPage() {
                         placeholder="Enter Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        
                         variants={itemVariants}
                       />
                     </motion.div>
-                    {!isLogin && ( // This button will be hidden when isLogin is true
+                    {!isLogin && (
                       <motion.button variants={itemVariants} type="submit" className="signup-btn">
                         Sign Up
+                      </motion.button>
+                    )}
+                    {isLogin && (
+                      <motion.button variants={itemVariants} type="submit" className="login-btn">
+                        Login
                       </motion.button>
                     )}
                   </>
@@ -253,28 +298,28 @@ function LandingPage() {
                 <AnimatePresence>
                   {/* Complete profile section */}
                   <motion.div key="username" variants={itemVariants} className="input-container">
-                  <div className="profile-pic-btn">
-                  <label htmlFor="profilePicInput">
-                    {profilePic ? (
-                      <img src={profilePic} alt="Profile" />
-                    ) : (
-                    <span
-                      className="plus-icon"
-                      style={{ cursor: 'pointer' }}
-                      onClick={handleProfilePicChange}
-                    >
-                      +
-                    </span>
-                    )}
-                  </label>
-                  <input
-                    id="profilePicInput"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleProfilePicChange}
-                    style={{ display: 'none' }}
-                  />
-                </div>
+                    <div className="profile-pic-btn">
+                      <label htmlFor="profilePicInput">
+                        {profilePic ? (
+                          <img src={profilePic} alt="Profile" />
+                        ) : (
+                          <span
+                            className="plus-icon"
+                            style={{ cursor: 'pointer' }}
+                            onClick={handleProfilePicChange}
+                          >
+                            +
+                          </span>
+                        )}
+                      </label>
+                      <input
+                        id="profilePicInput"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfilePicChange}
+                        style={{ display: 'none' }}
+                      />
+                    </div>
                     <label className="input-label">Username:</label>
                     <motion.input
                       type="text"
@@ -282,20 +327,18 @@ function LandingPage() {
                       onChange={handleUsernameChange}
                       variants={itemVariants}
                     />
-                   {username.length > 0 && (
-  <span style={{ color: isUsernameAvailable ? 'green' : 'red' }}>
-    {isUsernameAvailable ? 'Username available!' : 'Username unavailable!'}
-  </span>
-)}
+                    {username.length > 0 && (
+                      <span className={`availability-message ${isUsernameAvailable ? 'available' : 'unavailable'}`}>
+                        {isUsernameAvailable ? 'Username available!' : 'Username unavailable!'}
+                      </span>
+                    )}
                   </motion.div>
                   <motion.button key="completeProfile" variants={itemVariants} type="button" className="complete-profile-btn" onClick={handleCompleteProfile}>
-        Complete Profile
-      </motion.button>
+                    Complete Profile
+                  </motion.button>
                 </AnimatePresence>
               )}
             </motion.form>
-            
-
             {!isSignedUp && (
               <motion.div
                 variants={itemVariants}
@@ -305,7 +348,6 @@ function LandingPage() {
                 {isLogin ? 'Need an account? Sign up here' : 'Already have an account? Login here'}
               </motion.div>
             )}
-
             {!isSignedUp && !isLogin && (
               <motion.button variants={itemVariants} className="google-btn">
                 Continue with Google
@@ -314,11 +356,12 @@ function LandingPage() {
           </motion.div>
         )}
       </motion.div>
+      {isLoading && <LoadingScreen />}
       <footer className="landing-page-footer">
-  <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a> | <a href="#">Contact Us</a>
-</footer>
+        <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a> | <a href="#">Contact Us</a>
+      </footer>
     </div>
   );
-  }
-  export default LandingPage;
-  
+}
+
+export default LandingPage;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { animated, useSpring } from 'react-spring';
 import './Feed.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -11,10 +12,12 @@ import ProfileIcon from '../components/ProfileIcon';
 import ProfilePanel from '../components/ProfilePanel';
 import TopPanel from '../components/TopPanel';
 import BottomPanel from '../components/BottomPanel';
-import AnonImage from '../assets/images/Jestr4.jpg'; // Update the path if necessary
+import AnonImage from '../assets/images/Jestr4.jpg'; 
+import { getFromS3 } from '../utils/s3Util';
 
 
-const LOAD_MORE_THRESHOLD = 300; // Distance from bottom to load more items
+
+const LOAD_MORE_THRESHOLD = 300; 
 
 function importAll(r) {
   return r.keys().map(r);
@@ -31,10 +34,14 @@ const initialLikeDislikeCounts = media.reduce((acc, _, index) => {
 
 const Feed = () => {
   const [initLoadComplete, setInitLoadComplete] = useState(false);
+  const location = useLocation();
+  const loggedInUser = location.state?.user;
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [viewedIndices, setViewedIndices] = useState(new Set());
   const [navHistory, setNavHistory] = useState([]);
   const [endOfList, setEndOfList] = useState(false);
+  const [profilePicUrl, setProfilePicUrl] = useState('');
+  const [username, setUsername] = useState('');
   const [likedIndices, setLikedIndices] = useState(new Set());
   const [savedPosts, setSavedPosts] = useState([]);
   const [dislikedIndices, setDislikedIndices] = useState(new Set());
@@ -63,19 +70,42 @@ const Feed = () => {
     setViewedIndices(new Set([0])); // Start with the first item as viewed
   }, []);
 
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const picUrl = await getProfilePic();
+        const name = await getUsername();
+        setProfilePicUrl(picUrl);
+        setUsername(name);
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+      }
+    };
 
-  const getUsername = () => {
-    // Implement the logic to retrieve the actual username
-    // If username is unknown or not provided, return 'Anon'
-    return "Anon";
+    fetchProfileData();
+  }, []);
+
+
+  const getProfilePic = async () => {
+    try {
+      const profilePicUrl = await getFromS3(`${loggedInUser.email}-profilePic.jpg`);
+      return profilePicUrl;
+    } catch (error) {
+      console.error('Error fetching profile picture:', error);
+      return AnonImage;
+    }
   };
 
-  const getProfilePic = () => {
-    // Implement the logic to retrieve the actual profile picture
-    // If the profile picture is unknown, return the Anon image
-    return AnonImage; // Assuming this is a default image
+  const getUsername = async () => {
+    try {
+      const response = await fetch(`https://your-api-endpoint/getUsername?email=${loggedInUser.email}`);
+      const data = await response.json();
+      return data.username || 'Anon';
+    } catch (error) {
+      console.error('Error fetching username:', error);
+      return 'Anon';
+    }
   };
-  
 
   useEffect(() => {
     const shuffledMediaArray = media.sort(() => Math.random() - 0.5);
@@ -160,6 +190,11 @@ const handleSave = (index) => {
     setCurrentMediaIndex(newHistory[newHistory.length - 1]);
 
     if (endOfList) setEndOfList(false); // Reset endOfList if we can navigate back
+  };
+
+  const handleProfilePanelClose = () => {
+    setIsProfilePanelVisible(false);
+    console.log('Profile panel closed');
   };
 
   // Resetting navHistory on shuffle or component mount
@@ -249,10 +284,20 @@ const handleSave = (index) => {
   return (
     <div className="feed-container">
       <TopPanel onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)} />
-      <div className="user-info">
-        <img src={getProfilePic()} alt="User" className="profile-pic" />
-        <span className="username">{getUsername()}</span>
+      <div className="user-info" onClick={() => {
+        setIsProfilePanelVisible(!isProfilePanelVisible);
+        console.log('Profile icon clicked, isProfilePanelVisible:', !isProfilePanelVisible);
+      }}>
+        <img src={profilePicUrl} alt="User" className="profile-pic" />
+        <span className="username">{username}</span>
       </div>
+      <ProfilePanel
+      isVisible={isProfilePanelVisible}
+      onClose={() => {
+        setIsProfilePanelVisible(false);
+        console.log('Profile panel closed');
+      }}
+    />
     <animated.div style={fade} className="card">
         <button onClick={goToPrevMedia} className="prev">&#x3c;</button>
           {MediaElement}
@@ -296,6 +341,10 @@ const handleSave = (index) => {
           </div>
         </div>
       )}
+<ProfilePanel
+  isVisible={isProfilePanelVisible}
+  onClose={handleProfilePanelClose}
+/>
     </div>
 );
       }

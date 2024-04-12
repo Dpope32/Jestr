@@ -152,6 +152,13 @@
     color: red;
   }
 
+  .profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
   /* Feed.css */
 .top-panel {
   display: flex;

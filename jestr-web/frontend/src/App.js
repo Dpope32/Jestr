@@ -22,14 +22,8 @@ const App = () => {
             <LoadingScreen onFinished={() => setLoading(false)} />
           ) : (
             <Routes>
-              <Route
-                path="/"
-                element={<LandingPage />}
-              />
-              <Route
-                path="/feed"
-                element={<Feed />}
-              />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/feed" element={<Feed />} />
             </Routes>
           )}
         </div>
