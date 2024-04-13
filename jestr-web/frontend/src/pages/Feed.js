@@ -36,7 +36,7 @@ const initialLikeDislikeCounts = media.reduce((acc, _, index) => {
 const Feed = () => {
   const [initLoadComplete, setInitLoadComplete] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState('');
-
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const location = useLocation();
   const loggedInUser = location.state?.user;
@@ -57,6 +57,10 @@ const Feed = () => {
     setIsCommentFeedVisible(!isCommentFeedVisible);
   };
 
+  const handleDarkModeToggle = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   const [likeDislikeCounts, setLikeDislikeCounts] = useState(() => {
   const savedCounts = JSON.parse(localStorage.getItem('likeDislikeCounts'));
     // Merge saved counts with the initial zero counts to fill any gaps
@@ -73,25 +77,26 @@ const Feed = () => {
     setShuffledMedia(media.sort(() => Math.random() - 0.5));
     setViewedIndices(new Set([0])); // Start with the first item as viewed
   }, []);
-
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        if (loggedInUser) {
-          const picUrl = await getProfilePic();
-          const name = await getUsername();
-          setProfilePicUrl(picUrl);
-          setUsername(name);
-        } else {
-          console.error('Logged-in user information not available');
+  
+    useEffect(() => {
+      const fetchUsername = async () => {
+        try {
+          if (loggedInUser && loggedInUser.email) {
+            console.log('Logged-in user email:', loggedInUser.email);
+            const response = await fetch(`https://h7lqceo6i2.execute-api.us-east-2.amazonaws.com/getUsername?email=${loggedInUser.email}`);
+            const data = await response.json();
+            console.log('Response from getUsername API:', data);
+            setUsername(data.username);
+          } else {
+            console.error('Logged-in user information not available');
+          }
+        } catch (error) {
+          console.error('Error fetching username:', error);
         }
-      } catch (error) {
-        console.error('Error fetching profile data:', error);
-      }
-    };
-
-    fetchProfileData();
-  }, [loggedInUser]);
+      };
+  
+      fetchUsername();
+    }, [loggedInUser]);
 
   const getUsername = async () => {
     try {
@@ -293,20 +298,26 @@ const handleSave = (index) => {
   };
   
   return (
-    <div className="feed-container">
+    <div className={`feed-container ${isDarkMode ? 'dark-mode' : ''}`}>
       <TopPanel onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)} profilePicUrl={profilePicUrl} username={username} />
       <div className="meme-poster-info">
   <FontAwesomeIcon icon={faPlus} className="follow-icon" />
   <img src={profilePicUrl || AnonImage} alt="Poster" className="poster-profile-pic" />
   <span className="poster-username">{username || 'Anon'}</span>
 </div>
-      <ProfilePanel
-      isVisible={isProfilePanelVisible}
-      onClose={() => {
-        setIsProfilePanelVisible(false);
-        console.log('Profile panel closed');
-      }}
-    />
+<ProfilePanel
+        isVisible={isProfilePanelVisible}
+        onClose={() => {
+          setIsProfilePanelVisible(false);
+          console.log('Profile panel closed');
+        }}
+        profilePicUrl={profilePicUrl}
+        username={username}
+        displayName="Display Name"
+        followersCount="0"
+        followingCount= "0"
+        onDarkModeToggle={handleDarkModeToggle}
+      />
     <animated.div style={fade} className="card">
         <button onClick={goToPrevMedia} className="prev">&#x3c;</button>
           {MediaElement}
@@ -333,9 +344,6 @@ const handleSave = (index) => {
               <button className="comment" onClick={toggleCommentFeed}>
                   <FontAwesomeIcon icon={faComment} />
                 </button>
-                <button className="save" onClick={handleSave}>
-                  <FontAwesomeIcon icon={faFlag} />
-                </button>
                 <button className="share">
                   <FontAwesomeIcon icon={faShare} />
                 </button>
@@ -350,12 +358,17 @@ const handleSave = (index) => {
           </div>
         </div>
       )}
-<ProfilePanel
-  isVisible={isProfilePanelVisible}
-  onClose={handleProfilePanelClose}
-/>
+{loggedInUser && (
+  <ProfilePanel
+    isVisible={isProfilePanelVisible}
+    onClose={handleProfilePanelClose}
+    profilePicUrl={profilePicUrl}
+    username={username}
+  />
+)}
     </div>
 );
       }
 
 export default Feed;
+

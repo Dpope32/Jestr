@@ -103,13 +103,13 @@ function LandingPage() {
   const handleLogin = async (event) => {
     event.preventDefault();
     setIsLoading(true);
-  
+
     const userData = {
       operation: 'signin',
       email: email,
       password: password,
     };
-  
+
     try {
       console.log('Sending login request...');
       const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/signin', {
@@ -119,7 +119,7 @@ function LandingPage() {
         },
         body: JSON.stringify(userData),
       });
-  
+
       const data = await response.json();
       console.log('Login response:', data);
       if (response.ok && data.message === 'Sign-in successful.') {
@@ -129,7 +129,8 @@ function LandingPage() {
           autoClose: 1000,
           onClose: () => {
             console.log('Toast closed, navigating to /feed');
-            navigate('/feed');
+            console.log('Logged-in user data:', data.user); // Add this log
+            navigate('/feed', { state: { user: data.user } }); // Pass the user data
             setIsLoading(false);
           },
         });
@@ -146,8 +147,7 @@ function LandingPage() {
       setIsLoading(false);
       toast.error('An error occurred during sign-in. Please try again.', {
         position: "top-center",
-        autoClose: 2000,
-      });
+        autoClose: 2000,      });
     }
   };
 

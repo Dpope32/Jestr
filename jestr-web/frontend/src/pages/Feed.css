@@ -6,13 +6,18 @@
     border-radius: 36px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    background: #ffffff;
+    background: #000000;
     position: relative;
     display: flex;
     flex-direction: column; /* Stack children vertically */
     justify-content: flex-start; 
     position: relative; /* Context for absolute positioning */
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+
+  .feed-container.dark-mode {
+    background: #979797;
+    color: #ffffff;
   }
   
   @media (min-width: 768px) {
@@ -35,11 +40,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start; /* Align content to the top of the card */
     position: relative;
-    background-color: #ffffff; /* Card background color */
-    flex-grow: 1; /* Allow the card to grow and fill available space */
-  }
+    background-color: #000000;
+    padding-bottom: 45px;
+    }
   
   
   .prev {
@@ -47,7 +51,7 @@
     top: 50%;
     left: 16px;
     transform: translateY(-50%);
-    background: none;
+    background: rgba(255, 255, 255, 0.8);
     color: #333;
     border: none;
     font-size: 24px;
@@ -60,7 +64,7 @@
     top: 50%;
     right: 16px;
     transform: translateY(-50%);
-    background: none;
+    background: rgba(255, 255, 255, 0.8);
     color: #333;
     border: none;
     font-size: 24px;
@@ -68,11 +72,19 @@
     z-index: 2;
   }
 
+  .prev:hover,
+.next:hover {
+background: rgba(255, 255, 255, 1);
+}
+
+.card video {
+  margin-bottom: 10px;
+}
   
   .card img,
   .card video {
     max-width: 100%; /* Maximum width */
-    height: 440px; /* Defined height for consistency */
+    height: 500px; /* Defined height for consistency */
     object-fit: contain; /* Ensure full media visibility */
     background-color: #000; /* Backdrop for media */
     margin-bottom: 10px; /* Create space at the bottom for video controls */
@@ -81,7 +93,7 @@
 .buttons {
   display: flex; /* Use flexbox for horizontal alignment */
   position: absolute; /* Position absolutely to place within the card */
-  bottom: 20px; /* Adjust to create space above the bottom-panel */
+  bottom: 10px; /* Adjust to create space above the bottom-panel */
   left: 50%; /* Center the buttons container horizontally */
   transform: translateX(-50%); /* Align the center of the buttons with the center of the card */
   gap: 10px; /* Space between each button */
@@ -89,24 +101,18 @@
 }
   
   .buttons button {
-    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background for visibility */
     border-radius: 50%; /* Make buttons circular */
     border: none;
-    color: #333;
+    color: #008000;
     font-size: 20px;
     width: 40px; /* Define a fixed width for uniformity */
     align-items: center; /* Center the icon vertically */
    justify-content: center; /* Center the icon horizontally */
    height: 40px;
-    margin: 0 12px;
-    background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white background */
-    padding: 8px; /* Spacing around the icon */
     margin: 0 8px; /* Space between icons */
-    /* Optional: add a shadow to make icons pop out more */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); 
+    display: flex;
     cursor: pointer;
     position: relative; /* Use relative instead of absolute */
-    padding: 0; /* Remove padding */
     bottom: 60px; /* Place it above the bottom-panel */
   }
   
@@ -133,23 +139,46 @@
 
   .like-counter {
     position: absolute;
-    bottom: 72px; /* Adjust this value based on your bottom-panel height */
-    margin-left: 56px;
+    bottom: 70px; /* Adjust this value based on your bottom-panel height */
+    margin-left: 52px;
     width: 100%;
     text-align: left;
     font-style: italic;
     z-index: 1;
-    font-size: 18px; /* Make sure the font size is readable */
-    font-weight: normal; /* Adjust weight as needed */
+    font-weight: bold;
+    font-size: 16px; /* Make sure the font size is readable */
     color: #ffffff; /* Adjust for readability on all backgrounds */
   }
+
+  .like,
+.dislike,
+.comment,
+.share {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.like-button svg,
+.dislike-button svg,
+.comment-button svg,
+.share-button svg {
+  font-size: 24px;
+  color: #333;
+}
   
-  .liked {
-    color: green;
+.like-button.liked svg,
+.dislike-button.disliked svg {
+  color: #ff4d4d;
+}
+  
+  .buttons button.liked {
+color: #4caf50;
   }
   
-  .disliked {
-    color: red;
+  .buttons button.disliked {
+color: #f44336;
   }
 
   .profile-icon img {
@@ -164,7 +193,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0px;
     background-color: transparent;
   }
 
@@ -215,19 +243,17 @@
   position: absolute;
   top: 75px; /* Adjust the top position to bring the user info over the media */
   left: 60px; /* Adjust the left position to align with the content padding */
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
   color: white;
   padding: 8px;
-  border-radius: 18px; /* Soften the corners */
   z-index: 2; /* Ensure it's above the media content */
 }
 
 .profile-pic {
-  width: 40px; /* Adjust size as needed */
-  height: 40px; /* Adjust size as needed */
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   margin-right: 8px;
-}
+  }
 
 .poster-profile-pic {
   width: 40px; /* Adjust size as needed */
@@ -246,17 +272,24 @@
   z-index: 2; /* Ensure it's above the media content */
 }
 
+
 .follow-icon {
   color: green;
-  position: fixed; /* Change from 'display: fixed' to 'position: fixed' */
-  top: 12.7%;
-  left: 35.6%;
-  z-index: 999;
+  position: absolute;
+  margin-right: 10px; /* Adjust this value to move the icon horizontally */
+  top: 64px;
+  right: 252px;
+  color: #2fff2f; /* This is the hex code for green */
   cursor: pointer;
+  z-index: 999;
 }
 
+.follow-icon:hover {
+  transform: scale(1.2);
+  }
+
 .feed svg {
-  color: #008000; /* This is the hex code for green */
+  color: #2fff2f; /* This is the hex code for green */
   font-size: 18px;
   cursor: pointer;
 }
@@ -270,12 +303,12 @@
 
 .caption {
   position: absolute;
-  bottom: 130px; /* Adjust this value based on your bottom-panel height */
+  bottom: 117px; /* Adjust this value based on your bottom-panel height */
   width: 98%;
   text-align: left;
   font-style: italic;
   z-index: 1;
-  font-size: 14px; /* Make sure the font size is readable */
+  font-size: 16px; /* Make sure the font size is readable */
   font-weight: normal; /* Adjust weight as needed */
   color: #ffffff; /* Adjust for readability on all backgrounds */
 }
