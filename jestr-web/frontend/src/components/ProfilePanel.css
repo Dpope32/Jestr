@@ -54,6 +54,11 @@
   font-weight: bold;
   overflow: hidden;
 }
+
+.dark-mode .display-name {
+  color: #fff; /* Or any dark theme color */
+}
+
 .username {
   font-size: 16px;
   color: #5eff81;
@@ -114,4 +119,80 @@
 
 .dark-icon.active {
   color: #ffcc00;
+}
+
+.settings-modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.settings-modal {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  width: 80%;
+  max-width: 500px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.close-modal-button {
+  background-color: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.modal-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.option-item:hover {
+  background-color: #f0f0f0;
+}
+
+.option-icon {
+  margin-right: 10px;
+}
+
+.sign-out-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f44336;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.sign-out-button .icon {
+  margin-right: 5px;
 }

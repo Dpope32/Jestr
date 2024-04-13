@@ -15,6 +15,7 @@ import BottomPanel from '../components/BottomPanel';
 import AnonImage from '../assets/images/Jestr4.jpg'; 
 import { getFromS3 } from '../utils/s3Util';
 import MemePost from '../components/MemePost';
+import Anon1Image from '../assets/images/Jestr5.jpg';
 
 
 
@@ -78,48 +79,36 @@ const Feed = () => {
     setViewedIndices(new Set([0])); // Start with the first item as viewed
   }, []);
   
-    useEffect(() => {
-      const fetchUsername = async () => {
-        try {
-          if (loggedInUser && loggedInUser.email) {
-            console.log('Logged-in user email:', loggedInUser.email);
-            const response = await fetch(`https://h7lqceo6i2.execute-api.us-east-2.amazonaws.com/getUsername?email=${loggedInUser.email}`);
-            const data = await response.json();
-            console.log('Response from getUsername API:', data);
-            setUsername(data.username);
-          } else {
-            console.error('Logged-in user information not available');
-          }
-        } catch (error) {
-          console.error('Error fetching username:', error);
-        }
-      };
+  useEffect(() => {
+    const fetchUsername = async () => {
+      try {
+        const response = await fetch(`https://h7lqceo6i2.execute-api.us-east-2.amazonaws.com/getUsername?email=${loggedInUser.email}`);
+        if (!response.ok) throw new Error('Failed to fetch username');
+        const data = await response.json();
+        setUsername(data.username);
+      } catch (error) {
+        console.error('Error fetching username:', error);
+        setUsername('Anon');
+      }
+    };
   
+    const getProfilePic = async () => {
+      try {
+        const profilePicUrl = await getFromS3(`${loggedInUser.email}-profilePic.jpg`);
+        console.log('Profile picture URL:', profilePicUrl);
+        // Set the profile picture URL or perform any other necessary actions
+      } catch (error) {
+        console.error('Error fetching profile picture:', error);
+        // Fallback to default image or handle the error accordingly
+      }
+    };
+  
+    if (loggedInUser) {
+      setUsername(loggedInUser.username);
       fetchUsername();
-    }, [loggedInUser]);
-
-  const getUsername = async () => {
-    try {
-      const response = await fetch(`https://h7lqceo6i2.execute-api.us-east-2.amazonaws.com/getUsername?email=${loggedInUser.email}`);
-      const data = await response.json();
-      console.log('Username fetched:', data.username); // Log the username
-      return data.username || 'Anon'; // Fallback to 'Anon' if username is not fetched
-    } catch (error) {
-      console.error('Error fetching username:', error);
-      return 'Anon'; // Fallback to 'Anon' in case of error
+      getProfilePic();
     }
-  };
-  
-  const getProfilePic = async () => {
-    try {
-      const profilePicUrl = await getFromS3(`${loggedInUser.email}-profilePic.jpg`);
-      console.log('Profile picture URL:', profilePicUrl); // Log the profile picture URL
-      return profilePicUrl;
-    } catch (error) {
-      console.error('Error fetching profile picture:', error);
-      return AnonImage; // Fallback to default image
-    }
-  };
+  }, [loggedInUser]);
   
   
 
@@ -296,6 +285,8 @@ const handleSave = (index) => {
       return { ...prevCounts, [index]: newCount };
     });
   };
+
+
   
   return (
     <div className={`feed-container ${isDarkMode ? 'dark-mode' : ''}`}>
@@ -306,18 +297,15 @@ const handleSave = (index) => {
   <span className="poster-username">{username || 'Anon'}</span>
 </div>
 <ProfilePanel
-        isVisible={isProfilePanelVisible}
-        onClose={() => {
-          setIsProfilePanelVisible(false);
-          console.log('Profile panel closed');
-        }}
-        profilePicUrl={profilePicUrl}
-        username={username}
-        displayName="Display Name"
-        followersCount="0"
-        followingCount= "0"
-        onDarkModeToggle={handleDarkModeToggle}
-      />
+  isVisible={isProfilePanelVisible}
+  onClose={handleProfilePanelClose}
+  profilePicUrl={loggedInUser.profilePic || Anon1Image} // Fallback to default image if profilePic is not available
+  username={username}
+  displayName="Display Name"
+  followersCount="0"
+  followingCount="0"
+  onDarkModeToggle={handleDarkModeToggle}
+/>
     <animated.div style={fade} className="card">
         <button onClick={goToPrevMedia} className="prev">&#x3c;</button>
           {MediaElement}

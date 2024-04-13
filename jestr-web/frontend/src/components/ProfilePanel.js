@@ -1,11 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ProfilePanel.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faHistory, faBox, faCog, faMoon, faHeart, faBell } from '@fortawesome/free-solid-svg-icons';
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  faUser,
+  faHistory,
+  faBox,
+  faCog,
+  faMoon,
+  faTimes,
+  faHeart,
+  faBell,
+  faSignOutAlt,
+  faLock,
+  faUserShield,
+  faBell as faBellSolid,
+  faPalette,
+  faEdit,
+  faAd,
+} from '@fortawesome/free-solid-svg-icons';
 import Anon1Image from '../assets/images/Jestr5.jpg';
 
-const ProfilePanel = ({ isVisible, onClose, profilePicUrl, username, displayName, followersCount, followingCount, onDarkModeToggle }) => {
+const ProfilePanel = ({
+  isVisible,
+  onClose,
+  profilePicUrl,
+  displayName,
+  followersCount,
+  followingCount,
+  onDarkModeToggle = () => {} // Default function if not passed
+}) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [username, setUsername] = useState('');
+  const navigate = useNavigate();
+
+  const location = useLocation();
+  const loggedInUser = location.state?.user;
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      try {
+        const response = await fetch(`https://h7lqceo6i2.execute-api.us-east-2.amazonaws.com/getUsername?email=${loggedInUser.email}`);
+        if (!response.ok) throw new Error('Failed to fetch username');
+        const data = await response.json();
+        setUsername(data.username);  
+      } catch (error) { console.error('Error fetching username:', error); 
+      setUsername('Anon'); 
+    } 
+  }; 
+  
+  if (loggedInUser) 
+  { setUsername(loggedInUser.username); 
+  } 
+}, [loggedInUser]); 
 
   if (!isVisible) return null;
 
@@ -18,10 +66,11 @@ const ProfilePanel = ({ isVisible, onClose, profilePicUrl, username, displayName
   };
 
   const handleSettingsClick = () => {
-    console.log('Settings clicked');
+    setShowSettingsModal(true);
   };
 
   const handleDarkModeClick = () => {
+    console.log('onDarkModeToggle is: ', onDarkModeToggle);
     setIsDarkMode(!isDarkMode);
     onDarkModeToggle();
   };
@@ -34,6 +83,30 @@ const ProfilePanel = ({ isVisible, onClose, profilePicUrl, username, displayName
     console.log('Notifications clicked');
   };
 
+  const getProfilePic = () => {
+    try {
+      if (loggedInUser && loggedInUser.profilePic) {
+        console.log('Profile picture URL:', loggedInUser.profilePic);
+        return loggedInUser.profilePic;
+      } else {
+        console.error('Profile picture URL not available');
+        return Anon1Image;
+      }
+    } catch (error) {
+      console.error('Error fetching profile picture:', error);
+      return Anon1Image;
+    }
+  };
+
+  const handleSignOut = () => {
+    // Sign out logic
+    navigate('/'); // Navigate to the root URL (e.g., localhost:3000)
+  };
+
+  const closeModal = () => {
+    setShowSettingsModal(false);
+  };
+
   return (
     <div className={`profile-panel ${isDarkMode ? 'dark-mode' : ''}`}>
       <div className="profile-panel-container">
@@ -42,7 +115,11 @@ const ProfilePanel = ({ isVisible, onClose, profilePicUrl, username, displayName
         </button>
         <div className="profile-info">
           <div className="profile-pic-container">
-            <img src={profilePicUrl || Anon1Image} alt={username || 'Profile'} className="profile-pic" />
+            <img
+              src={profilePicUrl || Anon1Image}
+              alt={setUsername || 'Profile'}
+              className="profile-pic"
+            />
           </div>
           <h3 className="display-name">{displayName || 'Display Name'}</h3>
           <p className="username">{username || 'Username'}</p>
@@ -73,10 +150,61 @@ const ProfilePanel = ({ isVisible, onClose, profilePicUrl, username, displayName
             <span>Settings</span>
           </button>
         </div>
-        <FontAwesomeIcon icon={faMoon} className={`dark-icon ${isDarkMode ? 'active' : ''}`} onClick={handleDarkModeClick} />
-      </div>
+        <FontAwesomeIcon
+          icon={faMoon}
+          className={`dark-icon ${isDarkMode ? 'active' : ''}`}
+          onClick={handleDarkModeClick}
+        />
+
+
+   {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="settings-modal-container">
+          <div className="settings-modal">
+            <div className="modal-header">
+              <h2>Settings</h2>
+              <button className="settings-close-button" onClick={closeModal}>
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+            <div className="modal-options">
+              <div className="option-item">
+                <FontAwesomeIcon icon={faUserShield} className="option-icon" />
+                <span className="option-label">Privacy</span>
+              </div>
+              <div className="option-item">
+                <FontAwesomeIcon icon={faBellSolid} className="option-icon" />
+                <span className="option-label">Notifications</span>
+              </div>
+              <div className="option-item">
+                <FontAwesomeIcon icon={faPalette} className="option-icon" />
+                <span className="option-label">Content Preferences</span>
+              </div>
+              <div className="option-item">
+                <FontAwesomeIcon icon={faEdit} className="option-icon" />
+                <span className="option-label">Set Display Name</span>
+              </div>
+              <div className="option-item">
+                <FontAwesomeIcon icon={faLock} className="option-icon" />
+                <span className="option-label">Change Password</span>
+              </div>
+              <div className="option-item">
+                <FontAwesomeIcon icon={faAd} className="option-icon" />
+                <span className="option-label">Ad Preferences</span>
+              </div>
+            </div>
+            <button className="sign-out-button" onClick={handleSignOut}>
+              <FontAwesomeIcon icon={faSignOutAlt} className="icon" />
+              Sign Out
+            </button>
+          </div>
+          
+        </div>
+      )}
+    </div>
     </div>
   );
+  
 };
 
 export default ProfilePanel;
