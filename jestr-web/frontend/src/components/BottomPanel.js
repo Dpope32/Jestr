@@ -2,6 +2,7 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faPlus, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import './BottomPanel.css';
 
 const BottomPanel = () => {
   return (

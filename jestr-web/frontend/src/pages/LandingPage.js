@@ -26,14 +26,6 @@ function LandingPage() {
 
   const handleSignup = async (event) => {
     event.preventDefault();
-  
-    // Check email availability
-    const emailCheckResponse = await fetch(`https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/checkEmail?email=${email}`);
-    const emailCheckData = await emailCheckResponse.json();
-    if (emailCheckData.emailExists) {
-      setIsEmailTaken(true);
-      return;
-    }
 
     const userData = {
       operation: 'signup',
@@ -96,7 +88,7 @@ function LandingPage() {
         const data = await response.json();
         console.log('Profile completed response:', data);
         // Pass the logged-in user's information to the Feed component
-        navigate('/feed', { state: { user: data.user } });
+        navigate('/feed', { state: { user: data } });
       } else {
         const errorData = await response.json();
         console.error('Complete profile error response:', errorData);
@@ -222,8 +214,9 @@ function LandingPage() {
 
   return (
     <div className="landing-page-container">
-      <ToastContainer />
-      <motion.div initial="hidden" animate="visible" className="landing-page">
+ <ToastContainer />
+    {isLoading && <LoadingScreen />}
+    <motion.div initial="hidden" animate="visible" className="landing-page">
         <div className="title">
           {['J', 'e', 's', 't', 'r'].map((letter, index) => (
             <motion.span

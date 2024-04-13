@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { animated, useSpring } from 'react-spring';
 import './Feed.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faThumbsUp, faThumbsDown, faComment, faShare } from '@fortawesome/free-solid-svg-icons';
+import { faThumbsUp, faThumbsDown, faComment, faShare, faPlus } from '@fortawesome/free-solid-svg-icons';
 import CommentFeed from '../components/CommentFeed';
 import Comment from '../components/Comment';
 import  '../components/CommentFeed.css';
@@ -14,6 +14,7 @@ import TopPanel from '../components/TopPanel';
 import BottomPanel from '../components/BottomPanel';
 import AnonImage from '../assets/images/Jestr4.jpg'; 
 import { getFromS3 } from '../utils/s3Util';
+import MemePost from '../components/MemePost';
 
 
 
@@ -34,16 +35,19 @@ const initialLikeDislikeCounts = media.reduce((acc, _, index) => {
 
 const Feed = () => {
   const [initLoadComplete, setInitLoadComplete] = useState(false);
+  const [profilePicUrl, setProfilePicUrl] = useState('');
+
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const location = useLocation();
   const loggedInUser = location.state?.user;
-  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [viewedIndices, setViewedIndices] = useState(new Set());
   const [navHistory, setNavHistory] = useState([]);
   const [endOfList, setEndOfList] = useState(false);
-  const [profilePicUrl, setProfilePicUrl] = useState('');
   const [username, setUsername] = useState('');
   const [likedIndices, setLikedIndices] = useState(new Set());
   const [savedPosts, setSavedPosts] = useState([]);
+  const [posterProfilePic, setposterProfilePic] = useState([]); 
+  const [posterUsername, setposterUsername] = useState([]); 
   const [dislikedIndices, setDislikedIndices] = useState(new Set());
   const [shuffledMedia, setShuffledMedia] = useState([]);
   const [isProfilePanelVisible, setIsProfilePanelVisible] = useState(false);
@@ -73,39 +77,46 @@ const Feed = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const picUrl = await getProfilePic();
-        const name = await getUsername();
-        setProfilePicUrl(picUrl);
-        setUsername(name);
+        if (loggedInUser) {
+          const picUrl = await getProfilePic();
+          const name = await getUsername();
+          setProfilePicUrl(picUrl);
+          setUsername(name);
+        } else {
+          console.error('Logged-in user information not available');
+        }
       } catch (error) {
         console.error('Error fetching profile data:', error);
       }
     };
 
     fetchProfileData();
-  }, []);
-
-
-  const getProfilePic = async () => {
-    try {
-      const profilePicUrl = await getFromS3(`${loggedInUser.email}-profilePic.jpg`);
-      return profilePicUrl;
-    } catch (error) {
-      console.error('Error fetching profile picture:', error);
-      return AnonImage;
-    }
-  };
+  }, [loggedInUser]);
 
   const getUsername = async () => {
     try {
-      const response = await fetch(`https://your-api-endpoint/getUsername?email=${loggedInUser.email}`);
+      const response = await fetch(`https://h7lqceo6i2.execute-api.us-east-2.amazonaws.com/getUsername?email=${loggedInUser.email}`);
       const data = await response.json();
-      return data.username || 'Anon';
+      console.log('Username fetched:', data.username); // Log the username
+      return data.username || 'Anon'; // Fallback to 'Anon' if username is not fetched
     } catch (error) {
       console.error('Error fetching username:', error);
-      return 'Anon';
+      return 'Anon'; // Fallback to 'Anon' in case of error
     }
   };
+  
+  const getProfilePic = async () => {
+    try {
+      const profilePicUrl = await getFromS3(`${loggedInUser.email}-profilePic.jpg`);
+      console.log('Profile picture URL:', profilePicUrl); // Log the profile picture URL
+      return profilePicUrl;
+    } catch (error) {
+      console.error('Error fetching profile picture:', error);
+      return AnonImage; // Fallback to default image
+    }
+  };
+  
+  
 
   useEffect(() => {
     const shuffledMediaArray = media.sort(() => Math.random() - 0.5);
@@ -283,14 +294,12 @@ const handleSave = (index) => {
   
   return (
     <div className="feed-container">
-      <TopPanel onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)} />
-      <div className="user-info" onClick={() => {
-        setIsProfilePanelVisible(!isProfilePanelVisible);
-        console.log('Profile icon clicked, isProfilePanelVisible:', !isProfilePanelVisible);
-      }}>
-        <img src={profilePicUrl} alt="User" className="profile-pic" />
-        <span className="username">{username}</span>
-      </div>
+      <TopPanel onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)} profilePicUrl={profilePicUrl} username={username} />
+      <div className="meme-poster-info">
+  <FontAwesomeIcon icon={faPlus} className="follow-icon" />
+  <img src={profilePicUrl || AnonImage} alt="Poster" className="poster-profile-pic" />
+  <span className="poster-username">{username || 'Anon'}</span>
+</div>
       <ProfilePanel
       isVisible={isProfilePanelVisible}
       onClose={() => {
@@ -330,8 +339,8 @@ const handleSave = (index) => {
                 <button className="share">
                   <FontAwesomeIcon icon={faShare} />
                 </button>
+                <BottomPanel />
           </div>
-          <BottomPanel />
           </animated.div>
       {isCommentFeedVisible && (
           <div className="modal-background" onClick={() => setIsCommentFeedVisible(false)}>

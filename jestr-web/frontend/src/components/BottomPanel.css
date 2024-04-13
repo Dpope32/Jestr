@@ -1,0 +1,18 @@
+/* BottomPanel.css */
+.bottom-panel {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0px;
+    bottom: 0;
+  }
+  
+  .bottom-panel svg {
+    color: #008000; /* This is the hex code for green */
+    font-size: 18px;
+    cursor: pointer;
+  }

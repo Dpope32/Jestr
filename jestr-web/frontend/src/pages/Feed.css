@@ -72,10 +72,10 @@
   .card img,
   .card video {
     max-width: 100%; /* Maximum width */
-    height: 510px; /* Defined height for consistency */
+    height: 440px; /* Defined height for consistency */
     object-fit: contain; /* Ensure full media visibility */
     background-color: #000; /* Backdrop for media */
-    margin-bottom: 0px; /* Create space at the bottom for video controls */
+    margin-bottom: 10px; /* Create space at the bottom for video controls */
   }
   
 .buttons {
@@ -152,7 +152,7 @@
     color: red;
   }
 
-  .profile-pic {
+  .profile-icon img {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -160,13 +160,13 @@
   }
 
   /* Feed.css */
-.top-panel {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background-color: #179355; /* A modern green color; adjust as necessary */
-}
+  .top-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0px;
+    background-color: transparent;
+  }
 
 .profile-icon {
   cursor: pointer;
@@ -174,8 +174,13 @@
 }
 
 .search-settings {
-  display: right;
-  width: 50px; /* Adjust the space between the icons */
+  display: flex;
+  gap: 10px;
+}
+
+.search-settings svg {
+  cursor: pointer;
+  font-size: 20px;
 }
 
 .bottom-panel {
@@ -183,7 +188,7 @@
   justify-content: space-around;
   align-items: center;
   padding: 20px;
-  background-color: #179355; /* A modern green color; adjust as necessary */
+  background-color: transparent;
   color: white; /* Ensures icons are visible on a dark background */
   position: absolute; /* Positioned absolutely within feed-container */
   bottom: 0; /* Stick to the bottom */
@@ -204,12 +209,12 @@
   border-radius: 50%; /* Round effect on icons when hovered */
 }
 
-.user-info {
+.poster-username{
   display: flex;
   align-items: center;
   position: absolute;
-  top: 64px; /* Adjust the top position to bring the user info over the media */
-  left: 10px; /* Adjust the left position to align with the content padding */
+  top: 75px; /* Adjust the top position to bring the user info over the media */
+  left: 60px; /* Adjust the left position to align with the content padding */
   background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
   color: white;
   padding: 8px;
@@ -223,6 +228,39 @@
   border-radius: 50%;
   margin-right: 8px;
 }
+
+.poster-profile-pic {
+  width: 40px; /* Adjust size as needed */
+  height: 40px; /* Adjust size as needed */
+  border-radius: 50%;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: 64px; /* Adjust the top position to bring the user info over the media */
+  left: 10px; /* Adjust the left position to align with the content padding */
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  color: white;
+  padding: 8px;
+  border-radius: 18px; /* Soften the corners */
+  z-index: 2; /* Ensure it's above the media content */
+}
+
+.follow-icon {
+  color: green;
+  position: fixed; /* Change from 'display: fixed' to 'position: fixed' */
+  top: 12.7%;
+  left: 35.6%;
+  z-index: 999;
+  cursor: pointer;
+}
+
+.feed svg {
+  color: #008000; /* This is the hex code for green */
+  font-size: 18px;
+  cursor: pointer;
+}
+
 
 .username {
   font-size: 18px; /* Match to your design */

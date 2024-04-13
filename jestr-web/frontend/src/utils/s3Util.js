@@ -28,17 +28,17 @@ export const uploadToS3 = async (file, key) => {
 
 export const getFromS3 = async (key) => {
   try {
-  const params = {
-    Bucket: 'jestr-bucket',
-    Key: key,
-  };
-  const data = await s3.getObject(params).promise();
-  const blob = new Blob([data.Body], { type: data.ContentType });
-  const url = URL.createObjectURL(blob);
-  return url;
-} catch (error) {
-  console.error('Error fetching from S3:', error);
-  throw error;
-}
+    const params = {
+      Bucket: 'jestr-bucket',
+      Key: key,
+    };
+    const data = await s3.getObject(params).promise();
+    console.log('S3 data:', data); // Add this line
+    const blob = new Blob([data.Body], { type: data.ContentType });
+    const url = URL.createObjectURL(blob);
+    return url;
+  } catch (error) {
+    console.error('Error fetching from S3:', error);
+    throw error;
+  }
 };
-
