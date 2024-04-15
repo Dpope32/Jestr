@@ -6,12 +6,14 @@ import { uploadToS3, getFromS3 } from '../utils/s3Util';
 import LoadingScreen from '../components/LoadingScreen';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
+import ProfilePicUpload from './ProfilePicUpload';
 
 
 function LandingPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
@@ -64,16 +66,28 @@ function LandingPage() {
       operation: 'completeProfile',
       email: email,
       username: username,
-      profilePic: profilePic, // Pass the actual file
     };
   
+    console.log('Preparing to complete profile with:', profileData);
+  
     try {
-      // First, upload the profile picture to S3
-      if (profilePic !== defaultProfilePic) {
+      let profilePicUrl = null;
+  
+      // Check if there is a profilePic to upload
+      if (profilePic) {
+        console.log('Profile picture file selected:', profilePic);
+  
+        // First, upload the profile picture to S3 if a file is selected
         console.log('Uploading profile picture to S3...');
-        await uploadToS3(profilePic, `${email}-profilePic.jpg`);
-        console.log('Profile picture uploaded to S3 successfully');
+        profilePicUrl = await uploadToS3(profilePic, `${email}-profilePic.jpg`);
+        console.log('Profile picture uploaded to S3 successfully at URL:', profilePicUrl);
+        profileData.profilePic = profilePicUrl;
+      } else {
+        console.log('No profile picture to upload.');
       }
+  
+      // Log the data being sent in the request to complete the profile
+      console.log('Sending complete profile request with data:', profileData);
   
       // Then, complete the profile using the existing completeProfile function
       const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
@@ -84,15 +98,17 @@ function LandingPage() {
         body: JSON.stringify(profileData),
       });
   
+      // Check and log the response from the completeProfile request
       if (response.ok) {
         const data = await response.json();
-        console.log('Profile completed response:', data);
+        console.log('Profile completed successfully with response:', data);
         // Pass the logged-in user's information to the Feed component
         const user = {
           email: data.user.email,
           username: data.user.username,
-          profilePic: data.user.profilePic
+          profilePic: profilePicUrl || data.user.profilePic // Use the uploaded profilePicUrl or the one from the response
         };
+        console.log('Navigating to feed with user data:', user);
         navigate('/feed', { state: { user } });
       } else {
         const errorData = await response.json();
@@ -104,6 +120,9 @@ function LandingPage() {
       toast.error('An error occurred while completing your profile. Please try again.');
     }
   };
+  
+  
+   
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -215,11 +234,8 @@ function LandingPage() {
     }
   };
 
-  const handleProfilePicChange = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      setProfilePic(URL.createObjectURL(file));
-    }
+  const handleProfilePicChange = (file) => {
+    setProfilePic(file);
   };
 
   return (
@@ -301,28 +317,7 @@ function LandingPage() {
                 <AnimatePresence>
                   {/* Complete profile section */}
                   <motion.div key="username" variants={itemVariants} className="input-container">
-                    <div className="profile-pic-btn">
-                      <label htmlFor="profilePicInput">
-                        {profilePic ? (
-                          <img src={profilePic} alt="Profile" />
-                        ) : (
-                          <span
-                            className="plus-icon"
-                            style={{ cursor: 'pointer' }}
-                            onClick={handleProfilePicChange}
-                          >
-                            +
-                          </span>
-                        )}
-                      </label>
-                      <input
-                        id="profilePicInput"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleProfilePicChange}
-                        style={{ display: 'none' }}
-                      />
-                    </div>
+                  <ProfilePicUpload onProfilePicChange={handleProfilePicChange} />
                     <label className="input-label">Username:</label>
                     <motion.input
                       type="text"

@@ -75,18 +75,19 @@ const ProfilePanel = ({
   
 
   const getProfilePic = () => {
-    try {
-      if (profilePicUrl && profilePicUrl.startsWith('data:image/')) {
-        console.log('Profile picture URL:', profilePicUrl);
+    if (profilePicUrl) {
+      console.log('Profile picture URL:', profilePicUrl);
+      // Check if the URL starts with 'data:image'
+      if (profilePicUrl.startsWith('data:image')) {
+        // If it's a base64-encoded URL, return it directly
         return profilePicUrl;
       } else {
-        console.error('Profile picture URL is not a valid data URI');
-        console.log('Fallback image:', Anon1Image);
-        return Anon1Image;
+        // If it's a regular URL, return it as is
+        return profilePicUrl;
       }
-    } catch (error) {
-      console.error('Error fetching profile picture:', error);
-      return Anon1Image;
+    } else {
+      console.log('Profile picture URL not available');
+      return Anon1Image; // Return a default profile picture URL
     }
   };
 

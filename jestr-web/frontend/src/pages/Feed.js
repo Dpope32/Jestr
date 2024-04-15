@@ -101,13 +101,13 @@ const Feed = () => {
           console.log('Fetching profile picture from S3 with key:', key);
           const profilePicUrl = await getFromS3(key);
           console.log('Profile picture URL:', profilePicUrl);
-          console.log('profilePicUrl value before setting state:', profilePicUrl || loggedInUser.profilePic);
-          setProfilePicUrl(profilePicUrl || loggedInUser.profilePic);
+          setProfilePicUrl(profilePicUrl);
         } else {
           console.log('Logged-in user email not available');
         }
       } catch (error) {
         console.error('Error fetching profile picture:', error);
+        setProfilePicUrl(Anon1Image); // Set to a default profile picture URL
       }
     };
   
@@ -116,6 +116,28 @@ const Feed = () => {
       fetchUsername();
       getProfilePic();
     }
+  }, [loggedInUser]);
+
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      try {
+        if (loggedInUser && loggedInUser.email) {
+          const key = `${loggedInUser.email}-profilePic.jpg`;
+          console.log('Fetching profile picture from S3 with key:', key);
+          const base64ProfilePicUrl = await getFromS3(key);
+          console.log('Base64 profile picture URL:', base64ProfilePicUrl);
+          setProfilePicUrl(base64ProfilePicUrl);
+        } else {
+          console.log('Logged-in user email not available');
+          setProfilePicUrl(Anon1Image); // Set to a default profile picture URL
+        }
+      } catch (error) {
+        console.error('Error fetching profile picture:', error);
+        setProfilePicUrl(Anon1Image); // Set to a default profile picture URL
+      }
+    };
+  
+    fetchProfilePicture();
   }, [loggedInUser]);
   
   
