@@ -303,6 +303,7 @@ color: #f44336;
 
 .caption {
   position: absolute;
+  margin-top: auto;
   bottom: 117px; /* Adjust this value based on your bottom-panel height */
   width: 98%;
   text-align: left;

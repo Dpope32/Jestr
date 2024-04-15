@@ -64,7 +64,7 @@ function LandingPage() {
       operation: 'completeProfile',
       email: email,
       username: username,
-      profilePic: profilePic, // This is expected to be a URL
+      profilePic: profilePic, // Pass the actual file
     };
   
     try {
@@ -88,7 +88,12 @@ function LandingPage() {
         const data = await response.json();
         console.log('Profile completed response:', data);
         // Pass the logged-in user's information to the Feed component
-        navigate('/feed', { state: { user: data } });
+        const user = {
+          email: data.user.email,
+          username: data.user.username,
+          profilePic: data.user.profilePic
+        };
+        navigate('/feed', { state: { user } });
       } else {
         const errorData = await response.json();
         console.error('Complete profile error response:', errorData);
@@ -122,15 +127,20 @@ function LandingPage() {
 
       const data = await response.json();
       console.log('Login response:', data);
-      if (response.ok && data.message === 'Sign-in successful.') {
+      if (response.ok && data.message === 'Sign-in successful.' && data.user && data.user.email) {
         console.log('Sign-in successful');
         toast.success('Sign-in successful!', {
           position: "top-center",
           autoClose: 1000,
           onClose: () => {
             console.log('Toast closed, navigating to /feed');
-            console.log('Logged-in user data:', data.user); // Add this log
-            navigate('/feed', { state: { user: data.user } }); // Pass the user data
+            console.log('Logged-in user data:', data.user);
+            const user = {
+              email: data.user.email,
+              username: data.user.username, // Add the username property
+              profilePic: data.user.profilePic // Add the profilePic property
+            };
+            navigate('/feed', { state: { user } });
             setIsLoading(false);
           },
         });

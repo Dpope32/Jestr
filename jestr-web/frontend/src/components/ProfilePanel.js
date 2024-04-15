@@ -30,6 +30,7 @@ const ProfilePanel = ({
   followingCount,
   onDarkModeToggle = () => {} // Default function if not passed
 }) => {
+  console.log('profilePicUrl value in ProfilePanel:', profilePicUrl);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [username, setUsername] = useState('');
@@ -39,21 +40,10 @@ const ProfilePanel = ({
   const loggedInUser = location.state?.user;
 
   useEffect(() => {
-    const fetchUsername = async () => {
-      try {
-        const response = await fetch(`https://h7lqceo6i2.execute-api.us-east-2.amazonaws.com/getUsername?email=${loggedInUser.email}`);
-        if (!response.ok) throw new Error('Failed to fetch username');
-        const data = await response.json();
-        setUsername(data.username);  
-      } catch (error) { console.error('Error fetching username:', error); 
-      setUsername('Anon'); 
-    } 
-  }; 
-  
-  if (loggedInUser) 
-  { setUsername(loggedInUser.username); 
-  } 
-}, [loggedInUser]); 
+    if (loggedInUser) {
+      setUsername(loggedInUser.username);
+    }
+  }, [loggedInUser]);
 
   if (!isVisible) return null;
 
@@ -82,14 +72,16 @@ const ProfilePanel = ({
   const handleNotificationsClick = () => {
     console.log('Notifications clicked');
   };
+  
 
   const getProfilePic = () => {
     try {
-      if (loggedInUser && loggedInUser.profilePic) {
-        console.log('Profile picture URL:', loggedInUser.profilePic);
-        return loggedInUser.profilePic;
+      if (profilePicUrl && profilePicUrl.startsWith('data:image/')) {
+        console.log('Profile picture URL:', profilePicUrl);
+        return profilePicUrl;
       } else {
-        console.error('Profile picture URL not available');
+        console.error('Profile picture URL is not a valid data URI');
+        console.log('Fallback image:', Anon1Image);
         return Anon1Image;
       }
     } catch (error) {
@@ -115,11 +107,11 @@ const ProfilePanel = ({
         </button>
         <div className="profile-info">
           <div className="profile-pic-container">
-            <img
-              src={profilePicUrl || Anon1Image}
-              alt={setUsername || 'Profile'}
-              className="profile-pic"
-            />
+          <img
+            src={getProfilePic()}
+            alt={username || 'Profile'}
+            className="profile-pic"
+          />
           </div>
           <h3 className="display-name">{displayName || 'Display Name'}</h3>
           <p className="username">{username || 'Username'}</p>

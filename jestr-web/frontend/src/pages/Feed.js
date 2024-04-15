@@ -82,7 +82,9 @@ const Feed = () => {
   useEffect(() => {
     const fetchUsername = async () => {
       try {
-        const response = await fetch(`https://h7lqceo6i2.execute-api.us-east-2.amazonaws.com/getUsername?email=${loggedInUser.email}`);
+        const response = await fetch(`https://h7lqceo6i2.execute-api.us-east-2.amazonaws.com/getUsername?email=${loggedInUser.email}`, {
+          mode: 'no-cors' // Add this option to disable CORS for development purposes
+        });
         if (!response.ok) throw new Error('Failed to fetch username');
         const data = await response.json();
         setUsername(data.username);
@@ -91,20 +93,26 @@ const Feed = () => {
         setUsername('Anon');
       }
     };
-  
+    
     const getProfilePic = async () => {
       try {
-        const profilePicUrl = await getFromS3(`${loggedInUser.email}-profilePic.jpg`);
-        console.log('Profile picture URL:', profilePicUrl);
-        // Set the profile picture URL or perform any other necessary actions
+        if (loggedInUser && loggedInUser.email) {
+          const key = `${loggedInUser.email}-profilePic.jpg`;
+          console.log('Fetching profile picture from S3 with key:', key);
+          const profilePicUrl = await getFromS3(key);
+          console.log('Profile picture URL:', profilePicUrl);
+          console.log('profilePicUrl value before setting state:', profilePicUrl || loggedInUser.profilePic);
+          setProfilePicUrl(profilePicUrl || loggedInUser.profilePic);
+        } else {
+          console.log('Logged-in user email not available');
+        }
       } catch (error) {
         console.error('Error fetching profile picture:', error);
-        // Fallback to default image or handle the error accordingly
       }
     };
   
     if (loggedInUser) {
-      setUsername(loggedInUser.username);
+      setUsername(loggedInUser.username || ''); // Use the username property if available
       fetchUsername();
       getProfilePic();
     }
@@ -299,13 +307,14 @@ const handleSave = (index) => {
 <ProfilePanel
   isVisible={isProfilePanelVisible}
   onClose={handleProfilePanelClose}
-  profilePicUrl={loggedInUser.profilePic || Anon1Image} // Fallback to default image if profilePic is not available
+  profilePicUrl={profilePicUrl}
   username={username}
   displayName="Display Name"
   followersCount="0"
   followingCount="0"
   onDarkModeToggle={handleDarkModeToggle}
 />
+{console.log('profilePicUrl value in render:', profilePicUrl)}
     <animated.div style={fade} className="card">
         <button onClick={goToPrevMedia} className="prev">&#x3c;</button>
           {MediaElement}
