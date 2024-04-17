@@ -8,30 +8,35 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
+const contentTypeMap = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+};
+
+
 export const uploadToS3 = async (file, key) => {
   console.log('File to be uploaded:', file);
+  console.log('File name:', file.name);
+  console.log('File type:', file.type);
+  console.log('File size:', file.size);
 
-  // Convert the File object to a binary array
-  const binaryArray = await new Promise((resolve, reject) => {
-    const fileReader = new FileReader();
-    fileReader.onload = () => {
-      resolve(fileReader.result);
-    };
-    fileReader.onerror = () => {
-      reject(fileReader.error);
-    };
-    fileReader.readAsArrayBuffer(file);
-  });
+  const fileExtension = key.substring(key.lastIndexOf('.')).toLowerCase();
+  const contentType = contentTypeMap[fileExtension] || 'image/jpeg';
+
+  const fileData = await file.arrayBuffer();
+  console.log('File data:', fileData);
 
   const params = {
     Bucket: 'jestr-bucket',
     Key: key,
-    Body: binaryArray,
-    ContentType: file.type,
+    Body: new Uint8Array(fileData),
+    ContentType: contentType,
   };
 
   try {
-    await s3.upload(params).promise();
+    await s3.putObject(params).promise();
     const fileUrl = `https://jestr-bucket.s3.amazonaws.com/${key}`;
     console.log(`File uploaded successfully: ${fileUrl}`);
     return fileUrl;
@@ -40,6 +45,9 @@ export const uploadToS3 = async (file, key) => {
     throw error;
   }
 };
+  
+
+
 
 export const getFromS3 = async (key) => {
   const params = {
@@ -49,13 +57,14 @@ export const getFromS3 = async (key) => {
 
   try {
     const data = await s3.getObject(params).promise();
-    // Assuming data.Body is an instance of ArrayBuffer
-    if (data.Body instanceof ArrayBuffer) {
-      const blob = new Blob([data.Body], { type: 'image/jpeg' });
-      return URL.createObjectURL(blob);
-    } else {
+    if (!data || !data.Body) {
+      console.error('No data or no body returned from S3:', data);
       throw new Error("No image data returned from S3");
     }
+    console.log('Content Type:', data.ContentType);
+
+    const blob = new Blob([data.Body], { type: data.ContentType || 'image/jpeg' });
+    return URL.createObjectURL(blob);
   } catch (error) {
     console.error('Error retrieving file from S3:', error);
     throw error;

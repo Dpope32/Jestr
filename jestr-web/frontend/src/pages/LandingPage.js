@@ -71,49 +71,54 @@ function LandingPage() {
     console.log('Preparing to complete profile with:', profileData);
   
     try {
-      let profilePicUrl = null;
+      let profilePicBase64 = null;
   
       // Check if there is a profilePic to upload
       if (profilePic) {
         console.log('Profile picture file selected:', profilePic);
   
-        // First, upload the profile picture to S3 if a file is selected
-        console.log('Uploading profile picture to S3...');
-        profilePicUrl = await uploadToS3(profilePic, `${email}-profilePic.jpg`);
-        console.log('Profile picture uploaded to S3 successfully at URL:', profilePicUrl);
-        profileData.profilePic = profilePicUrl;
+        // Convert the file to base64
+        const fileReader = new FileReader();
+        fileReader.onloadend = async () => {
+          profilePicBase64 = fileReader.result.split(',')[1];
+          console.log('Profile picture converted to base64:', profilePicBase64);
+  
+          // Add the base64-encoded profile picture to the profileData object
+          profileData.profilePic = profilePicBase64;
+  
+          // Log the data being sent in the request to complete the profile
+          console.log('Sending complete profile request with data:', profileData);
+  
+          // Then, complete the profile using the existing completeProfile function
+          const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(profileData),
+          });
+  
+          // Check and log the response from the completeProfile request
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Profile completed successfully with response:', data);
+            // Pass the logged-in user's information to the Feed component
+            const user = {
+              email: data.user.email,
+              username: data.user.username,
+              profilePic: data.user.profilePic
+            };
+            console.log('Navigating to feed with user data:', user);
+            navigate('/feed', { state: { user } });
+          } else {
+            const errorData = await response.json();
+            console.error('Complete profile error response:', errorData);
+            toast.error(errorData.message || 'Failed to complete profile');
+          }
+        };
+        fileReader.readAsDataURL(profilePic);
       } else {
         console.log('No profile picture to upload.');
-      }
-  
-      // Log the data being sent in the request to complete the profile
-      console.log('Sending complete profile request with data:', profileData);
-  
-      // Then, complete the profile using the existing completeProfile function
-      const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(profileData),
-      });
-  
-      // Check and log the response from the completeProfile request
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Profile completed successfully with response:', data);
-        // Pass the logged-in user's information to the Feed component
-        const user = {
-          email: data.user.email,
-          username: data.user.username,
-          profilePic: profilePicUrl || data.user.profilePic // Use the uploaded profilePicUrl or the one from the response
-        };
-        console.log('Navigating to feed with user data:', user);
-        navigate('/feed', { state: { user } });
-      } else {
-        const errorData = await response.json();
-        console.error('Complete profile error response:', errorData);
-        toast.error(errorData.message || 'Failed to complete profile');
       }
     } catch (error) {
       console.error('Complete profile error caught:', error);

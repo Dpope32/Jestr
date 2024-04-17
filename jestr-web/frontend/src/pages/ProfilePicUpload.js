@@ -4,35 +4,29 @@ const ProfilePicUpload = ({ onProfilePicChange }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
 
   const handleProfilePicChange = (e) => {
-    const file = e.target.files && e.target.files[0];
+    const input = e.target;
+    const file = input.files && input.files[0];
+  
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreviewUrl(reader.result);
+      console.log('Selected file:', file);
+  
+      // Validate file type
+      if (['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+        setPreviewUrl(URL.createObjectURL(file));
         onProfilePicChange(file); // Call the parent's onProfilePicChange callback with the file
-      };
-      reader.readAsDataURL(file);
+      } else {
+        alert('Only JPG, PNG, and GIF files are allowed.');
+        input.value = ''; // Reset the file input
+        setPreviewUrl(null);
+        onProfilePicChange(null);
+      }
     } else {
+      console.log('No file selected');
       setPreviewUrl(null);
       onProfilePicChange(null); // Call the parent's onProfilePicChange callback with null
     }
   };
-
-// ProfilePicUpload.js
-const handleFileChange = (e) => {
-  const file = e.target.files && e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPreviewUrl(reader.result);
-    };
-    reader.readAsDataURL(file);
-    onProfilePicChange(file); // Pass the File object to the parent's callback
-  } else {
-    setPreviewUrl(null);
-    onProfilePicChange(null); // Pass null to the parent's callback
-  }
-};
+  
 
   return (
     <div className="profile-pic-btn">

@@ -30,7 +30,6 @@ const ProfilePanel = ({
   followingCount,
   onDarkModeToggle = () => {} // Default function if not passed
 }) => {
-  console.log('profilePicUrl value in ProfilePanel:', profilePicUrl);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [username, setUsername] = useState('');
@@ -76,7 +75,6 @@ const ProfilePanel = ({
 
   const getProfilePic = () => {
     if (profilePicUrl) {
-      console.log('Profile picture URL:', profilePicUrl);
       // Check if the URL starts with 'data:image'
       if (profilePicUrl.startsWith('data:image')) {
         // If it's a base64-encoded URL, return it directly

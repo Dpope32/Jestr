@@ -82,34 +82,29 @@ const Feed = () => {
   useEffect(() => {
     const fetchUsername = async () => {
       try {
-        const response = await fetch(`https://h7lqceo6i2.execute-api.us-east-2.amazonaws.com/getUsername?email=${loggedInUser.email}`, {
-          mode: 'no-cors' // Add this option to disable CORS for development purposes
-        });
-        if (!response.ok) throw new Error('Failed to fetch username');
-        const data = await response.json();
-        setUsername(data.username);
+        setUsername('Anon');
       } catch (error) {
         console.error('Error fetching username:', error);
         setUsername('Anon');
       }
     };
     
-    const getProfilePic = async () => {
-      try {
-        if (loggedInUser && loggedInUser.email) {
-          const key = `${loggedInUser.email}-profilePic.jpg`;
-          console.log('Fetching profile picture from S3 with key:', key);
-          const profilePicUrl = await getFromS3(key);
-          console.log('Profile picture URL:', profilePicUrl);
-          setProfilePicUrl(profilePicUrl);
+    const getProfilePic = () => {
+      if (profilePicUrl) {
+        console.log('Profile picture URL:', profilePicUrl);
+        if (profilePicUrl.startsWith('data:image')) {
+          // If it's a base64-encoded URL, return it directly
+          return profilePicUrl;
         } else {
-          console.log('Logged-in user email not available');
+          // If it's a regular URL, return it as is
+          return profilePicUrl;
         }
-      } catch (error) {
-        console.error('Error fetching profile picture:', error);
-        setProfilePicUrl(Anon1Image); // Set to a default profile picture URL
+      } else {
+        console.log('Profile picture URL not available');
+        return Anon1Image; // Return a default profile picture URL
       }
     };
+    
   
     if (loggedInUser) {
       setUsername(loggedInUser.username || ''); // Use the username property if available
@@ -124,21 +119,20 @@ const Feed = () => {
         if (loggedInUser && loggedInUser.email) {
           const key = `${loggedInUser.email}-profilePic.jpg`;
           console.log('Fetching profile picture from S3 with key:', key);
-          const base64ProfilePicUrl = await getFromS3(key);
-          console.log('Base64 profile picture URL:', base64ProfilePicUrl);
-          setProfilePicUrl(base64ProfilePicUrl);
+          const objectURL = await getFromS3(key);
+          setProfilePicUrl(objectURL); // use the state setter function here
         } else {
           console.log('Logged-in user email not available');
           setProfilePicUrl(Anon1Image); // Set to a default profile picture URL
         }
       } catch (error) {
         console.error('Error fetching profile picture:', error);
-        setProfilePicUrl(Anon1Image); // Set to a default profile picture URL
+        setProfilePicUrl(Anon1Image); // Fallback to default image
       }
     };
   
     fetchProfilePicture();
-  }, [loggedInUser]);
+  }, [loggedInUser]); 
   
   
 
