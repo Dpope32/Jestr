@@ -46,6 +46,7 @@ const Feed = () => {
   const [endOfList, setEndOfList] = useState(false);
   const [username, setUsername] = useState('');
   const [likedIndices, setLikedIndices] = useState(new Set());
+  const [displayName, setDisplayName] = useState('');
   const [savedPosts, setSavedPosts] = useState([]);
   const [posterProfilePic, setposterProfilePic] = useState([]); 
   const [posterUsername, setposterUsername] = useState([]); 
@@ -91,7 +92,6 @@ const Feed = () => {
     
     const getProfilePic = () => {
       if (profilePicUrl) {
-        console.log('Profile picture URL:', profilePicUrl);
         if (profilePicUrl.startsWith('data:image')) {
           // If it's a base64-encoded URL, return it directly
           return profilePicUrl;
@@ -110,6 +110,7 @@ const Feed = () => {
       setUsername(loggedInUser.username || ''); // Use the username property if available
       fetchUsername();
       getProfilePic();
+      setDisplayName(loggedInUser.displayName || 'Display Name');
     }
   }, [loggedInUser]);
 
@@ -118,7 +119,6 @@ const Feed = () => {
       try {
         if (loggedInUser && loggedInUser.email) {
           const key = `${loggedInUser.email}-profilePic.jpg`;
-          console.log('Fetching profile picture from S3 with key:', key);
           const objectURL = await getFromS3(key);
           setProfilePicUrl(objectURL); // use the state setter function here
         } else {
@@ -145,7 +145,6 @@ const Feed = () => {
   }, []);
 
   const goToNextMedia = () => {
-    console.log('Next button clicked');
 
     let nextIndex;
     if (navHistory.length < shuffledMedia.length) {
@@ -209,7 +208,6 @@ const handleSave = (index) => {
 
   const goToPrevMedia = () => {
     if (navHistory.length <= 1) { // If at the beginning or only one item in history
-      console.log("At the start of the media list.");
       return; // Prevent going back further, or handle as desired
     }
 
@@ -310,7 +308,10 @@ const handleSave = (index) => {
     });
   };
 
-
+  useEffect(() => {
+    console.log('User data in state:', { username, displayName, profilePicUrl });
+  }, [username, displayName, profilePicUrl]);
+  
   
   return (
     <div className={`feed-container ${isDarkMode ? 'dark-mode' : ''}`}>
@@ -325,12 +326,11 @@ const handleSave = (index) => {
   onClose={handleProfilePanelClose}
   profilePicUrl={profilePicUrl}
   username={username}
-  displayName="Display Name"
+  displayName={displayName}
   followersCount="0"
   followingCount="0"
   onDarkModeToggle={handleDarkModeToggle}
 />
-{console.log('profilePicUrl value in render:', profilePicUrl)}
     <animated.div style={fade} className="card">
         <button onClick={goToPrevMedia} className="prev">&#x3c;</button>
           {MediaElement}

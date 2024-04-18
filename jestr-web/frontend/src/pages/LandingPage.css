@@ -131,6 +131,12 @@ color: white;
     align-items: center; /* Center children */
   }
 
+  .-dn-input-label {
+    display: block; /* Make the label take the full width */
+    color: #fff; /* White color for the text */
+    margin-bottom: 0.5em; /* Spacing between label and input */
+  }
+  
   .input-label {
     display: block; /* Make the label take the full width */
     color: #fff; /* White color for the text */
@@ -205,6 +211,7 @@ input[type="username"] {
   align-items: center;
   text-align: center;
 }
+
 
 
 .google-btn {

@@ -13,6 +13,7 @@ function LandingPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +24,7 @@ function LandingPage() {
   const [animationComplete, setAnimationComplete] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(false);
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(false);
+  const [isdisplayNameAvailable, setIsdisplayNameAvailable] = useState(false);
   const defaultProfilePic = "https://via.placeholder.com/150"; 
   const navigate = useNavigate();
 
@@ -66,6 +68,7 @@ function LandingPage() {
       operation: 'completeProfile',
       email: email,
       username: username,
+      displayName: displayName
     };
   
     console.log('Preparing to complete profile with:', profileData);
@@ -106,10 +109,13 @@ function LandingPage() {
             const user = {
               email: data.user.email,
               username: data.user.username,
-              profilePic: data.user.profilePic
+              profilePic: data.user.profilePic,
+              displayName: data.user.displayName
             };
             console.log('Navigating to feed with user data:', user);
             navigate('/feed', { state: { user } });
+            console.log('User data in state:', { username, displayName});
+
           } else {
             const errorData = await response.json();
             console.error('Complete profile error response:', errorData);
@@ -126,9 +132,6 @@ function LandingPage() {
     }
   };
   
-  
-   
-
   const handleLogin = async (event) => {
     event.preventDefault();
     setIsLoading(true);
@@ -158,12 +161,13 @@ function LandingPage() {
           autoClose: 1000,
           onClose: () => {
             console.log('Toast closed, navigating to /feed');
-            console.log('Logged-in user data:', data.user);
             const user = {
               email: data.user.email,
-              username: data.user.username, // Add the username property
-              profilePic: data.user.profilePic // Add the profilePic property
+              username: data.user.username,
+              profilePic: data.user.profilePic,
+              displayName: data.user.displayName // Make sure this line is added
             };
+            console.log('Logged-in user data:', data.user);
             navigate('/feed', { state: { user } });
             setIsLoading(false);
           },
@@ -238,6 +242,18 @@ function LandingPage() {
       setIsUsernameAvailable(false);
     }
   };
+
+  const handledisplayNameChange= async (e) => {
+    const displayNameInput = e.target.value;
+    const displayNameRegex = /^[a-zA-Z0-9]+$/;
+    if (displayNameRegex.test(displayNameInput)) {
+      setDisplayName(displayNameInput);
+      setIsdisplayNameAvailable(true);
+    } else {
+      setIsdisplayNameAvailable(false);
+    }
+  };
+
 
   const handleProfilePicChange = (file) => {
     setProfilePic(file);
@@ -323,6 +339,7 @@ function LandingPage() {
                   {/* Complete profile section */}
                   <motion.div key="username" variants={itemVariants} className="input-container">
                   <ProfilePicUpload onProfilePicChange={handleProfilePicChange} />
+
                     <label className="input-label">Username:</label>
                     <motion.input
                       type="text"
@@ -335,7 +352,23 @@ function LandingPage() {
                         {isUsernameAvailable ? 'Username available!' : 'Username unavailable!'}
                       </span>
                     )}
+
+                  <label className="-dn-input-label">Display Name:</label>
+                    <motion.input
+                      type="text"
+                      value={displayName}
+                      onChange={handledisplayNameChange}
+                      variants={itemVariants}
+                    />
+                    {displayName.length > 0 && (
+                      <span className={`availability-message ${isdisplayNameAvailable ? 'available' : 'unavailable'}`}>
+                        {isdisplayNameAvailable ? 'Display Name available!' : 'Display name unavailable!'}
+                      </span>
+                    )}
+
+
                   </motion.div>
+                  
                   <motion.button key="completeProfile" variants={itemVariants} type="button" className="complete-profile-btn" onClick={handleCompleteProfile}>
                     Complete Profile
                   </motion.button>

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './ProfilePanel.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { updateDisplayName } from '../utils/s3Util';
+import SetDisplayName from './SetDisplayName';
+
 import {
   faUser,
   faHistory,
@@ -25,7 +28,6 @@ const ProfilePanel = ({
   isVisible,
   onClose,
   profilePicUrl,
-  displayName,
   followersCount,
   followingCount,
   onDarkModeToggle = () => {} // Default function if not passed
@@ -33,14 +35,21 @@ const ProfilePanel = ({
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const navigate = useNavigate();
-
+  const [newDisplayName, setNewDisplayName] = useState('');
+  const [showDisplayNameForm, setShowDisplayNameForm] = useState(false);
+  const [showDisplayNameWarning, setShowDisplayNameWarning] = useState(false);
   const location = useLocation();
   const loggedInUser = location.state?.user;
+  
 
   useEffect(() => {
+    console.log('Logged in user from location state:', loggedInUser);
     if (loggedInUser) {
       setUsername(loggedInUser.username);
+      setDisplayName(loggedInUser.displayName);
+      console.log('Updated states:', loggedInUser.username, loggedInUser.displayName);
     }
   }, [loggedInUser]);
 
@@ -68,35 +77,38 @@ const ProfilePanel = ({
     console.log('Favorites clicked');
   };
 
+  const handleDisplayNameClick = () => {
+    setShowDisplayNameForm(true);
+  };
+
   const handleNotificationsClick = () => {
     console.log('Notifications clicked');
   };
   
-
   const getProfilePic = () => {
     if (profilePicUrl) {
-      // Check if the URL starts with 'data:image'
       if (profilePicUrl.startsWith('data:image')) {
-        // If it's a base64-encoded URL, return it directly
         return profilePicUrl;
       } else {
-        // If it's a regular URL, return it as is
         return profilePicUrl;
       }
     } else {
       console.log('Profile picture URL not available');
-      return Anon1Image; // Return a default profile picture URL
+      return Anon1Image;
     }
   };
 
   const handleSignOut = () => {
-    // Sign out logic
     navigate('/'); // Navigate to the root URL (e.g., localhost:3000)
   };
 
+
   const closeModal = () => {
     setShowSettingsModal(false);
+    setShowDisplayNameForm(false);
+    setShowDisplayNameWarning(false);
   };
+
 
   return (
     <div className={`profile-panel ${isDarkMode ? 'dark-mode' : ''}`}>
@@ -106,18 +118,22 @@ const ProfilePanel = ({
         </button>
         <div className="profile-info">
           <div className="profile-pic-container">
-          <img
-            src={getProfilePic()}
-            alt={username || 'Profile'}
-            className="profile-pic"
-          />
+            <img src={getProfilePic()} alt={username || 'Profile'} className="profile-pic" />
           </div>
-          <h3 className="display-name">{displayName || 'Display Name'}</h3>
-          <p className="username">{username || 'Username'}</p>
-          <div className="follow-info">
-            <span>{followersCount || 0} Followers</span>
-            <span>{followingCount || 0} Following</span>
-          </div>
+          <div className="user-info">
+            <div className="info-container">
+              <span className="info-label">Display Name</span>
+              <h3 className="info-value">{displayName || 'Anon'}</h3>
+            </div>
+            <div className="info-container">
+              <span className="info-label">Username</span>
+              <p className="info-value"> @{username || 'Username'}</p>
+            </div>
+            <div className="info-container follow-container">
+              <span className="follow-count">{followersCount || 0} Followers</span>
+              <span className="follow-count">{followingCount || 0} Following</span>
+            </div>
+        </div>
         </div>
         <div className="icon-section">
           <button className="icon-button" onClick={handleProfileClick}>
@@ -141,61 +157,64 @@ const ProfilePanel = ({
             <span>Settings</span>
           </button>
         </div>
+        <button className="icon-button signout-icon" onClick={handleSignOut}>
+          <FontAwesomeIcon icon={faSignOutAlt} className="icon" />
+        </button>
         <FontAwesomeIcon
           icon={faMoon}
           className={`dark-icon ${isDarkMode ? 'active' : ''}`}
           onClick={handleDarkModeClick}
         />
-
-
-   {/* Settings Modal */}
-      {showSettingsModal && (
-        <div className="settings-modal-container">
-          <div className="settings-modal">
-            <div className="modal-header">
-              <h2>Settings</h2>
-              <button className="settings-close-button" onClick={closeModal}>
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
+        {showSettingsModal && (
+          <div className="settings-modal-container">
+            <div className="settings-modal">
+              <div className="modal-header">
+                <h2>Settings</h2>
+                <button className="settings-close-button" onClick={closeModal}>
+                  <FontAwesomeIcon icon={faTimes} />
+                </button>
+              </div>
+              {showDisplayNameForm ? (
+                <SetDisplayName user={loggedInUser} onClose={(updated) => {
+                  setShowDisplayNameForm(false);
+                  setShowSettingsModal(!updated); // Optionally toggle settings modal based on update status
+                }} />
+              ) : (
+                <div className="modal-options">
+                  <div className="option-item">
+                    <FontAwesomeIcon icon={faUserShield} className="option-icon" />
+                    <span className="option-label">Privacy</span>
+                  </div>
+                  <div className="option-item">
+                    <FontAwesomeIcon icon={faBellSolid} className="option-icon" />
+                    <span className="option-label">Notifications</span>
+                  </div>
+                  <div className="option-item">
+                    <FontAwesomeIcon icon={faPalette} className="option-icon" />
+                    <span className="option-label">Content Preferences</span>
+                  </div>
+                  <div className="option-item">
+                    <FontAwesomeIcon icon={faEdit} className="option-icon" />
+                    <span className="option-label" onClick={handleDisplayNameClick}>Set Display Name</span>
+                  </div>
+                  <div className="option-item">
+                    <FontAwesomeIcon icon={faLock} className="option-icon" />
+                    <span className="option-label">Change Password</span>
+                  </div>
+                  <div className="option-item">
+                    <FontAwesomeIcon icon={faAd} className="option-icon" />
+                    <span className="option-label">Ad Preferences</span>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="modal-options">
-              <div className="option-item">
-                <FontAwesomeIcon icon={faUserShield} className="option-icon" />
-                <span className="option-label">Privacy</span>
-              </div>
-              <div className="option-item">
-                <FontAwesomeIcon icon={faBellSolid} className="option-icon" />
-                <span className="option-label">Notifications</span>
-              </div>
-              <div className="option-item">
-                <FontAwesomeIcon icon={faPalette} className="option-icon" />
-                <span className="option-label">Content Preferences</span>
-              </div>
-              <div className="option-item">
-                <FontAwesomeIcon icon={faEdit} className="option-icon" />
-                <span className="option-label">Set Display Name</span>
-              </div>
-              <div className="option-item">
-                <FontAwesomeIcon icon={faLock} className="option-icon" />
-                <span className="option-label">Change Password</span>
-              </div>
-              <div className="option-item">
-                <FontAwesomeIcon icon={faAd} className="option-icon" />
-                <span className="option-label">Ad Preferences</span>
-              </div>
-            </div>
-            <button className="sign-out-button" onClick={handleSignOut}>
-              <FontAwesomeIcon icon={faSignOutAlt} className="icon" />
-              Sign Out
-            </button>
           </div>
-          
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </div>
   );
+}
   
-};
+  export default ProfilePanel;
 
-export default ProfilePanel;
+

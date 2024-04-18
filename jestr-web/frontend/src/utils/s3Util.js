@@ -8,6 +8,8 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
+const API_GATEWAY_URL = process.env.REACT_APP_API_GATEWAY_URL;
+
 const contentTypeMap = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -15,18 +17,10 @@ const contentTypeMap = {
   '.gif': 'image/gif',
 };
 
-
 export const uploadToS3 = async (file, key) => {
-  console.log('File to be uploaded:', file);
-  console.log('File name:', file.name);
-  console.log('File type:', file.type);
-  console.log('File size:', file.size);
-
   const fileExtension = key.substring(key.lastIndexOf('.')).toLowerCase();
   const contentType = contentTypeMap[fileExtension] || 'image/jpeg';
-
   const fileData = await file.arrayBuffer();
-  console.log('File data:', fileData);
 
   const params = {
     Bucket: 'jestr-bucket',
@@ -46,9 +40,6 @@ export const uploadToS3 = async (file, key) => {
   }
 };
   
-
-
-
 export const getFromS3 = async (key) => {
   const params = {
     Bucket: 'jestr-bucket',
@@ -67,6 +58,28 @@ export const getFromS3 = async (key) => {
     return URL.createObjectURL(blob);
   } catch (error) {
     console.error('Error retrieving file from S3:', error);
+    throw error;
+  }
+};
+
+export const updateDisplayName = async (requestBody) => {
+  try {
+    const response = await fetch('/updateProfile', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: requestBody,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error in updateDisplayName:', error);
     throw error;
   }
 };

@@ -13,7 +13,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 40%;
+  width: 45%;
   height: 100%;
   background: linear-gradient(to bottom right, #888888, #07540c);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -39,9 +39,9 @@
 
 
 .profile-pic {
-  width: 50%;
-  height: 50%;
-  object-fit: cover;
+  width: 60%;
+  height: 60%;
+  object-fit: scale-down;
   border-radius: 50%;
 }
 
@@ -58,11 +58,17 @@
 .dark-mode .display-name {
   color: #fff; /* Or any dark theme color */
 }
-
 .username {
   font-size: 16px;
   color: #5eff81;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .follow-info {
@@ -79,10 +85,57 @@
   align-items: center;
   justify-content: space-around;
   width: 100%;
-  margin-right: 40px;
-  color: #ffffff;
+  margin-right: 60px;
   margin-top: 20px;
+  color: #ffffff;
 }
+
+.info-container {
+  background-color: rgba(255, 255, 255, 0.304); /* Slightly opaque background */
+  border-radius: 10px;
+  width: 80%; /* Adjust width as needed */
+  height: 50%;
+  text-align: center;
+  padding: 4px; /* Reduced padding */
+  margin: 2px 0; /* Reduced margin for tighter spacing */
+}
+
+.follow-container {
+  display: flex;
+  justify-content: space-around;
+  padding: 5px;
+  margin-top: 10px; /* Adjust space from the above container */
+  width: 110%;
+}
+
+.follow-count {
+  background-color: rgba(0, 0, 0, 0.5); /* More visible on different backgrounds */
+  color: #fff; /* White text for better visibility */
+  border-radius: 15px; /* Rounded edges */
+  width: 80%;
+  padding: 3px 8px; /* Adjust padding for smaller height */
+  font-size: 0.7em; /* Adjust font size to match other labels */
+}
+
+.info-label {
+  color: #555;
+  display: block; /* Ensure the label is on its own line */
+  font-size: 0.7em; /* Smaller font size for label */
+  opacity: 0.7; /* Slightly transparent for less emphasis */
+}
+
+.info-value {
+  color: #22ff00;
+  font-size: 1em; /* Adjust font size if needed for space */
+  font-weight: bold; /* Optional: if you want the value to stand out */
+}
+
+.follow-info {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+}
+
 
 .icon-button {
   display: flex;
@@ -135,19 +188,27 @@
 }
 
 .settings-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background-color: #fff;
-  padding: 20px;
+  padding: 15px;
   border-radius: 5px;
-  width: 80%;
-  max-width: 500px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  width: 30%;
 }
+
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  font-weight: 60;
+  background-image: linear-gradient(to bottom, #146811, #93d3b1);
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
 }
 
 .close-modal-button {
@@ -167,7 +228,8 @@
 .option-item {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 5px;
+  font-size: 16px;;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -181,18 +243,107 @@
   margin-right: 10px;
 }
 
-.sign-out-button {
+.signout-icon {
+  position: absolute;
+  bottom: 47px;
+  color: #ffffff;
+  transition: color 0.3s ease;
+  right: 90px;
+  width: 50%;
+}
+
+.signout-icon:hover {
+  color: #ec1818;
+}
+.sign-out-button .icon {
+  margin-right: 5px;
+}
+
+.close-form-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: #000; /* Set the color for the X icon */
+  font-size: 24px; /* Size of the X icon */
+}
+
+.set-display-name-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1010; /* Higher than the settings modal to be on top */
+  width: 90%; /* Adjust width as necessary, or keep it auto */
+}
+
+.warning-text {
+  color: #ff0000; /* red */
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.update-display-name-button {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background-color: #f44336;
-  color: #fff;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 5px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 1rem; /* Add space above the button */
+}
+.set-display-name-modal .close-modal-button {
+  /* ... existing styles ... */
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.display-name-input {
+  width: 100%; /* Take up full width of modal */
+  padding: 10px;
+  margin-bottom: 0.5rem; /* Space below the input field */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Style for the input within the display name form */
+.display-name-form-container input {
+  /* existing styles */
+  margin-bottom: 16px; /* Add some space above the button */
+}
+
+/* Style for the submit button */
+.submit-display-name {
+  background-color: #48c774; /* Green background */
+  color: white;
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
 }
 
-.sign-out-button .icon {
-  margin-right: 5px;
+/* Ensure the display name form container is positioned correctly */
+.display-name-form-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  width: 300px;
 }

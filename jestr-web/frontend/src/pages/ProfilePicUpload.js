@@ -2,20 +2,22 @@ import React, { useState } from 'react';
 
 const ProfilePicUpload = ({ onProfilePicChange }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleProfilePicChange = (e) => {
     const input = e.target;
     const file = input.files && input.files[0];
-  
+
     if (file) {
       console.log('Selected file:', file);
-  
+
       // Validate file type
-      if (['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+      if (file.type === 'image/jpeg') {
         setPreviewUrl(URL.createObjectURL(file));
-        onProfilePicChange(file); // Call the parent's onProfilePicChange callback with the file
+        onProfilePicChange(file);
+        setErrorMessage('');
       } else {
-        alert('Only JPG, PNG, and GIF files are allowed.');
+        setErrorMessage('Only JPEG files are allowed.');
         input.value = ''; // Reset the file input
         setPreviewUrl(null);
         onProfilePicChange(null);
@@ -23,10 +25,10 @@ const ProfilePicUpload = ({ onProfilePicChange }) => {
     } else {
       console.log('No file selected');
       setPreviewUrl(null);
-      onProfilePicChange(null); // Call the parent's onProfilePicChange callback with null
+      onProfilePicChange(null);
+      setErrorMessage('');
     }
   };
-  
 
   return (
     <div className="profile-pic-btn">
@@ -40,10 +42,11 @@ const ProfilePicUpload = ({ onProfilePicChange }) => {
       <input
         id="profilePicInput"
         type="file"
-        accept="image/*"
+        accept="image/jpeg"
         onChange={handleProfilePicChange}
         style={{ display: 'none' }}
       />
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
     </div>
   );
 };
