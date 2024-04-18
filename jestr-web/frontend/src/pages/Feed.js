@@ -12,10 +12,10 @@ import ProfileIcon from '../components/ProfileIcon';
 import ProfilePanel from '../components/ProfilePanel';
 import TopPanel from '../components/TopPanel';
 import BottomPanel from '../components/BottomPanel';
-import AnonImage from '../assets/images/Jestr4.jpg'; 
+import AnonImage from '../assets/images/db/Jestr4.jpg'; 
 import { getFromS3 } from '../utils/s3Util';
 import MemePost from '../components/MemePost';
-import Anon1Image from '../assets/images/Jestr5.jpg';
+import Anon1Image from '../assets/images/db/Jestr5.jpg';
 
 
 
@@ -311,7 +311,7 @@ const handleSave = (index) => {
   useEffect(() => {
     console.log('User data in state:', { username, displayName, profilePicUrl });
   }, [username, displayName, profilePicUrl]);
-  
+
   
   return (
     <div className={`feed-container ${isDarkMode ? 'dark-mode' : ''}`}>

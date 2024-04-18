@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { updateDisplayName } from '../utils/s3Util';
 import SetDisplayName from './SetDisplayName';
+import Anon1Image from '../assets/images/db/Jestr5.jpg';
 
 import {
   faUser,
@@ -22,7 +23,7 @@ import {
   faEdit,
   faAd,
 } from '@fortawesome/free-solid-svg-icons';
-import Anon1Image from '../assets/images/Jestr5.jpg';
+
 
 const ProfilePanel = ({
   isVisible,

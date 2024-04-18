@@ -1,7 +1,7 @@
 // LoadingScreen.js
 import React from 'react';
 import './LoadingScreen.css';
-import logo from '../assets/images/JestrLogo.jpg';
+import logo from '../assets/images/db/JestrLogo.jpg';
 
 function LoadingScreen({ onFinished }) {
   return (

@@ -2,7 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog } from '@fortawesome/free-solid-svg-icons';
 import './ProfilePanel.css';
-import Anon1Image from '../assets/images/Jestr5.jpg';
+import Anon1Image from '../assets/images/db/Jestr5.jpg';
 
 const TopPanel = ({ onProfileClick, profilePicUrl, username }) => {
   return (

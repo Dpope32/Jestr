@@ -2,7 +2,7 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import AnonImage from '../assets/images/Jestr4.jpg'; // Default profile image path
+import AnonImage from '../assets/images/db/Jestr4.jpg'; // Default profile image path
 
 const MemePost = ({ mediaSrc, posterProfilePic, posterUsername }) => {
   return (
