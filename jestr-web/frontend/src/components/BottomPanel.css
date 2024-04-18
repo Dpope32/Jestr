@@ -10,6 +10,7 @@
     right: 0;
     height: 0px;
     bottom: 5;
+    margin-top: 10px;
   }
 
   .bottom-panel.dark-mode {
@@ -21,4 +22,30 @@
     color: #008000; /* This is the hex code for green */
     font-size: 24px;
     cursor: pointer;
+  }
+
+  .bottom-panel {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 20px;
+    background-color: transparent;
+    color: white; /* Ensures icons are visible on a dark background */
+    position: absolute; /* Positioned absolutely within feed-container */
+    bottom: 0; /* Stick to the bottom */
+    left: 0; /* Align to the left edge */
+    right: 0; /* Align to the right edge */
+    z-index: 3; /* Above other content */
+  }
+  
+  
+  .bottom-panel .fa-icon {
+    padding: 10px; /* Add some padding around the icons */
+    cursor: pointer; /* Change cursor to pointer on hover */
+  }
+  
+  /* Additional hover effects for interactive elements */
+  .bottom-panel .fa-icon:hover {
+    background-color: #367c39; /* Slightly darker green on hover */
+    border-radius: 50%; /* Round effect on icons when hovered */
   }

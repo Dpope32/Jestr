@@ -84,6 +84,7 @@ background: rgba(255, 255, 255, 1);
   .card img,
   .card video {
     max-width: 100%; /* Maximum width */
+    margin-top: 60px;
     height: 500px; /* Defined height for consistency */
     object-fit: contain; /* Ensure full media visibility */
     background-color: #000; /* Backdrop for media */
@@ -188,19 +189,6 @@ color: #f44336;
     object-fit: cover;
   }
 
-  /* Feed.css */
-  .top-panel {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: transparent;
-  }
-
-.profile-icon {
-  cursor: pointer;
-  padding: 12px;
-}
-
 .search-settings {
   display: flex;
   gap: 10px;
@@ -211,31 +199,6 @@ color: #f44336;
   font-size: 20px;
 }
 
-.bottom-panel {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 20px;
-  background-color: transparent;
-  color: white; /* Ensures icons are visible on a dark background */
-  position: absolute; /* Positioned absolutely within feed-container */
-  bottom: 0; /* Stick to the bottom */
-  left: 0; /* Align to the left edge */
-  right: 0; /* Align to the right edge */
-  z-index: 3; /* Above other content */
-}
-
-
-.bottom-panel .fa-icon {
-  padding: 10px; /* Add some padding around the icons */
-  cursor: pointer; /* Change cursor to pointer on hover */
-}
-
-/* Additional hover effects for interactive elements */
-.bottom-panel .fa-icon:hover {
-  background-color: #367c39; /* Slightly darker green on hover */
-  border-radius: 50%; /* Round effect on icons when hovered */
-}
 
 .poster-username{
   display: flex;

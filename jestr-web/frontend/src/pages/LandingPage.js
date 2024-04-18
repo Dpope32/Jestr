@@ -70,29 +70,17 @@ function LandingPage() {
       username: username,
       displayName: displayName
     };
-  
     console.log('Preparing to complete profile with:', profileData);
-  
     try {
       let profilePicBase64 = null;
-  
-      // Check if there is a profilePic to upload
       if (profilePic) {
         console.log('Profile picture file selected:', profilePic);
-  
-        // Convert the file to base64
         const fileReader = new FileReader();
         fileReader.onloadend = async () => {
           profilePicBase64 = fileReader.result.split(',')[1];
-          console.log('Profile picture converted to base64:', profilePicBase64);
-  
-          // Add the base64-encoded profile picture to the profileData object
           profileData.profilePic = profilePicBase64;
-  
-          // Log the data being sent in the request to complete the profile
           console.log('Sending complete profile request with data:', profileData);
   
-          // Then, complete the profile using the existing completeProfile function
           const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
             method: 'POST',
             headers: {
@@ -101,21 +89,28 @@ function LandingPage() {
             body: JSON.stringify(profileData),
           });
   
-          // Check and log the response from the completeProfile request
           if (response.ok) {
             const data = await response.json();
             console.log('Profile completed successfully with response:', data);
-            // Pass the logged-in user's information to the Feed component
-            const user = {
-              email: data.user.email,
-              username: data.user.username,
-              profilePic: data.user.profilePic,
-              displayName: data.user.displayName
-            };
-            console.log('Navigating to feed with user data:', user);
-            navigate('/feed', { state: { user } });
-            console.log('User data in state:', { username, displayName});
-
+            if (data && data.user) {
+              const user = {
+                email: data.user.email,
+                username: data.user.username,
+                profilePic: data.user.profilePic,
+                displayName: data.user.displayName
+              };
+              console.log('Navigating to feed with user data:', user);
+              toast.success('Profile completed successfully!', {
+                position: "top-center",
+                autoClose: 1000,
+                onClose: () => {
+                  navigate('/feed', { state: { user } });
+                },
+              });
+            } else {
+              console.error('Invalid user data:', data);
+              toast.error('Incomplete user data received.');
+            }
           } else {
             const errorData = await response.json();
             console.error('Complete profile error response:', errorData);
@@ -131,7 +126,8 @@ function LandingPage() {
       toast.error('An error occurred while completing your profile. Please try again.');
     }
   };
-  
+
+
   const handleLogin = async (event) => {
     event.preventDefault();
     setIsLoading(true);
@@ -253,7 +249,6 @@ function LandingPage() {
       setIsdisplayNameAvailable(false);
     }
   };
-
 
   const handleProfilePicChange = (file) => {
     setProfilePic(file);

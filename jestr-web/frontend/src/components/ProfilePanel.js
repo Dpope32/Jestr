@@ -57,7 +57,7 @@ const ProfilePanel = ({
   if (!isVisible) return null;
 
   const handleProfileClick = () => {
-    console.log('Profile clicked');
+    navigate('/profile', { state: { user: loggedInUser } });
   };
 
   const handleStorageClick = () => {

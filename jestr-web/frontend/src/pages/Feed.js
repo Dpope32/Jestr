@@ -37,7 +37,7 @@ const initialLikeDislikeCounts = media.reduce((acc, _, index) => {
 const Feed = () => {
   const [initLoadComplete, setInitLoadComplete] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [posterprofilePicUrl, setPosterProfilePicUrl] = useState('');
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const location = useLocation();
   const loggedInUser = location.state?.user;
@@ -51,6 +51,7 @@ const Feed = () => {
   const [posterProfilePic, setposterProfilePic] = useState([]); 
   const [posterUsername, setposterUsername] = useState([]); 
   const [dislikedIndices, setDislikedIndices] = useState(new Set());
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [shuffledMedia, setShuffledMedia] = useState([]);
   const [isProfilePanelVisible, setIsProfilePanelVisible] = useState(false);
   const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
@@ -79,6 +80,11 @@ const Feed = () => {
     setShuffledMedia(media.sort(() => Math.random() - 0.5));
     setViewedIndices(new Set([0])); // Start with the first item as viewed
   }, []);
+
+  useEffect(() => {
+    console.log("Received user state on feed page:", location.state.user);
+    // Set local state or context if needed
+  }, [location.state.user]);
   
   useEffect(() => {
     const fetchUsername = async () => {
@@ -133,8 +139,27 @@ const Feed = () => {
   
     fetchProfilePicture();
   }, [loggedInUser]); 
+
+  useEffect(() => {
+    const fetchPosterProfilePicture = async () => {
+      try {
+        if (loggedInUser && loggedInUser.email) {
+          const key = `${loggedInUser.email}-profilePic.jpg`;
+          const objectURL = await getFromS3(key);
+          setPosterProfilePicUrl(Anon1Image); // use the state setter function here
+        } else {
+          console.log('Logged-in user email not available');
+          setPosterProfilePicUrl(Anon1Image); // Set to a default profile picture URL
+        }
+      } catch (error) {
+        console.error('Error fetching profile picture:', error);
+        setPosterProfilePicUrl(Anon1Image); // Fallback to default image
+      }
+    };
   
-  
+    fetchPosterProfilePicture();
+  }, [loggedInUser]); 
+
 
   useEffect(() => {
     const shuffledMediaArray = media.sort(() => Math.random() - 0.5);
@@ -318,7 +343,7 @@ const handleSave = (index) => {
       <TopPanel onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)} profilePicUrl={profilePicUrl} username={username} />
       <div className="meme-poster-info">
   <FontAwesomeIcon icon={faPlus} className="follow-icon" />
-  <img src={profilePicUrl || AnonImage} alt="Poster" className="poster-profile-pic" />
+  <img src={posterprofilePicUrl || Anon1Image} alt="Poster" className="poster-profile-pic" />
   <span className="poster-username">{username || 'Anon'}</span>
 </div>
 <ProfilePanel
