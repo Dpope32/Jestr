@@ -385,7 +385,7 @@ const handleSave = (index) => {
                 <button className="share">
                   <FontAwesomeIcon icon={faShare} />
                 </button>
-                <BottomPanel />
+
           </div>
           </animated.div>
       {isCommentFeedVisible && (

@@ -1,6 +1,6 @@
 .profile-page {
-    width: 320px;
-    height: 620px;
+    width: 375px; /* iPhone width */
+    height: 667px; /* iPhone height */
     margin: 20px auto;
     border-radius: 36px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

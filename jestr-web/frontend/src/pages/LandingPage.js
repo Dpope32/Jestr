@@ -292,15 +292,6 @@ function LandingPage() {
                         value={email}
                         onChange={(e) => {
                           setEmail(e.target.value);
-                          if (e.target.value.length >= 6) {
-                            // Check email availability
-                            fetch(`https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/checkEmail?email=${e.target.value}`)
-                              .then((response) => response.json())
-                              .then((data) => setIsEmailTaken(data.emailExists))
-                              .catch((error) => console.error('Error checking email:', error));
-                          } else {
-                            setIsEmailTaken(false);
-                          }
                         }}
                         variants={itemVariants}
                       />

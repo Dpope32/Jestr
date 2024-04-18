@@ -1,7 +1,7 @@
 /* Feed.css */
 .feed-container {
-    width: 320px;
-    height: 620px;
+  width: 375px; /* iPhone width */
+  height: 667px; /* iPhone height */
     margin: 0 auto;
     border-radius: 36px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -42,7 +42,7 @@
     align-items: center;
     position: relative;
     background-color: #000000;
-    padding-bottom: 45px;
+    padding-bottom: 95px;
     }
   
   
@@ -94,10 +94,10 @@ background: rgba(255, 255, 255, 1);
 .buttons {
   display: flex; /* Use flexbox for horizontal alignment */
   position: absolute; /* Position absolutely to place within the card */
-  bottom: 10px; /* Adjust to create space above the bottom-panel */
+  bottom: 0px; /* Adjust to create space above the bottom-panel */
   left: 50%; /* Center the buttons container horizontally */
   transform: translateX(-50%); /* Align the center of the buttons with the center of the card */
-  gap: 10px; /* Space between each button */
+  gap: 20px; /* Space between each button */
   z-index: 2; /* Above the image, but below the user-info and bottom-panel */
 }
   
