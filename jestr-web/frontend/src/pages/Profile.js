@@ -5,14 +5,19 @@ import ProfilePanel from '../components/ProfilePanel';
 import TopPanel from '../components/TopPanel';
 import BottomPanel from '../components/BottomPanel';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faImages, faVideo, faHeart, faShare, faHome } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faImages, faVideo, faHeart, faShare, faHome, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { ToastContainer, toast } from 'react-toastify';
 
 const Profile = () => {
+  const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
   const location = useLocation();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isProfilePanelVisible, setIsProfilePanelVisible] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState('');
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [newBio, setNewBio] = useState('');
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [activeTab, setActiveTab] = useState('memes');
@@ -23,25 +28,57 @@ const Profile = () => {
     navigate(-1); // This will go back to the previous page
   };
 
-  const updateUserProfile = async ({ username, bio }) => {
+  const handleAddBioClick = () => {
+    setIsEditingBio(true);
+  };
+
+  const handleSaveBioClick = async () => {
     try {
-      // API call would go here
-      const response = await fetch('/api/updateProfile', {
+      const updatedUser = await updateUserProfile({ email: user.email, bio: newBio });
+      if (updatedUser.success) {
+        setBio(newBio);
+        setIsEditingBio(false);
+      } else {
+        console.error('Failed to update bio:', updatedUser.message);
+        // Optionally show an error message to the user
+      }
+    } catch (error) {
+      console.error('Failed to save bio:', error);
+      // Optionally show an error message to the user
+    }
+  };
+
+const updateUserProfile = async () => {
+    const userData = {
+      operation: 'updateUserProfile',
+      email: email,
+      username: username,
+      displayName: displayName,
+      profilePic: previewUrl, // Assuming you have the S3 URL after upload
+      bio: bio,
+      lastLogin: new Date().toISOString(), // Set the last login time to now
+    };
+
+    try {
+      const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updateProfile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, bio }),
+        body: JSON.stringify(userData),
       });
+
       const data = await response.json();
-      if (data.success) {
-        setBio(bio);
+      if (response.ok) {
+        console.log('User profile updated:', data);
+        toast.success('Profile updated successfully!', { /* toast options */ });
+        // Additional actions on successful update
       } else {
-        // Handle failure
+        toast.error('Failed to update profile. ' + data.message);
       }
     } catch (error) {
-      console.error('Failed to update bio', error);
-      // Handle error state here
+      console.error('Update profile error:', error);
+      toast.error('An error occurred while updating your profile. Please try again.');
     }
   };
 
@@ -99,19 +136,38 @@ const Profile = () => {
           <div className="profile-profile-info">
           <div className="display-name">{displayName}</div>
           <div className="username1">@{username}</div>
-          <div className="bio">{bio || "Jestr bio here..."}</div>
+                <div className="bio-container">
+              {!isEditingBio ? (
+               <button className="add-bio-button" onClick={handleAddBioClick}>
+               <FontAwesomeIcon icon={faPlus} /> Add Bio
+             </button>
+              ) : (
+                <div className="bio-edit-container">
+                  <textarea
+                    className="bio-input"
+                    value={newBio}
+                    onChange={(e) => setNewBio(e.target.value)}
+                    placeholder="Describe yourself here..."
+                  />
+                  <button className="save-bio-button" onClick={handleSaveBioClick}>
+                    Save Bio
+                  </button>
+                </div>
+              )}
+              {bio && <div className="bio-display">{bio}</div>}
+            </div>
             <div className="profile-stats">
               <div className="stat-item">
                 <span className="stat-count">{user.followersCount || 0}</span>
-                <span className="stat-label">Followers</span>
+                <span className="stat-label"> Followers</span>
               </div>
               <div className="stat-item">
                 <span className="stat-count">{user.followingCount || 0}</span>
-                <span className="stat-label">Following</span>
+                <span className="stat-label"> Following</span>
               </div>
               <div className="stat-item">
-                <span className="stat-count">{user.memesCount || 0}</span>
-                <span className="stat-label">Memes</span>
+                <span className="stat-count">{user.smirksCount || 0}</span>
+                <span className="stat-label"> Smirks</span>
               </div>
             </div>
             <button className="edit-profile-button">

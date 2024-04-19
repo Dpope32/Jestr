@@ -95,15 +95,55 @@
     padding: 5px;
   }
 
-  .bio {
-    text-align: center;
-    font-size: 14px; /* Adjust as needed */
-    color: #666; /* Adjust as needed */
-    margin-top: 8px; /* Space between username and bio */
-    max-width: 80%; /* To prevent the bio from stretching too wide */
-    margin-bottom: 20px;
-    margin-right: 180px;
-}
+  .add-bio-button, .save-bio-button {
+    margin-right: 200px;
+    font-weight: bold;
+    opacity: 1;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background-color: #f0f0f0; /* light gray background */
+    color: #3333335a; /* dark text color */
+    border: none;
+    padding: 2px 5px;
+  }
+
+  .bio-edit-container {
+    display: flex;
+    align-items: center;
+  }
+
+  .bio-container {
+    margin-bottom: 20px; /* adjust as needed */
+  }
+
+  .bio-input {
+    background-color: #f0f0f0; /* light gray background */
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    width: 100%; /* adjust width as needed */
+    box-sizing: border-box;
+    margin-left: 10px; /* space between textarea and save button */
+  }
+
+  .bio-display {
+    background-color: #f0f0f0; /* light gray background */
+    color: #333;
+    padding: 6px;
+    border-radius: 4px;
+    width: fit-content;
+  }
+  
+  /* Adjust the button size to be smaller */
+  .add-bio-button,
+  .save-bio-button {
+    padding: 5px 10px; /* smaller padding for a smaller button */
+    font-size: 0.8rem; /* smaller font size for a smaller button */
+    margin-left: 10px;
+  }
 
   .profile-stats {
     display: flex; /* Align stats in a row */

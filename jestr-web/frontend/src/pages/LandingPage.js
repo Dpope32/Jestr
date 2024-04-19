@@ -24,6 +24,8 @@ function LandingPage() {
   const [animationComplete, setAnimationComplete] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(false);
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(false);
+  const [bio, setBio] = useState('');
+  const [lastLogin, setLastLogin] = useState('');
   const [isdisplayNameAvailable, setIsdisplayNameAvailable] = useState(false);
   const defaultProfilePic = "https://via.placeholder.com/150"; 
   const navigate = useNavigate();
@@ -68,7 +70,8 @@ function LandingPage() {
       operation: 'completeProfile',
       email: email,
       username: username,
-      displayName: displayName
+      displayName: displayName,
+      profilePic: '', // You'll fill this in after encoding the image to base64
     };
     console.log('Preparing to complete profile with:', profileData);
     try {
@@ -124,6 +127,40 @@ function LandingPage() {
     } catch (error) {
       console.error('Complete profile error caught:', error);
       toast.error('An error occurred while completing your profile. Please try again.');
+    }
+  };
+
+   const handleUpdateUserProfile = async () => {
+    const userData = {
+      operation: 'updateUserProfile',
+      email: email,
+      username: username,
+      displayName: displayName,
+      profilePic: previewUrl, // Assuming you have the S3 URL after upload
+      bio: bio,
+      lastLogin: new Date().toISOString(), // Set the last login time to now
+    };
+
+    try {
+      const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updateUserProfile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log('User profile updated:', data);
+        toast.success('Profile updated successfully!', { /* toast options */ });
+        // Additional actions on successful update
+      } else {
+        toast.error('Failed to update profile. ' + data.message);
+      }
+    } catch (error) {
+      console.error('Update profile error:', error);
+      toast.error('An error occurred while updating your profile. Please try again.');
     }
   };
 
