@@ -46,11 +46,9 @@ const ProfilePanel = ({
   
 
   useEffect(() => {
-    console.log('Logged in user from location state:', loggedInUser);
     if (loggedInUser) {
       setUsername(loggedInUser.username);
       setDisplayName(loggedInUser.displayName);
-      console.log('Updated states:', loggedInUser.username, loggedInUser.displayName);
     }
   }, [loggedInUser]);
 
@@ -123,18 +121,20 @@ const ProfilePanel = ({
           </div>
           <div className="user-info">
             <div className="info-container">
-              <span className="info-label">Display Name</span>
               <h3 className="info-value">{displayName || 'Anon'}</h3>
+              <span className="info-label">Display Name</span>
             </div>
             <div className="info-container">
-              <span className="info-label">Username</span>
               <p className="info-value"> @{username || 'Username'}</p>
+              <span className="info-label">Username</span>
+            </div>
             </div>
             <div className="info-container follow-container">
-              <span className="follow-count">{followersCount || 0} Followers</span>
-              <span className="follow-count">{followingCount || 0} Following</span>
+              <span className="follow-count">{followersCount || 0} 
+              <span className="follower">Followers</span></span>
+              <span className="follow-count">{followingCount || 0} 
+              <span className="following">Following</span></span>
             </div>
-        </div>
         </div>
         <div className="icon-section">
           <button className="icon-button" onClick={handleProfileClick}>

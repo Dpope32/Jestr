@@ -5,12 +5,11 @@
     gap: 70px;
     align-items: center;
     position: fixed;
-    bottom: 0;
+    bottom: 10;
     left: 0;
     right: 0;
     height: 0px;
     bottom: 5;
-    margin-top: 10px;
   }
 
   .bottom-panel.dark-mode {
@@ -19,7 +18,7 @@
   }
   
   .bottom-panel svg {
-    color: #008000; /* This is the hex code for green */
+    color: #000000; /* This is the hex code for green */
     font-size: 24px;
     cursor: pointer;
   }
@@ -28,7 +27,7 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 20px;
+    padding: 40px;
     background-color: transparent;
     color: white; /* Ensures icons are visible on a dark background */
     position: absolute; /* Positioned absolutely within feed-container */

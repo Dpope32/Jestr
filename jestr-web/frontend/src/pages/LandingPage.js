@@ -17,6 +17,7 @@ function LandingPage() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [creationDate, setCreationDate] = useState('');
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [profilePic, setProfilePic] = useState('');
   const [isLogin, setIsLogin] = useState(false);
@@ -130,51 +131,14 @@ function LandingPage() {
     }
   };
 
-   const handleUpdateUserProfile = async () => {
-    const userData = {
-      operation: 'updateUserProfile',
-      email: email,
-      username: username,
-      displayName: displayName,
-      profilePic: previewUrl, // Assuming you have the S3 URL after upload
-      bio: bio,
-      lastLogin: new Date().toISOString(), // Set the last login time to now
-    };
-
-    try {
-      const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updateUserProfile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        console.log('User profile updated:', data);
-        toast.success('Profile updated successfully!', { /* toast options */ });
-        // Additional actions on successful update
-      } else {
-        toast.error('Failed to update profile. ' + data.message);
-      }
-    } catch (error) {
-      console.error('Update profile error:', error);
-      toast.error('An error occurred while updating your profile. Please try again.');
-    }
-  };
-
-
   const handleLogin = async (event) => {
     event.preventDefault();
     setIsLoading(true);
-
     const userData = {
       operation: 'signin',
       email: email,
       password: password,
     };
-
     try {
       console.log('Sending login request...');
       const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/signin', {
@@ -184,7 +148,6 @@ function LandingPage() {
         },
         body: JSON.stringify(userData),
       });
-
       const data = await response.json();
       console.log('Login response:', data);
       if (response.ok && data.message === 'Sign-in successful.' && data.user && data.user.email) {
@@ -198,7 +161,11 @@ function LandingPage() {
               email: data.user.email,
               username: data.user.username,
               profilePic: data.user.profilePic,
-              displayName: data.user.displayName // Make sure this line is added
+              headerPic: data.user.headerPic,
+              displayName: data.user.displayName, 
+              bio: data.user.bio, 
+              lastLogin: data.user.LastLogin,
+              creationDate: data.user.creationDate
             };
             console.log('Logged-in user data:', data.user);
             navigate('/feed', { state: { user } });

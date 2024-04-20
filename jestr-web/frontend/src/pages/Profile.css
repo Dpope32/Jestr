@@ -1,17 +1,19 @@
+
+
 .profile-page {
     width: 375px; /* iPhone width */
     height: 667px; /* iPhone height */
     margin: 20px auto;
     border-radius: 36px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background: #ffffff;
+    background: #0f9214;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     overflow: hidden;
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 150px; /* To accommodate profile banner */
+    padding-top: 120px; 
   }
     
       .profile-page .dark-mode {
@@ -39,46 +41,81 @@
     overflow-y: auto;
     z-index: 1;
     width: 100%;
-    padding-top: 150px;
+    padding-top: 150px; 
+    background-color:hsla(130,74%,37%,1);
+    background-image:
+    radial-gradient(at 40% 20%, hsla(126,100%,74%,0.99) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsla(153,51%,47%,1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(0,0%,0%,0.1) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsla(125,100%,50%,1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(126,65%,26%,1) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(130,100%,70%,0.71) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(133,100%,50%,1) 0px, transparent 50%);
   }
   
+  .dark-mode {
+    background: #121212;
+    color: #ffffff;
+}
+
+
   .profile-banner {
-    background: linear-gradient(135deg, #c3e2c3 0%, #c3cfe2 100%);
+    cursor: pointer; /* Ensures it's visibly clickable */
+    z-index: 10; /* Test higher z-index to bring to front */
+    background-color:transparent;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     height: 150px;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    background-color: green;
     background-size: cover;
-    background-position: center;
-    z-index: -1;
+    width: 100%;
+    background-image: url(''); /* Default image path */
   }
 
+
   .profile-header {
-    display: flex;
+    text-align: center;
+    display: flex;;
+    top: 0px;
+    border-top: 1px solid #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* Center items vertically */
-    background-color: #fff;
-    border-radius: 20px;
+    background-color:hsla(130,74%,37%,1);
+    background-image:
+    radial-gradient(at 40% 20%, hsla(127, 24%, 44%, 0.99) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsla(153,51%,47%,1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(0,0%,0%,0.1) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsla(125,100%,50%,1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(126,65%,26%,1) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(130,100%,70%,0.71) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(133,100%,50%,1) 0px, transparent 50%);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     position: relative;
-    z-index: 2;
-    margin-top: -40px;
-    height: auto; /* Adjust for content size */
+    z-index: 12;
+    height: auto; /* Allow the header to adjust to its content */
+    padding: 12px; /* Add some padding for spacing */
+    
   }
   
+  .profile-icon {
+    cursor: pointer;
+    padding: 2px;
+    z-index: 5;
+    border-radius: 50%;
+  }
   
   .profile-profile-pic {
-    width: 120px;
-    height: 120px;
+    width: 120px; /* Adjust size if needed */
+    height: 120px; /* Adjust size if needed */
     border-radius: 50%;
     object-fit: cover;
-    margin-right: 200px;
     border: 4px solid #fff;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-top: -40px; 
+    position: absolute;
+    top: -60px; /* Adjust to overlap the banner */
   }
   
   .profile-profile-info {
@@ -87,16 +124,117 @@
     align-items: center;
     width: 100%;
   }
+
+  .display-name {
+    color: #00ff37;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    order: -3;
+    margin-top: 40px;
+    font-size: 30px;
+  }
   
-  .display-name, .username1 {
-    margin-right: 200px;
+  .username1, .display-name {
     font-weight: bold;
-    opacity: 1;
     padding: 5px;
+    text-align: center;
   }
 
-  .add-bio-button, .save-bio-button {
-    margin-right: 200px;
+  .username1{
+    color: #000000; /* Chosen color for display name */
+    font-size: 16px;
+    box-shadow: #5eff81;
+    margin-top: -30px;
+    margin-right: -280px;
+  }
+
+  .created-container {
+    order: -6; /* This will ensure the bio is displayed above the stats */
+    z-index: 5; /* Higher z-index to ensure it's above other elements if necessary */
+      border-top: 1px solid #e0e0e0;
+      border-right: 1px solid #e0e0e0;
+      border-left: 1px solid #e0e0e0;
+      border-bottom: 1px solid #e0e0e0;
+      background-color:rgb(18, 76, 28);
+      background-image:
+      radial-gradient(at 0% 50%, hsla(0, 0%, 0%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgb(0, 0, 0) 0px, transparent 50%),
+      radial-gradient(at 80% 100%, hsla(0, 0%, 0%, 0.71) 0px, transparent 50%);
+      border-radius: 12px;
+      padding: 8px;
+      font-size: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      color: white;
+      margin-left: 260px;
+      margin-top: -10px;
+  }
+
+
+  .date-date {
+    color: #5eff81;
+    padding: 1px;
+    
+  }
+
+  .bio-container {
+    order: -5; /* This will ensure the bio is displayed above the stats */
+    z-index: 5; /* Higher z-index to ensure it's above other elements if necessary */
+      margin-top: -70px; /* Adjust this value to move the bio up */
+      margin-left: -300px;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+    }
+
+
+
+  .bio-container, .stat-container {
+    margin-bottom: 5px; /* Add some bottom margin for spacing */
+  }
+
+  .stat-container {    
+    background-color:rgb(18, 76, 28);
+    background-image:
+    radial-gradient(at 0% 50%, hsla(0, 0%, 0%, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgb(0, 0, 0) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(0, 0%, 0%, 0.71) 0px, transparent 50%);
+    border-radius: 12px;
+    padding: 8px 4px;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+  justify-content: space-around;
+  margin-bottom: 24px;
+  width: 95%;
+    border-top: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0;
+    border-left: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  
+
+ .bio-edit-container, .add-bio-button {
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .add-bio-button {
+    justify-content: center;
+    text-align: center;
+    opacity: 1;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background-color: #f0f0f0; /* light gray background */
+    color: #3333335a; /* dark text color */
+    border: none;
+  }
+  
+  .save-bio-button {
+    margin-right: 10px;
     font-weight: bold;
     opacity: 1;
     padding: 5px;
@@ -112,62 +250,97 @@
   .bio-edit-container {
     display: flex;
     align-items: center;
+    margin-top: 10px;
+    width: 80%;;
+    margin-left: 100px;
   }
 
-  .bio-container {
-    margin-bottom: 20px; /* adjust as needed */
+  .profile-profile-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
   }
 
   .bio-input {
-    background-color: #f0f0f0; /* light gray background */
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 10px;
-    width: 100%; /* adjust width as needed */
-    box-sizing: border-box;
-    margin-left: 10px; /* space between textarea and save button */
+    background-color:rgb(18, 76, 28);
+    background-image:
+    radial-gradient(at 0% 50%, hsla(0, 0%, 0%, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgb(0, 0, 0) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(0, 0%, 0%, 0.71) 0px, transparent 50%);
+    border-radius: 12px;
+    padding: 8px 8px;
+    font-size: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: #ffffff;
+    margin-left: 24px;
+    border-top: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0;
+    border-left: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+    margin-top: 30px;
   }
 
   .bio-display {
-    background-color: #f0f0f0; /* light gray background */
-    color: #333;
-    padding: 6px;
-    border-radius: 4px;
-    width: fit-content;
+    background-color: rgb(18, 76, 28);
+    background-image: radial-gradient(at 0% 50%, hsla(0, 0%, 0%, 0.1) 0px, transparent 50%),
+                      radial-gradient(at 0% 100%, rgb(0, 0, 0) 0px, transparent 50%),
+                      radial-gradient(at 80% 100%, hsla(0, 0%, 0%, 0.71) 0px, transparent 50%);
+    border-radius: 12px;
+    padding: 8px 8px;
+    font-size: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: #ffffff;
+    margin-left: 24px;
+    border-top: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0;
+    border-left: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+    margin-top: 30px;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
   }
+
+
   
   /* Adjust the button size to be smaller */
   .add-bio-button,
   .save-bio-button {
     padding: 5px 10px; /* smaller padding for a smaller button */
     font-size: 0.8rem; /* smaller font size for a smaller button */
-    margin-left: 10px;
+    margin-left: 6x;
+    margin-top: 30px;
   }
 
   .profile-stats {
-    display: flex; /* Align stats in a row */
-    justify-content: center; /* Center stats horizontally */
     width: 100%;
-    margin-bottom: 10px;
-  }
-
-.stat-item {
-  margin: 0 10px; /* Spacing between stat items */
+    display: flex;
+    justify-content: space-around;
+    padding: px 0;
 }
 
-  .stat-count {
-    font-size: 20px;
-    font-weight: bold;
-  }
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #000;
+}
+
+.stat-count {
+  font-weight: bold;
+  color: #5eff81;
+  font-size: large;
+}
   
-  .stat-label {
-    font-size: 14px;
-    color: #888;
-  }
-.edit-profile-button {
-  background-color: #007bff;
-  color: #fff;
+.stat-label {
+  font-size: smaller;
+  color: #ffffff; /* Text white for visibility */
+}
+
+  .edit-profile-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
   border: none;
   border-radius: 4px;
   padding: 8px 16px; /* Adjust padding as needed */
@@ -185,33 +358,57 @@
   
   .profile-content {
     flex: 1;
-    background-color: #5555551d;
+    background-color: rgba(255, 255, 255, 0.772);
   }
   
   .profile-tabs {
     display: flex;
-    justify-content: space-around;
-    border-bottom: 1px solid #ddd;
-    z-index: 3;
+    justify-content: center;
+    background-color:rgb(18, 76, 28);
+    background-image:
+    radial-gradient(at 0% 50%, hsla(0, 0%, 0%, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgb(0, 0, 0) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(0, 0%, 0%, 0.71) 0px, transparent 50%);
+    border-bottom: none;
+    z-index: 999;
     width: 100%;
     position: sticky;
-    background-color: #fff;
+    top: 0; /* Ensures tabs stick to the top when scrolling */
+    border-top: 1px solid #e0e0e0;
+    align-items: center;
+    gap: 4px;
+    margin-top: -30px;
   }
   
   .tab {
     padding: 10px;
     cursor: pointer;
-    font-size: 12px;
-    color: #888;
+    font-size: 14px;
+    color: transparent;
+    margin-left: 6px;
     display: flex;
     align-items: center;
     font-weight: bold;
+    padding: 10px;
+    color: #fff; /* Text white for visibility */
+    align-items: center;
+    transition: background-color 0.3s ease; /* Smooth background transition */
   }
-  
-  .tab.active {
-    color: #007bff;
-    border-bottom: 2px solid #007bff;
-  }
+
+  .tab.favorites .fa-heart::before {
+    content: "\f49e"; /* Unicode for 'fa-box-open', representing storage */
+}
+
+.edit-profile-tab {
+  flex-grow: 1;
+  text-align: center;
+}  
+
+.tab.active {
+  color: #a3299f;
+  background-color: #27632a; /* Darker green for the active tab */
+  border-radius: 4px;
+}
   
   .tab svg {
     margin-right: 5px;
@@ -240,10 +437,62 @@
     right: 0;
     padding: 10px;
     z-index: 10; /* Increased to ensure it's above other content */
+    width: 50px;
   }
   
-  .profile-icon {
+
+  .header-pic-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     cursor: pointer;
-    padding: 5px;
-    z-index: 5
+    position: relative;
+    height: 100%;
   }
+  
+  .header-pic-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .header-pic-label {
+    align-items: center;
+    font-size: 18px;
+    color: #333;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat; /* This ensures the image doesn't repeat */
+  }
+
+  .header-pic {
+    width: 100%;
+    height: 150px; /* Adjust the height as needed */
+    object-fit: cover;
+  }
+  
+  
+  .header-pic-upload img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+  }
+  .header-preview {
+      cursor: pointer; /* Ensures it's visibly clickable */
+      z-index: 11; /* Test higher z-index to bring to front */
+      background-color:transparent;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      height: 120px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-size: cover;
+      width: 100%;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat; /* This ensures the image doesn't repeat */
+    }

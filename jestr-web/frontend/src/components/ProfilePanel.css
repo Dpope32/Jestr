@@ -15,15 +15,16 @@
   left: 0;
   width: 45%;
   height: 100%;
-  background: linear-gradient(to bottom right, #888888, #07540c);
+  background: linear-gradient(to bottom right, #424242, #07400b);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   padding: 20px;
   transition: background 0.3s ease;
+  border: 1px solid #000000;
 }
 
 .profile-panel.dark-mode {
-  background: linear-gradient(to bottom right, #1c1c1c, #0f0f0f);
+  background: linear-gradient(to bottom right, #b6b6b6, #000000);
 }
 
 .close-button {
@@ -41,8 +42,11 @@
 .profile-pic {
   width: 60%;
   height: 60%;
-  object-fit: scale-down;
-  border-radius: 50%;
+  object-fit: contain;
+  border-radius: 60%;
+  border: 2px solid #26ff00;
+  margin-bottom: 10px;
+  
 }
 
 .profile-info {
@@ -59,15 +63,16 @@
   color: #fff; /* Or any dark theme color */
 }
 .username {
-  font-size: 16px;
+  font-size: 14px;
   color: #5eff81;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .user-info {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  gap: 8px;
   width: 100%;
 }
 
@@ -90,13 +95,14 @@
   color: #ffffff;
 }
 
+
 .info-container {
   background-color: rgba(255, 255, 255, 0.304); /* Slightly opaque background */
   border-radius: 10px;
-  width: 80%; /* Adjust width as needed */
-  height: 50%;
+  width: auto; /* Adjust width as needed */
+  height: 20%;
   text-align: center;
-  padding: 4px; /* Reduced padding */
+  padding: 8px; /* Reduced padding */
   margin: 2px 0; /* Reduced margin for tighter spacing */
 }
 
@@ -105,7 +111,9 @@
   justify-content: space-around;
   padding: 5px;
   margin-top: 10px; /* Adjust space from the above container */
-  width: 110%;
+  margin-bottom: 10px;
+  width: 100%;
+  gap: 4px;
 }
 
 .follow-count {
@@ -118,15 +126,24 @@
 }
 
 .info-label {
-  color: #555;
+  color: #ffffff;
   display: block; /* Ensure the label is on its own line */
   font-size: 0.7em; /* Smaller font size for label */
-  opacity: 0.7; /* Slightly transparent for less emphasis */
+  opacity: 0.8; /* Slightly transparent for less emphasis */
 }
+
+.follower, .following {
+  color: #ffffff;
+  display: block; /* Ensure the label is on its own line */
+  font-size: 1em; /* Smaller font size for label */
+  opacity: 0.8; /* Slightly transparent for less emphasis */
+  padding: 4px;
+}
+
 
 .info-value {
   color: #22ff00;
-  font-size: 1em; /* Adjust font size if needed for space */
+  font-size: 12px; /* Adjust font size if needed for space */
   font-weight: bold; /* Optional: if you want the value to stand out */
 }
 
@@ -141,7 +158,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  width: 100%;
+  width: 120%;
   padding: 10px;
   margin-bottom: 5px;
   background: none;
@@ -149,6 +166,7 @@
   color: #ffffff;
   cursor: pointer;
   transition: background 0.3s ease;
+  margin-left: 30px;
 }
 
 .icon-button:hover {

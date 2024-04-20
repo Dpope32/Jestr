@@ -25,9 +25,10 @@ function importAll(r) {
   return r.keys().map(r);
 }
 
-const images = importAll(require.context('../assets/images/', false, /\.jpg$/));
+const images = importAll(require.context('../assets/images/', false, /\.(jpg|png)$/));
 const videos = importAll(require.context('../assets/videos/', false, /\.mp4$/));
 const media = [...images, ...videos];
+
 
 const initialLikeDislikeCounts = media.reduce((acc, _, index) => {
   acc[index] = 0; // Start every meme with a count of 0
@@ -37,6 +38,7 @@ const initialLikeDislikeCounts = media.reduce((acc, _, index) => {
 const Feed = () => {
   const [initLoadComplete, setInitLoadComplete] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState('');
+  const [headerPicUrl, setHeaderPicUrl] = useState('');
   const [posterprofilePicUrl, setPosterProfilePicUrl] = useState('');
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const location = useLocation();
@@ -45,6 +47,8 @@ const Feed = () => {
   const [navHistory, setNavHistory] = useState([]);
   const [endOfList, setEndOfList] = useState(false);
   const [username, setUsername] = useState('');
+  const [bio, setBio] = useState('');
+  const [creationDate, setCreationDate] = useState('');
   const [likedIndices, setLikedIndices] = useState(new Set());
   const [displayName, setDisplayName] = useState('');
   const [savedPosts, setSavedPosts] = useState([]);
@@ -117,6 +121,11 @@ const Feed = () => {
       fetchUsername();
       getProfilePic();
       setDisplayName(loggedInUser.displayName || 'Display Name');
+      setBio(loggedInUser.bio)
+      setCreationDate(loggedInUser.creationDate);
+      setHeaderPicUrl(loggedInUser.headerPic); // Add this line
+      setCreationDate(loggedInUser.creationDate);
+      console.log('Logged in user from feed.js', loggedInUser);
     }
   }, [loggedInUser]);
 
@@ -334,8 +343,8 @@ const handleSave = (index) => {
   };
 
   useEffect(() => {
-    console.log('User data in state:', { username, displayName, profilePicUrl });
-  }, [username, displayName, profilePicUrl]);
+    console.log('User data in state:', { username, bio, displayName, profilePicUrl });
+  }, [username, displayName, profilePicUrl, bio]);
 
   
   return (

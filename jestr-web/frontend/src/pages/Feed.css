@@ -204,11 +204,12 @@ color: #f44336;
   display: flex;
   align-items: center;
   position: absolute;
-  top: 75px; /* Adjust the top position to bring the user info over the media */
-  left: 60px; /* Adjust the left position to align with the content padding */
+  top: 80px; /* Adjust the top position to bring the user info over the media */
+  left: 90px; /* Adjust the left position to align with the content padding */
   color: white;
   padding: 8px;
   z-index: 2; /* Ensure it's above the media content */
+  font-size: 20px;
 }
 
 .profile-pic {
@@ -216,6 +217,7 @@ color: #f44336;
   height: 40px;
   border-radius: 50%;
   margin-right: 8px;
+  border: 2px solid #ff03f26b;
   }
 
 .poster-profile-pic {
@@ -226,13 +228,14 @@ color: #f44336;
   display: flex;
   align-items: center;
   position: absolute;
-  top: 64px; /* Adjust the top position to bring the user info over the media */
-  left: 10px; /* Adjust the left position to align with the content padding */
+  top: 72px; /* Adjust the top position to bring the user info over the media */
+  left: 30px; /* Adjust the left position to align with the content padding */
   background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
   color: white;
   padding: 8px;
   border-radius: 18px; /* Soften the corners */
   z-index: 2; /* Ensure it's above the media content */
+  border: 2px solid #ffffff83;
 }
 
 
@@ -240,8 +243,8 @@ color: #f44336;
   color: green;
   position: absolute;
   margin-right: 10px; /* Adjust this value to move the icon horizontally */
-  top: 64px;
-  right: 252px;
+  top: 72px;
+  right: 280px;
   color: #2fff2f; /* This is the hex code for green */
   cursor: pointer;
   z-index: 999;
