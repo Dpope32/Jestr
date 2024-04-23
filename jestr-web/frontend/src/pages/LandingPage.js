@@ -7,6 +7,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 import ProfilePicUpload from './ProfilePicUpload';
+import HeaderPicUpload from './HeaderPicUpload';
 
 
 function LandingPage() {
@@ -15,6 +16,7 @@ function LandingPage() {
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [headerPicFile, setHeaderPicFile] = useState(null);
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [creationDate, setCreationDate] = useState('');
@@ -66,25 +68,140 @@ function LandingPage() {
     }
   };
 
-  const handleCompleteProfile = async () => {
-    const profileData = {
-      operation: 'completeProfile',
-      email: email,
-      username: username,
-      displayName: displayName,
-      profilePic: '', // You'll fill this in after encoding the image to base64
-    };
-    console.log('Preparing to complete profile with:', profileData);
-    try {
-      let profilePicBase64 = null;
-      if (profilePic) {
-        console.log('Profile picture file selected:', profilePic);
-        const fileReader = new FileReader();
-        fileReader.onloadend = async () => {
-          profilePicBase64 = fileReader.result.split(',')[1];
-          profileData.profilePic = profilePicBase64;
-          console.log('Sending complete profile request with data:', profileData);
-  
+const handleCompleteProfile = async () => {
+  const profileData = {
+    operation: 'completeProfile',
+    email: email,
+    username: username,
+    displayName: displayName,
+    profilePic: '',
+    headerPic: '',
+  };
+  console.log('Preparing to complete profile with:', profileData);
+  try {
+    let profilePicBase64 = null;
+    let headerPicBase64 = null;
+    if (profilePic) {
+      console.log('Profile picture file selected:', profilePic);
+      const fileReader = new FileReader();
+      fileReader.onloadend = async () => {
+        profilePicBase64 = fileReader.result.split(',')[1];
+        profileData.profilePic = profilePicBase64;
+        console.log('Profile picture base64:', profilePicBase64);
+
+        if (headerPicFile) {
+          console.log('Header picture file selected:', headerPicFile);
+          if (typeof headerPicFile === 'string') {
+            console.log('headerPicFile is a string, attempting to fetch the file from the URL');
+            try {
+              const response = await fetch(headerPicFile);
+              const blob = await response.blob();
+              const file = new File([blob], 'header-picture.jpg', { type: blob.type });
+              const headerFileReader = new FileReader();
+              headerFileReader.onloadend = async () => {
+                headerPicBase64 = headerFileReader.result.split(',')[1];
+                profileData.headerPic = headerPicBase64;
+                console.log('Header picture base64:', headerPicBase64);
+
+                console.log('Sending complete profile request with data:', profileData);
+
+                const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(profileData),
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  console.log('Profile completed successfully with response:', data);
+                  if (data && data.user) {
+                    const user = {
+                      email: data.user.email,
+                      username: data.user.username,
+                      profilePic: data.user.profilePic,
+                      displayName: data.user.displayName,
+                      headerPic: data.user.headerPic,
+                      creationDate: data.user.CreationDate
+                    };
+                    console.log('Navigating to feed with user data:', user);
+                    toast.success('Profile completed successfully!', {
+                      position: "top-center",
+                      autoClose: 1000,
+                      onClose: () => {
+                        navigate('/feed', { state: { user } });
+                      },
+                    });
+                  } else {
+                    console.error('Invalid user data:', data);
+                    toast.error('Incomplete user data received.');
+                  }
+                } else {
+                  const errorData = await response.json();
+                  console.error('Complete profile error response:', errorData);
+                  toast.error(errorData.message || 'Failed to complete profile');
+                }
+              };
+              headerFileReader.readAsDataURL(file);
+            } catch (error) {
+              console.error('Failed to fetch and read header picture file:', error);
+              toast.error('An error occurred while uploading your header picture. Please try again.');
+            }
+          } else if (headerPicFile instanceof File) {
+            const headerFileReader = new FileReader();
+            headerFileReader.onloadend = async () => {
+              headerPicBase64 = headerFileReader.result.split(',')[1];
+              profileData.headerPic = headerPicBase64;
+              console.log('Header picture base64:', headerPicBase64);
+
+              console.log('Sending complete profile request with data:', profileData);
+
+              const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(profileData),
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                console.log('Profile completed successfully with response:', data);
+                if (data && data.user) {
+                  const user = {
+                    email: data.user.email,
+                    username: data.user.username,
+                    profilePic: data.user.profilePic,
+                    displayName: data.user.displayName,
+                    headerPic: data.user.headerPic,      
+                   creationDate: data.user.creationDate
+                  };
+                  console.log('Navigating to feed with user data:', user);
+                  toast.success('Profile completed successfully!', {
+                    position: "top-center",
+                    autoClose: 1000,
+                    onClose: () => {
+                      navigate('/feed', { state: { user } });
+                    },
+                  });
+                } else {
+                  console.error('Invalid user data:', data);
+                  toast.error('Incomplete user data received.');
+                }
+              } else {
+                const errorData = await response.json();
+                console.error('Complete profile error response:', errorData);
+                toast.error(errorData.message || 'Failed to complete profile');
+              }
+            };
+            headerFileReader.readAsDataURL(headerPicFile);
+          } else {
+            console.error('Invalid header picture file:', headerPicFile);
+            toast.error('Invalid header picture file provided. Please try again.');
+          }
+        } else {
+          console.log('No header picture to upload.');
           const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
             method: 'POST',
             headers: {
@@ -92,7 +209,7 @@ function LandingPage() {
             },
             body: JSON.stringify(profileData),
           });
-  
+
           if (response.ok) {
             const data = await response.json();
             console.log('Profile completed successfully with response:', data);
@@ -101,7 +218,9 @@ function LandingPage() {
                 email: data.user.email,
                 username: data.user.username,
                 profilePic: data.user.profilePic,
-                displayName: data.user.displayName
+                displayName: data.user.displayName,
+                headerPic: data.user.headerPic,
+                creationDate: data.user.creationDate, // Include the creationDate from the API response
               };
               console.log('Navigating to feed with user data:', user);
               toast.success('Profile completed successfully!', {
@@ -120,16 +239,54 @@ function LandingPage() {
             console.error('Complete profile error response:', errorData);
             toast.error(errorData.message || 'Failed to complete profile');
           }
-        };
-        fileReader.readAsDataURL(profilePic);
+        }
+      };
+      fileReader.readAsDataURL(profilePic);
+    } else {
+      console.log('No profile picture to upload.');
+      const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Profile completed successfully with response:', data);
+        if (data && data.user) {
+          const user = {
+            email: data.user.email,
+            username: data.user.username,
+            profilePic: data.user.profilePic,
+            displayName: data.user.displayName,
+            headerPic: data.user.headerPic,
+            creationDate: data.user.creationDate
+          };
+          console.log('Navigating to feed with user data:', user);
+          toast.success('Profile completed successfully!', {
+            position: "top-center",
+            autoClose: 1000,
+            onClose: () => {
+              navigate('/feed', { state: { user } });
+            },
+          });
+        } else {
+          console.error('Invalid user data:', data);
+          toast.error('Incomplete user data received.');
+        }
       } else {
-        console.log('No profile picture to upload.');
+        const errorData = await response.json();
+        console.error('Complete profile error response:', errorData);
+        toast.error(errorData.message || 'Failed to complete profile');
       }
-    } catch (error) {
-      console.error('Complete profile error caught:', error);
-      toast.error('An error occurred while completing your profile. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('Complete profile error caught:', error);
+    toast.error('An error occurred while completing your profile. Please try again.');
+  }
+};
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -162,10 +319,10 @@ function LandingPage() {
               username: data.user.username,
               profilePic: data.user.profilePic,
               headerPic: data.user.headerPic,
-              displayName: data.user.displayName, 
-              bio: data.user.bio, 
+              displayName: data.user.displayName,
+              bio: data.user.bio,
               lastLogin: data.user.LastLogin,
-              creationDate: data.user.creationDate
+              creationDate: data.user.creationDate || '', // Use an empty string if creationDate is falsy
             };
             console.log('Logged-in user data:', data.user);
             navigate('/feed', { state: { user } });
@@ -258,6 +415,20 @@ function LandingPage() {
     setProfilePic(file);
   };
 
+  const handleHeaderPicChange = async (file) => {
+    if (file) {
+      try {
+        const fileUrl = await uploadToS3(file, `header-${Date.now()}.jpg`);
+        setHeaderPicFile(fileUrl);
+      } catch (error) {
+        console.error('Failed to upload header picture:', error);
+        toast.error('An error occurred while uploading your header picture. Please try again.');
+      }
+    } else {
+      setHeaderPicFile(null);
+    }
+  };
+
   return (
     <div className="landing-page-container">
  <ToastContainer />
@@ -327,35 +498,46 @@ function LandingPage() {
               {isSignedUp && (
                 <AnimatePresence>
                   {/* Complete profile section */}
+                  <HeaderPicUpload onHeaderPicChange={handleHeaderPicChange} />
                   <motion.div key="username" variants={itemVariants} className="input-container">
                   <ProfilePicUpload onProfilePicChange={handleProfilePicChange} />
 
-                    <label className="input-label">Username:</label>
+                    <label className="input-label">Username</label>
                     <motion.input
                       type="text"
+                      placeholder="What should your @ be?"
                       value={username}
                       onChange={handleUsernameChange}
+                      onBlur={() => {
+                        if (username.trim() === '') {
+                          setUsername('');
+                        }
+                      }}
                       variants={itemVariants}
                     />
-                    {username.length > 0 && (
+                    {username.trim().length > 0 && (
                       <span className={`availability-message ${isUsernameAvailable ? 'available' : 'unavailable'}`}>
                         {isUsernameAvailable ? 'Username available!' : 'Username unavailable!'}
                       </span>
                     )}
-
-                  <label className="-dn-input-label">Display Name:</label>
+                    <label className="input-label">Display Name</label>
                     <motion.input
                       type="text"
+                      placeholder="(yes you can change this later)"
                       value={displayName}
                       onChange={handledisplayNameChange}
+                      onBlur={() => {
+                        if (displayName.trim() === '') {
+                          setDisplayName('');
+                        }
+                      }}
                       variants={itemVariants}
                     />
-                    {displayName.length > 0 && (
+                    {displayName.trim().length > 0 && (
                       <span className={`availability-message ${isdisplayNameAvailable ? 'available' : 'unavailable'}`}>
                         {isdisplayNameAvailable ? 'Display Name available!' : 'Display name unavailable!'}
                       </span>
                     )}
-
 
                   </motion.div>
                   

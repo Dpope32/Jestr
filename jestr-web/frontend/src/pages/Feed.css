@@ -49,9 +49,9 @@
   .prev {
     position: absolute;
     top: 50%;
-    left: 16px;
+    left: 6px;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.33);
     color: #333;
     border: none;
     font-size: 24px;
@@ -62,9 +62,9 @@
   .next {
     position: absolute;
     top: 50%;
-    right: 16px;
+    right: 6px;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.33);
     color: #333;
     border: none;
     font-size: 24px;
@@ -87,7 +87,7 @@ background: rgba(255, 255, 255, 1);
     margin-top: 60px;
     height: 500px; /* Defined height for consistency */
     object-fit: contain; /* Ensure full media visibility */
-    background-color: #000; /* Backdrop for media */
+    background-color: #00000089; /* Backdrop for media */
     margin-bottom: 10px; /* Create space at the bottom for video controls */
   }
   
@@ -205,11 +205,12 @@ color: #f44336;
   align-items: center;
   position: absolute;
   top: 80px; /* Adjust the top position to bring the user info over the media */
-  left: 90px; /* Adjust the left position to align with the content padding */
+  right: 0;
   color: white;
   padding: 8px;
   z-index: 2; /* Ensure it's above the media content */
-  font-size: 20px;
+  font-size: 16px;
+  margin-top: -6px;
 }
 
 .profile-pic {
@@ -228,11 +229,11 @@ color: #f44336;
   display: flex;
   align-items: center;
   position: absolute;
-  top: 72px; /* Adjust the top position to bring the user info over the media */
-  left: 30px; /* Adjust the left position to align with the content padding */
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  top: 28px; /* Adjust the top position to bring the user info over the media */
+  right: -4px; /* Adjust the left position to align with the content padding */
+  background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent background */
   color: white;
-  padding: 8px;
+  padding: 4px;
   border-radius: 18px; /* Soften the corners */
   z-index: 2; /* Ensure it's above the media content */
   border: 2px solid #ffffff83;
@@ -243,8 +244,8 @@ color: #f44336;
   color: green;
   position: absolute;
   margin-right: 10px; /* Adjust this value to move the icon horizontally */
-  top: 72px;
-  right: 280px;
+  top: 34px;
+  left: 310px;
   color: #2fff2f; /* This is the hex code for green */
   cursor: pointer;
   z-index: 999;
@@ -256,7 +257,7 @@ color: #f44336;
 
 .feed svg {
   color: #2fff2f; /* This is the hex code for green */
-  font-size: 18px;
+  font-size: 24px;
   cursor: pointer;
 }
 

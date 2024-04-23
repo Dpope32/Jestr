@@ -1,27 +1,35 @@
 import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 
-const ProfilePicUpload = ({ onProfilePicChange }) => {
-  const [profilePreviewUrl, setProfilePreviewUrl] = useState(null);
+const HeaderPicUpload = ({ onHeaderPicChange }) => {
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef(null);
 
-  const handleProfilePicChange = async (e) => {
-    const file = e.target.files[0];
+  const HeaderPicVariants = {
+    initial: { x: 0 },
+    moved: { x: '0%', transition: { duration: 0.5 } },
+  };
+
+  const handleHeaderPicChange = async (e) => {
+    const file = e.target.files && e.target.files[0];
     if (file) {
+      console.log('Selected file:', file);
       if (/^image\//.test(file.type)) {
-        setProfilePreviewUrl(URL.createObjectURL(file));
-        onProfilePicChange(file); // Pass the file object directly
+        setPreviewUrl(URL.createObjectURL(file));
+        onHeaderPicChange(file); // Pass the file object directly
         setErrorMessage('');
       } else {
         setErrorMessage('Only image files are allowed.');
-        e.target.value = '';
-        setProfilePreviewUrl(null);
-        onProfilePicChange(null);
+        e.target.value = ''; // Reset the file input
+        setPreviewUrl(null);
+        onHeaderPicChange(null);
       }
     } else {
-      setErrorMessage('No file selected.');
-      setProfilePreviewUrl(null);
-      onProfilePicChange(null);
+      console.log('No file selected');
+      setPreviewUrl(null);
+      onHeaderPicChange(null);
+      setErrorMessage('');
     }
   };
 
@@ -30,25 +38,27 @@ const ProfilePicUpload = ({ onProfilePicChange }) => {
   };
 
   return (
-    <div className="profile-pic-upload" onClick={triggerFileInput}>
-      {profilePreviewUrl ? (
-        <div className="profile-preview">
-          <img src={profilePreviewUrl} alt="Profile Preview" />
-        </div>
+    <motion.div
+      className={`header-pic-upload ${previewUrl ? 'header-pic-preview' : ''}`}
+      variants={HeaderPicVariants}
+      onClick={triggerFileInput}
+    >
+      {previewUrl ? (
+        <img src={previewUrl} alt="header-preview" />
       ) : (
-        <span className="profile-pic-label">Click here to upload a profile picture</span>
+        <span className="header-pic-label">Click here to upload a header</span>
       )}
       <input
-        id="profilePicInput"
+        id="headerPicInput"
         type="file"
         accept="image/*"
-        onChange={handleProfilePicChange}
+        onChange={handleHeaderPicChange}
         style={{ display: 'none' }}
         ref={fileInputRef}
       />
       {errorMessage && <p className="error-message">{errorMessage}</p>}
-    </div>
+    </motion.div>
   );
 };
 
-export default ProfilePicUpload;
+export default HeaderPicUpload;

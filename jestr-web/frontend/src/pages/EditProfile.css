@@ -1,0 +1,168 @@
+/* EditProfile.css */
+
+.profile-page.dimmed::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.859);
+    z-index: 10; /* Below the modal's z-index */
+  }
+
+  .edit-profile-content {
+    box-sizing: border-box;  /* Include padding in width calculation */
+    background: #2b2b2b;
+  }
+  
+  .edit-profile-modal {
+    position: fixed; /* Stay in place */
+    z-index: 1050; /* Above everything */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw; /* Full viewport width */
+    max-width: 325px; /* Max width to match the profile page width */
+    box-sizing: border-box;; /* Max-width for larger screens */
+    border-radius: 20px;
+    background: #3b3b3b00;
+    margin-top: 48px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .close-button {
+    position: absolute;
+    top: 5px; /* Adjust position to ensure it's visible on the modal */
+    right: 20px;
+    font-size: 8px;
+    cursor: pointer;
+    color: #333; /* High contrast color for visibility */
+    background-color: #fff; /* Background to stand out from the header */
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1051; /* Above the modal content */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+  
+  .save-button {
+    width: 100%; /* Full width */
+    padding: 12px;
+    margin-top: 20px; /* Space above the button */
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff; /* Blue */
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .profile-profile-profile-pic {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .profile-profile-banner {
+    padding: 0;
+    height: 100px;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .edit-profile-header{
+    font-size: 20px;
+    padding: 10px;
+    color: white;
+  }
+
+  .edit-profile-data{
+    font-size: 18px;
+    color: white;
+    margin-right: 250px;
+  }
+
+  .edit-profile-data1{
+    font-size: 18px;
+    color: white;
+    margin-right: 290px;
+  }
+
+  .edit-profile-data2{
+    font-size: 18px;
+    color: white;
+    margin-right: 209px;
+  }
+
+  .edit-section-container .edit-section textarea {
+    /* If other inputs have a specific margin you want to match, apply it here. */
+    /* Example: */
+    margin-bottom: 10px; /* Adjust this value to match the margin of other input fields */
+  }
+  
+  .edit-profile-modal {
+    position: fixed;
+    z-index: 1050; /* Ensures modal is on top */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%; /* Responsive width */
+    max-width: 375px; /* Max-width for larger screens */
+    border-radius: 20px;
+    background: #fff;
+    padding: 0px; /* Padding for inner spacing */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+    overflow: hidden;
+  }
+
+  .profile-profile-banner {
+    height: 100px;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .edit-profile-modal {
+    z-index: 1050;
+  }
+
+  .edit-section-container {
+    box-sizing: border-box; 
+    padding: 24px;
+    margin-top: -34px;
+    font-size: 14px;
+  }
+  
+  .edit-section input,
+  .edit-section textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 24px;
+  }
+  
+  
+  button:hover {
+    background-color: #0056b3; 
+  }
+.profile-page.dimmed::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3); /* Dim the background */
+    z-index: 1040; /* Below the modal, above the page content */
+  }
+  
+  

@@ -25,24 +25,48 @@
     radial-gradient(at 35% 18%, hsla(160,92%,42%,1) 0px, transparent 50%),
     radial-gradient(at 70% 70%, rgb(0, 0, 0) 0px, transparent 92%);
   }
-
   .profile-pic-btn {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #444; /* Or any color you prefer */
+    background-color: #444;
     border-radius: 50%;
-    width: 100px; /* Size of the circle */
-    font-size: 24px; 
-    height: 100px; /* Size of the circle */
+    width: 100px;
+    height: 100px;
     cursor: pointer;
-    margin: 20px auto; /* Center the button and add space above and below */
-    margin-bottom: 10px;
+    margin: -60px auto 0;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .header-pic-upload {
+    position: relative;
+    width: 260px;
+    height: 110px;
+    background-color: #cccccc2b;
+    display: cover;
+    cursor: pointer;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    z-index: 2;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .header-pic-label {
+    color: #fff;
+    font-size: 12px;
+    margin-top: 24px;
+    margin-left: 14px;
+    text-align: center;
+    justify-content: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    color: #ffffffc0;
   }
   
+  
   .plus-icon {
-    font-size: 2em; /* Makes the plus sign larger */
-    color: white;
+    font-size: 2.5em;
+    color: #fff;
   }
   
   @media (min-width: 768px) {
@@ -59,7 +83,6 @@
   .auth-form-container {
     display: flex;
     flex-direction: column;
-    /* Rest of your styles */
   }
   
   .google-btn {
@@ -86,36 +109,32 @@ button {
     transition: background-color 0.3s ease; 
 }
 
-
-/* LandingPage.css */
-
 .title {
   font-weight: bold;
   font-size: 3em;
 color: white;
 }
 
-/* LandingPage.css */
 .form-container {
-  background-color: rgba(0, 0, 0, 0.616); /* Light background for the container */
-  padding: 40px;
-  border-radius: 20px; /* Rounded corners for the container */
+  background-color: rgba(0, 0, 0, 0.746);
+  padding: 24px;
+  border-radius: 20px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  margin: 1em 1em; /* Margin above and below the form */
+  margin: 0em;
   text-align: center;
-  max-width: 340px;
+  max-width: 440px;
+  position: relative;
+  padding-bottom: 60px; /* Add extra padding at the bottom of the form container */
 }
 
+.login-toggle {
+  color: #fff;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 0.9em;
+  text-align: center;
+}
   
-  .login-toggle {
-    color: #fff;
-    cursor: pointer;
-    margin-top: 10px;
-    font-size: 0.9em;
-    text-align: center;
-  }
-  
-
   .toggle-form {
     color: #fff;
     cursor: pointer;
@@ -124,41 +143,56 @@ color: white;
     margin-top: 1em; /* Space from the button */
     text-decoration: underline; /* Suggests clickability */
   }
+
   .input-container {
-    margin-bottom: 1em; /* Spacing between input fields */
+    margin-bottom: .4em; /* Spacing between input fields */
     display: flex;
     flex-direction: column;
     align-items: center; /* Center children */
+    padding: 6px;
   }
 
   .-dn-input-label {
     display: block; /* Make the label take the full width */
     color: #fff; /* White color for the text */
-    margin-bottom: 0.5em; /* Spacing between label and input */
+    font-size: 10px;
   }
   
   .input-label {
-    display: block; /* Make the label take the full width */
-    color: #fff; /* White color for the text */
-    margin-bottom: 0.5em; /* Spacing between label and input */
+    display: block;
+    color: #fff;
+    margin-top: 10px;
+    font-size: 12px;
+    margin-bottom: 5px;
   }
 
-  input[type="text"],
+input[type="email"] { margin-top: 5px;}
+input[type="text"],
 input[type="email"],
-input[type="password"] {
-  width: 90%; /* Make input fields full width */
+input[type="password"],
+input[type="username"] {
+  width: 90%;
   padding: 10px;
-  margin: 10px 0;
-  box-sizing: border-box; /* Include padding and border in element's total width and height */
-  border: 1px solid #ccc;
+  box-sizing: border-box;
+  border: none;
   border-radius: 4px;
-  opacity: 0.7 !important;
-  transition: opacity 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #333;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="text"]:focus,
+input[type="username"]:focus {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus {
-  opacity: 1.0 !important;
-  border: 2px solid #4CAF50; /* Highlight the input border when focused */
+input[type="text"]::placeholder,
+input[type="username"]::placeholder {
+  color: #3c3c3c;
+  font-size: 10px;
 }
 
 .error-message {
@@ -168,7 +202,7 @@ input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focu
 }
 
 .availability-message {
-  margin-top: 0.5em;
+  margin-bottom: .5em;
   font-size: 0.9em;
 }
 
@@ -210,9 +244,8 @@ input[type="username"] {
   transition: opacity 0.3s ease;
   align-items: center;
   text-align: center;
+  margin-top: -10px;
 }
-
-
 
 .google-btn {
   background-color: #db4437; /* Google's brand color */
@@ -230,15 +263,21 @@ input[type="username"] {
 .google-btn:hover {
   background-color: #c1351d; /* A darker shade for hover */
 }
-  .signup-btn,
+
+.signup-btn,
 .login-btn {
   background-color: #4caf50; /* Example button color */
   color: white;
   border: none;
   border-radius: 4px;
+
   cursor: pointer;
   transition: background-color 0.3s ease;
   width: 50%; /* Make input fields full width */
+}
+
+.signup-btn {
+  margin-top: 24px;
 }
 
 .signup-btn:hover {
@@ -256,7 +295,6 @@ input[type="username"] {
   object-fit: cover;
 }
 
-/* Style the footer */
 .landing-page-footer {
   position: absolute;
   bottom: 10px;
@@ -274,26 +312,25 @@ input[type="username"] {
 }
 
 .complete-profile-btn {
-  background-color:hsla(132,100%,59%,1);
+  background-color:rgb(37, 171, 63);
   background-image:
   radial-gradient(at 99% 2%, hsla(138,100%,51%,1) 0px, transparent 50%),
   radial-gradient(at 1% 1%, rgb(20, 116, 50) 0px, transparent 50%),
   radial-gradient(at 50% 50%, rgba(64, 206, 107, 0.533) 0px, transparent 50%),
-  radial-gradient(at 1% 16%, hsla(33,0%,0%,1) 0px, transparent 50%),
   radial-gradient(at 35% 18%, hsla(160,92%,42%,1) 0px, transparent 50%);
-  margin-top: 1.5em; /* More space from the toggle text */
   transition: background-color 0.3s ease;
   padding: 10px;
   color: white;
   border: none;
-
   border-radius: 4px;
   cursor: pointer;
-  width: 70%; /* Make input fields full width */
+  margin-top: 16px;
+  margin-bottom: 10px;
+  width: 50%; /* Make input fields full width */
 }
 
 .complete-profile-btn:hover {
-  opacity: 0.5;
+  background-color: #45a049;
 }
 
 .plus-icon:hover {

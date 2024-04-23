@@ -10,6 +10,7 @@ import HeaderPicUpload from './HeaderPicUpload';
 import { uploadToS3, getFromS3 } from '../utils/s3Util';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import EditProfile from './EditProfile';
 
 const Profile = () => {
   const [email, setEmail] = useState('');
@@ -21,9 +22,12 @@ const Profile = () => {
   const [creationDate, setCreationDate] = useState('');
   const [headerPicUrl, setHeaderPicUrl] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [isEditProfileVisible, setIsEditProfileVisible] = useState(false);
+
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [newBio, setNewBio] = useState('');
   const [username, setUsername] = useState('');
+  const [headerPic, setHeaderPic] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [activeTab, setActiveTab] = useState('memes');
   const [bio, setBio] = useState('');
@@ -33,84 +37,53 @@ const Profile = () => {
     const loggedInUser = location.state?.user;
     if (loggedInUser) {
       setUser(loggedInUser);
-      setCreationDate(loggedInUser.creationDate);
+      setCreationDate(formatDate(loggedInUser.creationDate) || ''); // Update this line
       setProfilePicUrl(loggedInUser.profilePic);
       setUsername(loggedInUser.username);
       setDisplayName(loggedInUser.displayName);
-      setBio(loggedInUser.bio);
-      setHeaderPicUrl(loggedInUser.headerPic); 
+      setBio(loggedInUser.bio || '');
+      setHeaderPicUrl(loggedInUser.headerPic || '');
       console.log('Logged in user from location state:', loggedInUser);
     }
   }, [location]);
 
-  // Profile.js
-  const handleHeaderPicChange = async (file) => {
-    if (file) {
-      try {
-        console.log('Starting upload to S3...');
-        const fileUrl = await uploadToS3(file, `header-${Date.now()}.jpg`);
-      console.log(`File uploaded successfully: ${fileUrl}`);
-      setHeaderPicUrl(fileUrl);
-      
-      // Clear the preview URL
-      setPreviewUrl(null);
-      
-      // Display a toast success message
-      toast.success('Header picture updated successfully!', {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+  useEffect(() => {
+    console.log("Received user state on feed page:", location.state.user);
+    // Set local state or context if needed
+  }, [location.state.user]);
 
-        console.log('Preparing to send update profile request...');
-        const updateProfilePayload = {
-          operation: 'updateUserProfile',
-          email: user.email,
-          headerPic: fileUrl,
-          username: user.username,
-          displayName: user.displayName,
-        };
-        console.log('Payload for update profile:', updateProfilePayload);
-  
-        const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updateUserProfile', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updateProfilePayload),
-        });
-  
-        console.log('Response received', response);
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Profile update successful:', data);
-          if (data && data.user && data.user.headerPic) {
-            const newHeaderPicUrl = data.user.headerPic;
-            setHeaderPicUrl(newHeaderPicUrl);
-            toast.success('Header picture updated successfully!');
-          } else {
-            console.error('Unexpected response structure:', data);
-            // Handle unexpected response structure
-          }
-        } else {
-          console.error('Response status was not OK.', response.status);
-          response.text().then(text => console.log('Error response body:', text));
-          throw new Error('Failed to update header picture');
-        }
-      } catch (error) {
-        console.error('Failed to update header picture:', error);
-        toast.error('An error occurred while updating your header picture. Please try again.');
-      }
-    } else {
-      console.log('No file was provided for the header picture update.');
+// When the modal is opened or closed, this effect will run
+useEffect(() => {
+  if (isEditProfileVisible) {
+    document.body.classList.add('dimmed');
+  } else {
+    document.body.classList.remove('dimmed');
+  }
+
+  // Clean up function to remove 'dimmed' when the component unmounts
+  return () => document.body.classList.remove('dimmed');
+}, [isEditProfileVisible]);
+
+
+
+  const formatDate = (dateString) => {
+    if (!dateString) {
+      return '';
     }
+  
+    const date = new Date(dateString);
+    
+    const getOrdinalNum = (n) => {
+      return n + (n > 0 ? ['th', 'st', 'nd', 'rd'][(n > 3 && n < 21) || n % 10 > 3 ? 0 : n % 10] : '');
+    };
+  
+    const day = getOrdinalNum(date.getDate());
+    const month = date.toLocaleString('en-US', { month: 'long' });
+    const year = date.getFullYear();
+  
+    return `${month} ${day} ${year}`; // Formats the date as "Month dayth year"
   };
-  
-  
+
   const handleHomeClick = () => {
     navigate(-1); 
   };
@@ -193,36 +166,50 @@ const Profile = () => {
   const handleProfilePanelClose = () => {
     setIsProfilePanelVisible(false);
     console.log('Profile panel closed');
+    setIsEditProfileVisible(false);
+    document.querySelector('.profile-page').classList.remove('dimmed');
   };
 
-  const bioContent = isEditingBio ? (
-    // Show bio edit form
-    <div className="bio-edit-container">
+  const handleEditProfileClick = () => {
+    console.log('Edit Profile button clicked');
+    setIsEditProfileVisible(true);
+    document.querySelector('.profile-page').classList.add('dimmed');
+  };
+
+  const bioContent = !bio || bio.trim() === '' ? (
+    <button className="add-bio-button" onClick={handleAddBioClick}>
+      <FontAwesomeIcon icon={faPlus} /> Add Bio
+    </button>
+  ) : (
+    <div className="bio-display">{bio}</div>
+  );
+  
+  const bioEditor = isEditingBio ? (
+    <div className="bio-editor">
       <textarea
-        className="bio-input"
+        className="bio-textarea"
         value={newBio}
         onChange={(e) => setNewBio(e.target.value)}
-        placeholder="Describe yourself here..."
+        placeholder="Enter your bio here..."
       />
-      <button className="save-bio-button" onClick={handleSaveBioClick}>
-        Save Bio
-      </button>
+      <div className="editor-buttons">
+        <button className="save-bio-button" onClick={handleSaveBioClick}>Save Bio</button>
+        <button className="cancel-bio-button" onClick={() => setIsEditingBio(false)}>Cancel</button>
+      </div>
     </div>
-) : bio ? (
-  <div className="bio-display">{bio}</div> // Bio should display here
-) : (
-  <button className="add-bio-button" onClick={handleAddBioClick}>
-    <FontAwesomeIcon icon={faPlus} /> Click to Add Bio
-  </button>
-);
-
-if (!user) {
-  return <div>Loading...</div>;
-}
+  ) : null;
+  
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className={`profile-page ${isDarkMode ? 'dark-mode' : ''}`}>
-      <TopPanel onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)} profilePicUrl={profilePicUrl} username={username} />
+<div className={`profile-page ${isDarkMode ? 'dark-mode' : ''} ${isEditProfileVisible ? 'dimmed' : ''}`}>
+      <TopPanel
+        onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)}
+        profilePicUrl={profilePicUrl}
+        username={username}
+      />
       <ProfilePanel
         isVisible={isProfilePanelVisible}
         onClose={handleProfilePanelClose}
@@ -232,36 +219,48 @@ if (!user) {
         followersCount="0"
         followingCount="0"
       />
+          {isEditProfileVisible && (
+      <EditProfile
+        user={user}
+        onSave={(updatedUser) => {
+          setIsEditProfileVisible(false); // Close the modal after saving
+        }}
+        onClose={() => setIsEditProfileVisible(false)}
+      />
+    )}
       <div className="profile-container">
-      <div className="profile-banner">
-  <img src={headerPicUrl} alt="" className="header-pic" />
-  <HeaderPicUpload onHeaderPicChange={handleHeaderPicChange} />
-</div>
+        <div className="profile-banner">
+          {user.headerPic && <img src={user.headerPic} alt={user.username} className="header-pic" />}
+        </div>
         <div className="profile-header">
-          <img src={user.profilePic} alt={user.username} className="profile-profile-pic" />
-          <div className="profile-profile-info">
+          <div className="profile-info-container">
             <div className="display-name">{displayName}</div>
-              <div className="username1">@{username}</div>
-              <div className="created-container">Jestr Since:<div className="date-date"> {user.creationDate}  
-                    </div>
-                      </div>
-                <div className="bio-container">{bioContent}</div>
-                         <div className="stat-container">
-                            <div className="stat-item">
-                             <span className="stat-count">{user.followersCount || 0}</span>
-                            <span className="stat-label"> Followers</span>
-                         </div>
-                          <div className="stat-item">
-                            <span className="stat-count">{user.followingCount || 0}</span>
-                            <span className="stat-label"> Following</span>
-                          </div>
-                          <div className="stat-item">
-                            <span className="stat-count">{user.smirksCount || 0}</span>
-                            <span className="stat-label"> Smirks</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+            <div className="username1">@{username}</div>
+            <div className="bio-container">
+      {isEditingBio ? bioEditor : bioContent}
+    </div>
+    <div className="created-container">
+  Jestr Since:
+  <div className="date-date">{creationDate || 'Account creation date not available'}</div>
+</div>
+
+            <div className="stat-container">
+              <div className="stat-item">
+                <span className="stat-count">{user.followersCount || 0}</span>
+                <span className="stat-label">Followers</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-count">{user.followingCount || 0}</span>
+                <span className="stat-label">Following</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-count">{user.smirksCount || 0}</span>
+                <span className="stat-label">Smirks</span>
+              </div>
+            </div>
+          </div>
+          <img src={user.profilePic} alt={user.username} className="profile-profile-pic" />
+        </div>
                       <div className="profile-tabs">
                         <div
                           className={`tab ${activeTab === 'memes-tab' ? 'active' : ''}`}
@@ -278,17 +277,17 @@ if (!user) {
                           onClick={() => setActiveTab('storage')}>
                           <FontAwesomeIcon icon={faBox} /> Storage
                       </div>
-                        <div
-                            className={`tab edit-profile-tab ${activeTab === 'edit' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('edit')}>
-                            <FontAwesomeIcon icon={faEdit} /> Edit Profile
-                        </div>
+                      <div
+                        className={`tab edit-profile-tab ${activeTab === 'edit' ? 'active' : ''}`}
+                        onClick={() => setIsEditProfileVisible(true)}> {/* This line has changed */}
+                        <FontAwesomeIcon icon={faEdit} /> Edit Profile
+                    </div>
                     </div>
                       <div className="profile-content">
                         <div className="profile-tab-content">
                           {activeTab === 'memes' && (
                             <div className="meme-dashboard">
-                              <h2>Posted Memes</h2>
+                              <h2>~~~ Posted Memes ~~~</h2>
                               {/* Render user's posted memes */}
                             </div>
                           )}

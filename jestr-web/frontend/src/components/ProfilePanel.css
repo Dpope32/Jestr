@@ -13,13 +13,15 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 45%;
+  width: 42%;
+  object-fit: cover;
   height: 100%;
   background: linear-gradient(to bottom right, #424242, #07400b);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   padding: 20px;
   transition: background 0.3s ease;
+  margin-left: -4px;
   border: 1px solid #000000;
 }
 
@@ -40,17 +42,17 @@
 
 
 .profile-pic {
-  width: 60%;
-  height: 60%;
-  object-fit: contain;
-  border-radius: 60%;
+  width: 60px; /* Fixed size */
+  height: 60px; /* Fixed size */
+  object-fit: cover;
+  border-radius: 50%; /* Makes the image a perfect circle */
   border: 2px solid #26ff00;
-  margin-bottom: 10px;
-  
+  margin-left: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Optional: Adds depth to the picture */
 }
 
 .profile-info {
-  margin-right: 30px;
+  margin-right: 40px;
 }
 
 .display-name {
@@ -66,6 +68,7 @@
   font-size: 14px;
   color: #5eff81;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
 }
 
 .user-info {
@@ -73,6 +76,7 @@
   flex-direction: row;
   align-items: center;
   gap: 8px;
+  margin-left: 12px;
   width: 100%;
 }
 
@@ -99,21 +103,25 @@
 .info-container {
   background-color: rgba(255, 255, 255, 0.304); /* Slightly opaque background */
   border-radius: 10px;
+  font-size: 16px;
   width: auto; /* Adjust width as needed */
   height: 20%;
   text-align: center;
-  padding: 8px; /* Reduced padding */
-  margin: 2px 0; /* Reduced margin for tighter spacing */
+  padding: 12px; /* Reduced padding */
+  margin: 0px 0; /* Reduced margin for tighter spacing */
 }
 
 .follow-container {
+  margin-left: 10px;
   display: flex;
   justify-content: space-around;
-  padding: 5px;
   margin-top: 10px; /* Adjust space from the above container */
-  margin-bottom: 10px;
-  width: 100%;
+  width: 90%;
   gap: 4px;
+  background-color: rgba(255, 255, 255, 0.2); /* Slight visibility */
+  border-radius: 20px; /* Rounded corners for the container */
+  padding: 6px; /* Inner spacing */
+  margin-top: 10px; /* Space from the previous elements */
 }
 
 .follow-count {
