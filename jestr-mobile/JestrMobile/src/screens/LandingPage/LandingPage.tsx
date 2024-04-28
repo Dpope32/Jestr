@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, ImageBackground, Alert} from 'react-native';
+import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
+import { AppleButton } from '@invertase/react-native-apple-authentication';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { NavigationProp } from '@react-navigation/native';
@@ -7,13 +9,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import  InputField  from '../../components/Input/InutField';
 import Button  from '../../components/Button/Button';
 import LoadingScreen from '../../components/LoadingScreen';
-import { Alert } from 'react-native';
 import  HeaderPicUpload  from '../../components/Upload/HeaderPicUpload';
 import  ProfilePicUpload  from '../../components/Upload/ProfilePicUpload';
-import { ImageBackground } from 'react-native';
 
 const radialGradientBg = require('../../assets/images/radial_gradient_bg.png');
-
 
 type User = {
     email: string;
@@ -24,7 +23,14 @@ type User = {
     creationDate: string;
   };
 
+  type LetterScale = {
+    scale: Animated.AnimatedInterpolation<string | number>;
+    opacity: Animated.AnimatedInterpolation<string | number>;
+  }[];
+  
+
 function LandingPage() {
+  console.log('LandingPage component rendered');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
@@ -49,53 +55,32 @@ function LandingPage() {
     const [titlePosition, setTitlePosition] = useState({ top: new Animated.Value(50), left: new Animated.Value(0) });
     const titleAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
     const letterAnimations = useRef<Animated.Value[]>([]);
-    useEffect(() => {
-      letterAnimations.current = ['J', 'e', 's', 't', 'r'].map((letter, index) => {
-        const animation = new Animated.Value(0);
-        Animated.timing(animation, {
-          toValue: 1,
-          duration: 500,
-          delay: index * 200,
-          useNativeDriver: true,
-        }).start(index === 4 ? handleTitleAnimationComplete : undefined);
-        return animation;
-      });
-    }, []);
-  
-  
-  
-    const handleTitleAnimationComplete = () => {
-      setAnimationComplete(true);
-      titleAnimationRef.current = Animated.timing(titleTranslateY, {
-        toValue: -100,
-        duration: 500,
-        useNativeDriver: true,
-      });
-  
-      if (titleAnimationRef.current) {
-        titleAnimationRef.current.start(() => {
-          setTitlePosition({ top: new Animated.Value(100), left: new Animated.Value(0) });
-        });
+    type RootStackParamList = {Feed: { user: User };};
+    type LandingPageNavigationProp = NavigationProp<RootStackParamList, 'Feed'>;
+    const [letterScale, setLetterScale] = useState<LetterScale>([]);
+    const navigation = useNavigation<LandingPageNavigationProp>();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    const checkAuthStatus = async () => {
+      try {
+        const user = await AsyncStorage.getItem('user');
+        if (user) {
+          setIsAuthenticated(true);
+          // Navigate to the main app screen or display the appropriate content for authenticated users
+        } else {
+          setIsAuthenticated(false);
+          // Navigate to the landing page or display the login/signup forms
+        }
+      } catch (error) {
+        console.error('Error checking authentication status:', error);
       }
     };
-    const letterScale = letterAnimations.current.map((animation: Animated.Value) => {
-      return {
-        scale: animation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, 1],
-        }),
-        opacity: animation.interpolate({
-          inputRange: [0, 0.5, 1],
-          outputRange: [0, 1, 1],
-        }),
-      };
-    });
-    type RootStackParamList = {
-        Feed: { user: User };
-      };
-      type LandingPageNavigationProp = NavigationProp<RootStackParamList, 'Feed'>;
-      const navigation = useNavigation<LandingPageNavigationProp>();
-
+  
+    useEffect(() => {
+      checkAuthStatus();
+      startAnimation(); // Start the animation on component mount
+    }, []);
+  
     const handleSignup = async () => {
     const userData = {
         operation: 'signup',
@@ -177,7 +162,7 @@ function LandingPage() {
     }
     };
 
-const handleLogin = async () => {
+    const handleLogin = async () => {
     setIsLoading(true);
     const userData = {
         operation: 'signin',
@@ -241,6 +226,47 @@ const handleLogin = async () => {
     }
     };
 
+    const handleGoogleSignIn = async () => {
+      // Implementation based on '@react-native-google-signin/google-signin'
+    };
+
+    const handleAppleSignIn = async () => {
+      // Implementation based on '@invertase/react-native-apple-authentication'
+    };
+
+    const handleUsernameChange = (username: string) => {
+      const usernameRegex = /^[a-zA-Z0-9]+$/;
+      if (usernameRegex.test(username)) {
+        setUsername(username);
+        setIsUsernameAvailable(true);
+      } else {
+        setIsUsernameAvailable(false);
+      }
+    };
+    
+    const handledisplayNameChange = (displayName: string) => {
+      const displayNameRegex = /^[a-zA-Z0-9]+$/;
+      if (displayNameRegex.test(displayName)) {
+        setDisplayName(displayName);
+        setIsdisplayNameAvailable(true);
+      } else {
+        setIsdisplayNameAvailable(false);
+      }
+    };
+
+    const handleProfilePicChange = (file: File | null) => {
+      setProfilePic(file);
+    };
+    
+    const handleHeaderPicChange = (file: File | null) => {
+      if (file) {
+        setHeaderPicFile(file);
+      } else {
+        setHeaderPicFile(null);
+      }
+    };
+
+
     const toggleForm = () => {
     setIsLogin(!isLogin);
     setEmail('');
@@ -248,110 +274,111 @@ const handleLogin = async () => {
     setUsername('');
     };
 
-  const formContainerVariants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.5,
-      },
-    },
-  };
+    const startAnimation = () => {
+      // Initialize the animated values
+      letterAnimations.current = ['J', 'e', 's', 't', 'r'].map(() => new Animated.Value(0));
+    
+      // Start the title opacity animation immediately
+      Animated.timing(titleOpacity, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    
+      // Create an array of letter animation configurations
+      const letterAnimationConfigs = letterAnimations.current.map((anim, index) => {
+        return {
+          0: {
+            opacity: anim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 1],
+            }),
+            transform: [
+              {
+                scale: anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 1],
+                }),
+              },
+            ],
+          },
+          1: {
+            opacity: 1,
+            transform: [{ scale: 1 }],
+          },
+        };
+      });
+    
+      // Create the staggered animation sequence
+      Animated.stagger(500, letterAnimationConfigs.map((config, index) => {
+        return Animated.timing(letterAnimations.current[index], {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        });
+      })).start(handleTitleAnimationComplete);
+    
+      const scale: LetterScale = letterAnimations.current.map(animation => ({
+        scale: animation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 1],
+        }),
+        opacity: animation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 1],
+        }),
+      }));
+      setLetterScale(scale);
+    };
 
-  const headerVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: (custom: number) => ({
-      y: 0,
-      opacity: 1,
-      transition: { delay: custom * 0.5 },
-    }),
-  };
+    const handleTitleAnimationComplete = () => {
+      console.log('Title animation complete');
+      setAnimationComplete(true);
+      titleAnimationRef.current = Animated.timing(titleTranslateY, {
+        toValue: -50,
+        duration: 500,
+        useNativeDriver: true,
+      });
+    
+      if (titleAnimationRef.current) {
+        titleAnimationRef.current.start(() => {
+          setTitlePosition({ top: new Animated.Value(50), left: new Animated.Value(0) });
+        });
+        console.log('Title position =', titlePosition);
+      }
+    };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: 'linear',
-        duration: 1,
-      },
-    },
-  };
 
-  const handleAnimationComplete = () => {
-    setAnimationComplete(true);
-  };
-
-  const handleUsernameChange = (username: string) => {
-    const usernameRegex = /^[a-zA-Z0-9]+$/;
-    if (usernameRegex.test(username)) {
-      setUsername(username);
-      setIsUsernameAvailable(true);
-    } else {
-      setIsUsernameAvailable(false);
-    }
-  };
-  
-  const handledisplayNameChange = (displayName: string) => {
-    const displayNameRegex = /^[a-zA-Z0-9]+$/;
-    if (displayNameRegex.test(displayName)) {
-      setDisplayName(displayName);
-      setIsdisplayNameAvailable(true);
-    } else {
-      setIsdisplayNameAvailable(false);
-    }
-  };
-
-  const handleProfilePicChange = (file: File | null) => {
-    setProfilePic(file);
-  };
-  
-  const handleHeaderPicChange = (file: File | null) => {
-    if (file) {
-      setHeaderPicFile(file);
-    } else {
-      setHeaderPicFile(null);
-    }
-  };
-
-  return (
-    <ImageBackground source={radialGradientBg} style={styles.container}>
-      {letterAnimations.current.length > 0 && (
-        <Animated.View
-          style={[
-            styles.titleContainer,
-            {
-              opacity: titleOpacity,
-              transform: [{ translateY: titleTranslateY }],
-              top: titlePosition.top,
-              left: titlePosition.left,
-            },
-          ]}
-        >
-          {['J', 'e', 's', 't', 'r'].map((letter, index) => (
+return (
+  <ImageBackground source={radialGradientBg} style={styles.container} resizeMode="cover">
+    {!isAuthenticated && (
+      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+        <View style={styles.titleContainer}>
+          {letterScale.map((anim, index) => (
             <Animated.Text
-              key={letter}
+              key={index}
               style={[
                 styles.titleLetter,
                 {
-                  transform: [{ scale: letterScale[index].scale }],
-                  opacity: letterScale[index].opacity,
+                  opacity: anim.opacity,
+                  transform: [{ scale: anim.scale }],
                 },
               ]}
             >
-              {letter}
+              {['J', 'e', 's', 't', 'r'][index]}
             </Animated.Text>
           ))}
-        </Animated.View>
-      )}
-      {animationComplete && (
-        <Animated.View style={[styles.formContainer, {
+        </View>
+
+      <View style={styles.formContainer}>
+        {animationComplete && (
+        <Animated.View
+        style={{
           opacity: titleOpacity,
           transform: [{ translateY: titleTranslateY }],
-        }]}>
-          {(!isSignedUp || isLogin) && (
-            <>
+        }}
+      >
+            {(!isSignedUp || isLogin) && (
+              <>
               <InputField
                 label="Email"
                 placeholder="Enter Email"
@@ -416,42 +443,63 @@ const handleLogin = async () => {
             </Text>
           </TouchableOpacity>
           {!isSignedUp && !isLogin && (
-            <Button title="Continue with Google" onPress={() => {}} />
+              <View>
+                <GoogleSigninButton
+                  style={styles.button}
+                  size={GoogleSigninButton.Size.Wide}
+                  color={GoogleSigninButton.Color.Dark}
+                  onPress={handleGoogleSignIn}
+                />
+                <AppleButton
+                  style={styles.button}
+                  buttonStyle={AppleButton.Style.BLACK}
+                  buttonType={AppleButton.Type.SIGN_IN}
+                  onPress={handleAppleSignIn}
+                />
+              </View>
+            )}
+            </Animated.View>
           )}
-        </Animated.View>
-      )}
-      <View style={styles.footer}>
+        </View>
+      </ScrollView>
+    )}
+    <View style={styles.footer}>
         <Text style={styles.footerLink}>Privacy Policy</Text>
-        <Text style={styles.footerDivider}> | </Text> 
+        <Text style={styles.footerDivider}> | </Text>
         <Text style={styles.footerLink}>Terms of Service</Text>
         <Text style={styles.footerDivider}> | </Text>
         <Text style={styles.footerLink}>Contact Us</Text>
-      </View>
-    </ImageBackground>
-  );
+        </View>
+  </ImageBackground>
+);
 }
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  scrollViewContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: 'transparent', // Add this line
+    alignItems: 'center',
   },
   titleContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row', // This will align the letters horizontally
+    justifyContent: 'center', // This will center the letters in the container
+    alignItems: 'center', // This will center the letters vertically within the container
+    width: '100%', // Ensure the container takes the full width
+    height: '30%', // Adjust the height accordingly
   },
   titleLetter: {
     fontSize: 60,
     fontWeight: 'bold',
-    color: '#333',
-    marginTop: 20,
+    color: '#fff',
+    // remove any margin or padding that might affect layout
   },
   formContainer: {
-    width: '100%',
-    alignItems: 'center',
+    alignSelf: 'center',
+    marginTop: 50, // Adjust this value as needed
   },
   inputContainer: {
     width: '100%',
@@ -460,6 +508,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 16,
     marginBottom: 5,
+    color: '#fff',
   },
   input: {
     width: '100%',
@@ -467,7 +516,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 4,
-    paddingHorizontal: 10, 
+    paddingHorizontal: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     fontSize: 16,
   },
   errorMessage: {
@@ -490,23 +540,27 @@ const styles = StyleSheet.create({
   },
   toggleForm: {
     marginTop: 20,
-  },  
+  },
   toggleFormText: {
     fontSize: 16,
     textDecorationLine: 'underline',
+    color: '#fff',
   },
   footer: {
     marginTop: 'auto',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   footerLink: {
     fontSize: 14,
-    color: '#666',
+    color: '#fff',
   },
   footerDivider: {
     fontSize: 14,
-    color: '#666',
+    color: '#fff',
     marginHorizontal: 5,
   },
   available: {
