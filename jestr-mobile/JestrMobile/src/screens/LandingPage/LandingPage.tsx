@@ -11,6 +11,11 @@ import Button  from '../../components/Button/Button';
 import LoadingScreen from '../../components/LoadingScreen';
 import  HeaderPicUpload  from '../../components/Upload/HeaderPicUpload';
 import  ProfilePicUpload  from '../../components/Upload/ProfilePicUpload';
+import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
+import { KeyboardAvoidingView, Platform } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import CheckBox from 'react-native-checkbox';
 
 const radialGradientBg = require('../../assets/images/radial_gradient_bg.png');
 
@@ -60,16 +65,18 @@ function LandingPage() {
     const [letterScale, setLetterScale] = useState<LetterScale>([]);
     const navigation = useNavigation<LandingPageNavigationProp>();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const handleTermsCheckbox = () => setTermsAccepted(!termsAccepted);
+    const [termsAccepted, setTermsAccepted] = useState(false);
 
     const checkAuthStatus = async () => {
       try {
         const user = await AsyncStorage.getItem('user');
         if (user) {
           setIsAuthenticated(true);
-          // Navigate to the main app screen or display the appropriate content for authenticated users
+          navigation.navigate('Feed', { user: JSON.parse(user) });
         } else {
           setIsAuthenticated(false);
-          // Navigate to the landing page or display the login/signup forms
         }
       } catch (error) {
         console.error('Error checking authentication status:', error);
@@ -79,6 +86,7 @@ function LandingPage() {
     useEffect(() => {
       checkAuthStatus();
       startAnimation(); // Start the animation on component mount
+      setAnimationComplete(false);
     }, []);
   
     const handleSignup = async () => {
@@ -103,7 +111,6 @@ function LandingPage() {
         Toast.show({
             type: 'success',
             text1: 'Account Created Successfully!',
-            position: 'top',
             visibilityTime: 2000,
         });
         } else {
@@ -162,7 +169,7 @@ function LandingPage() {
     }
     };
 
-    const handleLogin = async () => {
+  const handleLogin = async () => {
     setIsLoading(true);
     const userData = {
         operation: 'signin',
@@ -181,12 +188,13 @@ function LandingPage() {
         const data = await response.json();
         console.log('Login response:', data);
         if (response.ok && data.message === 'Sign-in successful.' && data.user && data.user.email) {
+          await AsyncStorage.setItem('user', JSON.stringify(data.user));
         console.log('Sign-in successful');
         Toast.show({
-            type: 'success',
-            text1: 'Sign-in successful!',
-            position: 'top',
-            visibilityTime: 1000,
+          type: 'success',
+          text1: `Welcome back, ${data.user.displayName}!`,
+          position: 'top',
+          visibilityTime: 1000,
             onHide: () => {
             console.log('Toast closed, navigating to Feed');
             const user = {
@@ -200,20 +208,21 @@ function LandingPage() {
                 creationDate: data.user.creationDate || '',
             };
             console.log('Logged-in user data:', data.user);
+            
             navigation.navigate('Feed', { user });
             setIsLoading(false);
             },
         });
-        } else {
+      } else {
         console.log('Sign-in failed');
         setIsLoading(false);
         Toast.show({
-            type: 'error',
-            text1: data.message || 'Sign-in failed.',
-            position: 'top',
-            visibilityTime: 2000,
+          type: 'error',
+          text1: data.message || 'Sign-in failed. Please check your credentials.',
+          position: 'top',
+          visibilityTime: 2000,
         });
-        }
+      }
     } catch (error) {
         console.error('Login error:', error);
         setIsLoading(false);
@@ -226,12 +235,29 @@ function LandingPage() {
     }
     };
 
+    const handleForgotPassword = () => {
+  // Navigate to the password reset page or trigger an email with reset instructions
+  // Example: navigation.navigate('PasswordReset');
+  console.log('Forgot Password clicked');
+};
+
     const handleGoogleSignIn = async () => {
       // Implementation based on '@react-native-google-signin/google-signin'
     };
 
     const handleAppleSignIn = async () => {
       // Implementation based on '@invertase/react-native-apple-authentication'
+    };
+
+    const handleTwitterSignIn = async () => {
+      // Implementation based on your Twitter authentication library
+      // Example using 'react-native-twitter-signin':
+      try {
+        console.log("twit click")
+        // Handle successful Twitter sign-in
+      } catch (error) {
+        // Handle Twitter sign-in error
+      }
     };
 
     const handleUsernameChange = (username: string) => {
@@ -275,7 +301,8 @@ function LandingPage() {
     };
 
     const startAnimation = () => {
-      // Initialize the animated values
+      setAnimationComplete(false);
+      console.log('Title animation starting');
       letterAnimations.current = ['J', 'e', 's', 't', 'r'].map(() => new Animated.Value(0));
     
       // Start the title opacity animation immediately
@@ -347,228 +374,387 @@ function LandingPage() {
       }
     };
 
+    return (
+      <ImageBackground source={radialGradientBg} style={styles.container} resizeMode="cover">
+        {!isAuthenticated && (
+          <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+            <View style={styles.titleContainer}>
+              {letterScale.map((anim, index) => (
+                <Animated.Text
+                  key={index}
+                  style={[
+                    styles.titleLetter,
+                    {
+                      opacity: anim.opacity,
+                      transform: [{ scale: anim.scale }],
+                    },
+                  ]}
+                >
+                  {['J', 'e', 's', 't', 'r'][index]}
+                </Animated.Text>
+              ))}
+            </View>
+    
+            {animationComplete && (
+              <Animated.View
+                style={{
+                  opacity: titleOpacity,
+                  transform: [{ translateY: titleTranslateY }],
+                }}
+              >
+                
 
-return (
-  <ImageBackground source={radialGradientBg} style={styles.container} resizeMode="cover">
-    {!isAuthenticated && (
-      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        <View style={styles.titleContainer}>
-          {letterScale.map((anim, index) => (
-            <Animated.Text
-              key={index}
-              style={[
-                styles.titleLetter,
-                {
-                  opacity: anim.opacity,
-                  transform: [{ scale: anim.scale }],
-                },
-              ]}
-            >
-              {['J', 'e', 's', 't', 'r'][index]}
-            </Animated.Text>
-          ))}
-        </View>
+                {isSignedUp ? (
+                  <View style={styles.profileContainer}>
+                    <View style={styles.headerUploadContainer}>
+                      <HeaderPicUpload onHeaderPicChange={handleHeaderPicChange} />
+                    </View>
+                    <View style={styles.profilePicUploadContainer}>
+                    <ProfilePicUpload
+                      onProfilePicChange={handleProfilePicChange}
+                      style={styles.profilePicUpload}
+                    />
+                  </View>
+                    <InputField
+                      label="Username"
+                      placeholder="What should your @ be?"
+                      value={username}
+                      onChangeText={handleUsernameChange}
+                      onBlur={() => username.trim() === '' && setUsername('')}
+                      labelStyle={styles.enhancedInputLabel}
+                      inputStyle={styles.enhancedInput}
+                    />
+                    {username.trim().length > 0 && (
+                      <Text style={isUsernameAvailable ? styles.available : styles.unavailable}>
+                        {isUsernameAvailable ? 'Username available!' : 'Username unavailable!'}
+                      </Text>
+                    )}
+                    <InputField
+                      label="Display Name"
+                      placeholder="(yes you can change this later)"
+                      value={displayName}
+                      onChangeText={handledisplayNameChange}
+                      onBlur={() => displayName.trim() === '' && setDisplayName('')}
+                      labelStyle={styles.enhancedInputLabel}
+                      inputStyle={styles.enhancedInput}
+                    />
+                    {displayName.trim().length > 0 && (
+                      <Text style={isdisplayNameAvailable ? styles.available : styles.unavailable}>
+                        {isdisplayNameAvailable ? 'Display Name available!' : 'Display name unavailable!'}
+                      </Text>
+                    )}
+                    <Button title="Complete Profile" onPress={handleCompleteProfile} />
+                  </View>
+                ) : (
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.formContainer}>
+                  <View style={styles.formContainer}>
+                    <Text style={styles.signupHeader}>{isLogin ? 'Login' : 'Sign Up'}</Text>
+                    <InputField
+                      label="Email"
+                      placeholder="Enter Email"
+                      value={email}
+                      onChangeText={(text) => setEmail(text)}
+                      containerStyle={styles.enhancedInputContainer}
+                      labelStyle={styles.enhancedInputLabel}
+                      inputStyle={styles.enhancedInput}
+                    />
+                    {isEmailTaken && (
+                      <Text style={styles.errorMessage}>Email already taken!</Text>
+                    )}
+                    <InputField
+                      label="Password"
+                      placeholder="Enter Password"
+                      secureTextEntry
+                      value={password}
+                      onChangeText={(text) => setPassword(text)}
+                      containerStyle={styles.enhancedInputContainer}
+                      labelStyle={styles.enhancedInputLabel}
+                      inputStyle={styles.enhancedInput}
+                    />
+                    {!isLogin && (
+                      <>
+                        <InputField
+                          label="Confirm Password"
+                          placeholder="Re-enter Password"
+                          secureTextEntry
+                          value={confirmPassword}
+                          onChangeText={(text) => setConfirmPassword(text)}
+                          containerStyle={styles.enhancedInputContainer}
+                          labelStyle={styles.enhancedInputLabel}
+                          inputStyle={styles.enhancedInput}
+                        />
+                        {password !== confirmPassword && (
+                          <Text style={styles.errorMessage}>Passwords do not match!</Text>
+                        )}
+                      </>
+                    )}
 
-      <View style={styles.formContainer}>
-        {animationComplete && (
-        <Animated.View
-        style={{
-          opacity: titleOpacity,
-          transform: [{ translateY: titleTranslateY }],
-        }}
-      >
-            {(!isSignedUp || isLogin) && (
-              <>
-              <InputField
-                label="Email"
-                placeholder="Enter Email"
-                value={email}
-                onChangeText={(text) => setEmail(text)}
-              />
-              {isEmailTaken && (
-                <Text style={styles.errorMessage}>Email already taken!</Text>
-              )}
-              <InputField
-                label="Password"
-                placeholder="Enter Password"
-                secureTextEntry
-                value={password}
-                onChangeText={(text) => setPassword(text)}
-              />
-              {!isLogin && (
-               <Button title="Sign Up" onPress={handleSignup} />
-              )}
-              {isLogin && (
-               <Button title="Login" onPress={handleLogin} />
-              )}
-            </>
-          )}
-          {isSignedUp && (
-            <>
-              {/* Complete profile section */}
-              <HeaderPicUpload onHeaderPicChange={handleHeaderPicChange} />
-              <ProfilePicUpload onProfilePicChange={handleProfilePicChange} />
-              <InputField
-                label="Username"
-                placeholder="What should your @ be?"
-                value={username}
-                onChangeText={handleUsernameChange}
-                onBlur={() => username.trim() === '' && setUsername('')}
-              />
-              {username.trim().length > 0 && (
-                <Text style={isUsernameAvailable ? styles.available : styles.unavailable}>
-                  {isUsernameAvailable ? 'Username available!' : 'Username unavailable!'}
-                </Text>
-              )}
-              <InputField
-                label="Display Name" 
-                placeholder="(yes you can change this later)"
-                value={displayName}
-                onChangeText={handledisplayNameChange}
-                onBlur={() => displayName.trim() === '' && setDisplayName('')}
-              />
-              {displayName.trim().length > 0 && (
-                <Text style={isdisplayNameAvailable ? styles.available : styles.unavailable}>
-                  {isdisplayNameAvailable ? 'Display Name available!' : 'Display name unavailable!'}
-                </Text>
-              )} 
-              <Button title="Complete Profile" onPress={() => handleCompleteProfile()} />
-            </>
-          )}
-          <TouchableOpacity onPress={toggleForm} style={styles.toggleForm}>
-            <Text style={styles.toggleFormText}>
-              {isLogin
-                ? "Need an account? Sign up here"
-                : "Already have an account? Login here"}
-            </Text>
-          </TouchableOpacity>
-          {!isSignedUp && !isLogin && (
-              <View>
-                <GoogleSigninButton
-                  style={styles.button}
-                  size={GoogleSigninButton.Size.Wide}
-                  color={GoogleSigninButton.Color.Dark}
-                  onPress={handleGoogleSignIn}
-                />
-                <AppleButton
-                  style={styles.button}
-                  buttonStyle={AppleButton.Style.BLACK}
-                  buttonType={AppleButton.Type.SIGN_IN}
-                  onPress={handleAppleSignIn}
-                />
-              </View>
+                   {!isLogin && (
+                      <View style={styles.termsContainer}>
+                        <CheckBox
+                          label="I have read and agree to the terms and conditions"
+                          checked={termsAccepted}
+                          onChange={handleTermsCheckbox}
+                          style={styles.checkbox}
+                          labelStyle={styles.termsText}
+                        />
+                      </View>
+                    )}
+                    {isLogin ? (
+                      <TouchableOpacity onPress={handleLogin} style={styles.button}>
+                        <LinearGradient
+                          colors={['#002400', '#00e100']}
+                          start={{ x: 0, y: 0.5 }}
+                          end={{ x: 1, y: .5 }}
+                          style={styles.gradient}
+                        >
+                          <Text style={styles.buttonText}>Login</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+
+                    ) : (
+                      <Button title="Sign Up" onPress={handleSignup} />
+                    )}
+                    <TouchableOpacity onPress={toggleForm} style={styles.toggleForm}>
+                      <Text style={styles.toggleFormText}>
+                        {isLogin
+                          ? "Need an account? Sign up here"
+                          : "Already have an account? Login here"}
+                      </Text>
+                    </TouchableOpacity>
+                    {isLogin && (
+                        <TouchableOpacity onPress={handleForgotPassword} style={styles.toggleForm}>
+                          <Text style={styles.toggleFormText}>Forgot Password?</Text>
+                        </TouchableOpacity>
+                      )}
+                {!isSignedUp && (
+                      <View style={styles.socialButtonsContainer}>
+                        <TouchableOpacity onPress={handleGoogleSignIn} style={styles.socialButton}>
+                          <FontAwesomeIcon name="google" size={24} color="#DB4437" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleAppleSignIn} style={styles.socialButton}>
+                          <FontAwesomeIcon name="apple" size={24} color="#000000" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleTwitterSignIn} style={styles.socialButton}>
+                          <MaterialIcon name="twitter" size={24} color="#1DA1F2" />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                  </KeyboardAvoidingView>
+                )}
+                
+              </Animated.View>
             )}
-            </Animated.View>
-          )}
+          </ScrollView>
+        )}
+        <View style={styles.footer}>
+          <Text style={styles.footerLink}>Privacy Policy</Text>
+          <Text style={styles.footerDivider}> | </Text>
+          <Text style={styles.footerLink}>Terms of Service</Text>
+          <Text style={styles.footerDivider}> | </Text>
+          <Text style={styles.footerLink}>Contact Us</Text>
         </View>
-      </ScrollView>
-    )}
-    <View style={styles.footer}>
-        <Text style={styles.footerLink}>Privacy Policy</Text>
-        <Text style={styles.footerDivider}> | </Text>
-        <Text style={styles.footerLink}>Terms of Service</Text>
-        <Text style={styles.footerDivider}> | </Text>
-        <Text style={styles.footerLink}>Contact Us</Text>
-        </View>
-  </ImageBackground>
-);
-}
+      </ImageBackground>
+    );
+  }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  scrollViewContainer: {
-    flexGrow: 1,
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(255, 255, 255, 1.0)',
+    },
+    scrollViewContainer: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+      width: '100%',
+    },
+    titleContainer: {
+      marginBottom: 30,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: '30%', // Added width to make the title container full width
+    },
+    titleLetter: {
+      textShadowColor: 'rgba(0, 0, 0, 0.2)',
+      textShadowOffset: {width: -1, height: 1},
+      textShadowRadius: 10,
+      fontSize: 60,
+      fontWeight: 'bold',
+      color: '#fff',
+      textAlign: 'center', // Added textAlign to center the title letters
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  titleContainer: {
-    flexDirection: 'row', // This will align the letters horizontally
-    justifyContent: 'center', // This will center the letters in the container
-    alignItems: 'center', // This will center the letters vertically within the container
-    width: '100%', // Ensure the container takes the full width
-    height: '30%', // Adjust the height accordingly
-  },
-  titleLetter: {
-    fontSize: 60,
-    fontWeight: 'bold',
-    color: '#fff',
-    // remove any margin or padding that might affect layout
-  },
-  formContainer: {
-    alignSelf: 'center',
-    marginTop: 50, // Adjust this value as needed
-  },
-  inputContainer: {
-    width: '100%',
-    marginBottom: 10,
-  },
-  inputLabel: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#fff',
-  },
-  input: {
-    width: '100%',
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    paddingHorizontal: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 16,
-  },
-  errorMessage: {
-    color: 'red',
-    marginTop: 5,
-  },
-  buttonContainer: {
-    marginTop: 20,
-  },
-  button: {
-    backgroundColor: '#333',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 4,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  toggleForm: {
-    marginTop: 20,
-  },
-  toggleFormText: {
-    fontSize: 16,
-    textDecorationLine: 'underline',
-    color: '#fff',
-  },
-  footer: {
-    marginTop: 'auto',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  footerLink: {
-    fontSize: 14,
-    color: '#fff',
-  },
-  footerDivider: {
-    fontSize: 14,
-    color: '#fff',
-    marginHorizontal: 5,
-  },
-  available: {
-    color: 'green',
-  },
-  unavailable: {
-    color: 'red',
-  },
-});
+},
+    formContainer: {
+      backgroundColor: 'rgba(255, 255, 255, 1.0)',
+      borderRadius: 10,
+      paddingHorizontal: 24,
+      paddingVertical: 14,
+      width: '90%', // Updated width to make the form container narrower
+      maxWidth: 360, // Adjusted maxWidth to control the maximum width of the form container
+      alignSelf: 'center',
+      borderWidth: 1, // Added border width
+      borderColor: '#ddd', // Light border color
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 7,
+      },
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
+      elevation: 20,
+      marginTop: 30, // Added marginTop to lower the form container
+    },
+    
+    signupHeader: {
+      fontSize: 32, // Reduced for space
+      fontWeight: 'bold',
+      color: '#333',
+      alignSelf: 'center',
+      marginBottom: 20,
+    },
+    profileContainer: {
+      alignItems: 'center',
+    },
+    headerUploadContainer: {
+      width: '100%',
+      marginBottom: 30, // Reduced to save space
+    },
+    profilePicUpload: {
+      position: 'absolute',
+      top: -45, // Adjusted for better visual effect
+      alignSelf: 'center',
+      zIndex: 1,
+    },
+    errorMessage: {
+      color: '#e63946', // Standard color for error
+      fontSize: 14, // Scaled down for subtlety
+      paddingVertical: 5,
+    },
+    buttonContainer: {
+      width: '100%',
+      marginTop: 10,
+    },
+    button: {
+      borderRadius: 18,
+      overflow: 'hidden', // This is necessary to contain the LinearGradient
+      marginVertical: 5,
+      width: '100%', // Set the width to 100% of its parent container
+    },
+    
+    gradient: {
+      height: 50, // Set a fixed height for the gradient
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: '100%', // Make sure the gradient also covers the full width
+    },
+    
+    buttonText: {
+      color: '#FFF',
+      fontWeight: 'bold',
+      fontSize: 16,
+      borderRadius: 48,
+      overflow: 'hidden', // This is necessary to contain the LinearGradient
+      marginVertical: 4,
+      paddingHorizontal: 100,
+      width: '100%', // Set the width to 100% of its parent container
+    },
+
+    toggleForm: {
+      marginTop: 20,
+    },
+    toggleFormText: {
+      color: '#007AFF',
+      fontSize: 16,
+      textAlign: 'center',
+    },
+    footer: {
+      flexDirection: 'row',
+      fontSize: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 10,
+      backgroundColor: 'rgba(0, 0, 0, 0.0)', // Semi-transparent black background
+    },
+    footerLink: {
+      fontSize: 16, // Increased font size for better tap targets
+      color: '#4A90E2',
+    },
+    footerDivider: {
+      fontSize: 14,
+      color: '#999', // Lighter for less emphasis
+      marginHorizontal: 5,
+    },
+    available: {
+      color: '#2ecc71', // Soft green for availability
+    },
+    unavailable: {
+      color: '#e74c3c', // Soft red for unavailability
+    },
+    enhancedInputContainer: {
+      marginBottom: 15,
+    },
+    enhancedInputLabel: {
+      color: '#333',
+      fontSize: 18, // Increased font size for better readability
+      fontWeight: '600',
+      marginBottom: 5,
+    },
+    enhancedInput: {
+      backgroundColor: '#f7f7f7', // Slightly darker to differentiate from the background
+      borderRadius: 8,
+      fontSize: 16,
+      paddingHorizontal: 15,
+      height: 50,
+    },
+    uniformButton: {
+      width: '100%',
+      height: 50,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    termsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginVertical: 10,
+    },
+    checkbox: {
+      marginRight: 10,
+      borderRadius: 4, // Rounded corners for the checkbox
+      borderWidth: 2, // Thicker border for better visibility
+      borderColor: '#333', // Darker border color for contrast
+    },
+    termsText: {
+      fontSize: 10,
+      color: '#333',
+    },
+    socialButtonsContainer: {
+      marginTop: 20,
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
+    
+    socialButton: {
+      marginHorizontal: 20,
+    },
+    
+    socialButtonIcon: {
+      width: 40,
+      height: 40,
+    },
+    profilePicUploadContainer: {
+      position: 'absolute',
+      top: -60, // Adjust the value to position the profile pic as desired
+      alignSelf: 'center',
+      zIndex: 1,
+    },
+  });
 
 export default LandingPage;

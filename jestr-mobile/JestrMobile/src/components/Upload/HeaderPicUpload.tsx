@@ -1,4 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { launchImageLibrary } from 'react-native-image-picker';
+
 
 interface HeaderPicUploadProps {
   onHeaderPicChange: (file: File | null) => void;
@@ -7,19 +10,17 @@ interface HeaderPicUploadProps {
 const HeaderPicUpload = ({ onHeaderPicChange }: HeaderPicUploadProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleHeaderPicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) {
-      console.log('Selected file:', file);
-      if (/^image\//.test(file.type)) {
-        setPreviewUrl(URL.createObjectURL(file));
-        onHeaderPicChange(file);
+  const handleHeaderPicChange = async () => {
+    const result = await launchImageLibrary({ mediaType: 'photo' });
+    if (result.assets && result.assets.length > 0) {
+      const file = result.assets[0];
+      if (file.type && file.type.startsWith('image/') && file.uri) {
+        setPreviewUrl(file.uri);
+        onHeaderPicChange(file as unknown as File);
         setErrorMessage('');
       } else {
         setErrorMessage('Only image files are allowed.');
-        (e.target as HTMLInputElement).value = '';
         setPreviewUrl(null);
         onHeaderPicChange(null);
       }
@@ -31,30 +32,38 @@ const HeaderPicUpload = ({ onHeaderPicChange }: HeaderPicUploadProps) => {
     }
   };
 
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
   return (
-    <div className={`header-pic-upload ${previewUrl ? 'header-pic-preview' : ''}`} onClick={triggerFileInput}>
+    <TouchableOpacity style={styles.headerPicUpload} onPress={handleHeaderPicChange}>
       {previewUrl ? (
-        <img src={previewUrl} alt="header-preview" />
+        <Image style={styles.headerPreview} source={{ uri: previewUrl }} />
       ) : (
-        <span className="header-pic-label">Click here to upload a header</span>
+        <Text style={styles.headerPicLabel}>Click here to upload a header</Text>
       )}
-      <input
-        id="headerPicInput"
-        type="file"
-        accept="image/*"
-        onChange={handleHeaderPicChange}
-        style={{ display: 'none' }}
-        ref={fileInputRef}
-      />
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
-    </div>
+      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
+    </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  headerPicUpload: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'lightgray',
+    height: 150,
+  },
+  headerPreview: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  headerPicLabel: {
+    fontSize: 16,
+    color: 'gray',
+  },
+  errorMessage: {
+    color: 'red',
+    marginTop: 10,
+  },
+});
 
 export default HeaderPicUpload;

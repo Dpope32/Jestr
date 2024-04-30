@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 interface InputFieldProps {
   label: string;
@@ -8,6 +8,9 @@ interface InputFieldProps {
   onChangeText: (text: string) => void;
   secureTextEntry?: boolean;
   onBlur?: () => void;
+  containerStyle?: ViewStyle;
+  labelStyle?: TextStyle;
+  inputStyle?: TextStyle;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -17,12 +20,15 @@ const InputField: React.FC<InputFieldProps> = ({
   onChangeText,
   secureTextEntry = false,
   onBlur,
+  containerStyle,
+  labelStyle,
+  inputStyle,
 }) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+    <View style={[styles.container, containerStyle]}>
+      <Text style={[styles.label, labelStyle]}>{label}</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, inputStyle]}
         placeholder={placeholder}
         value={value}
         onChangeText={onChangeText}
