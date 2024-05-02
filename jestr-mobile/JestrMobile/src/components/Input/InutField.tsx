@@ -11,6 +11,7 @@ interface InputFieldProps {
   containerStyle?: ViewStyle;
   labelStyle?: TextStyle;
   inputStyle?: TextStyle;
+  placeholderTextColor?: string; // Add this property to the props
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -23,6 +24,7 @@ const InputField: React.FC<InputFieldProps> = ({
   containerStyle,
   labelStyle,
   inputStyle,
+  placeholderTextColor = '#999', // Default to a gray color
 }) => {
   return (
     <View style={[styles.container, containerStyle]}>
@@ -34,6 +36,7 @@ const InputField: React.FC<InputFieldProps> = ({
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
         onBlur={onBlur}
+        placeholderTextColor={placeholderTextColor} // Apply the property here
       />
     </View>
   );

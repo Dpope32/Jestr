@@ -4,6 +4,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LandingPage from '../src/screens/LandingPage/LandingPage';
 import LoadingScreen from './components/LoadingScreen'
 import { enableScreens } from 'react-native-screens';
+import Feed from '../src/screens/Feed/Feed'; // Adjust the path to where your Feed component is located
+
 enableScreens();
 
 
@@ -23,10 +25,16 @@ function App(): React.JSX.Element {
           component={LandingPage}
           options={{ headerShown: false }}
         />
-        {/* Add other screens here */}
+        {/* Add the Feed screen */}
+        <Stack.Screen
+          name="Feed"
+          component={Feed}
+          options={{ headerShown: false }} // Adjust options as needed
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
 
 export default App;
