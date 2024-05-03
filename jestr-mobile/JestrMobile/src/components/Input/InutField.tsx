@@ -11,7 +11,7 @@ interface InputFieldProps {
   containerStyle?: ViewStyle;
   labelStyle?: TextStyle;
   inputStyle?: TextStyle;
-  placeholderTextColor?: string; // Add this property to the props
+  placeholderTextColor?: string;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -24,7 +24,7 @@ const InputField: React.FC<InputFieldProps> = ({
   containerStyle,
   labelStyle,
   inputStyle,
-  placeholderTextColor = '#999', // Default to a gray color
+  placeholderTextColor = '#999',
 }) => {
   return (
     <View style={[styles.container, containerStyle]}>
@@ -36,7 +36,7 @@ const InputField: React.FC<InputFieldProps> = ({
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
         onBlur={onBlur}
-        placeholderTextColor={placeholderTextColor} // Apply the property here
+        placeholderTextColor={placeholderTextColor}
       />
     </View>
   );
@@ -44,17 +44,28 @@ const InputField: React.FC<InputFieldProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
     marginBottom: 8,
+    color: '#333',
+    fontWeight: 'bold',
   },
   input: {
-    height: 40,
-    borderColor: 'gray',
+    height: 50,
+    borderColor: '#ccc',
     borderWidth: 1,
-    paddingHorizontal: 8,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    backgroundColor: '#fff',
+    fontSize: 16,
+    color: '#333',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
 });
 

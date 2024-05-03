@@ -20,6 +20,8 @@ import {
   faAd,
 } from '@fortawesome/free-solid-svg-icons';
 import Anon1Image from '../assets/images/db/Jestr5.jpg';
+import { Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type ProfilePanelProps = {
   isVisible: boolean;
@@ -105,7 +107,32 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   };
 
   const handleSignOut = () => {
-    navigation.navigate('LandingPage');
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log Out', onPress: confirmSignOut },
+      ],
+      { cancelable: false }
+    );
+  };
+  
+  const confirmSignOut = async () => {
+    try {
+      console.log('Confirming sign-out...');
+      // Clear local storage
+      await AsyncStorage.removeItem('user');
+  
+      console.log('User data cleared from AsyncStorage');
+  
+      // Navigate to the landing page
+      navigation.navigate('LandingPage');
+  
+      console.log('Navigated to LandingPage');
+    } catch (error) {
+      console.error('Error during sign-out:', error);
+    }
   };
 
   const closeModal = () => {

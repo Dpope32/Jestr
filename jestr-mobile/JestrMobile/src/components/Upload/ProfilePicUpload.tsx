@@ -1,11 +1,10 @@
-// ProfilePicUpload.tsx
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 
 interface ProfilePicUploadProps {
   onProfilePicChange: (file: File | null) => void;
-  style?: ViewStyle; // Add this line to include a style prop
+  style?: ViewStyle;
 }
 
 const ProfilePicUpload = ({ onProfilePicChange }: ProfilePicUploadProps) => {
@@ -16,12 +15,12 @@ const ProfilePicUpload = ({ onProfilePicChange }: ProfilePicUploadProps) => {
     const result = await launchImageLibrary({ mediaType: 'photo' });
     if (result.assets && result.assets.length > 0) {
       const file = result.assets[0];
-      if (file.type === 'image/jpeg' && file.uri) {
+      if (file.uri && file.type?.startsWith('image/')) {
         setPreviewUrl(file.uri);
         onProfilePicChange(file as unknown as File);
         setErrorMessage('');
       } else {
-        setErrorMessage('Only JPEG files are allowed.');
+        setErrorMessage('Only image files are allowed.');
         setPreviewUrl(null);
         onProfilePicChange(null);
       }
@@ -50,19 +49,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'lightgray',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    position: 'absolute',
+    top: '22%',
+    zIndex: 4,
+    left: '31%',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
-  
   profilePreview: {
     width: '100%',
     height: '100%',
-    borderRadius: 50,
+    borderRadius: 60,
   },
   plusIcon: {
-    fontSize: 24,
+    fontSize: 40,
     color: 'gray',
   },
   errorMessage: {

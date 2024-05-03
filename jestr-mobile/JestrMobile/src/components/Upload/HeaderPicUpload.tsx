@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 
-
 interface HeaderPicUploadProps {
   onHeaderPicChange: (file: File | null) => void;
 }
@@ -15,7 +14,7 @@ const HeaderPicUpload = ({ onHeaderPicChange }: HeaderPicUploadProps) => {
     const result = await launchImageLibrary({ mediaType: 'photo' });
     if (result.assets && result.assets.length > 0) {
       const file = result.assets[0];
-      if (file.type && file.type.startsWith('image/') && file.uri) {
+      if (file.uri && file.type?.startsWith('image/')) {
         setPreviewUrl(file.uri);
         onHeaderPicChange(file as unknown as File);
         setErrorMessage('');
@@ -49,11 +48,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'lightgray',
-    height: 150,
+    height: 170,
+    width: '100%',
   },
   headerPreview: {
-    width: '100%',
-    height: '100%',
+    width: '105%',
+    height: '105%',
     resizeMode: 'cover',
   },
   headerPicLabel: {

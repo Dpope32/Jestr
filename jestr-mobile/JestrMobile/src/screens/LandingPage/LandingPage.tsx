@@ -18,8 +18,15 @@ import { KeyboardAvoidingView, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import CheckBox from 'react-native-checkbox';
-
+import radialGradientBg from '../../assets/images/radial_gradient_bg.png';
+import { Image} from 'react-native';
+import ProfileCompletedSlideshow from './ProfileCompletedSlideshow';
 import { styles } from './LandingPage.styles';
+import googleIcon from '../../assets/images/google.jpeg';
+import appleIcon from '../../assets/images/apple.jpg';
+import twitterIcon from '../../assets/images/twitter.jpg';
+
+
 import {
   handleSignup,
   handleCompleteProfile,
@@ -29,7 +36,7 @@ import {
   handleTwitterSignIn
 } from '../../services/authFunctions';
 
-const radialGradientBg = require('../../assets/images/radial_gradient_bg.png');
+
 
 type User = {
   email: string;
@@ -70,6 +77,7 @@ const LandingPage = () => {
   const [animationComplete, setAnimationComplete] = useState(false);
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(false);
   const [bio, setBio] = useState('');
+  const [showProfileCompletedSlideshow, setShowProfileCompletedSlideshow] = useState(false);
   const [lastLogin, setLastLogin] = useState('');
   const [isdisplayNameAvailable, setIsdisplayNameAvailable] = useState(false);
   const defaultProfilePic = 'https://via.placeholder.com/150';
@@ -102,6 +110,7 @@ const LandingPage = () => {
         navigation.navigate('Feed', { user: JSON.parse(user) });
       } else {
         setIsAuthenticated(false);
+        // Optionally, display a welcome message or perform any other action when the user is not authenticated
       }
     } catch (error) {
       console.error('Error checking authentication status:', error);
@@ -110,6 +119,7 @@ const LandingPage = () => {
 
   useEffect(() => {
     checkAuthStatus();
+    console.log('LandingPage component mounted');
     startAnimation();
   }, []);
 
@@ -240,7 +250,7 @@ const LandingPage = () => {
     setTitleMarginTop(0); // Set to a higher value in pixels
     setAnimationComplete(true);  
     titleAnimationRef.current = Animated.timing(titleTranslateY, {
-      toValue: -10, // Reduced vertical translation
+      toValue: -30, // Reduced vertical translation
       duration: 500,
       useNativeDriver: true
     });
@@ -251,13 +261,36 @@ const LandingPage = () => {
       console.log('Title position =', titlePosition);
     }
   };
+
+  const handleProfileCompletionComplete = async () => {
+    setShowProfileCompletedSlideshow(false);
+
+    try {
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+            const user = JSON.parse(storedUser);
+
+            navigation.navigate('Feed', { user });
+        } else {
+            console.error('No user data found in AsyncStorage');
+            Alert.alert('Error', 'User data not found. Please sign in again.');
+        }
+    } catch (error) {
+        console.error('Error retrieving user data:', error);
+        Alert.alert('Error', 'An error occurred. Please try again.');
+    }
+};
   
 
   return (
     <ImageBackground source={radialGradientBg} style={styles.container} resizeMode="cover">
       {!isAuthenticated && (
         <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        <View style={[styles.titleContainer, { marginTop: titleMarginTop }]}>
+             {showProfileCompletedSlideshow && (
+            <ProfileCompletedSlideshow onComplete={handleProfileCompletionComplete} />
+          )}
+          <View style={[styles.titleContainer, { marginTop: titleMarginTop }]}>
+            
             {letterScale.map((anim, index) => (
               <Animated.Text
                 key={index}
@@ -273,7 +306,7 @@ const LandingPage = () => {
               </Animated.Text>
             ))}
           </View>
-
+  
           {animationComplete && (
             <Animated.View
               style={{
@@ -285,114 +318,116 @@ const LandingPage = () => {
                 <View style={styles.initialScreen}>
                   <Text style={styles.welcomeText}>Welcome</Text>
                   <TouchableOpacity style={styles.button} onPress={handleSignUpClick}>
-                  <LinearGradient
-                        colors={['#002400', '#00e100']}
-                        start={{ x: 0, y: 0.5 }}
-                        end={{ x: 1, y: 0.5 }}
-                        style={styles.gradient}
-                      >
-                    <Text style={styles.buttonText}>Sign Up</Text>
+                    <LinearGradient
+                      colors={['#002400', '#00e100']}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={styles.gradient}
+                    >
+                      <Text style={styles.buttonText}>Sign Up</Text>
                     </LinearGradient>
                   </TouchableOpacity>
-
+  
                   <TouchableOpacity style={styles.button} onPress={handleLoginClick}>
-                  <LinearGradient
-                        colors={['#002400', '#00e100']}
-                        start={{ x: 0, y: 0.5 }}
-                        end={{ x: 1, y: 0.5 }}
-                        style={styles.gradient}
-                      >
-                    <Text style={styles.buttonText}>Login</Text>
+                    <LinearGradient
+                      colors={['#002400', '#00e100']}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={styles.gradient}
+                    >
+                      <Text style={styles.buttonText}>Login</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                   <View style={styles.separator}></View>
                   <Text style={styles.socialHeaderText}>Login with Social Media</Text>
-
+  
                   <View style={styles.socialButtonsContainer}>
                     <TouchableOpacity onPress={handleGoogleSignIn} style={styles.socialButton}>
-                      <FontAwesomeIcon name="google" size={24} color="#DB4437" />
+                      <Image source={googleIcon} style={styles.socialIcon} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleAppleSignIn} style={styles.socialButton}>
-                      <FontAwesomeIcon name="apple" size={24} color="#000000" />
+                      <Image source={appleIcon} style={styles.socialIcon} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleTwitterSignIn} style={styles.socialButton}>
-                      <MaterialIcon name="twitter" size={24} color="#1DA1F2" />
+                      <Image source={twitterIcon} style={styles.socialIcon} />
                     </TouchableOpacity>
                   </View>
+
                 </View>
               ) : (
                 <KeyboardAvoidingView
                   behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                   style={styles.formContainer}
                 >
-                  <View style={styles.formContainer}>
-                    <Text style={styles.signupHeader}>{showSignUpForm ? 'Sign Up' : 'Login'}</Text>
-                    <InputField
-                      label=""
-                      placeholder="Enter Email"
-                      value={email}
-                      onChangeText={text => setEmail(text)}
-                      containerStyle={styles.enhancedInputContainer}
-                      labelStyle={styles.enhancedInputLabel}
-                      inputStyle={styles.enhancedInput}
-                    />
-                    {isEmailTaken && <Text style={styles.errorMessage}>Email already taken!</Text>}
-                    <InputField
-                      label=""
-                      placeholder="Enter Password"
-                      secureTextEntry
-                      value={password}
-                      onChangeText={text => setPassword(text)}
-                      containerStyle={styles.enhancedInputContainer}
-                      labelStyle={styles.enhancedInputLabel}
-                      inputStyle={styles.enhancedInput}
-                    />
-                    {showSignUpForm && (
-                      <>
-                        <InputField
-                          label=""
-                          placeholder="Re-enter Password"
-                          secureTextEntry
-                          value={confirmPassword}
-                          onChangeText={text => setConfirmPassword(text)}
-                          containerStyle={styles.enhancedInputContainer}
-                          labelStyle={styles.enhancedInputLabel}
-                          inputStyle={styles.enhancedInput}
-                        />
-                        {password !== confirmPassword && (
-                          <Text style={styles.errorMessage}>Passwords do not match!</Text>
-                        )}
-                        <View style={styles.termsContainer}>
-                          <CheckBox
-                            label="I have read and agree to the terms and conditions"
-                            checked={termsAccepted}
-                            onChange={handleTermsCheckbox}
-                            style={styles.checkbox}
-                            labelStyle={styles.termsText}
+                  {!isSignedUp && (
+                    <View style={styles.formContainer}>
+                      <Text style={styles.signupHeader}>{showSignUpForm ? 'Sign Up' : 'Login'}</Text>
+                      <InputField
+                        label=""
+                        placeholder="Enter Email"
+                        value={email}
+                        onChangeText={text => setEmail(text)}
+                        containerStyle={styles.enhancedInputContainer}
+                        labelStyle={styles.enhancedInputLabel}
+                        inputStyle={styles.enhancedInput}
+                      />
+                      {isEmailTaken && <Text style={styles.errorMessage}>Email already taken!</Text>}
+                      <InputField
+                        label=""
+                        placeholder="Enter Password"
+                        secureTextEntry
+                        value={password}
+                        onChangeText={text => setPassword(text)}
+                        containerStyle={styles.enhancedInputContainer}
+                        labelStyle={styles.enhancedInputLabel}
+                        inputStyle={styles.enhancedInput}
+                      />
+                      {showSignUpForm && (
+                        <>
+                          <InputField
+                            label=""
+                            placeholder="Re-enter Password"
+                            secureTextEntry
+                            value={confirmPassword}
+                            onChangeText={text => setConfirmPassword(text)}
+                            containerStyle={styles.enhancedInputContainer}
+                            labelStyle={styles.enhancedInputLabel}
+                            inputStyle={styles.enhancedInput}
                           />
-                        </View>
-                      </>
-                    )}
-
-                  <TouchableOpacity
-                    onPress={() =>
-                      showSignUpForm
-                        ? handleSignup(email, password, setIsSignedUp)
-                        : handleLogin(email, password, setIsLoading, navigation)
-                    }
-                    style={styles.button}
-                  >
-                      <LinearGradient
-                        colors={['#002400', '#00e100']}
-                        start={{ x: 0, y: 0.5 }}
-                        end={{ x: 1, y: 0.5 }}
-                        style={styles.gradient}
+                          {password !== confirmPassword && (
+                            <Text style={styles.errorMessage}>Passwords do not match!</Text>
+                          )}
+                          <View style={styles.termsContainer}>
+                            <CheckBox
+                              label="I have read and agree to the terms and conditions"
+                              checked={termsAccepted}
+                              onChange={handleTermsCheckbox}
+                              style={styles.checkbox}
+                              labelStyle={styles.termsText}
+                            />
+                          </View>
+                        </>
+                      )}
+  
+                      <TouchableOpacity
+                        onPress={() =>
+                          showSignUpForm
+                            ? handleSignup(email, password, setIsSignedUp)
+                            : handleLogin(email, password, setIsLoading, navigation)
+                        }
+                        style={styles.button}
                       >
-                        <Text style={styles.buttonText}>{showSignUpForm ? 'Sign Up' : 'Login'}</Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
+                        <LinearGradient
+                          colors={['#002400', '#00e100']}
+                          start={{ x: 0, y: 0.5 }}
+                          end={{ x: 1, y: 0.5 }}
+                          style={styles.gradient1}
+                        >
+                          <Text style={styles.buttonText}>{showSignUpForm ? 'Sign Up' : 'Login'}</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+  
+                      <TouchableOpacity
                         onPress={() => setShowSignUpForm(!showSignUpForm)}
                         style={styles.toggleForm}
                       >
@@ -402,43 +437,81 @@ const LandingPage = () => {
                             : 'Need an account? Sign up here'}
                         </Text>
                       </TouchableOpacity>
+  
+                      {!showSignUpForm && (
+                        <TouchableOpacity
+                          onPress={handleForgotPassword}
+                          style={styles.toggleForm}
+                        >
+                          <Text style={styles.toggleFormText}>Forgot Password?</Text>
+                        </TouchableOpacity>
+                      )}
+                      {!isSignedUp && (
+                        <View style={styles.socialButtonsContainer}>
+                            <TouchableOpacity onPress={handleGoogleSignIn} style={styles.socialButton}>
+                      <Image source={googleIcon} style={styles.socialIcon} />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={handleAppleSignIn} style={styles.socialButton}>
+                      <Image source={appleIcon} style={styles.socialIcon} />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={handleTwitterSignIn} style={styles.socialButton}>
+                      <Image source={twitterIcon} style={styles.socialIcon} />
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
+                  )}
+                  {isSignedUp && (
+                    <View style={styles.headerUploadContainer}>
+                      <HeaderPicUpload onHeaderPicChange={handleHeaderPicChange} />
+                      <ProfilePicUpload onProfilePicChange={handleProfilePicChange} />
+                      <View style={styles.inputFieldsContainer}>
+                        <InputField
+                          label=""
+                          placeholder="Enter Display Name"
+                          value={displayName}
+                          onChangeText={setDisplayName}
+                          containerStyle={{ marginBottom: 20 }}
+                          inputStyle={styles.inputField}
+                        />
+                        <InputField
+                          label=""
+                          placeholder="Enter Username"
+                          value={username}
+                          onChangeText={setUsername}
+                          containerStyle={{ marginBottom: 20 }}
+                          inputStyle={styles.inputField}
+                        />
+                      </View>
 
-
-                    {!showSignUpForm && (
+  
+                      {/* Complete Profile Button */}
                       <TouchableOpacity
-                        onPress={handleForgotPassword}
-                        style={styles.toggleForm}
+                        onPress={() =>
+                          handleCompleteProfile(
+                            email,
+                            username,
+                            displayName,
+                            profilePic,
+                            headerPicFile,
+                            navigation
+                          )
+                        }
+                        style={styles.button}
                       >
-                        <Text style={styles.toggleFormText}>Forgot Password?</Text>
+                        <LinearGradient
+                          colors={['#002400', '#00e100']}
+                          start={{ x: 0, y: 0.5 }}
+                          end={{ x: 1, y: 0.5 }}
+                          style={styles.gradient}
+                        >
+                          <Text style={styles.buttonText}>Complete Profile</Text>
+                        </LinearGradient>
                       </TouchableOpacity>
-                    )}
 
-                    {!isSignedUp && (
-                     <View style={styles.socialButtonsContainer}>
-                     <TouchableOpacity onPress={handleGoogleSignIn} style={styles.socialButton}>
-                       <FontAwesomeIcon
-                         name="google"
-                         size={50} // Adjusted size
-                         color="#DB4437"
-                       />
-                     </TouchableOpacity>
-                     <TouchableOpacity onPress={handleAppleSignIn} style={styles.socialButton}>
-                       <FontAwesomeIcon
-                         name="apple"
-                         size={50} // Adjusted size
-                         color="#000000"
-                       />
-                     </TouchableOpacity>
-                     <TouchableOpacity onPress={handleTwitterSignIn} style={styles.socialButton}>
-                       <MaterialIcon
-                         name="twitter"
-                         size={50} // Adjusted size
-                         color="#1DA1F2"
-                       />
-                     </TouchableOpacity>
-                   </View>
-                    )}
-                  </View>
+                      
+                    </View>
+                  )}
                 </KeyboardAvoidingView>
               )}
             </Animated.View>
@@ -455,5 +528,4 @@ const LandingPage = () => {
     </ImageBackground>
   );
 }
-
-export default LandingPage;
+  export default LandingPage;

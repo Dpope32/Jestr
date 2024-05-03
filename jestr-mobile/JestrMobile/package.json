@@ -10,15 +10,18 @@
     "test": "jest"
   },
   "dependencies": {
+    "@expo/vector-icons": "^14.0.1",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@fortawesome/react-native-fontawesome": "^0.3.0",
     "@invertase/react-native-apple-authentication": "^2.3.0",
     "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-native-community/checkbox": "^0.5.17",
+    "@react-native-community/image-editor": "^4.2.0",
     "@react-native-google-signin/google-signin": "^11.0.1",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/stack": "^6.3.29",
+    "expo-font": "^11.10.3",
     "react": "18.2.0",
     "react-native": "0.74.0",
     "react-native-checkbox": "^2.0.0",

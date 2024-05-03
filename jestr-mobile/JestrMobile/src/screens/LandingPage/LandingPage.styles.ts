@@ -21,13 +21,14 @@ export  const styles = StyleSheet.create({
             alignItems: 'center',
           },
   titleLetter: {
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowColor: 'rgba(255, 255, 255, 0.1)',
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
     fontSize: 60,
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
+    marginBottom: 30,
   },
     title: {
         fontSize: 48,
@@ -37,11 +38,11 @@ export  const styles = StyleSheet.create({
         marginBottom: 30,
       },
         formContainer: {
-          backgroundColor: 'rgba(255, 255, 255, 1.0)',
+          backgroundColor: 'rgba(255, 255, 255, 0.3)',
           borderRadius: 10,
-          paddingHorizontal: 24,
+          paddingHorizontal: 0,
           paddingVertical: 0,
-          width: '90%', 
+          width: '100%', 
           maxWidth: 340, 
           alignSelf: 'center',
           borderWidth: 1,
@@ -54,22 +55,21 @@ export  const styles = StyleSheet.create({
           shadowOpacity: 0.2,
           shadowRadius: 10,
           elevation: 0,
-          marginTop: 10, 
         },
         
         signupHeader: {
           fontSize: 32,
           fontWeight: 'bold',
-          color: '#333',
+          color: '#000',
           alignSelf: 'center',
-          marginTop: 10,
+          marginTop: 20,
         },
         profileContainer: {
           alignItems: 'center',
         },
         headerUploadContainer: {
-          width: '100%',
-          marginBottom: 30, 
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         profilePicUpload: {
           position: 'absolute',
@@ -85,11 +85,26 @@ export  const styles = StyleSheet.create({
         buttonContainer: {
           width: '100%',
           marginTop: 10,
+          
         },
         
         button: {
             borderRadius: 25,
-            marginVertical: 10,
+            marginTop: 20,
+            marginHorizontal: 40,
+            
+          },
+
+          gradient1: {
+            height: 50, 
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+            color: '#fff',
+            marginBottom: 0,
+            borderRadius: 25,
+            paddingHorizontal: 40,
+            
           },
 
         gradient: {
@@ -98,7 +113,9 @@ export  const styles = StyleSheet.create({
           alignItems: 'center',
           width: '100%',
           color: '#fff',
+          marginBottom: 20,
           borderRadius: 25,
+          
         },
         
         buttonText: {
@@ -106,7 +123,7 @@ export  const styles = StyleSheet.create({
             color: '#fff',
             textAlign: 'center',
             fontWeight: 'bold',
-            paddingHorizontal: 80,
+            paddingHorizontal: 60,
           },
     
         toggleForm: {
@@ -141,12 +158,12 @@ export  const styles = StyleSheet.create({
             marginTop: 20, // Adjusted for spacing
           },
           welcomeText: {
-            fontSize: 42,
+            fontSize: 48,
             fontWeight: 'bold',
             fontFamily: 'Lato-Bold',
             color: '#fff',
             marginBottom: 20,
-            marginTop: -100,
+            marginTop: 100,
             letterSpacing: 2,
             textShadowColor: 'rgba(0, 0, 0, 0.3)',
             textShadowOffset: { width: 2, height: 2 },
@@ -160,6 +177,7 @@ export  const styles = StyleSheet.create({
         },
         enhancedInputContainer: {
           marginBottom: 0,
+          marginHorizontal: 30,
         },
         enhancedInputLabel: {
           color: '#333',
@@ -184,17 +202,19 @@ export  const styles = StyleSheet.create({
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          marginVertical: 10,
+          marginTop: 20,
         },
         checkbox: {
           marginRight: 10,
           borderRadius: 4, 
           borderWidth: 2, 
           borderColor: '#333',
+          marginVertical: 5,
         },
         termsText: {
           fontSize: 10,
           color: '#333',
+          marginVertical: 10,
         },
         socialHeaderText: {
             fontSize: 18,
@@ -220,11 +240,46 @@ export  const styles = StyleSheet.create({
             width: '100%',
             marginVertical: 60, // Adjusted to move everything up
           },
+          socialIcon: {
+            width: 40, // Adjust the size as needed
+            height: 40,
+            resizeMode: 'contain',
+            marginBottom: 20,
+          },
+          inputFieldsContainer: {
+            marginTop: 40, 
+          },
+          inputField: {
+            height: 50, 
+            borderWidth: 1,
+            borderColor: '#ccc', 
+            borderRadius: 8, 
+            paddingHorizontal: 55, 
+            backgroundColor: '#fff', 
+            elevation: 1, 
+            shadowColor: '#000', 
+            shadowOffset: { width: 0, height: 2 }, 
+            shadowOpacity: 0.1, 
+            shadowRadius: 8,
+          },
+          inputStyle: {
+            height: 50, 
+            borderWidth: 1,
+            borderColor: '#ccc', 
+            borderRadius: 8, 
+            paddingHorizontal: 15, 
+            backgroundColor: '#fff', 
+            elevation: 1, 
+            shadowColor: '#000', 
+            shadowOffset: { width: 0, height: 2 }, 
+            shadowOpacity: 0.1, 
+            shadowRadius: 8, 
+          },
         
 
         profilePicUploadContainer: {
           position: 'absolute',
-          top: -60, 
+          top: -70, 
           alignSelf: 'center',
           zIndex: 1,
         },
