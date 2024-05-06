@@ -2,6 +2,8 @@
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp } from '@react-navigation/native';
+import { Asset } from 'react-native-image-picker';
+import RNFetchBlob from 'rn-fetch-blob';
 
 export type User = {
     email: string;
@@ -73,36 +75,36 @@ export type User = {
       }
     };
 // Utility function to convert file to base64 string
-const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
-  });
+const fileToBase64 = async (uri: string): Promise<string | null> => {
+  try {
+    const base64 = await RNFetchBlob.fs.readFile(uri, 'base64');
+    return base64;
+  } catch (error) {
+    console.error('Error converting file to base64:', error);
+    return null;
+  }
+};
 
 export const handleCompleteProfile = async (
   email: string,
   username: string,
   displayName: string,
-  profilePicFile: File | null,
-  headerPicFile: File | null,
+  profilePic: Asset | null,
+  headerPicFile: Asset | null,
   navigation: LandingPageNavigationProp
-): Promise<void> => {
+) => {
   try {
-    const profilePic = profilePicFile ? await fileToBase64(profilePicFile) : null;
-    const headerPic = headerPicFile ? await fileToBase64(headerPicFile) : null;
+    const profilePicBase64 = profilePic && profilePic.uri ? await fileToBase64(profilePic.uri) : null;
+    const headerPicBase64 = headerPicFile && headerPicFile.uri ? await fileToBase64(headerPicFile.uri) : null;
 
     const profileData = {
       operation: 'completeProfile',
       email,
       username,
       displayName,
-      profilePic,
-      headerPic,
+      profilePic: profilePicBase64,
+      headerPic: headerPicBase64,
     };
-
-    console.log('Sending complete profile request with data:', profileData);
 
     const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
       method: 'POST',
@@ -113,9 +115,8 @@ export const handleCompleteProfile = async (
     });
 
     const data = await response.json();
-
     if (response.ok) {
-      console.log('Profile completed successfully with response:', data);
+      console.log('Profile data being passed:', data.user); 
       Alert.alert(
         'Success',
         'Profile completed successfully!',
@@ -123,7 +124,6 @@ export const handleCompleteProfile = async (
         { cancelable: false }
       );
     } else {
-      console.error('Failed to complete profile', data);
       Alert.alert('Error', data.message || 'Failed to complete profile');
     }
   } catch (error) {
@@ -131,6 +131,7 @@ export const handleCompleteProfile = async (
     Alert.alert('Error', 'An error occurred while completing your profile. Please try again.');
   }
 };
+
 
 
     export const handleLogin = async (

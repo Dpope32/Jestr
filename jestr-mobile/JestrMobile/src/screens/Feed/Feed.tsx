@@ -1,17 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ImageBackground, ScrollView } from 'react-native';
-import { animated, useSpring } from 'react-spring';
 import { Animated } from 'react-native';
 import MediaPlayer from '../../components/MediaPlayer';
 import CommentFeed from '../../components/CommentFeed';
 import ProfilePanel from '../../components/ProfilePanel';
 import TopPanel from '../../components/TopPanel';
 import BottomPanel from '../../components/BottomPanel';
-import { getFromS3 } from '../../utils/s3Utils';
 import styles from './Feed.styles';
-import radialGradientBg from '../../assets/images/radial_gradient_bg.png'
-import { NavigationProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import radialGradientBg from '../../assets/images/radial_gradient_bg.png';
 
 export type User = {
   email: string;
@@ -27,17 +25,16 @@ type RootStackParamList = {
   Feed: { user: User };
 };
 
-type FeedNavigationProp = NavigationProp<RootStackParamList, 'Feed'>;
+const Feed: React.FC<{ route: any }> = ({ route }) => {
+  const { user } = route.params || {};
+  console.log('Received user data in Feed:', user); // Log received data
 
-type LetterScale = {
-  scale: Animated.AnimatedInterpolation<string | number>;
-  opacity: Animated.AnimatedInterpolation<string | number>;
-}[];
-
-const Feed: React.FC<{ navigation: FeedNavigationProp }> = ({ navigation }) => {
+  // Define the user state
+  const [localUser, setLocalUser] = useState<User | null>(user || null);
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [profilePicUrl, setProfilePicUrl] = useState('');
-  const [username, setUsername] = useState('');
+  const [profilePicUrl, setProfilePicUrl] = useState(user ? user.profilePic : '');
+  const [username, setUsername] = useState(user ? user.username : '');
   const [shuffledMedia, setShuffledMedia] = useState([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [handleLike, setHandleLike] = useState<(index: number) => void>(() => {});
@@ -49,8 +46,9 @@ const Feed: React.FC<{ navigation: FeedNavigationProp }> = ({ navigation }) => {
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [goToPrevMedia, setGoToPrevMedia] = useState<() => void>(() => {});
   const [goToNextMedia, setGoToNextMedia] = useState<() => void>(() => {});
-  const [user, setUser] = useState<User | null>(null);
   const [isProfilePanelVisible, setIsProfilePanelVisible] = useState(false);
+  const navigation = useNavigation();
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -58,7 +56,7 @@ const Feed: React.FC<{ navigation: FeedNavigationProp }> = ({ navigation }) => {
         const storedUser = await AsyncStorage.getItem('user');
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+          setLocalUser(parsedUser);
           setProfilePicUrl(parsedUser.profilePic);
         }
       } catch (error) {
@@ -69,16 +67,15 @@ const Feed: React.FC<{ navigation: FeedNavigationProp }> = ({ navigation }) => {
     fetchUser();
   }, []);
 
-
   return (
     <ImageBackground source={radialGradientBg} style={styles.container} resizeMode="cover">
-    {!isAuthenticated && (
-      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+      {!isAuthenticated && (
+        <ScrollView contentContainerStyle={styles.scrollViewContainer}>
           {/* Render other components */}
           <TopPanel
             onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)}
             profilePicUrl={profilePicUrl}
-            username={user ? user.username : 'Default Username'} // or user.username ?? 'Default Username'
+            username={localUser ? localUser.username : 'Default Username'}
           />
           <MediaPlayer
             currentMedia={shuffledMedia[currentMediaIndex]}
@@ -102,22 +99,21 @@ const Feed: React.FC<{ navigation: FeedNavigationProp }> = ({ navigation }) => {
             currentMediaIndex={currentMediaIndex}
             toggleCommentFeed={toggleCommentFeed}
           />
-           {isProfilePanelVisible && user && (
-            <ProfilePanel
-            isVisible={isProfilePanelVisible}
-            onClose={() => setIsProfilePanelVisible(false)}
-            profilePicUrl={user ? user.profilePic : ''}
-            username={user ? user.username : ''}
-            displayName={user ? user.displayName : ''}
-            followersCount={ '0'} 
-            followingCount={'0'} 
-            onDarkModeToggle={() => {}} 
-            user={user}
-            navigation={navigation}
-          />
+          {isProfilePanelVisible && localUser && (
+          <ProfilePanel
+          isVisible={isProfilePanelVisible}
+          onClose={() => setIsProfilePanelVisible(false)}
+          profilePicUrl={localUser.profilePic}
+          username={localUser.username}
+          displayName={localUser.displayName}
+          followersCount="0"
+          followingCount="0"
+          onDarkModeToggle={() => {}}
+          user={localUser}
+          navigation={navigation}  // Pass the navigation prop here
+        />
           )}
           {isCommentFeedVisible && <CommentFeed mediaIndex={currentMediaIndex} />}
-          {/* Render other components */}
         </ScrollView>
       )}
     </ImageBackground>

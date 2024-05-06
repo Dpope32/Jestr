@@ -13,8 +13,12 @@ const ProfilePicUpload = ({ onProfilePicChange }: ProfilePicUploadProps) => {
 
   const handleProfilePicChange = async () => {
     const result = await launchImageLibrary({ mediaType: 'photo' });
+    console.log('launchImageLibrary result:', result);
+  
     if (result.assets && result.assets.length > 0) {
       const file = result.assets[0];
+      console.log('Selected file:', file);
+  
       if (file.uri && file.type?.startsWith('image/')) {
         setPreviewUrl(file.uri);
         onProfilePicChange(file as unknown as File);

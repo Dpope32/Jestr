@@ -262,33 +262,12 @@ const LandingPage = () => {
     }
   };
 
-  const handleProfileCompletionComplete = async () => {
-    setShowProfileCompletedSlideshow(false);
-
-    try {
-        const storedUser = await AsyncStorage.getItem('user');
-        if (storedUser) {
-            const user = JSON.parse(storedUser);
-
-            navigation.navigate('Feed', { user });
-        } else {
-            console.error('No user data found in AsyncStorage');
-            Alert.alert('Error', 'User data not found. Please sign in again.');
-        }
-    } catch (error) {
-        console.error('Error retrieving user data:', error);
-        Alert.alert('Error', 'An error occurred. Please try again.');
-    }
-};
   
 
   return (
     <ImageBackground source={radialGradientBg} style={styles.container} resizeMode="cover">
       {!isAuthenticated && (
         <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-             {showProfileCompletedSlideshow && (
-            <ProfileCompletedSlideshow onComplete={handleProfileCompletionComplete} />
-          )}
           <View style={[styles.titleContainer, { marginTop: titleMarginTop }]}>
             
             {letterScale.map((anim, index) => (
