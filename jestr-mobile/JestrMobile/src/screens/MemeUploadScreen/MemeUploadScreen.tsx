@@ -26,6 +26,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
   const [isProfilePanelVisible, setIsProfilePanelVisible] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState(user ? user.profilePic : '');
   const [localUser, setLocalUser] = useState<User | null>(user || null);
+  const [imageUploaded, setImageUploaded] = useState(false);  // State to track if an image is uploaded
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -45,6 +46,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
 
   const handleUploadSuccess = (url: string) => {
     console.log('Meme uploaded successfully:', url);
+    setImageUploaded(true);  // Update state when image is uploaded
     navigation.goBack();
   };
 
@@ -61,11 +63,12 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
         username={localUser ? localUser.username : 'Default Username'}
       />
       <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>Upload Your Meme</Text>
-          <Text style={styles.subtitle}>Easily share your memes with friends!</Text>
-          
-        </View>
+      <View style={styles.titleContainer}>
+  <Text style={styles.title}>Upload Your Meme</Text>
+  {!imageUploaded && (
+    <Text style={styles.subtitle}>Easily share your memes with friends!</Text>  
+  )}
+</View>
         <ProgressBarAndroid style={styles.progress} styleAttr="Horizontal" indeterminate={true} color="#00a100" />
         <View style={styles.card}>
           <MemeUpload onUploadSuccess={handleUploadSuccess} userEmail={user.email} />
@@ -99,7 +102,7 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   container: {
     flex: 1,
