@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ImageBackground, ScrollView } from 'react-native';
+import { View, ImageBackground, TextInput, ScrollView } from 'react-native';
 import { Animated } from 'react-native';
 import MediaPlayer from '../../components/MediaPlayer';
 import CommentFeed from '../../components/CommentFeed';
@@ -98,6 +98,7 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
             likeDislikeCounts={likeDislikeCounts}
             currentMediaIndex={currentMediaIndex}
             toggleCommentFeed={toggleCommentFeed}
+            user={localUser} // Pass the localUser as the user prop
           />
           {isProfilePanelVisible && localUser && (
           <ProfilePanel
