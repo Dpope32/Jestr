@@ -6,7 +6,6 @@ import TopPanel from '../../components/TopPanel';
 import BottomPanel from '../../components/BottomPanel';
 import radialGradientBg from '../../assets/images/radial_gradient_bg.png';
 
-
 type MemeUploadScreenProps = {
   navigation: any;
   route: any;
@@ -26,7 +25,8 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
   const [isProfilePanelVisible, setIsProfilePanelVisible] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState(user ? user.profilePic : '');
   const [localUser, setLocalUser] = useState<User | null>(user || null);
-  const [imageUploaded, setImageUploaded] = useState(false);  // State to track if an image is uploaded
+  const [imageUploaded, setImageUploaded] = useState(false);
+  const [imageSelected, setImageSelected] = useState(false); // State to track if an image is selected
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -46,8 +46,11 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
 
   const handleUploadSuccess = (url: string) => {
     console.log('Meme uploaded successfully:', url);
-    setImageUploaded(true);  // Update state when image is uploaded
-    navigation.goBack();
+    setImageUploaded(true);
+  };
+
+  const handleImageSelect = (selected: boolean) => {
+    setImageSelected(selected);
   };
 
   const handleHomeClick = () => {
@@ -63,15 +66,21 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
         username={localUser ? localUser.username : 'Default Username'}
       />
       <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <View style={styles.titleContainer}>
-  <Text style={styles.title}>Upload Your Meme</Text>
-  {!imageUploaded && (
-    <Text style={styles.subtitle}>Easily share your memes with friends!</Text>  
-  )}
-</View>
+        {!imageSelected && (
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>Upload Your Meme</Text>
+            {!imageUploaded && (
+              <Text style={styles.subtitle}>Easily share your memes with friends!</Text>
+            )}
+          </View>
+        )}
         <ProgressBarAndroid style={styles.progress} styleAttr="Horizontal" indeterminate={true} color="#00a100" />
         <View style={styles.card}>
-          <MemeUpload onUploadSuccess={handleUploadSuccess} userEmail={user.email} />
+          <MemeUpload
+            onUploadSuccess={handleUploadSuccess}
+            userEmail={user.email}
+            onImageSelect={handleImageSelect}
+          />
         </View>
       </Animated.View>
       <BottomPanel

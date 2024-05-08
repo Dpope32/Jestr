@@ -22,10 +22,15 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
       },
+      
       captionInput: {
-        fontSize: 18,
-        color: '#000',
-        width: '100%',
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: '#fff',
+        borderRadius: 5,
+        padding: 10,
+        marginVertical: 10,
+        color: '#fff',
       },
       actions: {
         flexDirection: 'row',
@@ -85,22 +90,27 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         marginTop: 5,
       },
+      editedImageContainer: {
+        marginTop: 20,
+        alignItems: 'center',
+      },
+      editedImage: {
+        width: 300,
+        height: 300,
+        resizeMode: 'contain',
+      },
       uploadButton: {
-        paddingHorizontal: 80,
         backgroundColor: '#007700',
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 6,
-        elevation: 6,
-        paddingVertical: 10, // Increased padding for better touch area
-        marginTop: 10,
-    },
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 5,
+        marginTop: 20,
+        alignItems: 'center',
+      },
       uploadButtonText: {
-        fontSize: 18,
+        color: '#fff',
+        fontSize: 16,
         fontWeight: 'bold',
-        color: '#FFFFFF',
       },
       brightnessContainer: {
         flexDirection: 'row',
@@ -187,6 +197,57 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         flexWrap: 'wrap',
         marginBottom: 10,
+      },
+      modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Semi-transparent background
+      },
+      modalContent: {
+        backgroundColor: 'white',
+        padding: 20,
+        borderRadius: 10,
+        width: '90%',  // Adjusted width
+        maxHeight: '80%',  // Limiting height to avoid overflow
+        alignItems: 'center',
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        overflow: 'hidden',  // Hides anything overflowing the content area
+      },
+      closeButton: {
+        position: 'absolute',  // Positioning it to float over content
+        top: 10,
+        right: 10,
+        backgroundColor: 'transparent',  // Transparent background
+        padding: 8,
+        borderRadius: 50,  // Circular button
+      },
+      closeButtonText: {
+        color: '#ff0000',  // Red color for the text/icon
+        fontSize: 16,
+      },
+      
+      successText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+      },
+      uploadedImage: {
+        width: '100%',
+        maxHeight: 300,  // Limiting image height
+        marginVertical: 10,
+      },
+      shareContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%',
+      },
+      shareButton: {
+        backgroundColor: '#1e88e5',
+        padding: 10,
+        borderRadius: 5,
       },
     });
 

@@ -1,63 +1,71 @@
 import { API_URL } from './config'; // Define your backend API URL
+import RNFetchBlob from 'rn-fetch-blob';
 
-export const fetchMemes = async (): Promise<string[]> => {
-    try {
-      const response = await fetch(`${API_URL}/getMemes`);
-      const data = await response.json();
-      return data.memes || [];
-    } catch (error) {
-      console.error('Error fetching memes:', error);
-      return [];
+export const fetchMemes = async (): Promise<{ url: string, username: string, caption: string }[]> => {
+  try {
+    const response = await fetch(`${API_URL}/getMemes`);
+    const data = await response.json();
+    return data.memes || []; // Assuming 'memes' is an array of objects
+  } catch (error) {
+    console.error('Error fetching memes:', error);
+    return [];
+  }
+};
+
+
+export const uploadMeme = async (imageUri: string, userEmail: string): Promise<{ url: string }> => {
+  try {
+    console.log('Uploading meme...');
+    console.log('Image URI:', imageUri);
+    console.log('User Email:', userEmail);
+
+    const memeData = await fileToBase64(imageUri);
+    
+    const requestBody = {
+      operation: "uploadMeme",  // Make sure to include the operation if your Lambda expects it
+      email: userEmail,
+      memeData: memeData,
+    };
+
+    const requestUrl = `${API_URL}/uploadMeme`;
+    console.log('Request URL:', requestUrl);
+    //console.log('Request Body:', JSON.stringify(requestBody, null, 2));  // This will print formatted JSON
+
+    const response = await fetch(requestUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log('HTTP Response Status:', response.status);
+    const data = await response.json();
+    console.log('Upload response data:', data);
+
+    if (response.ok) {
+      console.log('Meme uploaded successfully:', data.url);
+      return { url: data.url };
+    } else {
+      console.error('Failed to upload meme:', data.message);
+      throw new Error(`Failed to upload meme: ${data.message}`);
     }
-  };
+  } catch (error) {
+    console.error('Error uploading meme:', error);
+    throw error;
+  }
+};
 
-
-  export const uploadMeme = async (imageUri: string, userEmail: string): Promise<{ url: string }> => {
-    try {
-      console.log('Uploading meme...');
-      console.log('Image URI:', imageUri);
-      console.log('User Email:', userEmail);
   
-      const memeData = await fileToBase64(imageUri);
-      console.log('Meme data (base64):', memeData);
   
-      const response = await fetch(`${API_URL}/uploadMeme`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: userEmail,
-          memeData: memeData,
-        }),
-      });
-  
-      console.log('Upload response:', response);
-  
-      const data = await response.json();
-      console.log('Upload response data:', data);
-  
-      if (response.ok) {
-        console.log('Meme uploaded successfully');
-        return { url: data.url };
-      } else {
-        console.error('Failed to upload meme');
-        throw new Error('Failed to upload meme');
-      }
-    } catch (error) {
-      console.error('Error uploading meme:', error);
-      throw error;
-    }
-  };
   
   // Add this utility function to convert the image file to base64
-  const fileToBase64 = async (uri: string): Promise<string> => {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+  const fileToBase64 = async (uri: string): Promise<string | null> => {
+    try {
+      const base64 = await RNFetchBlob.fs.readFile(uri, 'base64');
+      return base64;
+    } catch (error) {
+      console.error('Error converting file to base64:', error);
+      return null;
+    }
   };

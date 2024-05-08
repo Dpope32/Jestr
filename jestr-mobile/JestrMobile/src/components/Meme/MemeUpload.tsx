@@ -1,20 +1,28 @@
+// MemeUpload.tsx
 import React, { useState, useRef } from 'react';
-import { View, Alert, TouchableOpacity, Text, StyleSheet, Image, TextInput } from 'react-native';
+import { View, Alert, TouchableOpacity, Text, StyleSheet, Image, TextInput, Modal, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';
+import { faTimes, faShare, faComment, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { faFacebook, faTwitter, faSnapchat } from '@fortawesome/free-brands-svg-icons';
+import Share from 'react-native-share';
 import * as ImagePicker from 'react-native-image-picker';
 import { uploadMeme } from './memeService';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faUpload, faCrop, faFilter, faUndo, faRotateRight, faArrowLeft, faRotateLeft, faSun, faMoon, faRefresh, faTextWidth, faAdjust } from '@fortawesome/free-solid-svg-icons';
 import Slider from '@react-native-community/slider';
 import ImageResizer from 'react-native-image-resizer';
-import styles  from './MemeUpload.styles'
+import styles from './MemeUpload.styles';
+
 
 type MemeUploadProps = {
   onUploadSuccess: (url: string) => void;
   userEmail: string;
+  onImageSelect: (selected: boolean) => void;
 };
 
-const MemeUpload: React.FC<MemeUploadProps> = ({ onUploadSuccess, userEmail }) => {
+
+const MemeUpload: React.FC<MemeUploadProps> = ({ onUploadSuccess, userEmail, onImageSelect }) => {
   const [image, setImage] = useState<string[]>([]);
+  const [editedImage, setEditedImage] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [brightness, setBrightness] = useState(1);
   const [contrast, setContrast] = useState(1);
@@ -23,21 +31,64 @@ const MemeUpload: React.FC<MemeUploadProps> = ({ onUploadSuccess, userEmail }) =
   const [showBrightnessSlider, setShowBrightnessSlider] = useState(false);
   const [showContrastSlider, setShowContrastSlider] = useState(false);
   const editHistoryRef = useRef<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadedMemeUrl, setUploadedMemeUrl] = useState('');
+
+
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibrary({ mediaType: 'mixed' });
+    const result = await ImagePicker.launchImageLibrary({ mediaType: 'photo' });
     if (result.assets && result.assets[0]?.uri) {
       setImage([result.assets[0].uri]);
+      onImageSelect(true);
     }
   };
 
   const handleUpload = async () => {
+    if (!image || image.length === 0) {
+      Alert.alert('Please select an image');
+      return;
+    }
+  
+    setUploading(true);
+    console.log('Starting upload...'); // Debug log
+  
     try {
       const result = await uploadMeme(image[0], userEmail);
+      setUploadedMemeUrl(result.url);
+      setUploadSuccess(true);
       onUploadSuccess(result.url);
+      console.log('Upload success:', result.url); // Debug log
     } catch (error) {
       console.error('Upload failed:', error);
       Alert.alert('Upload failed', 'Unable to upload the meme. Please try again.');
+    }
+  
+    setUploading(false);
+    console.log('Upload finished'); // Debug log
+    
+  };
+  
+
+  const handleShare = async () => {
+    try {
+      await Share.open({
+        url: uploadedMemeUrl,
+        message: 'Check out this meme!',
+      });
+    } catch (error) {
+      console.error('Share failed:', error);
+      Alert.alert('Share failed', 'Unable to share the meme. Please try again.');
+    }
+  };
+
+  const closeSuccessModal = () => {
+    if (uploadSuccess) {  // Additional check to ensure it doesn't run if already false
+      setUploadSuccess(false);
+      setUploadedMemeUrl('');
+      setImage([]);
+      onImageSelect(false);
     }
   };
 
@@ -65,7 +116,6 @@ const handleRotateLeft = async () => {
   });
 };
 
-
   const handleUndo = () => {
     if (editHistoryRef.current.length > 0) {
       setImage(prevImages => {
@@ -87,6 +137,7 @@ const handleRotateLeft = async () => {
     }
   };
 
+
   const handleReset = () => {
     setImage([]);
     setCaption('');
@@ -95,6 +146,7 @@ const handleRotateLeft = async () => {
     setTextOverlay('');
     editHistoryRef.current = [];
     setEditIndex(0);
+    onImageSelect(false);
   };
 
   const rotateImage = async (imageUri: string, degrees: number) => {
@@ -114,12 +166,53 @@ const handleRotateLeft = async () => {
     }
   };
 
-  const handleEdit = () => {
-    Alert.alert('Edit', 'Image editing functionality coming soon.');
+  const handleEdit = async () => {
+    try {
+      const result = await ImageResizer.createResizedImage(
+        image[editIndex],
+        800,
+        600,
+        'JPEG',
+        100,
+        0,
+        undefined,
+        false,
+        { mode: 'contain', onlyScaleDown: true }
+      );
+
+      setEditedImage(result.uri);
+    } catch (error) {
+      console.error('Error editing image:', error);
+      Alert.alert('Error', 'Failed to edit the image.');
+    }
   };
+
+  const handleFilter = async (filterType: 'contrast' | 'grayscale') => {
+    try {
+      let filteredImage;
+
+//      if (filterType === 'contrast') {
+//        filteredImage = await ContrastFilter.image(image[editIndex], {
+//          contrast: 2.0,
+//        });
+//      } else if (filterType === 'grayscale') {
+//        filteredImage = await GrayScaleFilter.image(image[editIndex]);
+//      }
+
+      if (filteredImage) {
+        setEditedImage(filteredImage);
+      }
+    } catch (error) {
+      console.error('Error applying filter:', error);
+      Alert.alert('Error', 'Failed to apply the filter.');
+    }
+  };
+
+
   return (
-    <>
-      <View style={styles.container}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View>
+        <View style={styles.container}>
         <View style={styles.imageContainer}>
           {image.length > 0 ? (
             image.map((img, index) => (
@@ -137,14 +230,15 @@ const handleRotateLeft = async () => {
         {image.length > 0 && (
           <>
             <View style={{ marginHorizontal: 0 }}>
-              <TextInput
-                style={[styles.captionInput, { height: 50 }]}
+            <TextInput
+                style={[styles.captionInput, { height: 50, color: '#fff' }]}
                 placeholder="Add a caption..."
                 placeholderTextColor="#999"
                 onChangeText={setCaption}
                 value={caption}
                 multiline
                 numberOfLines={3}
+                blurOnSubmit={true}
               />
             </View>
             
@@ -179,15 +273,18 @@ const handleRotateLeft = async () => {
               <TouchableOpacity style={styles.iconButton} onPress={() => setShowContrastSlider(!showContrastSlider)}>
                 <FontAwesomeIcon icon={faAdjust} size={26} style={styles.icon} />  
               </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={handleEdit}>
-                <FontAwesomeIcon icon={faCrop} size={26} style={styles.icon} /> 
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={handleEdit}>
-                <FontAwesomeIcon icon={faFilter} size={26} style={styles.icon} /> 
-              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={() => handleFilter('contrast')}>
+          <FontAwesomeIcon icon={faFilter} size={26} style={styles.icon} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconButton} onPress={() => handleFilter('grayscale')}>
+          <FontAwesomeIcon icon={faMoon} size={26} style={styles.icon} />
+        </TouchableOpacity>
+        </View>
+          {editedImage && (
+            <View style={styles.editedImageContainer}>
+              <Image source={{ uri: editedImage }} style={styles.editedImage} />
             </View>
-
-            
+          )}
             {showBrightnessSlider && (
               <View style={styles.brightnessContainer}>
                 <Slider
@@ -219,19 +316,53 @@ const handleRotateLeft = async () => {
       {image.length > 0 && (
         <TouchableOpacity
           style={[styles.uploadButton, { marginHorizontal: 20 }]}
-          onPress={() => {
-            if (image.length === 0) {
-              Alert.alert('Please select an image or video');
-              return;
-            }
-            handleUpload();
-          }}
+          onPress={handleUpload}
+          disabled={uploading}
         >
-          <Text style={styles.uploadButtonText}>Finalize Upload</Text>
+          {uploading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.uploadButtonText}>Finalize Upload</Text>
+          )}
         </TouchableOpacity>
       )}
-    </>
+       <Modal visible={uploadSuccess} animationType="slide" transparent>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+    <TouchableOpacity style={styles.closeButton} onPress={closeSuccessModal}>
+  <FontAwesomeIcon icon={faTimes} size={24} color="red" />
+</TouchableOpacity>
+
+      <Text style={styles.successText}>Meme uploaded successfully!</Text>
+      {uploadedMemeUrl ? (
+  <Image source={{ uri: uploadedMemeUrl }} style={styles.uploadedImage} resizeMode="contain" />
+) : (
+  <Text style={styles.placeholderText}>Image preview not available</Text>
+)}
+      <View style={styles.shareContainer}>
+            <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+              <FontAwesomeIcon icon={faFacebook} size={24} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+                <FontAwesomeIcon icon={faTwitter} size={24} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+                <FontAwesomeIcon icon={faComment} size={24} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+                <FontAwesomeIcon icon={faEnvelope} size={24} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+                <FontAwesomeIcon icon={faSnapchat} size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      </View>
+    </TouchableWithoutFeedback>
+
   );
-}
+};
 
 export default MemeUpload;
