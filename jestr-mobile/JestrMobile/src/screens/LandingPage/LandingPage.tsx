@@ -1,31 +1,25 @@
-// LandingPage.tsx
-
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, ImageBackground, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { AppleButton } from '@invertase/react-native-apple-authentication';
-import { NavigationProp } from '@react-navigation/native'; // Import NavigationProp
-import { useNavigation } from '@react-navigation/native'; // Make sure to import this
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import InputField from '../../components/Input/InutField';
+import logoImage from '../../assets/images/db/JestrLogo.jpg';
 import Button from '../../components/Button/Button';
 import LoadingScreen from '../../components/LoadingScreen';
 import HeaderPicUpload from '../../components/Upload/HeaderPicUpload';
 import ProfilePicUpload from '../../components/Upload/ProfilePicUpload';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
-import { KeyboardAvoidingView, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import CheckBox from 'react-native-checkbox';
-import radialGradientBg from '../../assets/images/radial_gradient_bg.png';
-import { Image} from 'react-native';
 import ProfileCompletedSlideshow from './ProfileCompletedSlideshow';
 import { styles } from './LandingPage.styles';
 import googleIcon from '../../assets/images/google.jpeg';
 import appleIcon from '../../assets/images/apple.jpg';
 import twitterIcon from '../../assets/images/twitter.jpg';
-
 
 import {
   handleSignup,
@@ -35,8 +29,6 @@ import {
   handleAppleSignIn,
   handleTwitterSignIn
 } from '../../services/authFunctions';
-
-
 
 type User = {
   email: string;
@@ -74,6 +66,8 @@ const LandingPage = () => {
   const [isLogin, setIsLogin] = useState(false);
   const [isEmailTaken, setIsEmailTaken] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(false);
+  const [isCompleteProfileLoading, setIsCompleteProfileLoading] = useState(false); // Added state for loading spinner
+  const logoOpacity = useRef(new Animated.Value(1)).current;
   const [animationComplete, setAnimationComplete] = useState(false);
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(false);
   const [bio, setBio] = useState('');
@@ -84,7 +78,7 @@ const LandingPage = () => {
   const titleOpacity = useRef(new Animated.Value(0)).current;
   const titleTranslateY = useRef(new Animated.Value(30)).current;
   const [titlePosition, setTitlePosition] = useState({
-    top: new Animated.Value(30),
+    top: new Animated.Value(10),
     left: new Animated.Value(0)
   });
   const titleAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
@@ -101,7 +95,6 @@ const LandingPage = () => {
   const formOpacity = useRef(new Animated.Value(0)).current;
   const [titleMarginTop, setTitleMarginTop] = useState(-300);
 
-
   const checkAuthStatus = async () => {
     try {
       const user = await AsyncStorage.getItem('user');
@@ -110,11 +103,18 @@ const LandingPage = () => {
         navigation.navigate('Feed', { user: JSON.parse(user) });
       } else {
         setIsAuthenticated(false);
-        // Optionally, display a welcome message or perform any other action when the user is not authenticated
       }
     } catch (error) {
       console.error('Error checking authentication status:', error);
     }
+  };
+
+  const handleButtonPress = () => {
+    Animated.timing(logoOpacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true
+    }).start(() => setShowInitialScreen(false));
   };
 
   useEffect(() => {
@@ -189,13 +189,11 @@ const LandingPage = () => {
     console.log('Title animation starting');
     letterAnimations.current = ['J', 'e', 's', 't', 'r'].map(() => new Animated.Value(0));
   
-    // Start the title opacity animation immediately
     Animated.timing(titleOpacity, {
       toValue: 1,
       useNativeDriver: true
     }).start();
   
-    // Create an array of letter animation configurations
     const letterAnimationConfigs = letterAnimations.current.map((anim, index) => {
       return {
         0: {
@@ -219,7 +217,6 @@ const LandingPage = () => {
       };
     });
   
-    // Create the staggered animation sequence
     Animated.stagger(
       500,
       letterAnimationConfigs.map((config, index) => {
@@ -244,32 +241,43 @@ const LandingPage = () => {
     setLetterScale(scale);
   };
   
-
+  
   const handleTitleAnimationComplete = () => {
     console.log('Title animation complete');
-    setTitleMarginTop(0); // Set to a higher value in pixels
+    setTitleMarginTop(0);
     setAnimationComplete(true);  
     titleAnimationRef.current = Animated.timing(titleTranslateY, {
-      toValue: -30, // Reduced vertical translation
+      toValue: -50, // Increased translation value to move title up
       duration: 500,
       useNativeDriver: true
     });
     if (titleAnimationRef.current) {
       titleAnimationRef.current.start(() => {
-        setTitlePosition({ top: new Animated.Value(50), left: new Animated.Value(0) });
+        setTitlePosition({ top: new Animated.Value(30), left: new Animated.Value(0) }); // Adjusted top position
       });
       console.log('Title position =', titlePosition);
     }
   };
 
-  
+  const handleCompleteProfileButtonClick = () => {
+    setIsCompleteProfileLoading(true);
+    handleCompleteProfile(
+      email,
+      username,
+      displayName,
+      profilePic,
+      headerPicFile,
+      navigation
+    ).finally(() => {
+      setIsCompleteProfileLoading(false);
+    });
+  };
 
   return (
-    <ImageBackground source={radialGradientBg} style={styles.container} resizeMode="cover">
+    <View style={styles.container}>
       {!isAuthenticated && (
         <ScrollView contentContainerStyle={styles.scrollViewContainer}>
           <View style={[styles.titleContainer, { marginTop: titleMarginTop }]}>
-            
             {letterScale.map((anim, index) => (
               <Animated.Text
                 key={index}
@@ -295,43 +303,47 @@ const LandingPage = () => {
             >
               {showInitialScreen ? (
                 <View style={styles.initialScreen}>
-                  <Text style={styles.welcomeText}>Welcome</Text>
-                  <TouchableOpacity style={styles.button} onPress={handleSignUpClick}>
-                    <LinearGradient
-                      colors={['#002400', '#00e100']}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 1, y: 0.5 }}
-                      style={styles.gradient}
-                    >
-                      <Text style={styles.buttonText}>Sign Up</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-  
-                  <TouchableOpacity style={styles.button} onPress={handleLoginClick}>
-                    <LinearGradient
-                      colors={['#002400', '#00e100']}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 1, y: 0.5 }}
-                      style={styles.gradient}
-                    >
-                      <Text style={styles.buttonText}>Login</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                  <View style={styles.separator}></View>
-                  <Text style={styles.socialHeaderText}>Login with Social Media</Text>
-  
-                  <View style={styles.socialButtonsContainer}>
-                    <TouchableOpacity onPress={handleGoogleSignIn} style={styles.socialButton}>
-                      <Image source={googleIcon} style={styles.socialIcon} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleAppleSignIn} style={styles.socialButton}>
-                      <Image source={appleIcon} style={styles.socialIcon} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleTwitterSignIn} style={styles.socialButton}>
-                      <Image source={twitterIcon} style={styles.socialIcon} />
-                    </TouchableOpacity>
+                  <View style={styles.logoContainer}>
+                    <Image source={require('../../assets/images/db/JestrLogo.jpg')} style={styles.logo} />
                   </View>
-
+                  <View style={styles.authContainer}>
+                    <Text style={styles.welcomeText}>Welcome</Text>
+                    <TouchableOpacity style={styles.button} onPress={handleSignUpClick}>
+                      <LinearGradient
+                        colors={['#002400', '#00e100']}
+                        start={{ x: 0, y: 0.5 }}
+                        end={{ x: 1, y: 0.5 }}
+                        style={styles.gradient}
+                      >
+                        <Text style={styles.buttonText}>Sign Up</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+  
+                    <TouchableOpacity style={styles.button} onPress={handleLoginClick}>
+                      <LinearGradient
+                        colors={['#002400', '#00e100']}
+                        start={{ x: 0, y: 0.5 }}
+                        end={{ x: 1, y: 0.5 }}
+                        style={styles.gradient}
+                      >
+                        <Text style={styles.buttonText}>Login</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                    <View style={styles.separator}></View>
+                    <Text style={styles.socialHeaderText}>Login with Social Media</Text>
+  
+                    <View style={styles.socialButtonsContainer}>
+                      <TouchableOpacity onPress={handleGoogleSignIn} style={styles.socialButton}>
+                        <Image source={googleIcon} style={styles.socialIcon} />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={handleTwitterSignIn} style={styles.socialButton}>
+                        <Image source={twitterIcon} style={[styles.socialIcon, styles.twitterButton]} />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={handleAppleSignIn} style={styles.socialButton}>
+                        <Image source={appleIcon} style={[styles.socialIcon, styles.appleButton]} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 </View>
               ) : (
                 <KeyboardAvoidingView
@@ -427,14 +439,14 @@ const LandingPage = () => {
                       )}
                       {!isSignedUp && (
                         <View style={styles.socialButtonsContainer}>
-                            <TouchableOpacity onPress={handleGoogleSignIn} style={styles.socialButton}>
-                      <Image source={googleIcon} style={styles.socialIcon} />
-                          </TouchableOpacity>
-                          <TouchableOpacity onPress={handleAppleSignIn} style={styles.socialButton}>
-                      <Image source={appleIcon} style={styles.socialIcon} />
+                          <TouchableOpacity onPress={handleGoogleSignIn} style={styles.socialButton}>
+                            <Image source={googleIcon} style={styles.socialIcon} />
                           </TouchableOpacity>
                           <TouchableOpacity onPress={handleTwitterSignIn} style={styles.socialButton}>
-                      <Image source={twitterIcon} style={styles.socialIcon} />
+                            <Image source={twitterIcon} style={[styles.socialIcon, styles.twitterButton]} />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={handleAppleSignIn} style={styles.socialButton}>
+                            <Image source={appleIcon} style={[styles.socialIcon, styles.appleButton]} />
                           </TouchableOpacity>
                         </View>
                       )}
@@ -462,20 +474,9 @@ const LandingPage = () => {
                           inputStyle={styles.inputField}
                         />
                       </View>
-
   
-                      {/* Complete Profile Button */}
                       <TouchableOpacity
-                        onPress={() =>
-                          handleCompleteProfile(
-                            email,
-                            username,
-                            displayName,
-                            profilePic,
-                            headerPicFile,
-                            navigation
-                          )
-                        }
+                        onPress={handleCompleteProfileButtonClick}
                         style={styles.button}
                       >
                         <LinearGradient
@@ -484,11 +485,13 @@ const LandingPage = () => {
                           end={{ x: 1, y: 0.5 }}
                           style={styles.gradient}
                         >
-                          <Text style={styles.buttonText}>Complete Profile</Text>
+                          {isCompleteProfileLoading ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <Text style={styles.buttonText}>Complete Profile</Text>
+                          )}
                         </LinearGradient>
                       </TouchableOpacity>
-
-                      
                     </View>
                   )}
                 </KeyboardAvoidingView>
@@ -504,7 +507,8 @@ const LandingPage = () => {
         <Text style={styles.footerDivider}> | </Text>
         <Text style={styles.footerLink}>Contact Us</Text>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
-  export default LandingPage;
+
+export default LandingPage;

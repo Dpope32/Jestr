@@ -4,7 +4,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-    backgroundColor: '#000000',
+    backgroundColor: '#1C1C1C',
   },
   scrollViewContainer: {
     flexGrow: 1,

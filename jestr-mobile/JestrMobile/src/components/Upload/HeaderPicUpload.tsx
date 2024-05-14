@@ -48,12 +48,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'lightgray',
-    height: 170,
-    width: '100%',
+    height: 180,
+    width: '120%',
+    marginTop: -5,
   },
   headerPreview: {
-    width: '105%',
-    height: '105%',
+    width: '120%',
+    height: '110%',
     resizeMode: 'cover',
   },
   headerPicLabel: {

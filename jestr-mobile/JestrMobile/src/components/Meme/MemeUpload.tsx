@@ -69,8 +69,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({ onUploadSuccess, userEmail, onI
     console.log('Upload finished'); // Debug log
     
   };
-  
-
+                                                                                                                                                  
   const handleShare = async () => {
     try {
       await Share.open({

@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
-import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
+import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faThumbsUp, faThumbsDown, faComment, faShare } from '@fortawesome/free-solid-svg-icons';
 
 type MediaPlayerProps = {
   currentMedia: string;
-  handleLike: (index: number) => void;
-  handleDislike: (index: number) => void;
+  handleLike: () => void;
+  handleDislike: () => void;
   likedIndices: Set<number>;
   dislikedIndices: Set<number>;
   likeDislikeCounts: { [key: number]: number };
@@ -28,11 +28,55 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   goToPrevMedia,
   goToNextMedia,
 }) => {
+  console.log('Rendering media with URL:', currentMedia);
+
   return (
-    <View>
-      {/* Render the media player component with necessary props */}
+    <View style={styles.container}>
+      <Image
+        source={{ uri: currentMedia }}
+        style={styles.memeImage}
+        onError={(error) => console.error('Image loading error:', error)}
+      />
+      <View style={styles.iconRow}>
+        <TouchableOpacity onPress={handleLike}>
+          <FontAwesomeIcon icon={faThumbsUp} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleDislike}>
+          <FontAwesomeIcon icon={faThumbsDown} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={toggleCommentFeed}>
+          <FontAwesomeIcon icon={faComment} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => {}}>
+          <FontAwesomeIcon icon={faShare} />
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity onPress={goToPrevMedia}>
+        <Text>Swipe Down</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={goToNextMedia}>
+        <Text>Swipe Up</Text>
+      </TouchableOpacity>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  memeImage: {
+    width: '100%',
+    height: 300,
+    resizeMode: 'contain',
+  },
+  iconRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '80%',
+    marginTop: 10,
+  },
+});
 
 export default MediaPlayer;

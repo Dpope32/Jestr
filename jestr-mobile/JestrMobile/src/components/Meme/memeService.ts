@@ -1,16 +1,43 @@
-import { API_URL } from './config'; // Define your backend API URL
+import { API_URL } from './config';
 import RNFetchBlob from 'rn-fetch-blob';
 
-export const fetchMemes = async (): Promise<{ url: string, username: string, caption: string }[]> => {
+export const fetchMemes = async (): Promise<{ memeID: string; email: string; url: string; uploadTimestamp: string; username: string; caption: string; }[]> => {
   try {
-    const response = await fetch(`${API_URL}/getMemes`);
-    const data = await response.json();
-    return data.memes || []; // Assuming 'memes' is an array of objects
+    const requestUrl = `${API_URL}/getMemes`;
+    const response = await fetch(requestUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ operation: 'getMemes' })
+    });
+
+    console.log('HTTP Response Status:', response.status);
+    const responseText = await response.text();
+    console.log('Response text:', responseText);
+
+    if (!response.ok) {
+      console.log('Failed to fetch memes. Status:', response.status);
+      return [];
+    }
+    const data = JSON.parse(responseText);
+    // Add default values for username and caption
+    return data.user.map((meme: any) => ({
+      ...meme,
+      username: meme.username || 'defaultUsername',
+      caption: meme.caption || 'defaultCaption'
+    })) || [];
   } catch (error) {
     console.error('Error fetching memes:', error);
     return [];
   }
 };
+
+
+
+
+
+
 
 
 export const uploadMeme = async (imageUri: string, userEmail: string): Promise<{ url: string }> => {
@@ -20,7 +47,7 @@ export const uploadMeme = async (imageUri: string, userEmail: string): Promise<{
     console.log('User Email:', userEmail);
 
     const memeData = await fileToBase64(imageUri);
-    
+
     const requestBody = {
       operation: "uploadMeme",  // Make sure to include the operation if your Lambda expects it
       email: userEmail,
@@ -29,7 +56,6 @@ export const uploadMeme = async (imageUri: string, userEmail: string): Promise<{
 
     const requestUrl = `${API_URL}/uploadMeme`;
     console.log('Request URL:', requestUrl);
-    //console.log('Request Body:', JSON.stringify(requestBody, null, 2));  // This will print formatted JSON
 
     const response = await fetch(requestUrl, {
       method: 'POST',
@@ -56,16 +82,13 @@ export const uploadMeme = async (imageUri: string, userEmail: string): Promise<{
   }
 };
 
-  
-  
-  
-  // Add this utility function to convert the image file to base64
-  const fileToBase64 = async (uri: string): Promise<string | null> => {
-    try {
-      const base64 = await RNFetchBlob.fs.readFile(uri, 'base64');
-      return base64;
-    } catch (error) {
-      console.error('Error converting file to base64:', error);
-      return null;
-    }
-  };
+
+const fileToBase64 = async (uri: string): Promise<string | null> => {
+  try {
+    const base64 = await RNFetchBlob.fs.readFile(uri, 'base64');
+    return base64;
+  } catch (error) {
+    console.error('Error converting file to base64:', error);
+    return null;
+  }
+};
