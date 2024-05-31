@@ -11,6 +11,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 20,
   },
+  cardMedia: {
+    maxWidth: '100%',
+    height: 500,
+    resizeMode: 'cover',
+    backgroundColor: 'rgba(0, 0, 0, 0.53)',
+    marginBottom: 10,
+  },
   darkMode: {
     backgroundColor: '#979797',
     color: '#ffffff',
@@ -35,7 +42,6 @@ const styles = StyleSheet.create({
     color: '#333333',
     borderWidth: 0,
     fontSize: 24,
-    zIndex: 2,
   },
   next: {
     position: 'absolute',
@@ -46,7 +52,6 @@ const styles = StyleSheet.create({
     color: '#333333',
     borderWidth: 0,
     fontSize: 24,
-    zIndex: 2,
   },
   cardVideo: {
     marginBottom: 10,
@@ -60,14 +65,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around', // Adjust positioning as needed
     padding: 10,
   },
-  cardMedia: {
-    maxWidth: '100%', // Maximum width
-    marginTop: 60,
-    height: 500, // Defined height for consistency
-    resizeMode: 'contain', // Ensure full media visibility
-    backgroundColor: 'rgba(0, 0, 0, 0.53)', // Backdrop for media
-    marginBottom: 10, // Create space at the bottom for video controls
-  },
   buttons: {
     flexDirection: 'row', // Use flexbox for horizontal alignment
     position: 'absolute', // Position absolutely to place within the card
@@ -75,7 +72,6 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -50 }], // Align the center of the buttons with the center of the card
     gap: 20, // Space between each button
-    zIndex: 2, // Above the image, but below the user-info and bottom-panel
   },
   buttonsButton: {
     borderRadius: 50, // Make buttons circular
@@ -106,7 +102,6 @@ const styles = StyleSheet.create({
     width: '100%',
     textAlign: 'left',
     fontStyle: 'italic',
-    zIndex: 1,
     fontWeight: 'bold',
     fontSize: 16, // Make sure the font size is readable
     color: '#ffffff', // Adjust for readability on all backgrounds
@@ -119,7 +114,6 @@ const styles = StyleSheet.create({
     right: 0,
     color: 'white',
     padding: 8,
-    zIndex: 2, // Ensure it's above the media content
     fontSize: 16,
     marginTop: -6,
   },
@@ -146,7 +140,6 @@ const styles = StyleSheet.create({
     color: 'white',
     padding: 4,
     borderRadius: 18, // Soften the corners
-    zIndex: 2, // Ensure it's above the media content
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.51)',
   },
@@ -156,7 +149,6 @@ const styles = StyleSheet.create({
     top: 34,
     left: 310,
     color: '#2fff2f', // This is the hex code for green
-    zIndex: 999,
   },
   username: {
     fontSize: 18, // Match to your design
@@ -170,7 +162,6 @@ const styles = StyleSheet.create({
     width: '98%',
     textAlign: 'left',
     fontStyle: 'italic',
-    zIndex: 1,
     fontSize: 16, // Make sure the font size is readable
     fontWeight: 'normal', // Adjust weight as needed
     color: '#ffffff', // Adjust for readability on all backgrounds

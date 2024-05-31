@@ -21,7 +21,6 @@ export const fetchMemes = async (): Promise<{ memeID: string; email: string; url
       return [];
     }
     const data = JSON.parse(responseText);
-    // Add default values for username and caption
     return data.user.map((meme: any) => ({
       ...meme,
       username: meme.username || 'defaultUsername',
@@ -32,13 +31,6 @@ export const fetchMemes = async (): Promise<{ memeID: string; email: string; url
     return [];
   }
 };
-
-
-
-
-
-
-
 
 export const uploadMeme = async (imageUri: string, userEmail: string): Promise<{ url: string }> => {
   try {

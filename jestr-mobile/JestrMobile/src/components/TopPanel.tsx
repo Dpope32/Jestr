@@ -38,8 +38,7 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    color: '#1bd40b',
   },
 });
 
