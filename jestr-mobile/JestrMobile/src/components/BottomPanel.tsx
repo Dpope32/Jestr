@@ -1,9 +1,10 @@
 /* eslint-disable react/no-deprecated */
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faHome, faPlus, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+
 
 type RootStackParamList = {
   Home: undefined;
@@ -36,6 +37,7 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
   user = null,
 }) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
 
   const handleHomeClick = () => {
     navigation.navigate('Feed', { user });
@@ -71,10 +73,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 3,
-    paddingVertical: 10,
+    paddingVertical: 5,
+    borderTopColor: '#1bd40b',
   },
   iconContainer: {
     padding: 20,
+    zIndex: 3,
   },
   icon: {
     color: '#1bd40b',

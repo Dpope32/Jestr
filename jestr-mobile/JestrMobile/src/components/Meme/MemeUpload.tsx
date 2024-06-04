@@ -5,22 +5,48 @@ import { faTimes, faShare, faComment, faEnvelope } from '@fortawesome/free-solid
 import { faFacebook, faTwitter, faSnapchat } from '@fortawesome/free-brands-svg-icons';
 import Share from 'react-native-share';
 import * as ImagePicker from 'react-native-image-picker';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { uploadMeme } from './memeService';
+import { NavigationProp, RouteProp } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faUpload, faCrop, faFilter, faUndo, faRotateRight, faArrowLeft, faRotateLeft, faSun, faMoon, faRefresh, faTextWidth, faAdjust } from '@fortawesome/free-solid-svg-icons';
 import Slider from '@react-native-community/slider';
 import ImageResizer from 'react-native-image-resizer';
 import styles from './MemeUpload.styles';
+import { useNavigation } from '@react-navigation/native';
 
+type RootStackParamList = {
+  Feed: undefined; // No parameters expected for the Feed route
+};
+
+type FeedScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'Feed'
+>;
+
+type Props = {
+  navigation: FeedScreenNavigationProp;
+};
+type StackParamList = {
+  Feed: undefined; // Add other routes as needed
+};
 
 type MemeUploadProps = {
   onUploadSuccess: (url: string) => void;
   userEmail: string;
-  onImageSelect: (selected: boolean) => void;
+  username: string;
+  onImageSelect: (selected: boolean) => void; // Confirm this matches the expected type
+  navigation: NavigationProp<StackParamList, 'Feed'>;
+  route: RouteProp<StackParamList, 'Feed'>;
 };
 
-
-const MemeUpload: React.FC<MemeUploadProps> = ({ onUploadSuccess, userEmail, onImageSelect }) => {
+const MemeUpload: React.FC<MemeUploadProps> = ({
+  onUploadSuccess,
+  userEmail,
+  navigation,
+  username,
+  onImageSelect,
+}) => {
   const [image, setImage] = useState<string[]>([]);
   const [editedImage, setEditedImage] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
@@ -36,7 +62,6 @@ const MemeUpload: React.FC<MemeUploadProps> = ({ onUploadSuccess, userEmail, onI
   const [uploadedMemeUrl, setUploadedMemeUrl] = useState('');
 
 
-
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibrary({ mediaType: 'photo' });
     if (result.assets && result.assets[0]?.uri) {
@@ -50,24 +75,18 @@ const MemeUpload: React.FC<MemeUploadProps> = ({ onUploadSuccess, userEmail, onI
       Alert.alert('Please select an image');
       return;
     }
-  
     setUploading(true);
-    console.log('Starting upload...'); // Debug log
-  
     try {
-      const result = await uploadMeme(image[0], userEmail);
-      setUploadedMemeUrl(result.url);
+      const result = await uploadMeme(image[0], userEmail, username, caption); // Include username and caption
       setUploadSuccess(true);
-      onUploadSuccess(result.url);
-      console.log('Upload success:', result.url); // Debug log
     } catch (error) {
       console.error('Upload failed:', error);
       Alert.alert('Upload failed', 'Unable to upload the meme. Please try again.');
+      setUploadSuccess(false); // Ensure modal doesn't show on failed upload
     }
-  
+
     setUploading(false);
     console.log('Upload finished'); // Debug log
-    
   };
                                                                                                                                                   
   const handleShare = async () => {
@@ -83,11 +102,11 @@ const MemeUpload: React.FC<MemeUploadProps> = ({ onUploadSuccess, userEmail, onI
   };
 
   const closeSuccessModal = () => {
-    if (uploadSuccess) {  // Additional check to ensure it doesn't run if already false
+    if (uploadSuccess) {
       setUploadSuccess(false);
-      setUploadedMemeUrl('');
       setImage([]);
       onImageSelect(false);
+      navigation.navigate('Feed');
     }
   };
 
@@ -325,19 +344,14 @@ const handleRotateLeft = async () => {
           )}
         </TouchableOpacity>
       )}
-       <Modal visible={uploadSuccess} animationType="slide" transparent>
+      <Modal visible={uploadSuccess} animationType="slide" transparent>
   <View style={styles.modalContainer}>
     <View style={styles.modalContent}>
-    <TouchableOpacity style={styles.closeButton} onPress={closeSuccessModal}>
-  <FontAwesomeIcon icon={faTimes} size={24} color="red" />
-</TouchableOpacity>
-
+      <TouchableOpacity style={styles.closeButton} onPress={closeSuccessModal}>
+        <FontAwesomeIcon icon={faTimes} size={24} color="red" />
+      </TouchableOpacity>
       <Text style={styles.successText}>Meme uploaded successfully!</Text>
-      {uploadedMemeUrl ? (
-  <Image source={{ uri: uploadedMemeUrl }} style={styles.uploadedImage} resizeMode="contain" />
-) : (
-  <Text style={styles.placeholderText}>Image preview not available</Text>
-)}
+  
       <View style={styles.shareContainer}>
             <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
               <FontAwesomeIcon icon={faFacebook} size={24} color="#fff" />

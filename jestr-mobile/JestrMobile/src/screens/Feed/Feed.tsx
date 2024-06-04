@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchMemes } from '../../components/Meme/memeService';
 import { useNavigation } from '@react-navigation/native';
 import ProfilePanel from '../../components/ProfilePanel';
+import CommentFeed from '../../components/CommentFeed';
 
 export type User = {
   email: string;
@@ -35,8 +36,13 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
   const [profilePicUrl, setProfilePicUrl] = useState(user ? user.profilePic : '');
   const [shuffledMedia, setShuffledMedia] = useState<Meme[]>([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false); 
   const toggleProfilePanel = () => {
     setProfilePanelVisible(!profilePanelVisible);
+  };
+
+  const toggleCommentFeed = () => {
+    setIsCommentFeedVisible(!isCommentFeedVisible); // Toggle the CommentFeed visibility state
   };
 
   useEffect(() => {
@@ -107,6 +113,7 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
         />
         )}
         {shuffledMedia.length > 0 ? (
+          <>
           <MediaPlayer
             currentMedia={shuffledMedia[currentMediaIndex].url}
             handleLike={() => {}}
@@ -115,17 +122,25 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
             dislikedIndices={new Set()}
             likeDislikeCounts={{}}
             currentMediaIndex={currentMediaIndex}
-            toggleCommentFeed={() => {}}
+            toggleCommentFeed={toggleCommentFeed}
             goToPrevMedia={goToPrevMedia}
             goToNextMedia={goToNextMedia}
             username={shuffledMedia[currentMediaIndex].username}
             caption={shuffledMedia[currentMediaIndex].caption}
             uploadTimestamp={shuffledMedia[currentMediaIndex].uploadTimestamp}
+            user={localUser} // Pass the localUser object as the user prop
           />
-
-        ) : (
-          <Text>No memes available</Text>
-        )}
+            {isCommentFeedVisible && ( // Conditionally render the CommentFeed based on the state variable
+              <CommentFeed
+                mediaIndex={currentMediaIndex} // Pass the current media index to the CommentFeed
+                profilePicUrl={localUser ? localUser.profilePic : ''} // Pass the user's profile picture URL
+                user={localUser} // Pass the localUser object as the user prop
+              />
+            )}
+        </>
+      ) : (
+        <Text>No memes available</Text>
+      )}
         <BottomPanel
           onHomeClick={() => {}}
           handleLike={() => {}}

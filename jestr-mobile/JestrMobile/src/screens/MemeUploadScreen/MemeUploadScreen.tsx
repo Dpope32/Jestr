@@ -76,11 +76,15 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
         )}
         <ProgressBarAndroid style={styles.progress} styleAttr="Horizontal" indeterminate={true} color="#00a100" />
         <View style={styles.card}>
-          <MemeUpload
-            onUploadSuccess={handleUploadSuccess}
-            userEmail={user.email}
-            onImageSelect={handleImageSelect}
-          />
+        <MemeUpload
+          onUploadSuccess={handleUploadSuccess}
+          userEmail={user.email}
+          onImageSelect={handleImageSelect}
+          username={user.username}
+          navigation={navigation}  // Passing navigation prop
+          route={route}            // Passing route prop
+        />
+
         </View>
       </Animated.View>
       <BottomPanel

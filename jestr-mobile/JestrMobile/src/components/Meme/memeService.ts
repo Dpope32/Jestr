@@ -24,7 +24,7 @@ export const fetchMemes = async (): Promise<{ memeID: string; email: string; url
     return data.user.map((meme: any) => ({
       ...meme,
       username: meme.username || 'defaultUsername',
-      caption: meme.caption || 'defaultCaption'
+      caption: meme.caption || '' // Default to empty string if caption is not present
     })) || [];
   } catch (error) {
     console.error('Error fetching memes:', error);
@@ -32,7 +32,8 @@ export const fetchMemes = async (): Promise<{ memeID: string; email: string; url
   }
 };
 
-export const uploadMeme = async (imageUri: string, userEmail: string): Promise<{ url: string }> => {
+
+export const uploadMeme = async (imageUri: string, userEmail: string, username: string, caption: string): Promise<{ url: string }> => {
   try {
     console.log('Uploading meme...');
     console.log('Image URI:', imageUri);
@@ -44,6 +45,8 @@ export const uploadMeme = async (imageUri: string, userEmail: string): Promise<{
       operation: "uploadMeme",  // Make sure to include the operation if your Lambda expects it
       email: userEmail,
       memeData: memeData,
+      username: username,
+      caption: caption,
     };
 
     const requestUrl = `${API_URL}/uploadMeme`;

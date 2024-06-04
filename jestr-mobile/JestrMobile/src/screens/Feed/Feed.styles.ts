@@ -1,4 +1,7 @@
 import { StyleSheet } from 'react-native';
+import { Dimensions } from 'react-native';
+
+const windowWidth = Dimensions.get('window').width;
 
 const styles = StyleSheet.create({
   container: {
@@ -12,9 +15,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   cardMedia: {
-    maxWidth: '100%',
-    height: 500,
-    resizeMode: 'cover',
+    width: windowWidth,  // Set width to match the device width
+    height: undefined,   // Allow the height to adjust based on the content
+    resizeMode: 'contain',
     backgroundColor: 'rgba(0, 0, 0, 0.53)',
     marginBottom: 10,
   },
@@ -23,7 +26,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   commentFeed: {
-    marginTop: 40,
+    marginTop: 10,
   },
   card: {
     width: '100%',

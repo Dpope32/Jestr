@@ -205,23 +205,27 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Semi-transparent background
       },
       modalContent: {
-        backgroundColor: 'white',
+        backgroundColor: '#333', // Dark grey background
+        borderColor: '#00FF00', // Bright green border
+        borderWidth: 2, // Set the thickness of the border
         padding: 20,
         borderRadius: 10,
-        width: '90%',  // Adjusted width
-        maxHeight: '80%',  // Limiting height to avoid overflow
+        width: '90%',
+        maxHeight: '80%',
         alignItems: 'center',
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-        overflow: 'hidden',  // Hides anything overflowing the content area
+        overflow: 'hidden',
+        color: '#FFFFFFF',
       },
+      
       closeButton: {
         position: 'absolute',  // Positioning it to float over content
         top: 10,
         right: 10,
         backgroundColor: 'transparent',  // Transparent background
-        padding: 8,
+        padding: 2,
         borderRadius: 50,  // Circular button
       },
       closeButtonText: {
@@ -230,10 +234,13 @@ const styles = StyleSheet.create({
       },
       
       successText: {
-        fontSize: 18,
+        fontSize: 22,
         fontWeight: 'bold',
-        marginBottom: 10,
+        marginBottom: 30,
+        color: '#FFFFFF', // Set the text color to white
+        paddingVertical: 10,
       },
+      
       uploadedImage: {
         width: '100%',
         maxHeight: 300,  // Limiting image height

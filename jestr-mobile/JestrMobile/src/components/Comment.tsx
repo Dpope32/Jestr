@@ -24,6 +24,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 8,
+    color: 'white',
   },
   profilePic: {
     width: 40,
@@ -36,13 +37,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0',
     padding: 10,
     borderRadius: 10,
+    color: 'white',
   },
   userName: {
     fontWeight: 'bold',
     marginBottom: 4,
+    color: 'white',
   },
   commentText: {
     fontSize: 16,
+    color: 'white',
   },
 });
 

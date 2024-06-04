@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, Dimensions, Animated } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faThumbsUp, faThumbsDown, faComment, faShare } from '@fortawesome/free-solid-svg-icons';
 import { PanGestureHandler, PanGestureHandlerGestureEvent, State } from 'react-native-gesture-handler';
 import { GestureHandlerStateChangeEvent, PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { Text } from 'react-native';
+import  CommentFeed  from './CommentFeed'
+import { User } from '../screens/Feed/Feed';
 
 
 const { width, height } = Dimensions.get('window'); // Get device width and height
@@ -23,6 +25,7 @@ type MediaPlayerProps = {
   dislikedIndices: Set<number>;
   likeDislikeCounts: Record<number, number>;
   currentMediaIndex: number;
+  user: User | null; 
 };
 
 
@@ -35,9 +38,39 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   handleDislike,
   toggleCommentFeed,
   goToPrevMedia,
-  goToNextMedia
+  goToNextMedia,
+  currentMediaIndex,
+  likedIndices,
+  dislikedIndices,
+  likeDislikeCounts,
+  user
 }) => {
+  const [imageHeight, setImageHeight] = useState(height - 170);
+  const [imageSize, setImageSize] = useState({ width: width, height: height - 170 });
   const translateY = new Animated.Value(0);
+
+    // State to manage the visibility of comments
+    const [showComments, setShowComments] = useState(false);
+
+    const toggleComments = () => {
+      setShowComments(!showComments);
+      toggleCommentFeed();  // Additional functionality can still be handled
+    };
+
+  useEffect(() => {
+    Image.getSize(currentMedia, (imgWidth, imgHeight) => {
+      const imgAspectRatio = imgWidth / imgHeight;
+      const screenAspectRatio = width / (height - 170);
+      if (imgAspectRatio > screenAspectRatio) {
+        // Image is wider than screen
+        setImageSize({ width: width, height: width / imgAspectRatio });
+      } else {
+        // Image is taller than screen or similar
+        setImageSize({ height: height - 170, width: (height - 170) * imgAspectRatio });
+      }
+    });
+  }, [currentMedia]);
+  
 
   const onSwipe = (event: PanGestureHandlerGestureEvent) => {
     if (event.nativeEvent.state === State.END) {
@@ -63,7 +96,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     <View style={styles.container}>
       <PanGestureHandler onGestureEvent={onSwipe} onHandlerStateChange={onSwipe}>
         <Animated.View style={{ transform: [{ translateY }] }}>
-          <Image source={{ uri: currentMedia }} style={styles.memeImage} resizeMode="cover" />
+          <Image source={{ uri: currentMedia }} style={[styles.memeImage, { height: imageHeight }]} resizeMode="contain" />
           <View style={styles.textContainer}>
             <Text style={styles.username}>{username}</Text>
             <Text style={styles.caption}>{caption}</Text>
@@ -74,7 +107,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       <View style={styles.iconColumn}>
         <TouchableOpacity onPress={handleLike}><FontAwesomeIcon icon={faThumbsUp} size={24} color="#1bd40b" /></TouchableOpacity>
         <TouchableOpacity onPress={handleDislike}><FontAwesomeIcon icon={faThumbsDown} size={24} color="#1bd40b" /></TouchableOpacity>
-        <TouchableOpacity onPress={toggleCommentFeed}><FontAwesomeIcon icon={faComment} size={24} color="#1bd40b" /></TouchableOpacity>
+        <TouchableOpacity onPress={toggleCommentFeed}>
+          <FontAwesomeIcon icon={faComment} size={24} color="#1bd40b" />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => {}}><FontAwesomeIcon icon={faShare} size={24} color="#1bd40b" /></TouchableOpacity>
       </View>
     </View>
@@ -89,11 +124,11 @@ const styles = StyleSheet.create({
   },
   memeImage: {
     width: width,
-    height: height - 170,
+    height: height,
   },
   iconColumn: {
     position: 'absolute',
-    right: 10,
+    right: 20,
     top: 280,
     justifyContent: 'space-between',
     height: 350,
@@ -101,7 +136,7 @@ const styles = StyleSheet.create({
   textContainer: {
     position: 'absolute',
     bottom: 10,
-    left: 10,
+    left: 5,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Semi-transparent background for readability
     padding: 10,
   },
