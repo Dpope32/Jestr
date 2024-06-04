@@ -1,5 +1,8 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import DefaultPfp from '../assets/images/db/JestrLogo.jpg';
+import { faThumbsUp, faThumbsDown, faComment, faShare } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 
 type CommentProps = {
   commentText: string;
@@ -12,19 +15,27 @@ type CommentProps = {
 };
 
 const Comment: React.FC<CommentProps> = ({ commentText, userName, profilePicUrl, likesCount, dislikesCount, onLike, onDislike }) => {
+  
+  
+  
   return (
     <View style={styles.commentContainer}>
-      <Image source={{ uri: profilePicUrl }} style={styles.profilePic} />
+<Image
+  source={profilePicUrl ? { uri: profilePicUrl } : DefaultPfp}
+  style={styles.profilePic}
+/>
       <View style={styles.commentDetailsContainer}>
         <Text style={styles.userName}>{userName}</Text>
         <Text style={styles.commentText}>{commentText}</Text>
         <View style={styles.reactionsContainer}>
-          <TouchableOpacity onPress={onLike} style={styles.reactionButton}>
-            <Text style={styles.likesText}>{`👍 ${likesCount}`}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onDislike} style={styles.reactionButton}>
-            <Text style={styles.dislikesText}>{`👎 ${dislikesCount}`}</Text>
-          </TouchableOpacity>
+        <TouchableOpacity onPress={onLike} style={styles.reactionButton}>
+  <FontAwesomeIcon icon={faThumbsUp} color="#007AFF" size={16} />
+  <Text style={styles.likesText}>{` ${likesCount}`}</Text>
+</TouchableOpacity>
+<TouchableOpacity onPress={onDislike} style={styles.reactionButton}>
+  <FontAwesomeIcon icon={faThumbsDown} color="#FF3B30" size={16} />
+  <Text style={styles.dislikesText}>{` ${dislikesCount}`}</Text>
+</TouchableOpacity>
         </View>
       </View>
     </View>

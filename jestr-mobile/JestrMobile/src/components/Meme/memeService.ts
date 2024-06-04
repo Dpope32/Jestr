@@ -110,12 +110,13 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
     }
 
     console.log(`Fetched comments for memeID ${memeID}:`, data);
-    return data.comments || [];
+    return data.user || []; // Ensure this key matches what the API is sending
   } catch (error) {
     console.error(`Error fetching comments for memeID ${memeID}:`, error);
     return [];
   }
 };
+
 
 
 export const postComment = async (memeID: string, text: string, user: User): Promise<void> => {

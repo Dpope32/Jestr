@@ -68,23 +68,30 @@ export const styles = StyleSheet.create({
     marginBottom: 20,
   },
   formContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(85, 85, 85, 0.95)', // Slightly darker gray with high transparency
+    borderColor: '#00FF00',
     borderRadius: 20,
     width: '90%',
+    paddingHorizontal: 20, // Added padding for internal spacing
     maxWidth: 360,
     alignSelf: 'center',
     borderWidth: 1,
-    borderColor: '#ccc',
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25, // Increased opacity for more pronounced shadow
     shadowRadius: 10,
-    elevation: 5,
+    elevation: 10, // Increased elevation for more depth
+  },
+  divider: {
+    height: 2, // Ensure this is sufficient to be visible
+    backgroundColor: '#red', // Change color to white for maximum contrast
+    width: '85%', // Ensure it's less than the container width to see the edges
+    alignSelf: 'center', // Center align in the container
   },
   signupHeader: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#000',
+    color: 'white',
     alignSelf: 'center',
     paddingTop: 20,
   },
@@ -113,6 +120,10 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '80%',
     alignSelf: 'center',
+    opacity: 0.9,
+  },
+  buttonPress: {
+    opacity: 1, // Brighter on press
   },
   gradient1: {
     height: 50,
@@ -144,9 +155,9 @@ export const styles = StyleSheet.create({
   },
   toggleFormText: {
     color: '#007AFF',
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 5,
   },
   footer: {
     flexDirection: 'row',
@@ -206,6 +217,13 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     paddingHorizontal: 10,
     height: 45,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)', // subtle border
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
   },
   uniformButton: {
     width: '100%',
@@ -289,6 +307,13 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
 
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: 10,
+    top: 10,
+    color: '#ccc',
+    fontSize: 20,
   },
   inputStyle: {
     height: 50,

@@ -42,8 +42,10 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
   };
 
   const toggleCommentFeed = () => {
-    setIsCommentFeedVisible(!isCommentFeedVisible); // Toggle the CommentFeed visibility state
-  };
+    if (!isCommentFeedVisible) {
+        setIsCommentFeedVisible(true);
+    }
+};
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -89,7 +91,14 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
     }
   };
 
-  const memeID = shuffledMedia[currentMediaIndex].memeID;
+  useEffect(() => {
+    if (shuffledMedia.length > 0 && shuffledMedia[currentMediaIndex]) {
+      console.log('Current media URL:', shuffledMedia[currentMediaIndex].url);
+      const memeID = shuffledMedia[currentMediaIndex].memeID;
+      // Use memeID for further operations here
+    }
+  }, [currentMediaIndex, shuffledMedia]);
+  
 
   return (
     <View style={styles.container}>
@@ -132,13 +141,14 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
             uploadTimestamp={shuffledMedia[currentMediaIndex].uploadTimestamp}
             user={localUser} // Pass the localUser object as the user prop
           />
-            {isCommentFeedVisible && ( // Conditionally render the CommentFeed based on the state variable
-              <CommentFeed
-                mediaIndex={currentMediaIndex} // Pass the current media index to the CommentFeed
-                profilePicUrl={localUser ? localUser.profilePic : ''} // Pass the user's profile picture URL
-                user={localUser} // Pass the localUser object as the user prop
-                memeID={memeID}
-              />
+    {isCommentFeedVisible && (
+      <CommentFeed
+      key={shuffledMedia[currentMediaIndex].memeID}
+      memeID={shuffledMedia[currentMediaIndex].memeID}
+      mediaIndex={currentMediaIndex}
+      profilePicUrl={localUser ? localUser.profilePic : ''}
+      user={localUser}
+ />
             )}
         </>
       ) : (

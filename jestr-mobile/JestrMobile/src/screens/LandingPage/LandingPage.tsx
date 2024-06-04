@@ -169,6 +169,18 @@ const LandingPage = () => {
     setProfilePic(file);
   };
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Reset states or perform any setup necessary
+      setShowInitialScreen(true); // Assuming this should be true initially
+      setTitleMarginTop(-300); // Reset any animated values if necessary
+      setAnimationComplete(false); // Reset animation states
+    });
+  
+    return unsubscribe;
+  }, [navigation]);
+  
+
   const handleHeaderPicChange = (file: File | null) => {
     if (file) {
       setHeaderPicFile(file);
@@ -350,7 +362,7 @@ const LandingPage = () => {
                   behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                   style={styles.formContainer}
                 >
-                  {!isSignedUp && (
+                 {!isSignedUp && (
                     <View style={styles.formContainer}>
                       <Text style={styles.signupHeader}>{showSignUpForm ? 'Sign Up' : 'Login'}</Text>
                       <InputField
@@ -362,7 +374,7 @@ const LandingPage = () => {
                         labelStyle={styles.enhancedInputLabel}
                         inputStyle={styles.enhancedInput}
                       />
-                      {isEmailTaken && <Text style={styles.errorMessage}>Email already taken!</Text>}
+                      <View style={styles.divider} />  
                       <InputField
                         label=""
                         placeholder="Enter Password"
@@ -375,6 +387,7 @@ const LandingPage = () => {
                       />
                       {showSignUpForm && (
                         <>
+                        <View style={styles.divider} />
                           <InputField
                             label=""
                             placeholder="Re-enter Password"

@@ -5,14 +5,16 @@ import Comment from './Comment';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowUp, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { User } from '../screens/Feed/Feed';
-import { fetchComments } from './Meme/memeService';
+import { fetchComments, postComment } from './Meme/memeService';
+import  comment  from './Comment'
+import DefaultPfp from '../assets/images/db/JestrLogo.jpg';
 
 const screenHeight = Dimensions.get('window').height;
 
 export type CommentType = {
   commentID: string;
   text: string;
-  userName: string;
+  username: string;
   profilePicUrl: string;
   likesCount: number;
   dislikesCount: number;
@@ -25,40 +27,38 @@ type CommentFeedProps = {
   user: User | null; // Add the user prop
 };
 
-const CommentFeed: React.FC<CommentFeedProps> = ({ mediaIndex, profilePicUrl, user, memeID}) => {
-  const [comments, setComments] = useState<{ text: string; userName: string; profilePicUrl: string }[]>([]);
+const CommentFeed: React.FC<CommentFeedProps> = ({ mediaIndex, profilePicUrl, user, memeID }) => {
+  const [comments, setComments] = useState<CommentType[]>([]);
   const [newComment, setNewComment] = useState('');
-  const modalY = useRef(new Animated.Value(screenHeight)).current;  // Start fully off-screen
-
+  const modalY = useRef(new Animated.Value(screenHeight)).current;
 
   useEffect(() => {
-    // Animate modal to slide up to cover approximately 2/3 of the screen
     Animated.timing(modalY, {
-      toValue: screenHeight * 0.0000000001,
+      toValue: screenHeight * 0.00000001, // Adjusted to show modal correctly
       duration: 500,
       useNativeDriver: true
     }).start();
-  }, []);
 
-  useEffect(() => {
-    fetchComments(memeID).then(comments => {
-      if (comments) {
-        setComments(comments);
-      } else {
-        console.error('No comments fetched or data is undefined');
+    const loadComments = async () => {
+      try {
+        const fetchedComments = await fetchComments(memeID);
+        console.log("Fetched comments for verification:", fetchedComments);
+        setComments(fetchedComments);
+      } catch (error) {
+        console.error('Error fetching comments:', error);
       }
-    }).catch(error => console.error('Error fetching comments:', error));
-  }, []);
+    };
+  
+    loadComments();
+  }, [memeID]);
+  
 
   const closeModal = () => {
-    // Animate the modal back off the screen
     Animated.timing(modalY, {
       toValue: screenHeight,
       duration: 500,
       useNativeDriver: true
-    }).start(() => {
-      setComments([]); // Optionally reset the comment state
-    });
+    }).start();
   };
 
   const handlePanResponderMove = (event: GestureResponderEvent, gestureState: PanResponderGestureState) => {
@@ -90,14 +90,18 @@ const CommentFeed: React.FC<CommentFeedProps> = ({ mediaIndex, profilePicUrl, us
   const handleAddComment = () => {
     if (newComment.trim() !== '') {
       const newComments = [...comments, {
+        commentID: Math.random().toString(36).substring(7), // Generate a pseudo-random ID for the comment
         text: newComment,
-        userName: 'Your Username',  // Assume you will replace with actual username
-        profilePicUrl: 'https://via.placeholder.com/40'
+        username: user ? user.username : 'Unknown user',
+        profilePicUrl: user && user.profilePic ? user.profilePic : DefaultPfp,
+        likesCount: 0,
+        dislikesCount: 0
       }];
       setComments(newComments);
       setNewComment('');
     }
   };
+  
 
   return (
     <Animated.View
@@ -105,24 +109,30 @@ const CommentFeed: React.FC<CommentFeedProps> = ({ mediaIndex, profilePicUrl, us
       {...panResponder.panHandlers}
     >
       <View style={styles.modalContent}>
-        <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-          <FontAwesomeIcon icon={faTimes} size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.commentCount}>Comments ({comments.length})</Text>
-        <View style={styles.commentsContainer}>
-          {comments.map((comment, index) => (
-            <View key={index} style={styles.comment}>
-            <Image source={{ uri: comment.profilePicUrl }} style={styles.commentProfilePic} />
-            <Text style={styles.commentText}>{comment.userName}: {comment.text}</Text>
-          </View>
-          ))}
-        </View>
+      <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+        <FontAwesomeIcon icon={faTimes} size={24} color="#000" />
+      </TouchableOpacity>
+      <Text style={styles.commentCount}>Comments ({comments.length})</Text>
+      <View style={styles.commentsContainer}>
+        {comments.map((comment, index) => (
+          <Comment
+            key={index}
+            commentText={comment.text}
+            userName={comment.username}
+            profilePicUrl={comment.profilePicUrl}
+            likesCount={comment.likesCount}
+            dislikesCount={comment.dislikesCount}
+            onLike={() => console.log('Like clicked')}
+            onDislike={() => console.log('Dislike clicked')}
+          />
+        ))}
+      </View>
         <View style={styles.newCommentContainer}>
         <Image source={{ uri: profilePicUrl }} style={styles.profilePic} /> 
         <TextInput
             style={styles.newCommentInput}
             placeholder="Add a comment..."
-            placeholderTextColor="white" // Set placeholder text color to white
+            placeholderTextColor="#ccc"
             value={newComment}
             onChangeText={setNewComment}
             onSubmitEditing={handleAddComment}
@@ -144,7 +154,7 @@ const styles = StyleSheet.create({
     bottom: -20,
     zIndex: 5,
     height: '80%',
-    backgroundColor: '#1C1C1C',  // Dark gray background
+    backgroundColor: 'rgba(85, 85, 85, 0.90)',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -159,7 +169,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    backgroundColor: '#1C1C1C',  // Dark gray background
+    backgroundColor: 'rgba(85, 85, 85, 0.80)',
     zIndex: 5,
     color: 'white',
     padding: 20,
@@ -174,8 +184,7 @@ const styles = StyleSheet.create({
   },
   commentsContainer: {
     flex: 1,
-    color: 'white',
-    zIndex: 5,
+    marginBottom: 10,
   },
   newCommentContainer: {
     flexDirection: 'row',
