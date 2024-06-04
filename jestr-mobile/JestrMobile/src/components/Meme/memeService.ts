@@ -1,5 +1,10 @@
 import { API_URL } from './config';
 import RNFetchBlob from 'rn-fetch-blob';
+import {  User } from '../../screens/Feed/Feed';
+import { CommentType } from '../CommentFeed';
+
+
+
 
 export const fetchMemes = async (): Promise<{ memeID: string; email: string; url: string; uploadTimestamp: string; username: string; caption: string; }[]> => {
   try {
@@ -86,4 +91,54 @@ const fileToBase64 = async (uri: string): Promise<string | null> => {
     console.error('Error converting file to base64:', error);
     return null;
   }
+};
+
+
+export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
+  try {
+    console.log(`Fetching comments for memeID: ${memeID}`);
+    const response = await fetch(`${API_URL}/getComments`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ operation: 'getComments', memeID })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error(`Failed to fetch comments for memeID ${memeID}:`, data.message);
+      return [];
+    }
+
+    console.log(`Fetched comments for memeID ${memeID}:`, data);
+    return data.comments || [];
+  } catch (error) {
+    console.error(`Error fetching comments for memeID ${memeID}:`, error);
+    return [];
+  }
+};
+
+
+export const postComment = async (memeID: string, text: string, user: User): Promise<void> => {
+  const commentData = {
+    operation: "postComment",
+    memeID,
+    text,
+    username: user.username,
+    profilePic: user.profilePic,
+  };
+
+  console.log(`Posting comment for memeID: ${memeID} by user: ${user.username}`);
+  const response = await fetch(`${API_URL}/postComment`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(commentData),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    console.error('Failed to post comment:', data.message);
+    throw new Error(data.message);
+  }
+
+  console.log('Comment posted successfully:', data);
 };

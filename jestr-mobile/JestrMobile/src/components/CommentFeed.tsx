@@ -5,19 +5,31 @@ import Comment from './Comment';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowUp, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { User } from '../screens/Feed/Feed';
+import { fetchComments } from './Meme/memeService';
 
 const screenHeight = Dimensions.get('window').height;
 
+export type CommentType = {
+  commentID: string;
+  text: string;
+  userName: string;
+  profilePicUrl: string;
+  likesCount: number;
+  dislikesCount: number;
+};
+
 type CommentFeedProps = {
   mediaIndex: number;
+  memeID: string;
   profilePicUrl: string;
   user: User | null; // Add the user prop
 };
 
-const CommentFeed: React.FC<CommentFeedProps> = ({ mediaIndex, profilePicUrl, user }) => {
+const CommentFeed: React.FC<CommentFeedProps> = ({ mediaIndex, profilePicUrl, user, memeID}) => {
   const [comments, setComments] = useState<{ text: string; userName: string; profilePicUrl: string }[]>([]);
   const [newComment, setNewComment] = useState('');
   const modalY = useRef(new Animated.Value(screenHeight)).current;  // Start fully off-screen
+
 
   useEffect(() => {
     // Animate modal to slide up to cover approximately 2/3 of the screen
@@ -26,6 +38,16 @@ const CommentFeed: React.FC<CommentFeedProps> = ({ mediaIndex, profilePicUrl, us
       duration: 500,
       useNativeDriver: true
     }).start();
+  }, []);
+
+  useEffect(() => {
+    fetchComments(memeID).then(comments => {
+      if (comments) {
+        setComments(comments);
+      } else {
+        console.error('No comments fetched or data is undefined');
+      }
+    }).catch(error => console.error('Error fetching comments:', error));
   }, []);
 
   const closeModal = () => {

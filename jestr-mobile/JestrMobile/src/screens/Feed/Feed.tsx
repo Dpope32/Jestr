@@ -89,6 +89,8 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
     }
   };
 
+  const memeID = shuffledMedia[currentMediaIndex].memeID;
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
@@ -135,6 +137,7 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
                 mediaIndex={currentMediaIndex} // Pass the current media index to the CommentFeed
                 profilePicUrl={localUser ? localUser.profilePic : ''} // Pass the user's profile picture URL
                 user={localUser} // Pass the localUser object as the user prop
+                memeID={memeID}
               />
             )}
         </>
