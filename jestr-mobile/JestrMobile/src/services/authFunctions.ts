@@ -134,56 +134,56 @@ export const handleCompleteProfile = async (
 
 
 
-    export const handleLogin = async (
-      email: string,
-      password: string,
-      setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-      navigation: LandingPageNavigationProp
-    ) => {
-      setIsLoading(true);
+export const handleLogin = async (
+  email: string,
+  password: string,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  navigation: LandingPageNavigationProp,
+  setSuccessModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
+  setModalUsername: React.Dispatch<React.SetStateAction<string>>
+) => {
+  setIsLoading(true);
 
-      const userData = {
-        operation: 'signin',
-        email: email,
-        password: password,
-      };
+  const userData = {
+    operation: 'signin',
+    email: email,
+    password: password,
+  };
 
-      try {
-        console.log('Sending login request...');
+  try {
+    console.log('Sending login request...');
 
-        const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/signin', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userData),
-        });
+    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/signin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
 
-        const data = await response.json();
-        console.log('Login response:', data);
+    const data = await response.json();
+    console.log('Login response:', data);
 
-        if (response.ok && data.message === 'Sign-in successful.' && data.user && data.user.email) {
-          await AsyncStorage.setItem('user', JSON.stringify(data.user));
-          console.log('Sign-in successful');
-          Alert.alert(
-            'Success',
-            `Welcome back, ${data.user.displayName}!`,
-            [{ text: 'OK', onPress: () => {
-              console.log('Alert closed, navigating to Feed');
-              navigation.navigate('Feed', { user: data.user });
-              setIsLoading(false);
-            }}],
-            { cancelable: false }
-          );
-        } else {
-          console.log('Sign-in failed');
-          setIsLoading(false);
-          Alert.alert('Error', data.message || 'Sign-in failed. Please check your credentials.');
-        }
-      } catch (error) {
-        console.error('Login error:', error);
+    if (response.ok && data.message === 'Sign-in successful.' && data.user && data.user.email) {
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      console.log('Sign-in successful');
+      setModalUsername(data.user.displayName);
+      setSuccessModalVisible(true);
+      setTimeout(() => {
+        navigation.navigate('Feed', { user: data.user });
         setIsLoading(false);
-        Alert.alert('Error', 'An error occurred during sign-in. Please try again.');
-      }
-    };
+        setSuccessModalVisible(false);
+      }, 2000); // Show modal for 2 seconds before navigating
+    } else {
+      console.log('Sign-in failed');
+      setIsLoading(false);
+      Alert.alert('Error', data.message || 'Sign-in failed. Please check your credentials.');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    setIsLoading(false);
+    Alert.alert('Error', 'An error occurred during sign-in. Please try again.');
+  }
+};
+
     

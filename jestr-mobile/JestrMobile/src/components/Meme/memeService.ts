@@ -110,7 +110,16 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
     }
 
     console.log(`Fetched comments for memeID ${memeID}:`, data);
-    return data.user || []; // Ensure this key matches what the API is sending
+    return data.user.map((comment: any) => ({
+      commentID: comment.CommentID || '',
+      text: comment.Text || '',
+      username: comment.Username || 'Unknown user',
+      profilePicUrl: comment.ProfilePicUrl,
+      likesCount: parseInt(comment.LikesCount) || 0,
+      dislikesCount: parseInt(comment.DislikesCount) || 0,
+      timestamp: comment.Timestamp || '',
+      repliesCount: comment.RepliesCount || 0,
+    })) || [];
   } catch (error) {
     console.error(`Error fetching comments for memeID ${memeID}:`, error);
     return [];
@@ -118,12 +127,12 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
 };
 
 
-
 export const postComment = async (memeID: string, text: string, user: User): Promise<void> => {
   const commentData = {
     operation: "postComment",
     memeID,
     text,
+    email: user.email, // Ensure email is included
     username: user.username,
     profilePic: user.profilePic,
   };
@@ -131,7 +140,7 @@ export const postComment = async (memeID: string, text: string, user: User): Pro
   console.log(`Posting comment for memeID: ${memeID} by user: ${user.username}`);
   const response = await fetch(`${API_URL}/postComment`, {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(commentData),
   });
 
@@ -143,3 +152,36 @@ export const postComment = async (memeID: string, text: string, user: User): Pro
 
   console.log('Comment posted successfully:', data);
 };
+
+
+export const updateCommentReaction = async (
+  commentID: string,
+  memeID: string,
+  incrementLikes: boolean,
+  incrementDislikes: boolean
+): Promise<void> => {
+  const requestBody = {
+    operation: 'updateCommentReaction',
+    commentID,
+    memeID,
+    incrementLikes,
+    incrementDislikes,
+  };
+
+  console.log('Updating comment reaction for commentID:', commentID);
+
+  const response = await fetch(`${API_URL}/updateCommentReaction`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    console.error('Failed to update comment reaction:', data.message);
+    throw new Error(data.message);
+  }
+
+  console.log('Comment reaction updated successfully:', data);
+};
+

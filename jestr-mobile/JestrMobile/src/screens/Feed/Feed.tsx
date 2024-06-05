@@ -36,16 +36,16 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
   const [profilePicUrl, setProfilePicUrl] = useState(user ? user.profilePic : '');
   const [shuffledMedia, setShuffledMedia] = useState<Meme[]>([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false); 
+  const [isCommentFeedVisible, setIsCommentFeedVisible] = useState<boolean>(false);
+
   const toggleProfilePanel = () => {
     setProfilePanelVisible(!profilePanelVisible);
   };
 
   const toggleCommentFeed = () => {
-    if (!isCommentFeedVisible) {
-        setIsCommentFeedVisible(true);
-    }
-};
+    console.log("toggleCommentFeed called: currently", isCommentFeedVisible);
+    setIsCommentFeedVisible(!isCommentFeedVisible);
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -98,62 +98,62 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
       // Use memeID for further operations here
     }
   }, [currentMediaIndex, shuffledMedia]);
-  
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         <TopPanel
-          onProfileClick={toggleProfilePanel}  // Here, we handle the profile pic click
+          onProfileClick={toggleProfilePanel}
           profilePicUrl={localUser ? localUser.profilePic : ''}
           username={localUser ? localUser.username : 'Default Username'}
         />
         {profilePanelVisible && localUser && (
-          // Assuming ProfilePanel is another component that takes an onClose prop
           <ProfilePanel
-          isVisible={profilePanelVisible}
-          onClose={() => setProfilePanelVisible(false)}
-          profilePicUrl={localUser.profilePic}
-          username={localUser.username}
-          displayName={localUser.displayName || 'N/A'}  // Assuming 'displayName' exists in 'User'
-          followersCount="0"  // Placeholder or dynamic value
-          followingCount="0"  // Placeholder or dynamic value
-          onDarkModeToggle={() => console.log("Dark Mode Toggle")}  // Placeholder function
-          user={localUser}
-          navigation={navigation}  // Assuming 'navigation' is available from props or context
-        />
+            isVisible={profilePanelVisible}
+            onClose={() => setProfilePanelVisible(false)}
+            profilePicUrl={localUser.profilePic}
+            username={localUser.username}
+            displayName={localUser.displayName || 'N/A'}
+            followersCount="0"
+            followingCount="0"
+            onDarkModeToggle={() => console.log("Dark Mode Toggle")}
+            user={localUser}
+            navigation={navigation}
+          />
         )}
         {shuffledMedia.length > 0 ? (
           <>
-          <MediaPlayer
-            currentMedia={shuffledMedia[currentMediaIndex].url}
-            handleLike={() => {}}
-            handleDislike={() => {}}
-            likedIndices={new Set()}
-            dislikedIndices={new Set()}
-            likeDislikeCounts={{}}
-            currentMediaIndex={currentMediaIndex}
-            toggleCommentFeed={toggleCommentFeed}
-            goToPrevMedia={goToPrevMedia}
-            goToNextMedia={goToNextMedia}
-            username={shuffledMedia[currentMediaIndex].username}
-            caption={shuffledMedia[currentMediaIndex].caption}
-            uploadTimestamp={shuffledMedia[currentMediaIndex].uploadTimestamp}
-            user={localUser} // Pass the localUser object as the user prop
-          />
-    {isCommentFeedVisible && (
-      <CommentFeed
-      key={shuffledMedia[currentMediaIndex].memeID}
-      memeID={shuffledMedia[currentMediaIndex].memeID}
-      mediaIndex={currentMediaIndex}
-      profilePicUrl={localUser ? localUser.profilePic : ''}
-      user={localUser}
- />
+            <MediaPlayer
+              currentMedia={shuffledMedia[currentMediaIndex].url}
+              handleLike={() => {}}
+              handleDislike={() => {}}
+              likedIndices={new Set()}
+              dislikedIndices={new Set()}
+              likeDislikeCounts={{}}
+              currentMediaIndex={currentMediaIndex}
+              toggleCommentFeed={toggleCommentFeed}
+              goToPrevMedia={goToPrevMedia}
+              goToNextMedia={goToNextMedia}
+              username={shuffledMedia[currentMediaIndex].username}
+              caption={shuffledMedia[currentMediaIndex].caption}
+              uploadTimestamp={shuffledMedia[currentMediaIndex].uploadTimestamp}
+              user={localUser}
+            />
+            {isCommentFeedVisible && (
+              <CommentFeed
+                key={`${shuffledMedia[currentMediaIndex].memeID}-${isCommentFeedVisible}`}
+                memeID={shuffledMedia[currentMediaIndex].memeID}
+                mediaIndex={currentMediaIndex}
+                profilePicUrl={localUser ? localUser.profilePic : ''}
+                user={localUser}
+                isCommentFeedVisible={isCommentFeedVisible}
+                toggleCommentFeed={toggleCommentFeed} // Pass the toggleCommentFeed prop
+              />
             )}
-        </>
-      ) : (
-        <Text>No memes available</Text>
-      )}
+          </>
+        ) : (
+          <Text>No memes available</Text>
+        )}
         <BottomPanel
           onHomeClick={() => {}}
           handleLike={() => {}}

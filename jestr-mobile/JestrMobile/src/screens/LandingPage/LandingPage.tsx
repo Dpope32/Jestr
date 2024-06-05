@@ -20,6 +20,7 @@ import { styles } from './LandingPage.styles';
 import googleIcon from '../../assets/images/google.jpeg';
 import appleIcon from '../../assets/images/apple.jpg';
 import twitterIcon from '../../assets/images/twitter.jpg';
+import SuccessModal from './SuccessModal'; 
 
 import {
   handleSignup,
@@ -94,6 +95,8 @@ const LandingPage = () => {
   const [showSignUpForm, setShowSignUpForm] = useState(false);
   const formOpacity = useRef(new Animated.Value(0)).current;
   const [titleMarginTop, setTitleMarginTop] = useState(-300);
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+const [modalUsername, setModalUsername] = useState('');
 
   const checkAuthStatus = async () => {
     try {
@@ -122,6 +125,18 @@ const LandingPage = () => {
     console.log('LandingPage component mounted');
     startAnimation();
   }, []);
+
+  
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Reset states or perform any setup necessary
+      setShowInitialScreen(true); // Assuming this should be true initially
+      setTitleMarginTop(-300); // Reset any animated values if necessary
+      setAnimationComplete(false); // Reset animation states
+    });
+  
+    return unsubscribe;
+  }, [navigation]);
 
   useEffect(() => {
     Animated.timing(formOpacity, {
@@ -417,7 +432,7 @@ const LandingPage = () => {
                         onPress={() =>
                           showSignUpForm
                             ? handleSignup(email, password, setIsSignedUp)
-                            : handleLogin(email, password, setIsLoading, navigation)
+                            : handleLogin(email, password, setIsLoading, navigation, setSuccessModalVisible, setModalUsername)
                         }
                         style={styles.button}
                       >

@@ -53,9 +53,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     const [showComments, setShowComments] = useState(false);
 
     const toggleComments = () => {
-      setShowComments(!showComments); // This toggles the local modal display
+      setShowComments(!showComments);
+      toggleCommentFeed();  // Additional functionality can still be handled
     };
-    
 
   useEffect(() => {
     Image.getSize(currentMedia, (imgWidth, imgHeight) => {
@@ -107,7 +107,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       <View style={styles.iconColumn}>
         <TouchableOpacity onPress={handleLike}><FontAwesomeIcon icon={faThumbsUp} size={24} color="#1bd40b" /></TouchableOpacity>
         <TouchableOpacity onPress={handleDislike}><FontAwesomeIcon icon={faThumbsDown} size={24} color="#1bd40b" /></TouchableOpacity>
-        <TouchableOpacity onPress={toggleComments}> 
+        <TouchableOpacity onPress={() => {
+  console.log("Comment icon pressed");
+  toggleCommentFeed();
+}}>
   <FontAwesomeIcon icon={faComment} size={24} color="#1bd40b" />
 </TouchableOpacity>
 

@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   username: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#1bd40b',
   },
 });

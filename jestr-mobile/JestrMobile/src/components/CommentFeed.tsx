@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GestureResponderEvent, PanResponder, PanResponderGestureState } from 'react-native';
-import { View, Text, TextInput, Modal, StyleSheet, Animated, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, Text, TextInput, Animated, TouchableOpacity, Image, Dimensions, StyleSheet } from 'react-native';
 import Comment from './Comment';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowUp, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { User } from '../screens/Feed/Feed';
-import { fetchComments, postComment } from './Meme/memeService';
-import  comment  from './Comment'
+import { fetchComments, postComment, updateCommentReaction } from './Meme/memeService';
 import DefaultPfp from '../assets/images/db/JestrLogo.jpg';
 
 const screenHeight = Dimensions.get('window').height;
@@ -18,63 +17,76 @@ export type CommentType = {
   profilePicUrl: string;
   likesCount: number;
   dislikesCount: number;
+  timestamp: string;
+  repliesCount: number;
 };
 
 type CommentFeedProps = {
   mediaIndex: number;
   memeID: string;
   profilePicUrl: string;
-  user: User | null; // Add the user prop
+  user: User | null;
+  isCommentFeedVisible: boolean;
+  toggleCommentFeed: () => void;
 };
 
-const CommentFeed: React.FC<CommentFeedProps> = ({ mediaIndex, profilePicUrl, user, memeID }) => {
+const CommentFeed: React.FC<CommentFeedProps> = ({
+  mediaIndex,
+  profilePicUrl,
+  user,
+  memeID,
+  isCommentFeedVisible,
+  toggleCommentFeed,
+}) => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [newComment, setNewComment] = useState('');
   const modalY = useRef(new Animated.Value(screenHeight)).current;
 
   useEffect(() => {
-    Animated.timing(modalY, {
-      toValue: screenHeight * 0.00000001, // Adjusted to show modal correctly
-      duration: 500,
-      useNativeDriver: true
-    }).start();
-
     const loadComments = async () => {
       try {
+        console.log(`Fetching comments for memeID: ${memeID}`);
         const fetchedComments = await fetchComments(memeID);
-        console.log("Fetched comments for verification:", fetchedComments);
+        console.log(`Fetched comments for memeID ${memeID}:`, fetchedComments);
         setComments(fetchedComments);
       } catch (error) {
         console.error('Error fetching comments:', error);
       }
     };
-  
-    loadComments();
-  }, [memeID]);
-  
+
+    if (isCommentFeedVisible) {
+      loadComments();
+      Animated.timing(modalY, {
+        toValue: screenHeight * 0.00001,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [memeID, isCommentFeedVisible]);
 
   const closeModal = () => {
     Animated.timing(modalY, {
       toValue: screenHeight,
       duration: 500,
-      useNativeDriver: true
-    }).start();
+      useNativeDriver: true,
+    }).start(() => {
+      toggleCommentFeed();
+    });
   };
 
   const handlePanResponderMove = (event: GestureResponderEvent, gestureState: PanResponderGestureState) => {
-    if (gestureState.dy > 0) {  // Allow dragging only downwards
+    if (gestureState.dy > 0) {
       modalY.setValue(gestureState.dy);
     }
   };
 
   const handlePanResponderRelease = (event: GestureResponderEvent, gestureState: PanResponderGestureState) => {
-    if (gestureState.dy > 100) {  // Threshold to close modal
+    if (gestureState.dy > 100) {
       closeModal();
     } else {
-      // Snap back to open position
       Animated.spring(modalY, {
         toValue: screenHeight * 0.33,
-        useNativeDriver: true
+        useNativeDriver: true,
       }).start();
     }
   };
@@ -83,25 +95,44 @@ const CommentFeed: React.FC<CommentFeedProps> = ({ mediaIndex, profilePicUrl, us
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderMove: handlePanResponderMove,
-      onPanResponderRelease: handlePanResponderRelease
+      onPanResponderRelease: handlePanResponderRelease,
     })
   ).current;
 
-  const handleAddComment = () => {
-    if (newComment.trim() !== '') {
-      const newComments = [...comments, {
-        commentID: Math.random().toString(36).substring(7), // Generate a pseudo-random ID for the comment
-        text: newComment,
-        username: user ? user.username : 'Unknown user',
-        profilePicUrl: user && user.profilePic ? user.profilePic : DefaultPfp,
-        likesCount: 0,
-        dislikesCount: 0
-      }];
-      setComments(newComments);
-      setNewComment('');
+  const handleAddComment = async () => {
+    if (newComment.trim() !== '' && user) {
+      try {
+        await postComment(memeID, newComment, user);
+        const updatedComments = await fetchComments(memeID);
+        setComments(updatedComments);
+        setNewComment('');
+      } catch (error) {
+        console.error('Failed to add comment:', error);
+      }
+    } else {
+      console.error('User is null, cannot post comment.');
     }
   };
-  
+
+  const handleLike = async (commentID: string) => {
+    try {
+      await updateCommentReaction(commentID, memeID, true, false);
+      const updatedComments = await fetchComments(memeID);
+      setComments(updatedComments);
+    } catch (error) {
+      console.error('Failed to like comment:', error);
+    }
+  };
+
+  const handleDislike = async (commentID: string) => {
+    try {
+      await updateCommentReaction(commentID, memeID, false, true);
+      const updatedComments = await fetchComments(memeID);
+      setComments(updatedComments);
+    } catch (error) {
+      console.error('Failed to dislike comment:', error);
+    }
+  };
 
   return (
     <Animated.View
@@ -109,32 +140,36 @@ const CommentFeed: React.FC<CommentFeedProps> = ({ mediaIndex, profilePicUrl, us
       {...panResponder.panHandlers}
     >
       <View style={styles.modalContent}>
-      <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-        <FontAwesomeIcon icon={faTimes} size={24} color="#000" />
-      </TouchableOpacity>
-      <Text style={styles.commentCount}>Comments ({comments.length})</Text>
-      <View style={styles.commentsContainer}>
-        {comments.map((comment, index) => (
-          <Comment
-            key={index}
-            commentText={comment.text}
-            userName={comment.username}
-            profilePicUrl={comment.profilePicUrl}
-            likesCount={comment.likesCount}
-            dislikesCount={comment.dislikesCount}
-            onLike={() => console.log('Like clicked')}
-            onDislike={() => console.log('Dislike clicked')}
-          />
-        ))}
-      </View>
+        <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+          <FontAwesomeIcon icon={faTimes} size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.commentCount}>Comments ({comments.length})</Text>
+        <View style={styles.commentsContainer}>
+          {comments.map((comment, index) => (
+            <Comment
+              key={index}
+              commentText={comment.text}
+              userName={comment.username}
+              profilePicUrl={comment.profilePicUrl}
+              likesCount={comment.likesCount}
+              dislikesCount={comment.dislikesCount}
+              timestamp={comment.timestamp}
+              onLike={() => handleLike(comment.commentID)}
+              onDislike={() => handleDislike(comment.commentID)}
+              onReply={() => console.log('Reply clicked')}
+              onViewReplies={() => console.log('View replies clicked')}
+              repliesCount={comment.repliesCount || 0}
+            />
+          ))}
+        </View>
         <View style={styles.newCommentContainer}>
-        <Image source={{ uri: profilePicUrl }} style={styles.profilePic} /> 
-        <TextInput
+          <Image source={{ uri: profilePicUrl }} style={styles.profilePic} />
+          <TextInput
             style={styles.newCommentInput}
             placeholder="Add a comment..."
             placeholderTextColor="#ccc"
             value={newComment}
-            onChangeText={setNewComment}
+            onChangeText={text => setNewComment(text)}
             onSubmitEditing={handleAddComment}
           />
           <TouchableOpacity onPress={handleAddComment}>
@@ -180,7 +215,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'white'
+    color: 'white',
   },
   commentsContainer: {
     flex: 1,
@@ -203,7 +238,7 @@ const styles = StyleSheet.create({
     zIndex: 5,
     paddingHorizontal: 10,
     marginRight: 10,
-    color: 'white', // Set text color to white
+    color: 'white',
   },
   profilePic: {
     width: 40,
@@ -211,26 +246,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     zIndex: 5,
     marginRight: 10,
-  },
-  commentProfilePic: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 10,
-  },
-  comment: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    color: 'white', // Set text color to white
-    borderBottomColor: '#eee',
-  },
-  commentText: {
-    color: 'white', // Set comment text color to white
-  },
-  commentUserName: {
-    color: 'green', // Set comment text color to white
   },
 });
 
