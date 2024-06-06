@@ -50,9 +50,6 @@ const Comment: React.FC<CommentProps> = ({
               <FontAwesomeIcon icon={faThumbsUp} color="lightgreen" size={16} />
             </TouchableOpacity>
             <Text style={styles.likesText}>{totalLikes}</Text>
-            <TouchableOpacity onPress={onDislike} style={styles.reactionButton}>
-              <FontAwesomeIcon icon={faThumbsDown} color="darkgreen" size={16} />
-            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.footerContainer}>

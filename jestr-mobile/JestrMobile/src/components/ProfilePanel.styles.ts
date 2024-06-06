@@ -35,16 +35,16 @@ const styles = StyleSheet.create({
     },
     profilePanel: {
       position: 'absolute',
-      width: '50%',
+      width: '75%',
       height: '106%',
       backgroundColor: '#333333',
-      left: 0,
+      left: -20,
       top: 0,
       zIndex: 10,
       elevation: 10,
     },
     dimBackground: {
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      backgroundColor: 'rgba(0, 0, 0, 0.1)',
     },
     userInfo: {
       marginRight: 20,
@@ -52,13 +52,15 @@ const styles = StyleSheet.create({
     infoContainer: {
       backgroundColor: 'rgba(255, 255, 255, 0.3)',
       borderRadius: 10,
-      padding: 10,
+      paddingHorizontal: 20,
       marginBottom: 10,
+      paddingVertical: 10,
+      width: 200,
     },
     infoValue: {
       fontSize: 16,
       fontWeight: 'bold',
-      color: '#FFFFFF',
+      color: '#1bd40b',
     },
     infoLabel: {
       fontSize: 12,
@@ -70,13 +72,14 @@ const styles = StyleSheet.create({
       marginTop: 10,
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
       borderRadius: 20,
-      padding: 6,
+      padding: 16,
+      paddingHorizontal: 24,
     },
     followCount: {
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
       borderRadius: 15,
-      padding: 5,
-      marginHorizontal: 4,
+      padding: 15,
+      marginHorizontal: 5,
     },
     followValue: {
       color: '#FFFFFF',
@@ -87,12 +90,12 @@ const styles = StyleSheet.create({
     iconSection: {
       flexDirection: 'column',
       alignItems: 'flex-start',
-      marginTop: 100,
+      marginTop: 40,
     },
     iconButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 10,
+      paddingVertical: 16,
     },
     icon: {
       color: '#FFFFFF',
@@ -101,12 +104,13 @@ const styles = StyleSheet.create({
     },
     iconLabel: {
       color: '#FFFFFF',
-      fontSize: 16,
+      fontSize: 24,
     },
     signoutButton: {
       position: 'absolute',
       bottom: 20,
       left: 20,
+      color: 'red'
     },
     darkModeButton: {
       position: 'absolute',

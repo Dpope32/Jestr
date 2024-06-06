@@ -19,13 +19,17 @@ export type User = {
   creationDate: string;
 };
 
-type Meme = {
+export type Meme = {
   memeID: string;
   email: string;
   url: string;
   uploadTimestamp: string;
   username: string;
   caption: string;
+  likeCount: number;
+  downloadCount: number;
+  commentCount: number;
+  profilePicUrl: string;
 };
 
 const Feed: React.FC<{ route: any }> = ({ route }) => {
@@ -126,9 +130,9 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
             <MediaPlayer
               currentMedia={shuffledMedia[currentMediaIndex].url}
               handleLike={() => {}}
-              handleDislike={() => {}}
+              handleDownload={() => {}}
               likedIndices={new Set()}
-              dislikedIndices={new Set()}
+              downloadedIndices={new Set()}
               likeDislikeCounts={{}}
               currentMediaIndex={currentMediaIndex}
               toggleCommentFeed={toggleCommentFeed}
@@ -138,6 +142,11 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
               caption={shuffledMedia[currentMediaIndex].caption}
               uploadTimestamp={shuffledMedia[currentMediaIndex].uploadTimestamp}
               user={localUser}
+              memeID={shuffledMedia[currentMediaIndex].memeID}
+              likeCount={shuffledMedia[currentMediaIndex].likeCount}
+              downloadCount={shuffledMedia[currentMediaIndex].downloadCount}
+              commentCount={shuffledMedia[currentMediaIndex].commentCount}
+              profilePicUrl={shuffledMedia[currentMediaIndex].profilePicUrl}
             />
             {isCommentFeedVisible && (
               <CommentFeed

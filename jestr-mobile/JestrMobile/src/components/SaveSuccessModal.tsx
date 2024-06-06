@@ -5,13 +5,12 @@ import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 
 const { width, height } = Dimensions.get('window');
 
-type SuccessModalProps = {
+type SaveSuccessModalProps = {
   visible: boolean;
   onClose: () => void;
-  username: string;
 };
 
-const SuccessModal: React.FC<SuccessModalProps> = ({ visible, onClose, username }) => {
+const SaveSuccessModal: React.FC<SaveSuccessModalProps> = ({ visible, onClose }) => {
   const scaleValue = new Animated.Value(0);
 
   React.useEffect(() => {
@@ -24,7 +23,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ visible, onClose, username 
     } else {
       Animated.timing(scaleValue, {
         toValue: 0,
-        duration: 400,
+        duration: 300,
         useNativeDriver: true,
       }).start();
     }
@@ -41,7 +40,10 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ visible, onClose, username 
         <Animated.View style={[styles.modalContainer, { transform: [{ scale: scaleValue }] }]}>
           <FontAwesomeIcon icon={faCheckCircle} size={60} color="#4CAF50" />
           <Text style={styles.successText}>Success</Text>
-          <Text style={styles.messageText}>Welcome back, {username}!</Text>
+          <Text style={styles.messageText}>Meme was added to your gallery!</Text>
+          <TouchableOpacity style={styles.button} onPress={onClose}>
+            <Text style={styles.buttonText}>Okay</Text>
+          </TouchableOpacity>
         </Animated.View>
       </View>
     </Modal>
@@ -58,21 +60,19 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: width * 0.8,
     padding: 20,
+    backgroundColor: '#1C1C1C',
     borderRadius: 10,
     alignItems: 'center',
-    backgroundColor: '#1C1C1C',
   },
   successText: {
     fontSize: 24,
     fontWeight: 'bold',
     marginVertical: 10,
-    color: '#1bd40b'
   },
   messageText: {
     fontSize: 18,
     textAlign: 'center',
     marginVertical: 10,
-    color: 'white'
   },
   button: {
     marginTop: 20,
@@ -87,4 +87,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SuccessModal;
+export default SaveSuccessModal;

@@ -2,11 +2,11 @@ import { API_URL } from './config';
 import RNFetchBlob from 'rn-fetch-blob';
 import {  User } from '../../screens/Feed/Feed';
 import { CommentType } from '../CommentFeed';
+import { Meme } from '../../screens/Feed/Feed';
 
 
 
-
-export const fetchMemes = async (): Promise<{ memeID: string; email: string; url: string; uploadTimestamp: string; username: string; caption: string; }[]> => {
+export const fetchMemes = async (): Promise<Meme[]> => {
   try {
     const requestUrl = `${API_URL}/getMemes`;
     const response = await fetch(requestUrl, {
@@ -27,15 +27,23 @@ export const fetchMemes = async (): Promise<{ memeID: string; email: string; url
     }
     const data = JSON.parse(responseText);
     return data.user.map((meme: any) => ({
-      ...meme,
+      memeID: meme.memeID,
+      email: meme.email,
+      url: meme.url,
+      uploadTimestamp: meme.uploadTimestamp,
       username: meme.username || 'defaultUsername',
-      caption: meme.caption || '' // Default to empty string if caption is not present
+      caption: meme.caption || '', // Default to empty string if caption is not present
+      likeCount: meme.likeCount || 0,
+      downloadCount: meme.downloadCount || 0,
+      commentCount: meme.commentCount || 0,
+      profilePicUrl: meme.profilePicUrl || ''
     })) || [];
   } catch (error) {
     console.error('Error fetching memes:', error);
     return [];
   }
 };
+
 
 
 export const uploadMeme = async (imageUri: string, userEmail: string, username: string, caption: string): Promise<{ url: string }> => {
@@ -185,3 +193,30 @@ export const updateCommentReaction = async (
   console.log('Comment reaction updated successfully:', data);
 };
 
+export const updateMemeReaction = async (memeID: string, incrementLikes: boolean, incrementDownloads: boolean, email: string): Promise<void> => {
+  const requestBody = {
+    operation: 'updateMemeReaction',
+    memeID,
+    incrementLikes,
+    incrementDownloads,
+    email,
+  };
+
+  console.log('Updating meme reaction with requestBody:', requestBody);
+
+  const response = await fetch(`${API_URL}/updateMemeReaction`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    console.error('Failed to update meme reaction:', data.message);
+    throw new Error(data.message);
+  }
+
+  console.log('Meme reaction updated successfully:', data);
+};

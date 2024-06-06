@@ -22,6 +22,8 @@ import {
 import Anon1Image from '../assets/images/db/Jestr5.jpg';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LogoutModal from './LogoutModal'; 
+import { CommonActions } from '@react-navigation/native';
 
 type ProfilePanelProps = {
   isVisible: boolean;
@@ -51,6 +53,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [panelTranslateX] = useState(new Animated.Value(-300)); // Initial position off-screen
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   useEffect(() => {
     if (isVisible) {
@@ -107,32 +110,31 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   };
 
   const handleSignOut = () => {
-    Alert.alert(
-      'Log Out',
-      'Are you sure you want to log out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Log Out', onPress: confirmSignOut },
-      ],
-      { cancelable: false }
-    );
+    setLogoutModalVisible(true);
   };
-  
+
   const confirmSignOut = async () => {
     try {
       console.log('Confirming sign-out...');
       // Clear local storage
       await AsyncStorage.removeItem('user');
-  
       console.log('User data cleared from AsyncStorage');
-  
-      // Navigate to the landing page
-      navigation.navigate('LandingPage');
-  
-      console.log('Navigated to LandingPage');
+      
+      // Navigate to the InitialScreen and clear the navigation stack
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'LandingPage' }],
+        })
+      );
+      console.log('Navigated to InitialScreen');
     } catch (error) {
       console.error('Error during sign-out:', error);
     }
+  };
+
+  const cancelSignOut = () => {
+    setLogoutModalVisible(false);
   };
 
   const closeModal = () => {
@@ -200,8 +202,13 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
           </TouchableOpacity>
         </View>
         <TouchableOpacity style={styles.signoutButton} onPress={handleSignOut}>
-          <FontAwesomeIcon icon={faSignOutAlt} style={styles.icon} />
-        </TouchableOpacity>
+        <FontAwesomeIcon icon={faSignOutAlt} style={styles.icon} />
+      </TouchableOpacity>
+      <LogoutModal
+        visible={logoutModalVisible}
+        onCancel={cancelSignOut}
+        onConfirm={confirmSignOut}
+      />
         <TouchableOpacity style={styles.darkModeButton} onPress={handleDarkModeClick}>
           <FontAwesomeIcon icon={faMoon} style={[styles.icon, getDarkModeIconStyle()]} />
         </TouchableOpacity>

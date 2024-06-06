@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
-import { Animated, StyleSheet, ImageBackground } from 'react-native';
+import { Animated, StyleSheet, View, Easing } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
-const logo = require('../assets/images/db/JestrLogo.jpg');
-const radialGradientBg = require('../assets/images/radial_gradient_bg.png');
+const logo = require('../assets/images/db/Jestr.jpg');
 
 type RootStackParamList = {
   LandingPage: undefined; // Add other routes and their params if any
@@ -18,20 +17,32 @@ const LoadingScreen: React.FC = () => {
     // Simulating an asynchronous loading process
     setTimeout(() => {
       navigation.navigate('LandingPage');
-    }, 5000);
+    }, 2000);
 
-    // Logo bounce animation
-    Animated.sequence([
-      Animated.timing(logoScale, { toValue: 1.1, duration: 1250, useNativeDriver: true }),
-      Animated.timing(logoScale, { toValue: 0.9, duration: 1250, useNativeDriver: true }),
-      Animated.timing(logoScale, { toValue: 1, duration: 1250, useNativeDriver: true }),
-    ]).start();
+    // Logo bounce animation with Easing
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(logoScale, { 
+          toValue: 0.8, 
+          duration: 800, 
+          easing: Easing.bounce, 
+          useNativeDriver: true 
+        }),
+        Animated.timing(logoScale, { 
+          toValue: 1.4, 
+          duration: 1200, 
+          easing: Easing.bounce, 
+          useNativeDriver: true 
+        }),
+
+      ])
+    ).start();
   }, []);
 
   return (
-    <ImageBackground source={radialGradientBg} style={styles.container}>
+    <View style={styles.container}>
       <Animated.Image source={logo} style={[styles.logo, { transform: [{ scale: logoScale }] }]} />
-    </ImageBackground>
+    </View>
   );
 };
 
@@ -40,12 +51,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#1C1C1C',
   },
   logo: {
     width: '50%',
-    maxWidth: 150,
+    maxWidth: 350,
     aspectRatio: 1,
     resizeMode: 'contain',
+    marginRight: 45,
   },
 });
 

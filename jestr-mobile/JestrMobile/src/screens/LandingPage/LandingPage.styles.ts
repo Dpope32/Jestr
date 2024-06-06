@@ -3,9 +3,10 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',  // Changed from 'center' to 'flex-start'
     alignItems: 'center',
     backgroundColor: '#1C1C1C',
+    paddingBottom: 40,  // Adjust this value as needed to move the content up
   },
   scrollViewContainer: {
     flexGrow: 1,
@@ -14,24 +15,25 @@ export const styles = StyleSheet.create({
     width: '100%',
   },
   logoStyle: {
-    width: 120,
-    height: 120,
+    width: 200,
+    height: 200,
     resizeMode: 'contain',
     marginBottom: 20,
   },
   logoContainer: {
-    marginBottom: 20,
+    marginBottom: 5,
+    marginRight: 20,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 200,
+    height: 200,
     resizeMode: 'contain',
   },
   titleContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10, // Added margin bottom to create space between title and form
+    marginBottom: 5, // Added margin bottom to create space between title and form
   },
   titleText: {
     fontSize: 24,
@@ -153,11 +155,13 @@ export const styles = StyleSheet.create({
   toggleForm: {
     marginTop: 20,
   },
+  
   toggleFormText: {
     color: '#007AFF',
     fontSize: 18,
     textAlign: 'center',
-    marginTop: 5,
+    marginBottom: 10,
+    textDecorationLine: 'underline',  // This will underline the text
   },
   footer: {
     flexDirection: 'row',
@@ -179,9 +183,10 @@ export const styles = StyleSheet.create({
   },
   initialScreen: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',  // Changed from 'center' to 'flex-start'
     alignItems: 'center',
-    marginTop: 20,
+    backgroundColor: '#1C1C1C',
+    paddingBottom: 40,  // Adjust this value as needed to move the content up
   },
   welcomeText: {
     fontSize: 44,
@@ -246,8 +251,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   termsText: {
-    fontSize: 10,
-    color: '#333',
+    fontSize: 12,
+    color: '#111',
     marginVertical: 10,
   },
   socialHeaderText: {
@@ -295,7 +300,7 @@ export const styles = StyleSheet.create({
     marginTop: 50,
   },
   inputField: {
-    height: 50,
+    height: 40,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,

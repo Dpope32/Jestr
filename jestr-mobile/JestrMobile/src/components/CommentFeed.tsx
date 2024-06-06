@@ -126,9 +126,7 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
 
   const handleDislike = async (commentID: string) => {
     try {
-      await updateCommentReaction(commentID, memeID, false, true);
-      const updatedComments = await fetchComments(memeID);
-      setComments(updatedComments);
+      console.log('DislikeClicked');
     } catch (error) {
       console.error('Failed to dislike comment:', error);
     }

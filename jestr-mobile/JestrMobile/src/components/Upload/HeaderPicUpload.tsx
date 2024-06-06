@@ -48,14 +48,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'lightgray',
-    height: 180,
-    width: '120%',
-    marginTop: -5,
+    height: 170,
+    width: '132%',
+    borderTopLeftRadius: 20,  // Add rounded corners on the top left
+    borderTopRightRadius: 20, // Add rounded corners on the top right
   },
   headerPreview: {
-    width: '120%',
+    width: '132%',
     height: '110%',
     resizeMode: 'cover',
+    borderTopLeftRadius: 20,  // Add rounded corners on the top left
+    borderTopRightRadius: 20, // Add rounded corners on the top right
   },
   headerPicLabel: {
     fontSize: 16,

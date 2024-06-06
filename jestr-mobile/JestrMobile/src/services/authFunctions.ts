@@ -39,7 +39,8 @@ export type User = {
     export const handleSignup = async (
       email: string,
       password: string,
-      setIsSignedUp: React.Dispatch<React.SetStateAction<boolean>>
+      setIsSignedUp: React.Dispatch<React.SetStateAction<boolean>>,
+      setSuccessModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
     ) => {
       const userData = {
         operation: 'signup',
@@ -60,12 +61,10 @@ export type User = {
           const data = await response.json();
           console.log('Account created:', data);
           setIsSignedUp(true);
-          Alert.alert(
-            'Success',
-            'Account created successfully!',
-            [{ text: 'OK' }],
-            { cancelable: false }
-          );
+          setSuccessModalVisible(true);
+          setTimeout(() => {
+            setSuccessModalVisible(false);
+          }, 1000);  // Modal visible for 1 second
         } else {
           throw new Error('Failed to create account');
         }
@@ -74,6 +73,7 @@ export type User = {
         Alert.alert('Error', 'An error occurred while signing up. Please try again.');
       }
     };
+
 // Utility function to convert file to base64 string
 const fileToBase64 = async (uri: string): Promise<string | null> => {
   try {
@@ -91,6 +91,7 @@ export const handleCompleteProfile = async (
   displayName: string,
   profilePic: Asset | null,
   headerPicFile: Asset | null,
+  setSuccessModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
   navigation: LandingPageNavigationProp
 ) => {
   try {
@@ -116,23 +117,21 @@ export const handleCompleteProfile = async (
 
     const data = await response.json();
     if (response.ok) {
-      console.log('Profile data being passed:', data.user); 
-      Alert.alert(
-        'Success',
-        'Profile completed successfully!',
-        [{ text: 'OK', onPress: () => navigation.navigate('Feed', { user: data.user }) }],
-        { cancelable: false }
-      );
+      console.log('Profile data being passed:', data.user);
+      setSuccessModalVisible(true); // Show success modal instead of alert
+      setTimeout(() => {
+        setSuccessModalVisible(false);
+        navigation.navigate('Feed', { user: data.user });
+      }, 1000); // Modal visible for 1 second then navigate
     } else {
-      Alert.alert('Error', data.message || 'Failed to complete profile');
+      console.error('Failed to complete profile:', data.message);
+      setSuccessModalVisible(false); // Optionally handle error with modal/notification
     }
   } catch (error) {
     console.error('Error completing profile:', error);
-    Alert.alert('Error', 'An error occurred while completing your profile. Please try again.');
+    setSuccessModalVisible(false); // Optionally handle error with modal/notification
   }
 };
-
-
 
 export const handleLogin = async (
   email: string,

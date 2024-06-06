@@ -73,12 +73,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 3,
-    paddingVertical: 5,
+    paddingVertical: 10,
     borderTopColor: '#1bd40b',
   },
   iconContainer: {
-    padding: 20,
-    zIndex: 3,
+    padding: 10,
+    zIndex: 2,
   },
   icon: {
     color: '#1bd40b',

@@ -6,7 +6,7 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import InputField from '../../components/Input/InutField';
-import logoImage from '../../assets/images/db/JestrLogo.jpg';
+import logoImage from '../../assets/images/db/Jestr.jpg';
 import Button from '../../components/Button/Button';
 import LoadingScreen from '../../components/LoadingScreen';
 import HeaderPicUpload from '../../components/Upload/HeaderPicUpload';
@@ -294,11 +294,14 @@ const [modalUsername, setModalUsername] = useState('');
       displayName,
       profilePic,
       headerPicFile,
+      setSuccessModalVisible, // Passing the state setter function
       navigation
     ).finally(() => {
       setIsCompleteProfileLoading(false);
     });
   };
+
+  
 
   return (
     <View style={styles.container}>
@@ -331,7 +334,7 @@ const [modalUsername, setModalUsername] = useState('');
               {showInitialScreen ? (
                 <View style={styles.initialScreen}>
                   <View style={styles.logoContainer}>
-                    <Image source={require('../../assets/images/db/JestrLogo.jpg')} style={styles.logo} />
+                    <Image source={require('../../assets/images/db/Jestr.jpg')} style={styles.logo} />
                   </View>
                   <View style={styles.authContainer}>
                     <Text style={styles.welcomeText}>Welcome</Text>
@@ -431,7 +434,7 @@ const [modalUsername, setModalUsername] = useState('');
                       <TouchableOpacity
                         onPress={() =>
                           showSignUpForm
-                            ? handleSignup(email, password, setIsSignedUp)
+                            ? handleSignup(email, password, setIsSignedUp, setSuccessModalVisible)
                             : handleLogin(email, password, setIsLoading, navigation, setSuccessModalVisible, setModalUsername)
                         }
                         style={styles.button}
@@ -528,6 +531,11 @@ const [modalUsername, setModalUsername] = useState('');
           )}
         </ScrollView>
       )}
+        <SuccessModal
+          visible={successModalVisible}
+          onClose={() => setSuccessModalVisible(false)}
+          username={modalUsername} // Ensure you have a state or prop for the username
+        />
       <View style={styles.footer}>
         <Text style={styles.footerLink}>Privacy Policy</Text>
         <Text style={styles.footerDivider}> | </Text>

@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, StatusBar, Alert, Animated, ImageBackground, Pr
 import MemeUpload from '../../components/Meme/MemeUpload';
 import TopPanel from '../../components/TopPanel';
 import BottomPanel from '../../components/BottomPanel';
-import radialGradientBg from '../../assets/images/radial_gradient_bg.png';
+
 
 type MemeUploadScreenProps = {
   navigation: any;
@@ -58,7 +58,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
   };
 
   return (
-    <ImageBackground source={radialGradientBg} style={styles.background}>
+    <View style={styles.background}>
       <StatusBar barStyle="light-content" />
       <TopPanel
         onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)}
@@ -98,7 +98,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
         toggleCommentFeed={() => {}}
         user={user}
       />
-    </ImageBackground>
+    </View>
   );
 };
 
@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#1C1C1C',
   },
   icon: {
     marginRight: 10,
