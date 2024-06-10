@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, Dimensions, Animated, Easing , TouchableWithoutFeedback } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -14,8 +13,6 @@ const { width, height } = Dimensions.get('window'); // Get device width and heig
 
 type MediaPlayerProps = {
   currentMedia: string;
-  previousMedia: string | null;
-  nextMedia: string | null;
   username: string;
   caption: string;
   uploadTimestamp: string;
@@ -33,12 +30,12 @@ type MediaPlayerProps = {
   downloadCount: number;
   commentCount: number;
   profilePicUrl: string;
-  memeID: string;
+  memeID: string; // Add this line
+  nextMedia: string | null;
 };
 
 const MediaPlayer: React.FC<MediaPlayerProps> = ({
   currentMedia,
-  previousMedia,
   nextMedia,
   username,
   caption,
@@ -59,7 +56,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   profilePicUrl,
   memeID
 }) => {
-  const translateY = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0.5)).current;
   const [imageHeight, setImageHeight] = useState(height - 150);
   const [imageSize, setImageSize] = useState({ width: width, height: height - 150 });
   const [localLikeCount, setLocalLikeCount] = useState(likeCount);
@@ -68,14 +65,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const [showComments, setShowComments] = useState(false);
   const likeAnimation = useRef(new Animated.Value(1)).current;
   const lastTap = useRef(0);
-  const SWIPE_THRESHOLD = height / 4;
+  const onSwipe = Animated.event([{ nativeEvent: { translationY: translateY } }], { useNativeDriver: true });
 
-  const onSwipe = Animated.event(
-    [{ nativeEvent: { translationY: translateY } }],
-    { useNativeDriver: true }
-  );
-
-
+  const SWIPE_THRESHOLD = height / 4; // For example, 1/4 of the screen height
 
   useEffect(() => {
     setLocalLikeCount(likeCount);
@@ -101,66 +93,36 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     });
   }, [currentMedia]);
   
-  const onSwipeRelease = (event: PanGestureHandlerGestureEvent) => {
-    const { nativeEvent } = event;
-    if (nativeEvent.state === State.END) {
-      let direction = nativeEvent.translationY > 0 ? 1 : -1;
-      let isFullSwipe = Math.abs(nativeEvent.translationY) > SWIPE_THRESHOLD;
-
-      if (isFullSwipe) {
-        Animated.timing(translateY, {
-          toValue: direction * height,
-          duration: 200,
-          useNativeDriver: true
-        }).start(() => {
-          translateY.setValue(0);
-          direction > 0 ? goToPrevMedia() : goToNextMedia();
-        });
-      } else {
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true
-        }).start();
-      }
-    }
-  };
-
+  const currentMemeOpacity = translateY.interpolate({
+    inputRange: [-height, -height / 2, 0],
+    outputRange: [0, 0, 1]
+  });
 
   const nextMemeTranslateY = translateY.interpolate({
-    inputRange: [0, height],
-    outputRange: [height, 0] // Starts from the height of the screen and moves to the top
+    inputRange: [-height, 0.5, height],
+    outputRange: [height, 0.5, -height] // Smooth transition without bouncing too high
   });
-
-  const currentMemeOpacity = translateY.interpolate({
-    inputRange: [-height, 0, height],
-    outputRange: [0, 1, 0],
-  });
-
-  const previousMemeOpacity = translateY.interpolate({
-    inputRange: [-height, 0],
-    outputRange: [1, 0],
-  });
+  
 
   const nextMemeOpacity = translateY.interpolate({
-    inputRange: [0, height],
-    outputRange: [0, 1],
+    inputRange: [-height, -height / 2, 0],
+    outputRange: [1, 1, 0]
   });
 
-  
   const handleSwipeRelease = (event: PanGestureHandlerGestureEvent) => {
     const { nativeEvent } = event;
     if (nativeEvent.state === State.END) {
-      let direction = nativeEvent.translationY > 0 ? 1 : -1;
+      let direction = nativeEvent.translationY > 0 ? 1 : -0.5;
       let isFullSwipe = Math.abs(nativeEvent.translationY) > SWIPE_THRESHOLD;
-
+  
       if (isFullSwipe) {
         Animated.timing(translateY, {
           toValue: direction * height, // Swipe movement
-          duration: 200,
+          duration: 100,
           useNativeDriver: true
         }).start(() => {
-          translateY.setValue(0); // Reset position for the current meme
-          direction < 0 ? goToPrevMedia() : goToNextMedia();
+          translateY.setValue(0.5); // Reset position for the current meme
+          direction < 0 ? goToNextMedia() : goToPrevMedia(); // Correctly determine the next media
         });
       } else {
         // Reset to original position if not a full swipe
@@ -172,7 +134,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     }
   };
 
-  
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -242,10 +203,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       lastTap.current = now;
     }
   };
-  
+
   return (
     <View style={styles.container}>
- <PanGestureHandler onGestureEvent={onSwipe} onHandlerStateChange={handleSwipeRelease}>
+      <PanGestureHandler onGestureEvent={onSwipe} onHandlerStateChange={handleSwipeRelease}>
         <Animated.View style={{ transform: [{ translateY }] }}>
           <TouchableWithoutFeedback onPress={handleDoubleTap}>
             <Animated.View>
@@ -257,7 +218,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
               {nextMedia && (
                 <Animated.Image
                   source={{ uri: nextMedia }}
-                  style={[styles.memeImage, { height: imageSize.height, width: imageSize.width, position: 'absolute', top: 0, opacity: nextMemeOpacity }]}
+                  style={[styles.memeImage, { height: imageSize.height, width: imageSize.width, position: 'absolute', bottom: -imageSize.height, opacity: nextMemeOpacity }]}
                   resizeMode="contain"
                 />
               )}
@@ -310,8 +271,9 @@ const styles = StyleSheet.create({
   },
   memeImage: {
     width: width,
-    maxHeight: height - 150,
+    maxHeight: height - 250,
     alignSelf: 'center', 
+    marginTop: 40
   },
   iconColumn: {
     position: 'absolute',
@@ -321,14 +283,15 @@ const styles = StyleSheet.create({
     height: '60%',  // Decrease height for a more compact look
   },
   textContainer: {
-    position: 'absolute',
-    bottom: 22,  // Lower the text container slightly
-    left: 10,  // Standard left margin for alignment
+    position: 'relative', // Changed from absolute to relative
+    bottom: 20,  // Adjust the bottom position
+    left: 0,  // Standard left margin for alignment
     backgroundColor: 'rgba(0, 0, 0, 0.6)',  // Increase opacity for readability
     padding: 12,  // Increased padding for better text separation
     borderRadius: 8,  // Soften the corners
     flexDirection: 'row',  // Layout direction for elements inside the container
     alignItems: 'center',  // Align items for a cleaner look
+    marginTop: 20, // Ensure some space from the image
   },
   profilePic: {
     width: 50,

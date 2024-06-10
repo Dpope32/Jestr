@@ -137,7 +137,6 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
           <>
             <MediaPlayer
               currentMedia={shuffledMedia[currentMediaIndex].url}
-              previousMedia={shuffledMedia[currentMediaIndex - 1] ? shuffledMedia[currentMediaIndex - 1].url : null}
               nextMedia={shuffledMedia[currentMediaIndex + 1] ? shuffledMedia[currentMediaIndex + 1].url : null}
               handleLike={() => {}}
               handleDownload={() => {}}
