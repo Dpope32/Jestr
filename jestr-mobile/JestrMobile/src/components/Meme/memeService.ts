@@ -1,48 +1,72 @@
 import { API_URL } from './config';
 import RNFetchBlob from 'rn-fetch-blob';
 import {  User } from '../../screens/Feed/Feed';
-import { CommentType } from '../CommentFeed';
+import { CommentType } from '../Modals/CommentFeed';
 import { Meme } from '../../screens/Feed/Feed';
 
 
 
-export const fetchMemes = async (): Promise<Meme[]> => {
+export const fetchMemes = async (lastEvaluatedKey?: string, limit: number = 10): Promise<FetchMemesResult> => {
   try {
     const requestUrl = `${API_URL}/getMemes`;
+    const body = JSON.stringify({
+      operation: 'getMemes',
+      lastEvaluatedKey: lastEvaluatedKey,
+      limit: limit
+    });
+
     const response = await fetch(requestUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ operation: 'getMemes' })
+      body: body
     });
 
     console.log('HTTP Response Status:', response.status);
     const responseText = await response.text();
     console.log('Response text:', responseText);
-
+    
     if (!response.ok) {
       console.log('Failed to fetch memes. Status:', response.status);
-      return [];
+      return { memes: [], lastEvaluatedKey: null };
     }
+    
     const data = JSON.parse(responseText);
-    return data.user.map((meme: any) => ({
+    if (!data || !data.user || !data.user.memes) {
+      return { memes: [], lastEvaluatedKey: null };
+    }
+    
+    const memes = data.user.memes.map((meme: any) => ({
       memeID: meme.memeID,
       email: meme.email,
       url: meme.url,
       uploadTimestamp: meme.uploadTimestamp,
       username: meme.username || 'defaultUsername',
-      caption: meme.caption || '', // Default to empty string if caption is not present
+      caption: meme.caption || '',
       likeCount: meme.likeCount || 0,
       downloadCount: meme.downloadCount || 0,
       commentCount: meme.commentCount || 0,
       profilePicUrl: meme.profilePicUrl || ''
-    })) || [];
+    }));
+    
+    return {
+      memes: memes,
+      lastEvaluatedKey: data.user.lastEvaluatedKey || null
+    };
+    
   } catch (error) {
     console.error('Error fetching memes:', error);
-    return [];
+    return { memes: [], lastEvaluatedKey: null };
   }
 };
+
+// Type definition for the result of fetchMemes
+type FetchMemesResult = {
+  memes: Meme[];
+  lastEvaluatedKey: string | null;
+};
+
 
 
 

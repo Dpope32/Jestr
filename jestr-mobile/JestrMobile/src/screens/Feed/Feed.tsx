@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, Text } from 'react-native';
 import MediaPlayer from '../../components/MediaPlayer';
-import TopPanel from '../../components/TopPanel';
-import BottomPanel from '../../components/BottomPanel';
+import TopPanel from '../../components/Panels/TopPanel';
+import BottomPanel from '../../components/Panels/BottomPanel';
 import styles from './Feed.styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchMemes } from '../../components/Meme/memeService';
 import { useNavigation } from '@react-navigation/native';
-import ProfilePanel from '../../components/ProfilePanel';
-import CommentFeed from '../../components/CommentFeed';
+import ProfilePanel from '../../components/Panels/ProfilePanel';
+import { Image } from 'react-native';
+import CommentFeed from '../../components/Modals/CommentFeed';
 
 export type User = {
   email: string;
@@ -69,10 +70,17 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
     fetchUser();
 
     const loadMemes = async () => {
-      const memesData = await fetchMemes();
-      setShuffledMedia(memesData);
-      console.log('Fetched memes:', memesData);
+      try {
+        const memesData = await fetchMemes();
+        setShuffledMedia(memesData.memes);
+        // Preload images of fetched memes
+        memesData.memes.forEach(meme => Image.prefetch(meme.url));
+        console.log('Fetched memes:', memesData);
+      } catch (error) {
+        console.error('Error fetching memes:', error);
+      }
     };
+    
 
     loadMemes();
   }, []);
@@ -129,6 +137,8 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
           <>
             <MediaPlayer
               currentMedia={shuffledMedia[currentMediaIndex].url}
+              previousMedia={shuffledMedia[currentMediaIndex - 1] ? shuffledMedia[currentMediaIndex - 1].url : null}
+              nextMedia={shuffledMedia[currentMediaIndex + 1] ? shuffledMedia[currentMediaIndex + 1].url : null}
               handleLike={() => {}}
               handleDownload={() => {}}
               likedIndices={new Set()}

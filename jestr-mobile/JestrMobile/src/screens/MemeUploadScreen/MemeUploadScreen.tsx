@@ -2,8 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, StatusBar, Alert, Animated, ImageBackground, ProgressBarAndroid } from 'react-native';
 import MemeUpload from '../../components/Meme/MemeUpload';
-import TopPanel from '../../components/TopPanel';
-import BottomPanel from '../../components/BottomPanel';
+import TopPanel from '../../components/Panels/TopPanel';
+import BottomPanel from '../../components/Panels/BottomPanel';
 
 
 type MemeUploadScreenProps = {

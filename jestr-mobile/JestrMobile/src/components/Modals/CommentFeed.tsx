@@ -4,8 +4,8 @@ import { View, Text, TextInput, Animated, TouchableOpacity, Image, Dimensions, S
 import Comment from './Comment';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowUp, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { User } from '../screens/Feed/Feed';
-import { fetchComments, postComment, updateCommentReaction } from './Meme/memeService';
+import { User } from '../../screens/Feed/Feed';
+import { fetchComments, postComment, updateCommentReaction } from '../Meme/memeService';
 import DefaultPfp from '../assets/images/db/JestrLogo.jpg';
 
 const screenHeight = Dimensions.get('window').height;

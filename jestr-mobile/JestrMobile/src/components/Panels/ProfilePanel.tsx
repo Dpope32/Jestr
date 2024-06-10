@@ -19,10 +19,10 @@ import {
   faEdit,
   faAd,
 } from '@fortawesome/free-solid-svg-icons';
-import Anon1Image from '../assets/images/db/Jestr5.jpg';
+import Anon1Image from '../../assets/images/db/Jestr5.jpg';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import LogoutModal from './LogoutModal'; 
+import LogoutModal from '../Modals/LogoutModal'; 
 import { CommonActions } from '@react-navigation/native';
 
 type ProfilePanelProps = {

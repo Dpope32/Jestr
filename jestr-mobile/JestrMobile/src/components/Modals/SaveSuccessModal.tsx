@@ -68,11 +68,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginVertical: 10,
+    color: 'white'
   },
   messageText: {
     fontSize: 18,
     textAlign: 'center',
     marginVertical: 10,
+    color: 'white'
   },
   button: {
     marginTop: 20,

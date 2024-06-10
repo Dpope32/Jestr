@@ -3,7 +3,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LandingPage from '../src/screens/LandingPage/LandingPage';
-import LoadingScreen from './components/LoadingScreen';
+import LoadingScreen from './screens/LoadingScreen';
 import { enableScreens } from 'react-native-screens';
 import Feed from '../src/screens/Feed/Feed';
 import MemeUploadScreen from '../src/screens/MemeUploadScreen/MemeUploadScreen';
