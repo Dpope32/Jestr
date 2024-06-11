@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, Dimensions, Animated, Easing , TouchableWithoutFeedback } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet, Dimensions, Animated, Easing, TouchableWithoutFeedback } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faThumbsUp, faSave, faComment, faShare } from '@fortawesome/free-solid-svg-icons';
-import { PanGestureHandler, PanGestureHandlerGestureEvent, State } from 'react-native-gesture-handler';
+import { PanGestureHandler, PanGestureHandlerGestureEvent, State, TapGestureHandler } from 'react-native-gesture-handler';
 import { Text } from 'react-native';
 import CommentFeed from './Modals/CommentFeed';
 import { User } from '../screens/Feed/Feed';
@@ -22,6 +22,7 @@ type MediaPlayerProps = {
   goToPrevMedia: () => void;
   goToNextMedia: () => void;
   likedIndices: Set<number>;
+  doubleLikedIndices: Set<number>;
   downloadedIndices: Set<number>;
   likeDislikeCounts: Record<number, number>;
   currentMediaIndex: number;
@@ -32,10 +33,12 @@ type MediaPlayerProps = {
   profilePicUrl: string;
   memeID: string; // Add this line
   nextMedia: string | null;
+  prevMedia: string | null;
 };
 
 const MediaPlayer: React.FC<MediaPlayerProps> = ({
   currentMedia,
+  prevMedia,
   nextMedia,
   username,
   caption,
@@ -47,6 +50,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   goToNextMedia,
   currentMediaIndex,
   likedIndices,
+  doubleLikedIndices,
   downloadedIndices,
   likeDislikeCounts,
   user,
@@ -56,7 +60,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   profilePicUrl,
   memeID
 }) => {
-  const translateY = useRef(new Animated.Value(0.5)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
   const [imageHeight, setImageHeight] = useState(height - 150);
   const [imageSize, setImageSize] = useState({ width: width, height: height - 150 });
   const [localLikeCount, setLocalLikeCount] = useState(likeCount);
@@ -66,8 +70,12 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const likeAnimation = useRef(new Animated.Value(1)).current;
   const lastTap = useRef(0);
   const onSwipe = Animated.event([{ nativeEvent: { translationY: translateY } }], { useNativeDriver: true });
-
+  const [liked, setLiked] = useState(false);
+  const [doubleLiked, setDoubleLiked] = useState(false);
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const doubleTapRef = useRef(null);
   const SWIPE_THRESHOLD = height / 4; // For example, 1/4 of the screen height
+  const tapTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setLocalLikeCount(likeCount);
@@ -92,48 +100,64 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       }
     });
   }, [currentMedia]);
-  
+
   const currentMemeOpacity = translateY.interpolate({
-    inputRange: [-height, -height / 2, 0],
-    outputRange: [0, 0, 1]
+    inputRange: [-height, -height / 2, 0, height / 2, height],
+    outputRange: [0, 0, 1, 0, 0],
+    extrapolate: 'clamp'
   });
 
   const nextMemeTranslateY = translateY.interpolate({
-    inputRange: [-height, 0.5, height],
-    outputRange: [height, 0.5, -height] // Smooth transition without bouncing too high
+    inputRange: [-height, 0, height],
+    outputRange: [height / 2, 0, -height / 2],
+    extrapolate: 'clamp'
   });
-  
 
   const nextMemeOpacity = translateY.interpolate({
-    inputRange: [-height, -height / 2, 0],
-    outputRange: [1, 1, 0]
+    inputRange: [-height, -height / 2, 0, height / 2, height],
+    outputRange: [0, 1, 0, 0, 0],
+    extrapolate: 'clamp'
+  });
+
+  const prevMemeTranslateY = translateY.interpolate({
+    inputRange: [-height, 0, height],
+    outputRange: [-height / 2, 0, height / 2],
+    extrapolate: 'clamp'
+  });
+
+  const prevMemeOpacity = translateY.interpolate({
+    inputRange: [-height, -height / 2, 0, height / 2, height],
+    outputRange: [0, 0, 0, 1, 0],
+    extrapolate: 'clamp'
   });
 
   const handleSwipeRelease = (event: PanGestureHandlerGestureEvent) => {
     const { nativeEvent } = event;
     if (nativeEvent.state === State.END) {
-      let direction = nativeEvent.translationY > 0 ? 1 : -0.5;
+      let direction = nativeEvent.translationY > 0 ? 1 : -1;
       let isFullSwipe = Math.abs(nativeEvent.translationY) > SWIPE_THRESHOLD;
   
       if (isFullSwipe) {
         Animated.timing(translateY, {
-          toValue: direction * height, // Swipe movement
-          duration: 100,
+          toValue: direction * height,
+          duration: 25,  // Adjust duration
+          easing: Easing.out(Easing.quad),   // Smoother easing
           useNativeDriver: true
         }).start(() => {
-          translateY.setValue(0.5); // Reset position for the current meme
-          direction < 0 ? goToNextMedia() : goToPrevMedia(); // Correctly determine the next media
+          translateY.setValue(0);
+          direction < 0 ? goToNextMedia() : goToPrevMedia();
         });
       } else {
-        // Reset to original position if not a full swipe
         Animated.spring(translateY, {
           toValue: 0,
+          tension: 80,
+          friction: 10,
           useNativeDriver: true
         }).start();
       }
     }
   };
-
+  
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -142,7 +166,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     const diffMinutes = Math.floor(diff / (1000 * 60));
     const diffHours = Math.floor(diff / (1000 * 60 * 60));
     const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
-  
+
     if (diffMinutes < 60) {
       return `${diffMinutes} minutes ago`;
     } else if (diffHours < 24) {
@@ -155,27 +179,23 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   };
 
   const handleLikePress = async () => {
+    const newLikedState = !liked;
+    setLiked(newLikedState);
+    
+    if (newLikedState && doubleLiked) {
+      setDoubleLiked(false);
+      setLocalLikeCount(localLikeCount - 1);
+    } else {
+      setLocalLikeCount(newLikedState ? localLikeCount + 1 : localLikeCount - 1);
+    }
+  
     if (user) {
       try {
-        await updateMemeReaction(memeID, true, false, user.email); // Use memeID prop
-        handleLike();
-        setLocalLikeCount(localLikeCount + 1);
-        Animated.sequence([
-          Animated.timing(likeAnimation, {
-            toValue: 1.5,
-            duration: 200,
-            easing: Easing.ease,
-            useNativeDriver: true
-          }),
-          Animated.timing(likeAnimation, {
-            toValue: 1,
-            duration: 200,
-            easing: Easing.ease,
-            useNativeDriver: true
-          })
-        ]).start();
+        await updateMemeReaction(memeID, newLikedState, false, false, user.email);
       } catch (error) {
         console.error('Error updating meme reaction:', error);
+        setLiked(liked);
+        setLocalLikeCount(liked ? localLikeCount - 1 : localLikeCount + 1);
       }
     }
   };
@@ -183,7 +203,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const handleDownloadPress = async () => {
     if (user) {
       try {
-        await updateMemeReaction(memeID, false, true, user.email); // Use memeID prop
+        await updateMemeReaction(memeID, false, false, true, user.email);
         handleDownload();
         setLocalDownloadCount(localDownloadCount + 1);
         setShowSaveModal(true);
@@ -194,36 +214,87 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     }
   };
 
-  const handleDoubleTap = () => {
-    const now = Date.now();
-    const DOUBLE_PRESS_DELAY = 300;
-    if (lastTap.current && (now - lastTap.current) < DOUBLE_PRESS_DELAY) {
-      handleLikePress();
-    } else {
-      lastTap.current = now;
+  const onSingleTap = (event: any) => {
+    const { state } = event.nativeEvent;
+    if (state === State.END) {
+      console.log('Single tap detected');
+      // Placeholder for single tap functionality
     }
   };
 
-  return (
+  const onDoubleTap = async (event: any) => {
+    const { state } = event.nativeEvent;
+    if (state === State.ACTIVE) {
+      console.log('Double tap detected');
+  
+      const newDoubleLikedState = !doubleLiked;
+      setDoubleLiked(newDoubleLikedState);
+  
+      if (newDoubleLikedState) {
+        setLocalLikeCount(localLikeCount + 2);
+        setLiked(true);
+      } else {
+        setLocalLikeCount(localLikeCount + 2);
+        setLiked(false);
+      }
+  
+      if (user) {
+        try {
+          await updateMemeReaction(memeID, newDoubleLikedState, newDoubleLikedState, false, user.email);
+          animateLogo();
+        } catch (error) {
+          console.error('Error updating meme reaction:', error);
+          setDoubleLiked(doubleLiked);
+          setLocalLikeCount(doubleLiked ? localLikeCount - 2 : localLikeCount + 2);
+          setLiked(!doubleLiked);
+        }
+      }
+    }
+  };
+
+  const animateLogo = () => {
+    console.log('Animating logo now');
+    Animated.sequence([
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true
+      }),
+      Animated.delay(500),
+      Animated.timing(logoOpacity, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true
+      })
+    ]).start();
+  };
+
+ return (
     <View style={styles.container}>
       <PanGestureHandler onGestureEvent={onSwipe} onHandlerStateChange={handleSwipeRelease}>
-        <Animated.View style={{ transform: [{ translateY }] }}>
-          <TouchableWithoutFeedback onPress={handleDoubleTap}>
-            <Animated.View>
-              <Animated.Image
-                source={{ uri: currentMedia }}
-                style={[styles.memeImage, { height: imageSize.height, width: imageSize.width, opacity: currentMemeOpacity }]}
-                resizeMode="contain"
-              />
-              {nextMedia && (
+        <Animated.View>
+          <TapGestureHandler ref={doubleTapRef} onHandlerStateChange={onDoubleTap} numberOfTaps={2}>
+            <TapGestureHandler onHandlerStateChange={onSingleTap} waitFor={doubleTapRef}>
+            <Animated.View style={{ transform: [{ translateY }] }}>
+                {prevMedia && ( // Check if there's previous media
+                  <Animated.Image
+                    source={{ uri: prevMedia }}
+                    style={[styles.memeImage, { height: imageSize.height, width: imageSize.width, position: 'absolute', top: -imageSize.height, opacity: prevMemeOpacity, transform: [{ translateY: prevMemeTranslateY }] }]}
+                    resizeMode="contain"
+                  />
+                )}
                 <Animated.Image
-                  source={{ uri: nextMedia }}
-                  style={[styles.memeImage, { height: imageSize.height, width: imageSize.width, position: 'absolute', bottom: -imageSize.height, opacity: nextMemeOpacity }]}
+                  source={{ uri: currentMedia }}
+                  style={[styles.memeImage, { height: imageSize.height, width: imageSize.width, opacity: currentMemeOpacity }]}
                   resizeMode="contain"
                 />
-              )}
-            </Animated.View>
-          </TouchableWithoutFeedback>
+                {nextMedia && (
+                  <Animated.Image
+                    source={{ uri: nextMedia }}
+                    style={[styles.memeImage, { height: imageSize.height + 20, width: imageSize.width, position: 'absolute', bottom: -imageSize.height, opacity: nextMemeOpacity, transform: [{ translateY: nextMemeTranslateY }] }]}
+                    resizeMode="contain"
+                  />
+                )}
           <View style={styles.textContainer}>
             <Image source={{ uri: profilePicUrl }} style={styles.profilePic} />
             <View>
@@ -232,9 +303,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
               <Text style={styles.date}>{formatDate(uploadTimestamp)}</Text>
             </View>
           </View>
-        </Animated.View>
-      </PanGestureHandler>
-      <View style={styles.iconColumn}>
+          <View style={styles.iconColumn}>
         <TouchableOpacity onPress={handleLikePress} style={styles.iconWrapper}>
           <Animated.View style={{ transform: [{ scale: likeAnimation }] }}>
             <FontAwesomeIcon icon={faThumbsUp} size={28} color="#1bd40b" />
@@ -254,6 +323,23 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           <Text style={styles.iconText}>0</Text>
         </TouchableOpacity>
       </View>
+              </Animated.View>
+            </TapGestureHandler>
+          </TapGestureHandler>
+        </Animated.View>
+      </PanGestureHandler>
+      <Animated.Image
+        source={require('../assets/images/Jestr.jpg')}
+        style={{
+          opacity: logoOpacity,
+          position: 'absolute',
+          width: 200,
+          height: 200,
+          alignSelf: 'center',
+          top: '45%',
+          left: '24%'
+        }}
+      />
       <SaveSuccessModal
         visible={showSaveModal}
         onClose={() => setShowSaveModal(false)}
@@ -271,27 +357,27 @@ const styles = StyleSheet.create({
   },
   memeImage: {
     width: width,
-    maxHeight: height - 250,
+    maxHeight: height - 260,
     alignSelf: 'center', 
     marginTop: 40
   },
   iconColumn: {
     position: 'absolute',
-    right: 20,  // Increase right margin for better spacing
-    top: '20%',  // Start lower to avoid the very top edge of the screen
+    right: 10,  // Increase right margin for better spacing
+    top: '10%',  // Start lower to avoid the very top edge of the screen
     justifyContent: 'space-between',  // Improved spacing between icons
     height: '60%',  // Decrease height for a more compact look
   },
   textContainer: {
     position: 'relative', // Changed from absolute to relative
-    bottom: 20,  // Adjust the bottom position
+    bottom: 10,  // Adjust the bottom position
     left: 0,  // Standard left margin for alignment
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',  // Increase opacity for readability
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',  // Increase opacity for readability
     padding: 12,  // Increased padding for better text separation
     borderRadius: 8,  // Soften the corners
     flexDirection: 'row',  // Layout direction for elements inside the container
     alignItems: 'center',  // Align items for a cleaner look
-    marginTop: 20, // Ensure some space from the image
+    marginTop: 10, // Ensure some space from the image
   },
   profilePic: {
     width: 50,
@@ -317,8 +403,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',  // Clear background to reduce visual clutter
     borderRadius: 20,  // Rounded corners for a more modern look
-    padding: 10,  // Consistent padding around icons
-    marginBottom: 10,  // Space between icon wrappers if stacked
+    paddingVertical: 25,  // Consistent padding around icons
+    marginTop: 10,  // Space between icon wrappers if stacked
   },
   iconText: {
     color: '#FFFFFF',

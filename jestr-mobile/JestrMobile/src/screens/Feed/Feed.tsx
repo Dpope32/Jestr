@@ -39,9 +39,11 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
   const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const [localUser, setLocalUser] = useState<User | null>(user || null);
   const [profilePicUrl, setProfilePicUrl] = useState(user ? user.profilePic : '');
-  const [shuffledMedia, setShuffledMedia] = useState<Meme[]>([]);
+  const [memes, setMemes] = useState<Meme[]>([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState<boolean>(false);
+  const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleProfilePanel = () => {
     setProfilePanelVisible(!profilePanelVisible);
@@ -68,28 +70,31 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
     };
 
     fetchUser();
-
-    const loadMemes = async () => {
-      try {
-        const memesData = await fetchMemes();
-        setShuffledMedia(memesData.memes);
-        // Preload images of fetched memes
-        memesData.memes.forEach(meme => Image.prefetch(meme.url));
-        console.log('Fetched memes:', memesData);
-      } catch (error) {
-        console.error('Error fetching memes:', error);
-      }
-    };
-    
-
-    loadMemes();
+    fetchInitialMemes();
   }, []);
 
+  const fetchInitialMemes = async () => {
+    setIsLoading(true);
+    const result = await fetchMemes();
+    setMemes(result.memes);
+    setLastEvaluatedKey(result.lastEvaluatedKey);
+    setIsLoading(false);
+  };
+
+  const fetchMoreMemes = async () => {
+    if (isLoading || !lastEvaluatedKey) return;
+    setIsLoading(true);
+    const result = await fetchMemes(lastEvaluatedKey);
+    setMemes(prevMemes => [...prevMemes, ...result.memes]);
+    setLastEvaluatedKey(result.lastEvaluatedKey);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    if (shuffledMedia.length > 0) {
-      console.log('Current media URL:', shuffledMedia[currentMediaIndex].url);
+    if (memes.length > 0) {
+      console.log('Current media URL:', memes[currentMediaIndex].url);
     }
-  }, [currentMediaIndex, shuffledMedia]);
+  }, [currentMediaIndex, memes]);
 
   const goToPrevMedia = () => {
     if (currentMediaIndex > 0) {
@@ -98,26 +103,23 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
   };
 
   const goToNextMedia = () => {
-    if (currentMediaIndex < shuffledMedia.length - 1) {
+    if (currentMediaIndex < memes.length - 1) {
       setCurrentMediaIndex(currentMediaIndex + 1);
     }
-  };
-
-  useEffect(() => {
-    if (shuffledMedia.length > 0 && shuffledMedia[currentMediaIndex]) {
-      console.log('Current media URL:', shuffledMedia[currentMediaIndex].url);
-      const memeID = shuffledMedia[currentMediaIndex].memeID;
-      // Use memeID for further operations here
+    if (currentMediaIndex === memes.length - 3 && !isLoading) {
+      fetchMoreMemes();
     }
-  }, [currentMediaIndex, shuffledMedia]);
+  };
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        <TopPanel
+      <TopPanel
           onProfileClick={toggleProfilePanel}
           profilePicUrl={localUser ? localUser.profilePic : ''}
           username={localUser ? localUser.username : 'Default Username'}
+          enableDropdown={true} // Enable dropdown only where needed
+          showLogo={true} // Show logo in Feed
         />
         {profilePanelVisible && localUser && (
           <ProfilePanel
@@ -133,39 +135,41 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
             navigation={navigation}
           />
         )}
-        {shuffledMedia.length > 0 ? (
+        {memes.length > 0 ? (
           <>
             <MediaPlayer
-              currentMedia={shuffledMedia[currentMediaIndex].url}
-              nextMedia={shuffledMedia[currentMediaIndex + 1] ? shuffledMedia[currentMediaIndex + 1].url : null}
+              prevMedia={memes[currentMediaIndex - 1] ? memes[currentMediaIndex - 1].url : null}
+              currentMedia={memes[currentMediaIndex].url}
+              nextMedia={memes[currentMediaIndex + 1] ? memes[currentMediaIndex + 1].url : null}
               handleLike={() => {}}
               handleDownload={() => {}}
               likedIndices={new Set()}
+              doubleLikedIndices={new Set()}
               downloadedIndices={new Set()}
               likeDislikeCounts={{}}
               currentMediaIndex={currentMediaIndex}
               toggleCommentFeed={toggleCommentFeed}
               goToPrevMedia={goToPrevMedia}
               goToNextMedia={goToNextMedia}
-              username={shuffledMedia[currentMediaIndex].username}
-              caption={shuffledMedia[currentMediaIndex].caption}
-              uploadTimestamp={shuffledMedia[currentMediaIndex].uploadTimestamp}
+              username={memes[currentMediaIndex].username}
+              caption={memes[currentMediaIndex].caption}
+              uploadTimestamp={memes[currentMediaIndex].uploadTimestamp}
               user={localUser}
-              memeID={shuffledMedia[currentMediaIndex].memeID}
-              likeCount={shuffledMedia[currentMediaIndex].likeCount}
-              downloadCount={shuffledMedia[currentMediaIndex].downloadCount}
-              commentCount={shuffledMedia[currentMediaIndex].commentCount}
-              profilePicUrl={shuffledMedia[currentMediaIndex].profilePicUrl}
+              memeID={memes[currentMediaIndex].memeID}
+              likeCount={memes[currentMediaIndex].likeCount}
+              downloadCount={memes[currentMediaIndex].downloadCount}
+              commentCount={memes[currentMediaIndex].commentCount}
+              profilePicUrl={memes[currentMediaIndex].profilePicUrl}
             />
             {isCommentFeedVisible && (
               <CommentFeed
-                key={`${shuffledMedia[currentMediaIndex].memeID}-${isCommentFeedVisible}`}
-                memeID={shuffledMedia[currentMediaIndex].memeID}
+                key={`${memes[currentMediaIndex].memeID}-${isCommentFeedVisible}`}
+                memeID={memes[currentMediaIndex].memeID}
                 mediaIndex={currentMediaIndex}
                 profilePicUrl={localUser ? localUser.profilePic : ''}
                 user={localUser}
                 isCommentFeedVisible={isCommentFeedVisible}
-                toggleCommentFeed={toggleCommentFeed} // Pass the toggleCommentFeed prop
+                toggleCommentFeed={toggleCommentFeed}
               />
             )}
           </>

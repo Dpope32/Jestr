@@ -60,7 +60,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedMemeUrl, setUploadedMemeUrl] = useState('');
-
+  const [tags, setTags] = useState<string[]>([]);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibrary({ mediaType: 'photo' });
@@ -70,6 +70,11 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
     }
   };
 
+  const handleTagsChange = (tagInput: string) => {
+    const tagList = tagInput.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+    setTags(tagList);
+  };
+
   const handleUpload = async () => {
     if (!image || image.length === 0) {
       Alert.alert('Please select an image');
@@ -77,7 +82,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
     }
     setUploading(true);
     try {
-      const result = await uploadMeme(image[0], userEmail, username, caption); // Include username and caption
+      const result = await uploadMeme(image[0], userEmail, username, caption, tags);
       setUploadSuccess(true);
     } catch (error) {
       console.error('Upload failed:', error);
@@ -248,6 +253,15 @@ const handleRotateLeft = async () => {
         {image.length > 0 && (
           <>
             <View style={{ marginHorizontal: 0 }}>
+            <TextInput
+                style={styles.tagInput}
+                placeholder="Enter tags (comma-separated)"
+                onChangeText={handleTagsChange}
+                placeholderTextColor="#999"
+                value={tags.join(', ')}
+                blurOnSubmit={true}
+                multiline
+              />
             <TextInput
                 style={[styles.captionInput, { height: 50, color: '#fff' }]}
                 placeholder="Add a caption..."

@@ -6,7 +6,8 @@ import { Meme } from '../../screens/Feed/Feed';
 
 
 
-export const fetchMemes = async (lastEvaluatedKey?: string, limit: number = 10): Promise<FetchMemesResult> => {
+export const fetchMemes = async (lastEvaluatedKey?: string, limit: number = 5): Promise<FetchMemesResult> => {
+  console.log('fetching more memes')
   try {
     const requestUrl = `${API_URL}/getMemes`;
     const body = JSON.stringify({
@@ -70,49 +71,49 @@ type FetchMemesResult = {
 
 
 
-export const uploadMeme = async (imageUri: string, userEmail: string, username: string, caption: string): Promise<{ url: string }> => {
-  try {
-    console.log('Uploading meme...');
-    console.log('Image URI:', imageUri);
-    console.log('User Email:', userEmail);
+export const uploadMeme = async (imageUri: string, userEmail: string, username: string, caption: string = '', tags: string[] = []): Promise<{ url: string }> => {
+  console.log('Uploading meme...');
+  console.log('Image URI:', imageUri);
+  console.log('User Email:', userEmail);
+  console.log('Username:', username);
+  console.log('Caption:', caption);
+  console.log('Tags:', tags.join(', '));
 
-    const memeData = await fileToBase64(imageUri);
+  const memeData = await fileToBase64(imageUri);
 
-    const requestBody = {
-      operation: "uploadMeme",  // Make sure to include the operation if your Lambda expects it
-      email: userEmail,
-      memeData: memeData,
-      username: username,
-      caption: caption,
-    };
+  const requestBody = {
+    operation: "uploadMeme",
+    email: userEmail,
+    memeData: memeData,
+    username: username,
+    caption: caption,
+    tags: tags,  // Adding tags to the request body
+  };
 
-    const requestUrl = `${API_URL}/uploadMeme`;
-    console.log('Request URL:', requestUrl);
+  const requestUrl = `${API_URL}/uploadMeme`;
+  console.log('Request URL:', requestUrl);
 
-    const response = await fetch(requestUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+  const response = await fetch(requestUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
 
-    console.log('HTTP Response Status:', response.status);
-    const data = await response.json();
-    console.log('Upload response data:', data);
+  console.log('HTTP Response Status:', response.status);
+  const data = await response.json();
+  console.log('Upload response data:', data);
 
-    if (response.ok) {
-      console.log('Meme uploaded successfully:', data.url);
-      return { url: data.url };
-    } else {
-      console.error('Failed to upload meme:', data.message);
-      throw new Error(`Failed to upload meme: ${data.message}`);
-    }
-  } catch (error) {
-    console.error('Error uploading meme:', error);
-    throw error;
+  if (response.ok) {
+    console.log('Meme uploaded successfully:', data.url);
+    return { url: data.url };
+  } else {
+    console.error('Failed to upload meme:', data.message);
+    throw new Error(`Failed to upload meme: ${data.message}`);
   }
 };
+
 
 
 const fileToBase64 = async (uri: string): Promise<string | null> => {
@@ -217,10 +218,11 @@ export const updateCommentReaction = async (
   console.log('Comment reaction updated successfully:', data);
 };
 
-export const updateMemeReaction = async (memeID: string, incrementLikes: boolean, incrementDownloads: boolean, email: string): Promise<void> => {
+export const updateMemeReaction = async (memeID: string, incrementLikes: boolean, doubleLike: boolean, incrementDownloads: boolean, email: string): Promise<void> => {
   const requestBody = {
     operation: 'updateMemeReaction',
     memeID,
+    doubleLike,
     incrementLikes,
     incrementDownloads,
     email,

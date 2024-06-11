@@ -3,7 +3,7 @@ import { Animated, StyleSheet, View, Easing } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
-const logo = require('../assets/images/db/Jestr.jpg');
+const logo = require('../assets/images/Jestr.jpg');
 
 type RootStackParamList = {
   LandingPage: undefined; // Add other routes and their params if any

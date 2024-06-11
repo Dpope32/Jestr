@@ -27,6 +27,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
   const [localUser, setLocalUser] = useState<User | null>(user || null);
   const [imageUploaded, setImageUploaded] = useState(false);
   const [imageSelected, setImageSelected] = useState(false); // State to track if an image is selected
+  const [profilePanelVisible, setProfilePanelVisible] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -57,14 +58,21 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
     navigation.navigate('Home');
   };
 
+
+  const toggleProfilePanel = () => {
+    setProfilePanelVisible(!profilePanelVisible);
+  };
+
   return (
     <View style={styles.background}>
       <StatusBar barStyle="light-content" />
       <TopPanel
-        onProfileClick={() => setIsProfilePanelVisible(!isProfilePanelVisible)}
-        profilePicUrl={profilePicUrl}
-        username={localUser ? localUser.username : 'Default Username'}
-      />
+            onProfileClick={toggleProfilePanel}
+            profilePicUrl={localUser ? localUser.profilePic : ''}
+            username={localUser ? localUser.username : 'Default Username'}
+            enableDropdown={false} // Disable dropdown in Inbox
+            showLogo={false} // Hide logo in Inbox
+            />
       <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
         {!imageSelected && (
           <View style={styles.titleContainer}>

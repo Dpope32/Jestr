@@ -10,7 +10,7 @@ type RootStackParamList = {
   Home: undefined;
   MemeUpload: { user: any };
   Feed: { user: any };
-  // Add other routes here
+  Inbox: { user: any };
 };
 
 type BottomPanelProps = {
@@ -47,6 +47,10 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
     navigation.navigate('MemeUpload', { user });
   };
 
+  const handleInboxClick = () => {
+    navigation.navigate('Inbox', { user });
+  };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.iconContainer} onPress={handleHomeClick}>
@@ -55,9 +59,10 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
       <TouchableOpacity style={styles.iconContainer} onPress={handleUploadClick}>
         <FontAwesomeIcon icon={faPlus} size={28} style={styles.icon} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.iconContainer}>
-        <FontAwesomeIcon icon={faEnvelope} size={28} style={styles.icon} />
-      </TouchableOpacity>
+      <TouchableOpacity style={styles.iconContainer} onPress={handleInboxClick} >
+    <FontAwesomeIcon icon={faEnvelope} size={28} style={styles.icon} />
+</TouchableOpacity>
+
     </View>
   );
 };

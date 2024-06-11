@@ -5,6 +5,9 @@ import { NavigationProp } from '@react-navigation/native';
 import { Asset } from 'react-native-image-picker';
 import RNFetchBlob from 'rn-fetch-blob';
 
+const defaultProfilePicUrl = 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg';
+const defaultHeaderPicUrl = 'https://jestr-bucket.s3.amazonaws.com/HeaderPictures/default-header-pic.jpg';
+
 export type User = {
     email: string;
     username: string;
@@ -40,7 +43,7 @@ export type User = {
       email: string,
       password: string,
       setIsSignedUp: React.Dispatch<React.SetStateAction<boolean>>,
-      setSuccessModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
+      setSignupSuccessModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
     ) => {
       const userData = {
         operation: 'signup',
@@ -61,10 +64,10 @@ export type User = {
           const data = await response.json();
           console.log('Account created:', data);
           setIsSignedUp(true);
-          setSuccessModalVisible(true);
+          setSignupSuccessModalVisible(true);
           setTimeout(() => {
-            setSuccessModalVisible(false);
-          }, 1000);  // Modal visible for 1 second
+            setSignupSuccessModalVisible(false);
+          }, 4000); // Modal visible for 1 second
         } else {
           throw new Error('Failed to create account');
         }
@@ -88,7 +91,7 @@ const fileToBase64 = async (uri: string): Promise<string | null> => {
 export const handleCompleteProfile = async (
   email: string,
   username: string,
-  displayName: string,
+  displayName: string | null,
   profilePic: Asset | null,
   headerPicFile: Asset | null,
   setSuccessModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
@@ -102,7 +105,7 @@ export const handleCompleteProfile = async (
       operation: 'completeProfile',
       email,
       username,
-      displayName,
+      displayName: displayName || null,
       profilePic: profilePicBase64,
       headerPic: headerPicBase64,
     };
@@ -122,7 +125,7 @@ export const handleCompleteProfile = async (
       setTimeout(() => {
         setSuccessModalVisible(false);
         navigation.navigate('Feed', { user: data.user });
-      }, 1000); // Modal visible for 1 second then navigate
+      }, 3000); // Modal visible for 1 second then navigate
     } else {
       console.error('Failed to complete profile:', data.message);
       setSuccessModalVisible(false); // Optionally handle error with modal/notification

@@ -23,6 +23,16 @@ const styles = StyleSheet.create({
         height: '100%',
       },
       
+      tagInput: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: '#fff',
+        borderRadius: 5,
+        padding: 10,
+        marginVertical: 10,
+        color: '#fff',
+      },
+      
       captionInput: {
         backgroundColor: 'transparent',
         borderWidth: 1,

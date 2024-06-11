@@ -6,7 +6,7 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import InputField from '../../components/shared/Input/InutField';
-import logoImage from '../../assets/images/db/Jestr.jpg';
+import logoImage from '../../assets/images/Jestr.jpg';
 import Button from '../../components/shared/Button/Button';
 import LoadingScreen from '../LoadingScreen';
 import HeaderPicUpload from '../../components/Upload/HeaderPicUpload';
@@ -20,7 +20,8 @@ import { styles } from './LandingPage.styles';
 import googleIcon from '../../assets/images/google.jpeg';
 import appleIcon from '../../assets/images/apple.jpg';
 import twitterIcon from '../../assets/images/twitter.jpg';
-import SuccessModal from './SuccessModal'; 
+import SuccessModal from '../../components/Modals/SuccessModal'; 
+import SignupSuccessModal from '../../components/Modals/SignupSuccessModal';
 
 import {
   handleSignup,
@@ -96,6 +97,7 @@ const LandingPage = () => {
   const formOpacity = useRef(new Animated.Value(0)).current;
   const [titleMarginTop, setTitleMarginTop] = useState(-300);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [signupSuccessModalVisible, setSignupSuccessModalVisible] = useState(false); 
 const [modalUsername, setModalUsername] = useState('');
 
   const checkAuthStatus = async () => {
@@ -334,7 +336,7 @@ const [modalUsername, setModalUsername] = useState('');
               {showInitialScreen ? (
                 <View style={styles.initialScreen}>
                   <View style={styles.logoContainer}>
-                    <Image source={require('../../assets/images/db/Jestr.jpg')} style={styles.logo} />
+                    <Image source={require('../../assets/images/Jestr.jpg')} style={styles.logo} />
                   </View>
                   <View style={styles.authContainer}>
                     <Text style={styles.welcomeText}>Welcome</Text>
@@ -431,23 +433,23 @@ const [modalUsername, setModalUsername] = useState('');
                         </>
                       )}
   
-                      <TouchableOpacity
-                        onPress={() =>
-                          showSignUpForm
-                            ? handleSignup(email, password, setIsSignedUp, setSuccessModalVisible)
-                            : handleLogin(email, password, setIsLoading, navigation, setSuccessModalVisible, setModalUsername)
-                        }
-                        style={styles.button}
-                      >
-                        <LinearGradient
-                          colors={['#002400', '#00e100']}
-                          start={{ x: 0, y: 0.5 }}
-                          end={{ x: 1, y: 0.5 }}
-                          style={styles.gradient1}
-                        >
-                          <Text style={styles.buttonText}>{showSignUpForm ? 'Sign Up' : 'Login'}</Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
+                    <TouchableOpacity
+                    onPress={() =>
+                      showSignUpForm
+                        ? handleSignup(email, password, setIsSignedUp, setSignupSuccessModalVisible)
+                        : handleLogin(email, password, setIsLoading, navigation, setSuccessModalVisible, setModalUsername)
+                    }
+                    style={styles.button}
+                  >
+                    <LinearGradient
+                      colors={['#002400', '#00e100']}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={styles.gradient1}
+                    >
+                      <Text style={styles.buttonText}>{showSignUpForm ? 'Sign Up' : 'Login'}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
   
                       <TouchableOpacity
                         onPress={() => setShowSignUpForm(!showSignUpForm)}
@@ -490,7 +492,7 @@ const [modalUsername, setModalUsername] = useState('');
                       <View style={styles.inputFieldsContainer}>
                         <InputField
                           label=""
-                          placeholder="Enter Display Name"
+                          placeholder="Enter Display Name (Optional)"
                           value={displayName}
                           onChangeText={setDisplayName}
                           containerStyle={{ marginBottom: 20 }}
@@ -498,7 +500,7 @@ const [modalUsername, setModalUsername] = useState('');
                         />
                         <InputField
                           label=""
-                          placeholder="Enter Username"
+                          placeholder="Enter Username (Required)"
                           value={username}
                           onChangeText={setUsername}
                           containerStyle={{ marginBottom: 20 }}
@@ -531,11 +533,15 @@ const [modalUsername, setModalUsername] = useState('');
           )}
         </ScrollView>
       )}
-        <SuccessModal
-          visible={successModalVisible}
-          onClose={() => setSuccessModalVisible(false)}
-          username={modalUsername} // Ensure you have a state or prop for the username
-        />
+<SuccessModal
+  visible={successModalVisible}
+  onClose={() => setSuccessModalVisible(false)}
+  username={modalUsername}
+/>
+<SignupSuccessModal
+  visible={signupSuccessModalVisible}
+  onClose={() => setSignupSuccessModalVisible(false)}
+/>
       <View style={styles.footer}>
         <Text style={styles.footerLink}>Privacy Policy</Text>
         <Text style={styles.footerDivider}> | </Text>
