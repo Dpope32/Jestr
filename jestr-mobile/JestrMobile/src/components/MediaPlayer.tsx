@@ -8,8 +8,42 @@ import CommentFeed from './Modals/CommentFeed';
 import { User } from '../screens/Feed/Feed';
 import { updateMemeReaction } from './Meme/memeService';
 import SaveSuccessModal from './Modals/SaveSuccessModal'; 
+import ShareModal from './Modals/ShareModal'; 
+import { handleShareMeme } from '../services/authFunctions'
+
+
+
+const testFriends: Friend[] = [
+  {
+    username: 'john_doe',
+    profilePic: 'https://placekitten.com/200/200',
+  },
+  {
+    username: 'jane_smith',
+    profilePic: 'https://placekitten.com/200/200',
+  },
+  {
+    username: 'mike_johnson',
+    profilePic: 'https://placekitten.com/200/200',
+  },
+  {
+    username: 'sarah_davis',
+    profilePic: 'https://placekitten.com/200/200',
+  },
+  {
+    username: 'david_wilson',
+    profilePic: 'https://placekitten.com/200/200',
+  },
+];
 
 const { width, height } = Dimensions.get('window'); // Get device width and height
+
+interface Friend {
+  username: string;
+  profilePic: string;
+}
+
+export type ShareType = 'copy' | 'message' | 'snapchat' | 'facebook' | 'twitter' | 'email' | 'friend' | 'instagram';
 
 type MediaPlayerProps = {
   currentMedia: string;
@@ -30,8 +64,9 @@ type MediaPlayerProps = {
   likeCount: number;
   downloadCount: number;
   commentCount: number;
+  shareCount: number;
   profilePicUrl: string;
-  memeID: string; // Add this line
+  memeID: string;
   nextMedia: string | null;
   prevMedia: string | null;
 };
@@ -57,9 +92,12 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   likeCount,
   downloadCount,
   commentCount,
+  shareCount,
   profilePicUrl,
   memeID
 }) => {
+  console.log(currentMedia, username,
+    caption,)
   const translateY = useRef(new Animated.Value(0)).current;
   const [imageHeight, setImageHeight] = useState(height - 150);
   const [imageSize, setImageSize] = useState({ width: width, height: height - 150 });
@@ -76,7 +114,12 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const doubleTapRef = useRef(null);
   const SWIPE_THRESHOLD = height / 4; // For example, 1/4 of the screen height
   const tapTimeout = useRef<NodeJS.Timeout | null>(null);
-
+  const [showShareModal, setShowShareModal] = useState(false);
+  const friends: Friend[] = [];
+  const [shareStatus, setShareStatus] = useState('');
+  const [responseMessage, setResponseMessage] = useState('');
+  const [responseModalVisible, setResponseModalVisible] = useState(false);
+  
   useEffect(() => {
     setLocalLikeCount(likeCount);
     setLocalDownloadCount(downloadCount);
@@ -269,6 +312,33 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     ]).start();
   };
 
+  const onShare = async (type: ShareType, username?: string) => {
+    if (user && type === 'friend' && username) {
+        console.log(`Sharing meme with ${username}`);
+        setShareStatus('Sharing...');
+        try {
+        await handleShareMeme(memeID, user.email, user.username, username, setResponseModalVisible, setResponseMessage);
+        setResponseMessage('Meme shared successfully!');
+        setResponseModalVisible(true);
+        setTimeout(() => {
+            setResponseModalVisible(false);
+            setShowShareModal(false);  // Close the share modal after showing the response
+        }, 3000);
+    } catch (error) {
+        console.error('Sharing failed:', error);
+        setResponseMessage('Failed to share meme.');
+        setResponseModalVisible(true);
+        setTimeout(() => {
+            setResponseModalVisible(false);
+        }, 3000);
+    }
+} else {
+    console.log(`Sharing meme via ${type}`);
+    // Handle other share types here, assuming they might be instant and won't need a response modal
+    setShowShareModal(false);  // Close the share modal directly for other types
+}
+};
+
  return (
     <View style={styles.container}>
       <PanGestureHandler onGestureEvent={onSwipe} onHandlerStateChange={handleSwipeRelease}>
@@ -318,10 +388,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           <FontAwesomeIcon icon={faComment} size={28} color="#1bd40b" />
           <Text style={styles.iconText}>{commentCount}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => {}} style={styles.iconWrapper}>
+        <TouchableOpacity onPress={() => setShowShareModal(true)} style={styles.iconWrapper}>
           <FontAwesomeIcon icon={faShare} size={28} color="#1bd40b" />
-          <Text style={styles.iconText}>0</Text>
-        </TouchableOpacity>
+          <Text style={styles.iconText}>{shareCount}</Text>
+      </TouchableOpacity>
       </View>
               </Animated.View>
             </TapGestureHandler>
@@ -344,9 +414,19 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
         visible={showSaveModal}
         onClose={() => setShowSaveModal(false)}
       />
-    </View>
-  );
-}
+          <ShareModal
+            visible={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            friends={testFriends}  // Pass the actual testFriends array here
+            onShare={onShare}
+          />
+
+            {responseModalVisible && (
+                <Text>{responseMessage}</Text>
+            )}
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
   container: {

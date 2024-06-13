@@ -27,6 +27,7 @@ export type RootStackParamList = {
       profilePicUrl: string;
       messages: Message[];
     };
+    previewMeme: string;
   };
 };
 

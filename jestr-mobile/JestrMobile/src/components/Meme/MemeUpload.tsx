@@ -236,24 +236,23 @@ const handleRotateLeft = async () => {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View>
         <View style={styles.container}>
-        <View style={styles.imageContainer}>
-          {image.length > 0 ? (
-            image.map((img, index) => (
-              <Image key={index} source={{ uri: img }} style={styles.image} />
-            ))
-          ) : (
-            // Placeholder text or image
-            <TouchableOpacity style={styles.placeholderContainer} onPress={pickImage}>
-            <FontAwesomeIcon icon={faUpload} size={38} color="#999" />
-            <Text style={styles.placeholderText}>Tap here to upload your meme!</Text>
-          </TouchableOpacity>
-          )}
+          <View style={styles.imageContainer}>
+            {image.length > 0 ? (
+              image.map((img, index) => (
+                <Image key={index} source={{ uri: img }} style={styles.image} />
+              ))
+            ) : (
+              <TouchableOpacity style={styles.placeholderContainer} onPress={pickImage}>
+                <FontAwesomeIcon icon={faUpload} size={38} color="#999" />
+                <Text style={styles.placeholderText}>Tap here to upload your meme!</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </View>
         {image.length > 0 && (
           <>
             <View style={{ marginHorizontal: 0 }}>
-            <TextInput
+              <TextInput
                 style={styles.tagInput}
                 placeholder="Enter tags (comma-separated)"
                 onChangeText={handleTagsChange}
@@ -262,7 +261,7 @@ const handleRotateLeft = async () => {
                 blurOnSubmit={true}
                 multiline
               />
-            <TextInput
+              <TextInput
                 style={[styles.captionInput, { height: 50, color: '#fff' }]}
                 placeholder="Add a caption..."
                 placeholderTextColor="#999"
@@ -275,48 +274,37 @@ const handleRotateLeft = async () => {
             </View>
             
             <TouchableOpacity style={[styles.iconButton, styles.rotateLeftButton]} onPress={handleRotateLeft}>
-              <FontAwesomeIcon icon={faRotateLeft} style={styles.icon} />
+              <FontAwesomeIcon icon={faRotateLeft} style={styles.icon} size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity style={[styles.iconButton, styles.rotateRightButton]} onPress={handleRotateRight}>
-              <FontAwesomeIcon icon={faRotateRight} style={styles.icon} />
+              <FontAwesomeIcon icon={faRotateRight} style={styles.icon} size={24} color="white" />
             </TouchableOpacity>
-            
-            {/* <View style={styles.textOverlayContainer}>
-              <FontAwesomeIcon icon={faTextWidth} style={styles.icon} />
-              <TextInput
-                style={styles.textOverlayInput}
-                placeholder="Text Overlay"
-                placeholderTextColor="#999"
-                onChangeText={setTextOverlay}
-                value={textOverlay}
-              />
-            </View> */}
             
             <View style={styles.editingActionsContainer}>
               <TouchableOpacity style={styles.iconButton} onPress={handleUndo}>
-                <FontAwesomeIcon icon={faRefresh} size={26} style={styles.icon} /> 
+                <FontAwesomeIcon icon={faRefresh} size={26} style={styles.icon} color="white" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton} onPress={handleReset}>
-                <FontAwesomeIcon icon={faArrowLeft} size={26} style={styles.icon} /> 
+                <FontAwesomeIcon icon={faArrowLeft} size={26} style={styles.icon} color="white" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton} onPress={() => setShowBrightnessSlider(!showBrightnessSlider)}>
-                <FontAwesomeIcon icon={faSun} size={26} style={styles.icon} color={showBrightnessSlider ? 'white' : 'white'} /> 
+                <FontAwesomeIcon icon={faSun} size={26} style={styles.icon} color={showBrightnessSlider ? 'white' : 'white'} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton} onPress={() => setShowContrastSlider(!showContrastSlider)}>
-                <FontAwesomeIcon icon={faAdjust} size={26} style={styles.icon} />  
+                <FontAwesomeIcon icon={faAdjust} size={26} style={styles.icon} color="white" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton} onPress={() => handleFilter('contrast')}>
-          <FontAwesomeIcon icon={faFilter} size={26} style={styles.icon} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => handleFilter('grayscale')}>
-          <FontAwesomeIcon icon={faMoon} size={26} style={styles.icon} />
-        </TouchableOpacity>
-        </View>
-          {editedImage && (
-            <View style={styles.editedImageContainer}>
-              <Image source={{ uri: editedImage }} style={styles.editedImage} />
+                <FontAwesomeIcon icon={faFilter} size={26} style={styles.icon} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={() => handleFilter('grayscale')}>
+                <FontAwesomeIcon icon={faMoon} size={26} style={styles.icon} color="white" />
+              </TouchableOpacity>
             </View>
-          )}
+            {editedImage && (
+              <View style={styles.editedImageContainer}>
+                <Image source={{ uri: editedImage }} style={styles.editedImage} />
+              </View>
+            )}
             {showBrightnessSlider && (
               <View style={styles.brightnessContainer}>
                 <Slider
@@ -345,50 +333,49 @@ const handleRotateLeft = async () => {
             
           </>
         )}
-      {image.length > 0 && (
-        <TouchableOpacity
-          style={[styles.uploadButton, { marginHorizontal: 20 }]}
-          onPress={handleUpload}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.uploadButtonText}>Finalize Upload</Text>
-          )}
-        </TouchableOpacity>
-      )}
-      <Modal visible={uploadSuccess} animationType="slide" transparent>
-  <View style={styles.modalContainer}>
-    <View style={styles.modalContent}>
-      <TouchableOpacity style={styles.closeButton} onPress={closeSuccessModal}>
-        <FontAwesomeIcon icon={faTimes} size={24} color="red" />
-      </TouchableOpacity>
-      <Text style={styles.successText}>Meme uploaded successfully!</Text>
-  
-      <View style={styles.shareContainer}>
-            <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-              <FontAwesomeIcon icon={faFacebook} size={24} color="#fff" />
+        {image.length > 0 && (
+          <TouchableOpacity
+            style={[styles.uploadButton, { marginHorizontal: 20 }]}
+            onPress={handleUpload}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.uploadButtonText}>Finalize Upload</Text>
+            )}
+          </TouchableOpacity>
+        )}
+        <Modal visible={uploadSuccess} animationType="slide" transparent>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity style={styles.closeButton} onPress={closeSuccessModal}>
+                <FontAwesomeIcon icon={faTimes} size={24} color="red" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-                <FontAwesomeIcon icon={faTwitter} size={24} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-                <FontAwesomeIcon icon={faComment} size={24} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-                <FontAwesomeIcon icon={faEnvelope} size={24} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-                <FontAwesomeIcon icon={faSnapchat} size={24} color="#fff" />
-              </TouchableOpacity>
+              <Text style={styles.successText}>Meme uploaded successfully!</Text>
+              
+              <View style={styles.shareContainer}>
+                <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+                  <FontAwesomeIcon icon={faFacebook} size={24} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+                  <FontAwesomeIcon icon={faTwitter} size={24} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+                  <FontAwesomeIcon icon={faComment} size={24} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+                  <FontAwesomeIcon icon={faEnvelope} size={24} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+                  <FontAwesomeIcon icon={faSnapchat} size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
       </View>
     </TouchableWithoutFeedback>
-
   );
 };
 

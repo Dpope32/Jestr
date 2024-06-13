@@ -34,6 +34,7 @@ export type Message = {
       profilePicUrl: string;
       messages: Message[];
     };
+    previewMeme: string;
   };
 
   
@@ -52,6 +53,7 @@ export type Message = {
     // Function to send a message
     console.log('Send message:', newMessage);
     setNewMessage('');
+    navigation.goBack();
   };
 
   const toggleProfilePanel = () => {
@@ -59,7 +61,7 @@ export type Message = {
   };
 
   return (
-    <View style={styles.container}>
+      <View style={[styles.container, { height: '90%' }]}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
         <FontAwesomeIcon icon={faArrowLeft} size={24} color="#1bd40b" />
       </TouchableOpacity>

@@ -5,57 +5,70 @@ import { CommentType } from '../Modals/CommentFeed';
 import { Meme } from '../../screens/Feed/Feed';
 
 
-
 export const fetchMemes = async (lastEvaluatedKey?: string, limit: number = 5): Promise<FetchMemesResult> => {
-  console.log('fetching more memes')
+  console.log('fetching more memes');
   try {
     const requestUrl = `${API_URL}/getMemes`;
-    const body = JSON.stringify({
+
+    // Create the body object with an optional lastEvaluatedKey
+    const body: {
+      operation: string;
+      limit: number;
+      lastEvaluatedKey?: string;
+    } = {
       operation: 'getMemes',
-      lastEvaluatedKey: lastEvaluatedKey,
       limit: limit
-    });
+    };
+
+    if (lastEvaluatedKey) {
+      body.lastEvaluatedKey = lastEvaluatedKey;
+    }
+
+    const requestBody = JSON.stringify(body);
+
+    console.log('Request URL:', requestUrl);
+    console.log('Request Body:', requestBody);
 
     const response = await fetch(requestUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: body
+      body: requestBody
     });
 
     console.log('HTTP Response Status:', response.status);
     const responseText = await response.text();
-    console.log('Response text:', responseText);
-    
+
     if (!response.ok) {
       console.log('Failed to fetch memes. Status:', response.status);
       return { memes: [], lastEvaluatedKey: null };
     }
-    
-    const data = JSON.parse(responseText);
-    if (!data || !data.user || !data.user.memes) {
-      return { memes: [], lastEvaluatedKey: null };
-    }
-    
-    const memes = data.user.memes.map((meme: any) => ({
-      memeID: meme.memeID,
-      email: meme.email,
-      url: meme.url,
-      uploadTimestamp: meme.uploadTimestamp,
-      username: meme.username || 'defaultUsername',
-      caption: meme.caption || '',
-      likeCount: meme.likeCount || 0,
-      downloadCount: meme.downloadCount || 0,
-      commentCount: meme.commentCount || 0,
-      profilePicUrl: meme.profilePicUrl || ''
-    }));
-    
-    return {
-      memes: memes,
-      lastEvaluatedKey: data.user.lastEvaluatedKey || null
-    };
-    
+
+const data = JSON.parse(responseText);
+if (!data || !data.user || !data.user.memes) {
+  return { memes: [], lastEvaluatedKey: null };
+}
+
+const memes = data.user.memes.map((meme: any) => ({
+  memeID: meme.memeID,
+  email: meme.email,
+  url: meme.url,
+  uploadTimestamp: meme.uploadTimestamp,
+  username: meme.username || 'defaultUsername',
+  caption: meme.caption || '',
+  likeCount: meme.likeCount || 0,
+  downloadCount: meme.downloadCount || 0,
+  commentCount: meme.commentCount || 0,
+  shareCount: meme.shareCount || 0, // Add shareCount
+  profilePicUrl: meme.profilePicUrl || ''
+}));
+
+return {
+  memes: memes,
+  lastEvaluatedKey: data.user.lastEvaluatedKey || null
+};
+
   } catch (error) {
     console.error('Error fetching memes:', error);
     return { memes: [], lastEvaluatedKey: null };

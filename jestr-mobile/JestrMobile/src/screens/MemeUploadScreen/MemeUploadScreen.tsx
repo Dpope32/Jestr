@@ -1,9 +1,10 @@
 // MemeUploadScreen.tsx
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, Alert, Animated, ImageBackground, ProgressBarAndroid } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Alert, Animated, ImageBackground } from 'react-native';
 import MemeUpload from '../../components/Meme/MemeUpload';
 import TopPanel from '../../components/Panels/TopPanel';
 import BottomPanel from '../../components/Panels/BottomPanel';
+
 
 
 type MemeUploadScreenProps = {
@@ -67,12 +68,12 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
     <View style={styles.background}>
       <StatusBar barStyle="light-content" />
       <TopPanel
-            onProfileClick={toggleProfilePanel}
-            profilePicUrl={localUser ? localUser.profilePic : ''}
-            username={localUser ? localUser.username : 'Default Username'}
-            enableDropdown={false} // Disable dropdown in Inbox
-            showLogo={false} // Hide logo in Inbox
-            />
+        onProfileClick={toggleProfilePanel}
+        profilePicUrl={localUser ? localUser.profilePic : ''}
+        username={localUser ? localUser.username : 'Default Username'}
+        enableDropdown={false}
+        showLogo={false}
+      />
       <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
         {!imageSelected && (
           <View style={styles.titleContainer}>
@@ -82,17 +83,15 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
             )}
           </View>
         )}
-        <ProgressBarAndroid style={styles.progress} styleAttr="Horizontal" indeterminate={true} color="#00a100" />
         <View style={styles.card}>
-        <MemeUpload
-          onUploadSuccess={handleUploadSuccess}
-          userEmail={user.email}
-          onImageSelect={handleImageSelect}
-          username={user.username}
-          navigation={navigation}  // Passing navigation prop
-          route={route}            // Passing route prop
-        />
-
+          <MemeUpload
+            onUploadSuccess={handleUploadSuccess}
+            userEmail={user.email}
+            onImageSelect={handleImageSelect}
+            username={user.username}
+            navigation={navigation}
+            route={route}
+          />
         </View>
       </Animated.View>
       <BottomPanel
@@ -109,6 +108,8 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
     </View>
   );
 };
+
+  
 
 const styles = StyleSheet.create({
   background: {

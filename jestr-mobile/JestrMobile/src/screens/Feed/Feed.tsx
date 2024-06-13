@@ -30,6 +30,7 @@ export type Meme = {
   likeCount: number;
   downloadCount: number;
   commentCount: number;
+  shareCount: number;
   profilePicUrl: string;
 };
 
@@ -62,7 +63,6 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
           const parsedUser = JSON.parse(storedUser);
           setLocalUser(parsedUser);
           setProfilePicUrl(parsedUser.profilePic);
-          console.log('User data from AsyncStorage:', parsedUser);
         }
       } catch (error) {
         console.error('Error retrieving user from AsyncStorage:', error);
@@ -73,19 +73,23 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
     fetchInitialMemes();
   }, []);
 
-  const fetchInitialMemes = async () => {
-    setIsLoading(true);
-    const result = await fetchMemes();
-    setMemes(result.memes);
-    setLastEvaluatedKey(result.lastEvaluatedKey);
-    setIsLoading(false);
-  };
+const fetchInitialMemes = async () => {
+  console.log('Fetching initial memes with lastEvaluatedKey:', lastEvaluatedKey);
+  setIsLoading(true);
+  const result = await fetchMemes();
+  setMemes(result.memes);
+  console.log('Memes after setting state:', result.memes); // Add this line
+  setLastEvaluatedKey(result.lastEvaluatedKey);
+  setIsLoading(false);
+};
 
   const fetchMoreMemes = async () => {
     if (isLoading || !lastEvaluatedKey) return;
+    console.log('Fetching more memes with lastEvaluatedKey:', lastEvaluatedKey);
     setIsLoading(true);
-    const result = await fetchMemes(lastEvaluatedKey);
+    const result = await fetchMemes(JSON.stringify(lastEvaluatedKey)); // Convert lastEvaluatedKey to string
     setMemes(prevMemes => [...prevMemes, ...result.memes]);
+    console.log('Memes after setting state:', result.memes); // Add this line
     setLastEvaluatedKey(result.lastEvaluatedKey);
     setIsLoading(false);
   };
@@ -158,6 +162,7 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
               memeID={memes[currentMediaIndex].memeID}
               likeCount={memes[currentMediaIndex].likeCount}
               downloadCount={memes[currentMediaIndex].downloadCount}
+              shareCount={memes[currentMediaIndex].shareCount}
               commentCount={memes[currentMediaIndex].commentCount}
               profilePicUrl={memes[currentMediaIndex].profilePicUrl}
             />
