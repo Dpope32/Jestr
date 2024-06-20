@@ -4,18 +4,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp } from '@react-navigation/native';
 import { Asset } from 'react-native-image-picker';
 import RNFetchBlob from 'rn-fetch-blob';
+import Toast from 'react-native-toast-message';
 
 const defaultProfilePicUrl = 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg';
 const defaultHeaderPicUrl = 'https://jestr-bucket.s3.amazonaws.com/HeaderPictures/default-header-pic.jpg';
 
 export type User = {
-    email: string;
-    username: string;
-    profilePic: string;
-    displayName: string;
-    headerPic: string;
-    creationDate: string;
-  };
+  email: string;
+  username: string;
+  profilePic: string;
+  displayName: string;
+  headerPic: string;
+  creationDate: string;
+  followersCount: number;
+  followingCount: number;
+};
 
   type RootStackParamList = {
     LandingPage: undefined;
@@ -37,6 +40,32 @@ export type User = {
       console.log("twit click")
       } catch (error) {
       }
+  };
+
+  export const addFollow = async (followerId: string, followeeId: string) => {
+    const followData = {
+      operation: 'addFollow',
+      followerId,
+      followeeId,
+    };
+  
+    try {
+      const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/addFollow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(followData),
+      });
+  
+      if (response.ok) {
+        console.log('Follow added successfully');
+      } else {
+        console.error('Failed to add follow');
+      }
+    } catch (error) {
+      console.error('Error adding follow:', error);
+    }
   };
 
   export const handleSignup = async (
@@ -110,6 +139,8 @@ export type User = {
         profilePic: profilePicBase64,
         headerPic: headerPicBase64,
       };
+      console.log('Sending profile data:', JSON.stringify(profileData));
+
 
       const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
         method: 'POST',
@@ -120,12 +151,24 @@ export type User = {
       });
 
       const data = await response.json();
-      if (response.ok) {
+      if (response.ok && data.data && data.data.email) {
+        const user: User = {
+          email: data.data.email,
+          username: data.data.username,
+          profilePic: data.data.profilePic,
+          displayName: data.data.displayName,
+          headerPic: data.data.headerPic,
+          creationDate: data.data.creationDate,
+          followersCount: data.data.followersCount || 0,
+          followingCount: data.data.followingCount || 0,
+        };
         console.log('Profile data being passed:', data.user);
+        await AsyncStorage.setItem('user', JSON.stringify(user));
         setSuccessModalVisible(true); // Show success modal instead of alert
         setTimeout(() => {
           setSuccessModalVisible(false);
-          navigation.navigate('Feed', { user: data.user });
+          navigation.navigate('Feed', { user });
+
         }, 3000); // Modal visible for 1 second then navigate
       } else {
         console.error('Failed to complete profile:', data.message);
@@ -146,16 +189,16 @@ export type User = {
     setModalUsername: React.Dispatch<React.SetStateAction<string>>
   ) => {
     setIsLoading(true);
-
+  
     const userData = {
       operation: 'signin',
       email: email,
       password: password,
     };
-
+  
     try {
       console.log('Sending login request...');
-
+  
       const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/signin', {
         method: 'POST',
         headers: {
@@ -163,17 +206,34 @@ export type User = {
         },
         body: JSON.stringify(userData),
       });
-
+  
       const data = await response.json();
-      console.log('Login response:', data);
-
-      if (response.ok && data.message === 'Sign-in successful.' && data.user && data.user.email) {
-        await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      if (response.ok && data.message === 'Sign-in successful.' && data.data && data.data.email) {
+        const user: User = {
+          email: data.data.email,
+          username: data.data.username,
+          profilePic: data.data.profilePic,
+          displayName: data.data.displayName,
+          headerPic: data.data.headerPic,
+          creationDate: data.data.creationDate,
+          followersCount: data.data.followersCount || 0,
+          followingCount: data.data.followingCount || 0,
+        };
+        if (!response.ok || !data || data.message !== 'Sign-in successful.') {
+          console.error('Sign-in failed:', data.message, 'Response status:', response.status);
+          // Further error handling
+        }
+  
+        await AsyncStorage.setItem('user', JSON.stringify(user)).catch(error => {
+          console.log(user)
+          console.error('Error storing user data:', error);
+        });
+        
         console.log('Sign-in successful');
-        setModalUsername(data.user.displayName);
+        setModalUsername(user.displayName);
         setSuccessModalVisible(true);
         setTimeout(() => {
-          navigation.navigate('Feed', { user: data.user });
+          navigation.navigate('Feed', { user });
           setIsLoading(false);
           setSuccessModalVisible(false);
         }, 2000); // Show modal for 2 seconds before navigating
@@ -191,19 +251,23 @@ export type User = {
 
   export const handleShareMeme = async (
     memeID: string,
-    userEmail: string,
+    email: string,
     username: string,
     catchUser: string,
-    setResponseModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
-    setResponseMessage: React.Dispatch<React.SetStateAction<string>>
+    message: string,
+    setResponseModalVisible: (visible: boolean) => void,
+    setResponseMessage: (message: string) => void
   ) => {
     const shareData = {
       operation: 'shareMeme',
       memeID,
-      email: userEmail,
+      email: email,
       username,
       catchUser,
+      message,
     };
+  
+    console.log('Share data:', shareData);
   
     try {
       console.log('Initiating share operation...');
@@ -215,20 +279,74 @@ export type User = {
         body: JSON.stringify(shareData),
       });
   
-      const data = await response.json();
+      console.log('Response status:', response.status);
+      console.log('Response body:', await response.text());
+  
       if (response.ok) {
-        console.log('Share successful:', data);
-        setResponseMessage('Meme shared successfully!');
-        setResponseModalVisible(true);
-        setTimeout(() => setResponseModalVisible(false), 3000); // Show response modal for 3 seconds
+        Toast.show({
+          type: 'success', // There are 'success', 'info', 'error'
+          position: 'top',
+          text1: 'Meme shared successfully!',
+          visibilityTime: 4000,
+          autoHide: true,
+          topOffset: 30,
+          bottomOffset: 40,
+          props: { backgroundColor: '#333', textColor: '#00ff00' },
+        });
+        
       } else {
-        throw new Error(data.message || 'Failed to share meme.');
+        Toast.show({
+          type: 'error',
+          position: 'top',
+          text1: 'Failed to share meme.',
+          visibilityTime: 4000,
+          autoHide: true,
+          topOffset: 30,
+          props: { backgroundColor: '#333', textColor: '#00ff00' },
+        });
       }
     } catch (error) {
-      console.error('Share error:', error);
-      setResponseModalVisible(true);
-      setTimeout(() => setResponseModalVisible(false), 3000); // Show error modal for 3 seconds
+      Toast.show({
+        type: 'error',
+        position: 'top',
+        text1: 'An error occurred while sharing the meme.',
+        visibilityTime: 4000,
+        autoHide: true,
+        topOffset: 30
+      });
     }
   };
+
+  export const checkFollowStatus = async (followerId: string, followeeId: string) => {
+    try {
+      
+      const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/checkFollowStatus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation: 'checkFollowStatus',
+          followerId,
+          followeeId
+        }),
+      });
   
-    
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+  
+      if (data.data && typeof data.data.isFollowing === 'boolean' && typeof data.data.canFollow === 'boolean') {
+        return data.data;
+      } else {
+        throw new Error('Unexpected response format');
+      }
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+      return { isFollowing: false, canFollow: true };  // Default to allowing follow on error
+    }
+  };

@@ -5,7 +5,7 @@ import TopPanel from '../../components/Panels/TopPanel';
 import BottomPanel from '../../components/Panels/BottomPanel';
 import styles from './Feed.styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchMemes } from '../../components/Meme/memeService';
+import { fetchMemes, getLikeStatus } from '../../components/Meme/memeService';
 import { useNavigation } from '@react-navigation/native';
 import ProfilePanel from '../../components/Panels/ProfilePanel';
 import { Image } from 'react-native';
@@ -18,6 +18,9 @@ export type User = {
   displayName: string;
   headerPic: string;
   creationDate: string;
+  followersCount: number;
+  followingCount: number;
+  Bio: string;
 };
 
 export type Meme = {
@@ -32,6 +35,7 @@ export type Meme = {
   commentCount: number;
   shareCount: number;
   profilePicUrl: string;
+  memeUser: User; // Add this line
 };
 
 const Feed: React.FC<{ route: any }> = ({ route }) => {
@@ -45,6 +49,32 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState<boolean>(false);
   const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [memeLikeStatuses, setMemeLikeStatuses] = useState<Record<string, { liked: boolean; doubleLiked: boolean }>>({});
+
+  useEffect(() => {
+    console.log('Received user in Feed:', user);
+  }, []);
+
+  useEffect(() => {
+    const fetchLikeStatuses = async () => {
+      if (user) {
+        const statuses: Record<string, { liked: boolean; doubleLiked: boolean }> = {};
+        for (let meme of memes) {
+          const status = await getLikeStatus(meme.memeID, user.email);
+          statuses[meme.memeID] = status;
+        }
+        setMemeLikeStatuses(statuses);
+      }
+    };
+    fetchLikeStatuses();
+  }, [user, memes]);
+
+  const onLikeStatusChange = (memeID: string, status: { liked: boolean; doubleLiked: boolean }) => {
+    setMemeLikeStatuses(prev => ({
+      ...prev,
+      [memeID]: status
+    }));
+  };
 
   const toggleProfilePanel = () => {
     setProfilePanelVisible(!profilePanelVisible);
@@ -73,32 +103,22 @@ const Feed: React.FC<{ route: any }> = ({ route }) => {
     fetchInitialMemes();
   }, []);
 
-const fetchInitialMemes = async () => {
-  console.log('Fetching initial memes with lastEvaluatedKey:', lastEvaluatedKey);
-  setIsLoading(true);
-  const result = await fetchMemes();
-  setMemes(result.memes);
-  console.log('Memes after setting state:', result.memes); // Add this line
-  setLastEvaluatedKey(result.lastEvaluatedKey);
-  setIsLoading(false);
-};
-
-  const fetchMoreMemes = async () => {
-    if (isLoading || !lastEvaluatedKey) return;
-    console.log('Fetching more memes with lastEvaluatedKey:', lastEvaluatedKey);
+  const fetchInitialMemes = async () => {
     setIsLoading(true);
-    const result = await fetchMemes(JSON.stringify(lastEvaluatedKey)); // Convert lastEvaluatedKey to string
-    setMemes(prevMemes => [...prevMemes, ...result.memes]);
-    console.log('Memes after setting state:', result.memes); // Add this line
+    const result = await fetchMemes();
+    setMemes(result.memes);
     setLastEvaluatedKey(result.lastEvaluatedKey);
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    if (memes.length > 0) {
-      console.log('Current media URL:', memes[currentMediaIndex].url);
-    }
-  }, [currentMediaIndex, memes]);
+  const fetchMoreMemes = async () => {
+    if (isLoading || !lastEvaluatedKey) return;
+    setIsLoading(true);
+    const result = await fetchMemes(lastEvaluatedKey); // Remove JSON.stringify
+    setMemes(prevMemes => [...prevMemes, ...result.memes]);
+    setLastEvaluatedKey(result.lastEvaluatedKey);
+    setIsLoading(false);
+  };
 
   const goToPrevMedia = () => {
     if (currentMediaIndex > 0) {
@@ -118,7 +138,7 @@ const fetchInitialMemes = async () => {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-      <TopPanel
+        <TopPanel
           onProfileClick={toggleProfilePanel}
           profilePicUrl={localUser ? localUser.profilePic : ''}
           username={localUser ? localUser.username : 'Default Username'}
@@ -132,8 +152,8 @@ const fetchInitialMemes = async () => {
             profilePicUrl={localUser.profilePic}
             username={localUser.username}
             displayName={localUser.displayName || 'N/A'}
-            followersCount="0"
-            followingCount="0"
+            followersCount={localUser.followersCount}
+            followingCount={localUser.followingCount}
             onDarkModeToggle={() => console.log("Dark Mode Toggle")}
             user={localUser}
             navigation={navigation}
@@ -142,11 +162,13 @@ const fetchInitialMemes = async () => {
         {memes.length > 0 ? (
           <>
             <MediaPlayer
+              memeUser={memes[currentMediaIndex].memeUser} // Ensure this data is correctly passed
+              user={localUser}
               prevMedia={memes[currentMediaIndex - 1] ? memes[currentMediaIndex - 1].url : null}
               currentMedia={memes[currentMediaIndex].url}
               nextMedia={memes[currentMediaIndex + 1] ? memes[currentMediaIndex + 1].url : null}
-              handleLike={() => {}}
-              handleDownload={() => {}}
+              handleLike={() => { }}
+              handleDownload={() => { }}
               likedIndices={new Set()}
               doubleLikedIndices={new Set()}
               downloadedIndices={new Set()}
@@ -158,13 +180,14 @@ const fetchInitialMemes = async () => {
               username={memes[currentMediaIndex].username}
               caption={memes[currentMediaIndex].caption}
               uploadTimestamp={memes[currentMediaIndex].uploadTimestamp}
-              user={localUser}
               memeID={memes[currentMediaIndex].memeID}
               likeCount={memes[currentMediaIndex].likeCount}
               downloadCount={memes[currentMediaIndex].downloadCount}
               shareCount={memes[currentMediaIndex].shareCount}
               commentCount={memes[currentMediaIndex].commentCount}
               profilePicUrl={memes[currentMediaIndex].profilePicUrl}
+              initialLikeStatus={memeLikeStatuses[memes[currentMediaIndex].memeID] || { liked: false, doubleLiked: false }}
+              onLikeStatusChange={onLikeStatusChange}
             />
             {isCommentFeedVisible && (
               <CommentFeed
@@ -181,15 +204,16 @@ const fetchInitialMemes = async () => {
         ) : (
           <Text>No memes available</Text>
         )}
+
         <BottomPanel
-          onHomeClick={() => {}}
-          handleLike={() => {}}
-          handleDislike={() => {}}
+          onHomeClick={() => { }}
+          handleLike={() => { }}
+          handleDislike={() => { }}
           likedIndices={new Set()}
           dislikedIndices={new Set()}
           likeDislikeCounts={{}}
           currentMediaIndex={currentMediaIndex}
-          toggleCommentFeed={() => {}}
+          toggleCommentFeed={() => { }}
           user={localUser}
         />
       </ScrollView>

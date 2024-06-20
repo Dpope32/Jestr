@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, Dimensions, Animated, Easing, TouchableWithoutFeedback } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faThumbsUp, faSave, faComment, faShare } from '@fortawesome/free-solid-svg-icons';
+import { faThumbsUp, faSave, faComment, faShare, faPlus, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { PanGestureHandler, PanGestureHandlerGestureEvent, State, TapGestureHandler } from 'react-native-gesture-handler';
 import { Text } from 'react-native';
 import CommentFeed from './Modals/CommentFeed';
@@ -9,14 +9,16 @@ import { User } from '../screens/Feed/Feed';
 import { updateMemeReaction } from './Meme/memeService';
 import SaveSuccessModal from './Modals/SaveSuccessModal'; 
 import ShareModal from './Modals/ShareModal'; 
-import { handleShareMeme } from '../services/authFunctions'
+import { handleShareMeme, addFollow, checkFollowStatus,  } from '../services/authFunctions'
+import { getLikeStatus } from './Meme/memeService'
 
-
+const DARK_GREEN = "#006400";
 
 const testFriends: Friend[] = [
   {
-    username: 'john_doe',
+    username: 'LOSER99',
     profilePic: 'https://placekitten.com/200/200',
+    
   },
   {
     username: 'jane_smith',
@@ -46,6 +48,7 @@ interface Friend {
 export type ShareType = 'copy' | 'message' | 'snapchat' | 'facebook' | 'twitter' | 'email' | 'friend' | 'instagram';
 
 type MediaPlayerProps = {
+  memeUser: User;
   currentMedia: string;
   username: string;
   caption: string;
@@ -69,9 +72,15 @@ type MediaPlayerProps = {
   memeID: string;
   nextMedia: string | null;
   prevMedia: string | null;
+  initialLikeStatus: {
+    liked: boolean;
+    doubleLiked: boolean;
+  };
+  onLikeStatusChange: (memeID: string, status: { liked: boolean; doubleLiked: boolean }) => void;
 };
 
 const MediaPlayer: React.FC<MediaPlayerProps> = ({
+  memeUser,
   currentMedia,
   prevMedia,
   nextMedia,
@@ -94,22 +103,25 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   commentCount,
   shareCount,
   profilePicUrl,
-  memeID
+  memeID,
+  initialLikeStatus,
+  onLikeStatusChange,
 }) => {
-  console.log(currentMedia, username,
-    caption,)
   const translateY = useRef(new Animated.Value(0)).current;
   const [imageHeight, setImageHeight] = useState(height - 150);
   const [imageSize, setImageSize] = useState({ width: width, height: height - 150 });
   const [localLikeCount, setLocalLikeCount] = useState(likeCount);
   const [localDownloadCount, setLocalDownloadCount] = useState(downloadCount);
+  const [localShareCount, setLocalShareCount] = useState(shareCount);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const likeAnimation = useRef(new Animated.Value(1)).current;
+  const [followIconVisible, setFollowIconVisible] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
   const lastTap = useRef(0);
   const onSwipe = Animated.event([{ nativeEvent: { translationY: translateY } }], { useNativeDriver: true });
-  const [liked, setLiked] = useState(false);
-  const [doubleLiked, setDoubleLiked] = useState(false);
+  const [liked, setLiked] = useState(initialLikeStatus.liked);
+  const [doubleLiked, setDoubleLiked] = useState(initialLikeStatus.doubleLiked);
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const doubleTapRef = useRef(null);
   const SWIPE_THRESHOLD = height / 4; // For example, 1/4 of the screen height
@@ -119,15 +131,60 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const [shareStatus, setShareStatus] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
   const [responseModalVisible, setResponseModalVisible] = useState(false);
+  const followButtonScale = useRef(new Animated.Value(1)).current;
+  const [hasFollowed, setHasFollowed] = useState(false);
+  const [isCurrentUserFollowed, setIsCurrentUserFollowed] = useState(false);
+  
   
   useEffect(() => {
+    setLiked(initialLikeStatus.liked);
+    setDoubleLiked(initialLikeStatus.doubleLiked);
     setLocalLikeCount(likeCount);
     setLocalDownloadCount(downloadCount);
-  }, [memeID, likeCount, downloadCount]);
+    setLocalShareCount(shareCount);
+    setHasFollowed(false);
+    setIsFollowing(false);
+    checkIfFollowed();
+  }, [memeID, initialLikeStatus, likeCount, downloadCount, shareCount, user, memeUser]);
 
   const toggleComments = () => {
     setShowComments(!showComments);
     toggleCommentFeed(); // Additional functionality can still be handled
+  };
+
+  const checkIfFollowed = async () => {
+    if (user && memeUser) {
+      try {
+        const followStatus = await checkFollowStatus(user.email, memeUser.email);
+        setIsCurrentUserFollowed(followStatus.isFollowing);
+        setFollowIconVisible(followStatus.canFollow && !followStatus.isFollowing);
+      } catch (error) {
+        console.error('Error checking follow status:', error);
+        // Handle error, maybe set default values
+        setIsCurrentUserFollowed(false);
+        setFollowIconVisible(true);
+      }
+    }
+  };
+
+  const checkLikeStatus = async () => {
+    if (user) {
+      try {
+        const likeStatus = await getLikeStatus(memeID, user.email);
+        setLiked(likeStatus.liked);
+        setDoubleLiked(likeStatus.doubleLiked);
+        setLocalLikeCount(likeCount); // Update local like count
+      } catch (error) {
+        console.error('Error checking like status:', error);
+        setLiked(false);
+        setDoubleLiked(false);
+        setLocalLikeCount(likeCount); // Ensure local like count is updated even on error
+      }
+    } else {
+      setLiked(false);
+      setDoubleLiked(false);
+      setLocalLikeCount(likeCount);
+    }
   };
 
   useEffect(() => {
@@ -201,7 +258,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     }
   };
   
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -222,23 +278,26 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   };
 
   const handleLikePress = async () => {
-    const newLikedState = !liked;
-    setLiked(newLikedState);
-    
-    if (newLikedState && doubleLiked) {
-      setDoubleLiked(false);
-      setLocalLikeCount(localLikeCount - 1);
-    } else {
-      setLocalLikeCount(newLikedState ? localLikeCount + 1 : localLikeCount - 1);
-    }
-  
     if (user) {
+      const newLikedState = !liked;
+      setLiked(newLikedState);
+      
+      let newLikeCount = localLikeCount;
+      if (newLikedState) {
+        newLikeCount += 1;
+      } else {
+        newLikeCount -= 1;
+      }
+      
+      setLocalLikeCount(newLikeCount);
+      
       try {
         await updateMemeReaction(memeID, newLikedState, false, false, user.email);
+        onLikeStatusChange(memeID, { liked: newLikedState, doubleLiked: false });
       } catch (error) {
         console.error('Error updating meme reaction:', error);
-        setLiked(liked);
-        setLocalLikeCount(liked ? localLikeCount - 1 : localLikeCount + 1);
+        setLiked(!newLikedState);
+        setLocalLikeCount(localLikeCount);
       }
     }
   };
@@ -248,7 +307,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       try {
         await updateMemeReaction(memeID, false, false, true, user.email);
         handleDownload();
-        setLocalDownloadCount(localDownloadCount + 1);
+        setLocalDownloadCount(prevCount => prevCount + 1);
         setShowSaveModal(true);
         setTimeout(() => setShowSaveModal(false), 2000);
       } catch (error) {
@@ -267,30 +326,35 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
 
   const onDoubleTap = async (event: any) => {
     const { state } = event.nativeEvent;
-    if (state === State.ACTIVE) {
+    if (state === State.ACTIVE && user) {
       console.log('Double tap detected');
   
-      const newDoubleLikedState = !doubleLiked;
-      setDoubleLiked(newDoubleLikedState);
+      let newLikeCount = localLikeCount;
+      let newLikedState = liked;
+      let newDoubleLikedState = !doubleLiked;
   
       if (newDoubleLikedState) {
-        setLocalLikeCount(localLikeCount + 2);
-        setLiked(true);
+        newLikeCount += liked ? 1 : 2;
+        newLikedState = true;
       } else {
-        setLocalLikeCount(localLikeCount + 2);
-        setLiked(false);
+        newLikeCount -= 2;
+        newLikedState = false;
       }
   
-      if (user) {
-        try {
-          await updateMemeReaction(memeID, newDoubleLikedState, newDoubleLikedState, false, user.email);
-          animateLogo();
-        } catch (error) {
-          console.error('Error updating meme reaction:', error);
-          setDoubleLiked(doubleLiked);
-          setLocalLikeCount(doubleLiked ? localLikeCount - 2 : localLikeCount + 2);
-          setLiked(!doubleLiked);
-        }
+      setLocalLikeCount(newLikeCount);
+      setLiked(newLikedState);
+      setDoubleLiked(newDoubleLikedState);
+  
+      try {
+        await updateMemeReaction(memeID, newLikedState, newDoubleLikedState, false, user.email);
+        animateLogo();
+        onLikeStatusChange(memeID, { liked: newLikedState, doubleLiked: newDoubleLikedState });
+      } catch (error) {
+        console.error('Error updating meme reaction:', error);
+        // Revert states on error
+        setLocalLikeCount(localLikeCount);
+        setLiked(liked);
+        setDoubleLiked(doubleLiked);
       }
     }
   };
@@ -312,32 +376,54 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     ]).start();
   };
 
-  const onShare = async (type: ShareType, username?: string) => {
+  const onShare = async (type: ShareType, username: string, message: string) => {
     if (user && type === 'friend' && username) {
-        console.log(`Sharing meme with ${username}`);
-        setShareStatus('Sharing...');
-        try {
-        await handleShareMeme(memeID, user.email, user.username, username, setResponseModalVisible, setResponseMessage);
-        setResponseMessage('Meme shared successfully!');
-        setResponseModalVisible(true);
-        setTimeout(() => {
-            setResponseModalVisible(false);
-            setShowShareModal(false);  // Close the share modal after showing the response
-        }, 3000);
-    } catch (error) {
+      console.log(`Sharing meme with ${username}`);
+      setShareStatus('Sharing...');
+      try {
+        await handleShareMeme(memeID, user.email, user.username, username, message, setResponseModalVisible, setResponseMessage);
+        setLocalShareCount(prevCount => prevCount + 1);
+      } catch (error) {
         console.error('Sharing failed:', error);
         setResponseMessage('Failed to share meme.');
-        setResponseModalVisible(true);
-        setTimeout(() => {
-            setResponseModalVisible(false);
-        }, 3000);
+      }
     }
-} else {
-    console.log(`Sharing meme via ${type}`);
-    // Handle other share types here, assuming they might be instant and won't need a response modal
-    setShowShareModal(false);  // Close the share modal directly for other types
-}
-};
+  };
+
+  const handleFollow = async () => {
+    console.log('User & MemeUser', user, memeUser);
+    if (user && memeUser && !isCurrentUserFollowed) {
+      try {
+        await addFollow(user.email, memeUser.email);
+        console.log('Followed successfully');
+        setIsFollowing(true);
+        setIsCurrentUserFollowed(true);
+        animateFollowButton();
+        
+        // Hide the follow icon after 2 seconds
+        setTimeout(() => {
+          setFollowIconVisible(false);
+        }, 2000);
+      } catch (error) {
+        console.error('Error following user:', error);
+      }
+    }
+  };
+  
+  const animateFollowButton = () => {
+    Animated.sequence([
+      Animated.timing(followButtonScale, {
+        toValue: 1.2,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(followButtonScale, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
  return (
     <View style={styles.container}>
@@ -365,33 +451,54 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
                     resizeMode="contain"
                   />
                 )}
-          <View style={styles.textContainer}>
-            <Image source={{ uri: profilePicUrl }} style={styles.profilePic} />
-            <View>
-              <Text style={styles.username}>{username}</Text>
-              <Text style={styles.caption}>{caption}</Text>
-              <Text style={styles.date}>{formatDate(uploadTimestamp)}</Text>
-            </View>
-          </View>
+<View style={styles.textContainer}>
+  <Image source={{ uri: profilePicUrl }} style={styles.profilePic} />
+  <View>
+    <Text style={styles.username}>{username}</Text>
+    <Text style={styles.caption}>{caption}</Text>
+    <Text style={styles.date}>{formatDate(uploadTimestamp)}</Text>
+  </View>
+  {followIconVisible && (
+  <TouchableOpacity
+    onPress={handleFollow}
+    style={[
+      styles.followButton,
+      { transform: [{ scale: followButtonScale }] },
+      isFollowing ? styles.followedButton : {}
+    ]}
+    disabled={isCurrentUserFollowed || user?.email === memeUser.email}
+  >
+    <FontAwesomeIcon
+      icon={isFollowing ? faCheck : faPlus}
+      size={16}
+      color={isFollowing ? 'white' : '#1bd40b'}
+    />
+  </TouchableOpacity>
+)}
+</View>
           <View style={styles.iconColumn}>
-        <TouchableOpacity onPress={handleLikePress} style={styles.iconWrapper}>
-          <Animated.View style={{ transform: [{ scale: likeAnimation }] }}>
-            <FontAwesomeIcon icon={faThumbsUp} size={28} color="#1bd40b" />
-          </Animated.View>
-          <Text style={styles.iconText}>{localLikeCount}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleDownloadPress} style={styles.iconWrapper}>
-          <FontAwesomeIcon icon={faSave} size={28} color="#1bd40b" />
-          <Text style={styles.iconText}>{localDownloadCount}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={toggleComments} style={styles.iconWrapper}>
-          <FontAwesomeIcon icon={faComment} size={28} color="#1bd40b" />
-          <Text style={styles.iconText}>{commentCount}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setShowShareModal(true)} style={styles.iconWrapper}>
-          <FontAwesomeIcon icon={faShare} size={28} color="#1bd40b" />
-          <Text style={styles.iconText}>{shareCount}</Text>
-      </TouchableOpacity>
+          <TouchableOpacity onPress={handleLikePress} style={styles.iconWrapper}>
+  <Animated.View style={{ transform: [{ scale: likeAnimation }] }}>
+    <FontAwesomeIcon 
+      icon={faThumbsUp} 
+      size={28} 
+      color={liked ? DARK_GREEN : "#1bd40b"} 
+    />
+  </Animated.View>
+  <Text style={styles.iconText}>{localLikeCount}</Text>
+</TouchableOpacity>
+<TouchableOpacity onPress={handleDownloadPress} style={styles.iconWrapper}>
+  <FontAwesomeIcon icon={faSave} size={28} color="#1bd40b" />
+  <Text style={styles.iconText}>{localDownloadCount}</Text>
+</TouchableOpacity>
+<TouchableOpacity onPress={toggleComments} style={styles.iconWrapper}>
+  <FontAwesomeIcon icon={faComment} size={28} color="#1bd40b" />
+  <Text style={styles.iconText}>{commentCount}</Text>
+</TouchableOpacity>
+<TouchableOpacity onPress={() => setShowShareModal(true)} style={styles.iconWrapper}>
+  <FontAwesomeIcon icon={faShare} size={28} color="#1bd40b" />
+  <Text style={styles.iconText}>{localShareCount}</Text>
+</TouchableOpacity>
       </View>
               </Animated.View>
             </TapGestureHandler>
@@ -406,7 +513,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           width: 200,
           height: 200,
           alignSelf: 'center',
-          top: '45%',
+          top: '35%',
           left: '24%'
         }}
       />
@@ -419,6 +526,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
             onClose={() => setShowShareModal(false)}
             friends={testFriends}  // Pass the actual testFriends array here
             onShare={onShare}
+            currentMedia= {currentMedia}
           />
 
             {responseModalVisible && (
@@ -440,6 +548,21 @@ const styles = StyleSheet.create({
     maxHeight: height - 260,
     alignSelf: 'center', 
     marginTop: 40
+  },
+  followButton: {
+    position: 'absolute',
+    left: 35,
+    top: 5,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  followedButton: {
+    backgroundColor: '#1bd40b',
   },
   iconColumn: {
     position: 'absolute',

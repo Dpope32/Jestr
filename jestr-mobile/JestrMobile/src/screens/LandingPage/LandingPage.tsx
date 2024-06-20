@@ -32,13 +32,15 @@ import {
   handleTwitterSignIn
 } from '../../services/authFunctions';
 
-type User = {
+export type User = {
   email: string;
   username: string;
   profilePic: string;
   displayName: string;
   headerPic: string;
   creationDate: string;
+  followersCount: number;
+  followingCount: number;
 };
 
 type RootStackParamList = {

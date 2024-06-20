@@ -9,48 +9,30 @@ export const fetchMemes = async (lastEvaluatedKey?: string, limit: number = 5): 
   console.log('fetching more memes');
   try {
     const requestUrl = `${API_URL}/getMemes`;
-
-    // Create the body object with an optional lastEvaluatedKey
-    const body: {
-      operation: string;
-      limit: number;
-      lastEvaluatedKey?: string;
-    } = {
+    const body = {
       operation: 'getMemes',
-      limit: limit
+      limit: limit,
+      lastEvaluatedKey: lastEvaluatedKey
     };
-
-    if (lastEvaluatedKey) {
-      body.lastEvaluatedKey = lastEvaluatedKey;
-    }
-
-    const requestBody = JSON.stringify(body);
-
-    console.log('Request URL:', requestUrl);
-    console.log('Request Body:', requestBody);
 
     const response = await fetch(requestUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: requestBody
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
     });
-
-    console.log('HTTP Response Status:', response.status);
     const responseText = await response.text();
 
     if (!response.ok) {
-      console.log('Failed to fetch memes. Status:', response.status);
+      console.error('Failed to fetch memes. Status:', response.status);
       return { memes: [], lastEvaluatedKey: null };
     }
 
-const data = JSON.parse(responseText);
-if (!data || !data.user || !data.user.memes) {
-  return { memes: [], lastEvaluatedKey: null };
-}
+    const data = JSON.parse(responseText);
+    if (!data || !data.data || !data.data.memes) {
+      return { memes: [], lastEvaluatedKey: null };
+    }
 
-const memes = data.user.memes.map((meme: any) => ({
+const memes = data.data.memes.map((meme: any) => ({
   memeID: meme.memeID,
   email: meme.email,
   url: meme.url,
@@ -60,25 +42,60 @@ const memes = data.user.memes.map((meme: any) => ({
   likeCount: meme.likeCount || 0,
   downloadCount: meme.downloadCount || 0,
   commentCount: meme.commentCount || 0,
-  shareCount: meme.shareCount || 0, // Add shareCount
-  profilePicUrl: meme.profilePicUrl || ''
+  shareCount: meme.shareCount || 0,
+  profilePicUrl: meme.profilePicUrl || '',
+  memeUser: { // Assuming this data is now part of the meme object from the API
+    email: meme.memeUser.email,
+    username: meme.memeUser.username,
+    profilePic: meme.memeUser.profilePic,
+    displayName: meme.memeUser.displayName,
+    headerPic: meme.memeUser.headerPic,
+    creationDate: meme.memeUser.creationDate
+}
 }));
-
 return {
   memes: memes,
-  lastEvaluatedKey: data.user.lastEvaluatedKey || null
+  lastEvaluatedKey: data.data.lastEvaluatedKey || null
 };
 
-  } catch (error) {
-    console.error('Error fetching memes:', error);
-    return { memes: [], lastEvaluatedKey: null };
-  }
+} catch (error) {
+console.error('Error fetching memes:', error);
+return { memes: [], lastEvaluatedKey: null };
+}
 };
-
 // Type definition for the result of fetchMemes
 type FetchMemesResult = {
   memes: Meme[];
   lastEvaluatedKey: string | null;
+};
+
+export const getLikeStatus = async (memeID: string, userEmail: string) => {
+  try {
+    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getLikeStatus', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        operation: 'getLikeStatus',
+        memeID,
+        userEmail,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get like status');
+    }
+
+    const data = await response.json();
+    return {
+      liked: data.liked,
+      doubleLiked: data.doubleLiked,
+    };
+  } catch (error) {
+    console.error('Error getting like status:', error);
+    return { liked: false, doubleLiked: false };
+  }
 };
 
 
@@ -142,7 +159,6 @@ const fileToBase64 = async (uri: string): Promise<string | null> => {
 
 export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
   try {
-    console.log(`Fetching comments for memeID: ${memeID}`);
     const response = await fetch(`${API_URL}/getComments`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -156,7 +172,8 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
     }
 
     console.log(`Fetched comments for memeID ${memeID}:`, data);
-    return data.user.map((comment: any) => ({
+    // Correctly reference the 'data' array in the response body
+    return data.data.map((comment: any) => ({
       commentID: comment.CommentID || '',
       text: comment.Text || '',
       username: comment.Username || 'Unknown user',
@@ -171,6 +188,7 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
     return [];
   }
 };
+
 
 
 export const postComment = async (memeID: string, text: string, user: User): Promise<void> => {

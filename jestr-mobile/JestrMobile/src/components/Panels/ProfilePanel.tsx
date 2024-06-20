@@ -1,29 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Animated } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import styles  from './ProfilePanel.styles'; // Import styles
+import styles from './ProfilePanel.styles';
 import {
   faUser,
-  faHistory,
-  faBox,
-  faCog,
-  faMoon,
-  faTimes,
-  faHeart,
-  faBell,
-  faSignOutAlt,
-  faLock,
   faUserShield,
-  faBell as faBellSolid,
   faPalette,
   faEdit,
+  faLock,
   faAd,
+  faBell,
+  faBox,
+  faHistory,
+  faCog,
+  faMoon,
+  faSignOutAlt,
+  faTimes,
 } from '@fortawesome/free-solid-svg-icons';
 import Anon1Image from '../../assets/images/Jestr5.jpg';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import LogoutModal from '../Modals/LogoutModal'; 
+import LogoutModal from '../Modals/LogoutModal';
 import { CommonActions } from '@react-navigation/native';
+import { User } from '../../screens/Feed/Feed';
 
 type ProfilePanelProps = {
   isVisible: boolean;
@@ -31,11 +30,11 @@ type ProfilePanelProps = {
   profilePicUrl: string;
   username: string;
   displayName: string;
-  followersCount: string;
-  followingCount: string;
+  followersCount: number;
+  followingCount: number;
   onDarkModeToggle: () => void;
-  user: any; // Replace with the appropriate type for the user object
-  navigation: any; // Replace with the appropriate type for the navigation object
+  user: User | null;
+  navigation: any;
 };
 
 const ProfilePanel: React.FC<ProfilePanelProps> = ({
@@ -44,32 +43,71 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   profilePicUrl,
   username,
   displayName,
-  followersCount,
-  followingCount,
+  followersCount: initialFollowersCount,
+  followingCount: initialFollowingCount,
   onDarkModeToggle,
   user,
   navigation,
 }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [panelTranslateX] = useState(new Animated.Value(-300)); // Initial position off-screen
+  const [panelTranslateX] = useState(new Animated.Value(-300));
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [followersCount, setFollowersCount] = useState(initialFollowersCount);
+  const [localUser, setLocalUser] = useState<User | null>(user || null);
+  const [followingCount, setFollowingCount] = useState(initialFollowingCount);
 
   useEffect(() => {
     if (isVisible) {
       Animated.timing(panelTranslateX, {
-        toValue: 0, // Slide in to the visible position
-        duration: 300, // Animation duration
+        toValue: 0,
+        duration: 300,
         useNativeDriver: true,
       }).start();
+      fetchUserData();
+      console.log('fetching user data..')
     } else {
       Animated.timing(panelTranslateX, {
-        toValue: -300, // Slide back off-screen
+        toValue: -300,
         duration: 300,
         useNativeDriver: true,
       }).start();
     }
   }, [isVisible, panelTranslateX]);
+
+  const fetchUserData = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ operation: 'getUser', email: parsedUser.email }),
+        });
+  
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Expected JSON response');
+        }
+  
+        const responseData = await response.json();
+        const updatedUser = responseData.data;
+        
+        console.log('Updated user data:', updatedUser);
+        
+        setLocalUser(updatedUser);
+        setFollowersCount(updatedUser.FollowersCount);
+        setFollowingCount(updatedUser.FollowingCount);
+        
+        console.log('Updated user following count:', updatedUser.FollowingCount);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
 
   const getProfilePic = () => {
     if (profilePicUrl) {
@@ -85,7 +123,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   };
 
   const handleProfileClick = () => {
-    navigation.navigate('Profile', { user });
+    navigation.navigate('Profile', { user: localUser });
   };
 
   const handleStorageClick = () => {
@@ -116,11 +154,9 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   const confirmSignOut = async () => {
     try {
       console.log('Confirming sign-out...');
-      // Clear local storage
       await AsyncStorage.removeItem('user');
       console.log('User data cleared from AsyncStorage');
       
-      // Navigate to the InitialScreen and clear the navigation stack
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -146,13 +182,8 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   };
 
   return (
-    <Animated.View
-      style={[
-        styles.profilePanel,
-        { transform: [{ translateX: panelTranslateX }] },
-      ]}
-    >
-    <Animated.View style={[styles.container, isDarkMode && styles.darkMode, isVisible && styles.dimBackground]}>
+    <Animated.View style={[styles.profilePanel, { transform: [{ translateX: panelTranslateX }] }]}>
+      <Animated.View style={[styles.container, isDarkMode && styles.darkMode, isVisible && styles.dimBackground]}>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Text style={styles.closeButtonText}>Close</Text>
         </TouchableOpacity>
@@ -202,13 +233,9 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
           </TouchableOpacity>
         </View>
         <TouchableOpacity style={styles.signoutButton} onPress={handleSignOut}>
-        <FontAwesomeIcon icon={faSignOutAlt} style={styles.icon} />
-      </TouchableOpacity>
-      <LogoutModal
-        visible={logoutModalVisible}
-        onCancel={cancelSignOut}
-        onConfirm={confirmSignOut}
-      />
+          <FontAwesomeIcon icon={faSignOutAlt} style={styles.icon} />
+        </TouchableOpacity>
+        <LogoutModal visible={logoutModalVisible} onCancel={cancelSignOut} onConfirm={confirmSignOut} />
         <TouchableOpacity style={styles.darkModeButton} onPress={handleDarkModeClick}>
           <FontAwesomeIcon icon={faMoon} style={[styles.icon, getDarkModeIconStyle()]} />
         </TouchableOpacity>
@@ -226,7 +253,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
                 <Text style={styles.optionLabel}>Privacy</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.optionItem}>
-                <FontAwesomeIcon icon={faBellSolid} style={styles.optionIcon} />
+                <FontAwesomeIcon icon={faBell} style={styles.optionIcon} />
                 <Text style={styles.optionLabel}>Notifications</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.optionItem}>

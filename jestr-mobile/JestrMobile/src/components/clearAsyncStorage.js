@@ -1,12 +1,20 @@
-const AsyncStorage = require('@react-native-async-storage/async-storage');
-
-const clearAsyncStorage = async () => {
+const checkAuthStatus = async () => {
   try {
-    await AsyncStorage.clear();
-    console.log('AsyncStorage cleared successfully');
+    const userString = await AsyncStorage.getItem('user');
+    if (userString) {
+      const user = JSON.parse(userString);
+      if (user && user.email) {
+        setIsAuthenticated(true);
+        navigation.navigate('Feed', { user });
+      } else {
+        setIsAuthenticated(false);
+        console.error('Invalid user data in AsyncStorage');
+      }
+    } else {
+      setIsAuthenticated(false);
+    }
   } catch (error) {
-    console.log('Error clearing AsyncStorage:', error);
+    console.error('Error checking authentication status:', error);
+    setIsAuthenticated(false);
   }
 };
-
-clearAsyncStorage();

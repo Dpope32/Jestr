@@ -96,11 +96,13 @@ const styles = StyleSheet.create({
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: 16,
+      paddingHorizontal: 12,
     },
     icon: {
       color: '#FFFFFF',
-      fontSize: 24,
-      marginRight: 10,
+      fontSize: 26,
+      marginRight: 0,
+      marginLeft: 14,
     },
     iconLabel: {
       color: '#FFFFFF',
