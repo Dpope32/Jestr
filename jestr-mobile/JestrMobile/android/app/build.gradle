@@ -107,8 +107,8 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-            implementation project(':react-native-safe-area-context')
-            
+    implementation project(':react-native-safe-area-context')
+    implementation project(':rn-fetch-blob')  // Add this line
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

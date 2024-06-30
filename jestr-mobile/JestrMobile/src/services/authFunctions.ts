@@ -350,3 +350,77 @@ export type User = {
       return { isFollowing: false, canFollow: true };  // Default to allowing follow on error
     }
   };
+
+  export const updateProfileImage = async (email: string, imageType: 'profile' | 'header', imagePath: string) => {
+    try {
+      console.log('Starting updateProfileImage');
+      console.log('Email:', email);
+      console.log('Image Type:', imageType);
+      console.log('Image Path:', imagePath);
+  
+      const imageBase64 = await RNFetchBlob.fs.readFile(imagePath, 'base64');
+      if (!imageBase64) {
+        throw new Error('Failed to read image file');
+      }
+  
+      console.log('Image converted to base64 successfully');
+  
+      const profileData = {
+        operation: 'updateProfileImage',
+        email,
+        imageType,
+        image: imageBase64,
+      };
+  
+      console.log('Sending request to update profile image');
+  
+      const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updateProfileImage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+      });
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json();
+      console.log('Response data:', data);
+  
+      // Update local storage with new image URL
+      const user = JSON.parse(await AsyncStorage.getItem('user') || '{}');
+      user[imageType + 'Pic'] = data.data[imageType + 'Pic'];
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+  
+      return data;
+    } catch (error) {
+      console.error('Error updating profile image:', error);
+      throw error;
+    }
+  };
+
+export const getUserMemes = async (email: string) => {
+  try {
+    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUserMemes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ operation: 'getUserMemes', email }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    return data.data; // This will be the array of user memes
+  } catch (error) {
+    console.error('Error fetching user memes:', error);
+    throw error;
+  }
+};

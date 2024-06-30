@@ -21,7 +21,9 @@ export type User = {
   followersCount: number;
   followingCount: number;
   Bio: string;
+  bio?: string; // Include this to handle lowercase 'bio'
 };
+
 
 export type Meme = {
   memeID: string;

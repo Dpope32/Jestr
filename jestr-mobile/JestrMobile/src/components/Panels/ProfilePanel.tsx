@@ -98,10 +98,12 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
         
         console.log('Updated user data:', updatedUser);
         
-        setLocalUser(updatedUser);
-        setFollowersCount(updatedUser.FollowersCount);
-        setFollowingCount(updatedUser.FollowingCount);
-        
+        setLocalUser(prevUser => ({
+          ...prevUser,
+          ...updatedUser,
+          Bio: updatedUser.Bio || updatedUser.bio || prevUser?.Bio || '',
+          bio: updatedUser.Bio || updatedUser.bio || prevUser?.bio || '',
+        }));
         console.log('Updated user following count:', updatedUser.FollowingCount);
       }
     } catch (error) {
