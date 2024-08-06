@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "JestrMobile",
+    "slug": "JestrMobile",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.jestrmobile.app"
+    },
+    "ios": {
+      "bundleIdentifier": "com.jestrmobile.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "project-id"
+      }
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ],
+      "expo-secure-store"
+    ]
+  }
+}

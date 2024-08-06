@@ -1,0 +1,29 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "lib": ["dom", "es6"],
+    "jsx": "react-native",
+    "module": "esnext",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["src/*"]
+    }
+  },
+  "include": [
+    "src",
+    "index.js",
+    "App.tsx",
+    ".",
+    "declarations.d.ts",
+     "../../Feed.tsx"  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
