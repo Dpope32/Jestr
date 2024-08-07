@@ -287,7 +287,11 @@ export const handleCompleteProfile = async (
         userId: responseData.data.userId || userId,
       };
       console.log('Profile data being passed:', user);
+
       await AsyncStorage.setItem('user', JSON.stringify(user));
+      
+      // Update Zustand store
+      useUserStore.getState().setUserDetails(user);
 
       setSuccessModalVisible(true);
       setTimeout(() => {
@@ -303,7 +307,7 @@ export const handleCompleteProfile = async (
   }
 };
 
-const fileToBase64 = async (asset: ImagePickerAsset): Promise<string | null> => {
+const fileToBase64 = async (asset: ProfileImage): Promise<string | null> => {
   if (asset.uri) {
     try {
       const base64 = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.Base64 });
@@ -315,6 +319,7 @@ const fileToBase64 = async (asset: ImagePickerAsset): Promise<string | null> => 
   }
   return null;
 };
+
 
 async function uriToAsset(uri: string): Promise<Asset> {
   const response = await fetch(uri);

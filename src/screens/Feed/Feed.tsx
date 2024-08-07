@@ -52,8 +52,8 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
   const isFetchingMore = useRef(false);
 
   useEffect(() => {
-   // console.log('Feed component mounted');
-   // console.log('User object:', JSON.stringify(user, null, 2));
+   console.log('Feed component mounted');
+   console.log('User object:', JSON.stringify(user, null, 2));
     const initializeFeed = async () => {
       setIsLoading(true);
       setError(null);
