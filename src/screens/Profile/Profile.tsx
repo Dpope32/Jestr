@@ -255,10 +255,14 @@ const Profile = () => {
 
   const handleImagePress = (type: 'profile' | 'header') => {
     const imageUri = type === 'profile' ? user?.profilePic || '' : user?.headerPic || '';
-  //  console.log('Image Pressed:', type, imageUri);
-    setFullScreenImage(imageUri);
+    
+    const finalImageUri: string | null = typeof imageUri === 'string' ? imageUri : null;
+    
+    console.log('Image Pressed:', type, finalImageUri);
+    setFullScreenImage(finalImageUri);
     setIsBlurVisible(true);
   };
+  
 
 
   const handleEditImagePress = async (type: 'profile' | 'header') => {
@@ -334,9 +338,10 @@ const Profile = () => {
 
   const convertUserStateToUser = (userState: UserState): User => ({
     ...userState,
-    profilePic: userState.profilePic || '',
-    headerPic: userState.headerPic || '',
+    profilePic: typeof userState.profilePic === 'string' ? userState.profilePic : '',
+    headerPic: typeof userState.headerPic === 'string' ? userState.headerPic : '',
   });
+  
 
   const onLikeStatusChange = (memeID: string, status: { liked: boolean; doubleLiked: boolean }, newLikeCount?: number) => {
     setTabMemes(prevMemes =>
@@ -361,17 +366,18 @@ const Profile = () => {
     >
         <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => handleImagePress('header')}>
-          <Image 
-            source={{ uri: user.headerPic || undefined }} 
-            style={styles.headerImage} 
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleImagePress('profile')}>
-          <Image 
-            source={{ uri: user.profilePic || undefined }} 
-            style={styles.profileImage} 
-          />
-        </TouchableOpacity>
+  <Image 
+    source={{ uri: typeof user.headerPic === 'string' ? user.headerPic : undefined }} 
+    style={styles.headerImage} 
+  />
+</TouchableOpacity>
+<TouchableOpacity onPress={() => handleImagePress('profile')}>
+  <Image 
+    source={{ uri: typeof user.profilePic === 'string' ? user.profilePic : undefined }} 
+    style={styles.profileImage} 
+  />
+</TouchableOpacity>
+
       </View>
       <View style={styles.userInfoContainer}>
         <TouchableOpacity style={styles.editContainer} onPress={() => setIsEditProfileModalVisible(true)}>
