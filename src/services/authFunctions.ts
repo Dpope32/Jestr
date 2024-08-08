@@ -113,19 +113,6 @@ export const handleLogin = async (
   }
 };
 
-export const convertUserStateToUser = (userState: UserState): User => ({
-  profilePic: userState.profilePic || '',
-  headerPic: userState.headerPic || '',
-  displayName: userState.displayName || '',
-  username: userState.username || '',
-  email: userState.email || '',
-  bio: userState.bio || '',
-  creationDate: userState.creationDate || '',
-  followersCount: userState.followersCount || 0,
-  followingCount: userState.followingCount || 0,
-  // Add any other required properties of the User type
-});
-
 export const fetchUserDetails = async (username: string, token?: string) => {
 //  console.log('Fetching user details for username:', username);
   //console.log('Using API endpoint:', API_ENDPOINT);
@@ -334,8 +321,10 @@ export const handleCompleteProfile = async (
         bio: responseData.data.bio || '',
         userId: responseData.data.userId || userId,
       };
-    //  console.log('Profile data being passed:', user);
+      console.log('Profile data being passed:', user);
       await AsyncStorage.setItem('user', JSON.stringify(user));
+      // Update Zustand store
+      useUserStore.getState().setUserDetails(user);
 
       setSuccessModalVisible(true);
       setTimeout(() => {
@@ -351,7 +340,7 @@ export const handleCompleteProfile = async (
   }
 };
 
-const fileToBase64 = async (asset: ImagePickerAsset): Promise<string | null> => {
+const fileToBase64 = async (asset: ProfileImage): Promise<string | null> => {
   if (asset.uri) {
     try {
       const base64 = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.Base64 });
@@ -363,6 +352,7 @@ const fileToBase64 = async (asset: ImagePickerAsset): Promise<string | null> => 
   }
   return null;
 };
+
 
 async function uriToAsset(uri: string): Promise<Asset> {
   const response = await fetch(uri);

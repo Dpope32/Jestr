@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Animated } from 'react-native';
+import { Animated, View, ActivityIndicator } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LP from './LP';
 import { User, RootStackParamList, LetterScale } from '../../types/types';
 
 type LandingPageNavigationProp = NavigationProp<RootStackParamList>;
-
 
 const LandingPage: React.FC = () => {
  // console.log('App mounted mwaha');
@@ -27,6 +26,11 @@ const LandingPage: React.FC = () => {
   const [showSignUpForm, setShowSignUpForm] = useState(false);
   const formOpacity = useRef(new Animated.Value(0)).current;
   const [titleMarginTop, setTitleMarginTop] = useState(-300);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    console.log('LandingPage mounted');
+  }, []);
 
   const checkAuthStatus = async () => {
     try {
@@ -45,7 +49,6 @@ const LandingPage: React.FC = () => {
   const navigateToConfirmSignUp = (email: string) => {
     navigation.navigate('ConfirmSignUp', { email });
   };
-  
 
   useEffect(() => {
     checkAuthStatus();
@@ -72,7 +75,7 @@ const LandingPage: React.FC = () => {
   const startAnimation = () => {
     setAnimationComplete(false);
     letterAnimations.current = ['J', 'e', 's', 't', 'r'].map(() => new Animated.Value(0));
-  
+
     const letterAnimationConfigs = letterAnimations.current.map((anim, index) =>
       Animated.timing(anim, {
         toValue: 1,
@@ -81,7 +84,7 @@ const LandingPage: React.FC = () => {
         useNativeDriver: true
       })
     );
-  
+
     Animated.parallel([
       Animated.timing(titleOpacity, {
         toValue: 1,
@@ -93,7 +96,7 @@ const LandingPage: React.FC = () => {
       setAnimationComplete(true);
       handleTitleAnimationComplete();
     });
-  
+
     const scale: LetterScale = letterAnimations.current.map(animation => ({
       scale: animation.interpolate({
         inputRange: [0, 1],
@@ -108,7 +111,6 @@ const LandingPage: React.FC = () => {
     setLetterScale(scale);
   };
 
-  
   const handleTitleAnimationComplete = () => {
     setTitleMarginTop(0);
     setAnimationComplete(true);
@@ -125,21 +127,29 @@ const LandingPage: React.FC = () => {
     }
   };
 
-
   return (
-    <LP 
-    animationComplete={animationComplete}
-    letterScale={letterScale}
-    titleMarginTop={titleMarginTop}
-    titleOpacity={titleOpacity}
-    titleTranslateY={titleTranslateY}
-    showInitialScreen={showInitialScreen}
-    isAuthenticated={isAuthenticated}
-    setShowInitialScreen={setShowInitialScreen}
-    setShowSignUpForm={setShowSignUpForm}
-    navigateToConfirmSignUp={navigateToConfirmSignUp} // Pass the function here
-  />
+    <View style={{ flex: 1 }}>
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#00ff00" />
+        </View>
+      ) : (
+        <LP
+          animationComplete={animationComplete}
+          letterScale={letterScale}
+          titleMarginTop={titleMarginTop}
+          titleOpacity={titleOpacity}
+          titleTranslateY={titleTranslateY}
+          showInitialScreen={showInitialScreen}
+          isAuthenticated={isAuthenticated}
+          setShowInitialScreen={setShowInitialScreen}
+          setShowSignUpForm={setShowSignUpForm}
+          navigateToConfirmSignUp={navigateToConfirmSignUp}
+          setIsLoading={setIsLoading} // Pass the setIsLoading function to LP
+        />
+      )}
+    </View>
   );
 };
 
-export default LandingPage;
+export default React.memo(LandingPage);

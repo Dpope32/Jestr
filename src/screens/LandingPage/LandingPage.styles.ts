@@ -3,32 +3,42 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#1C1C1C',
-    paddingVertical: 40,
+    padding: 0,
+    borderRadius: 20,
+  },
+  formContainer1: {
+    flex: 1,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#00ff00',
+    borderRadius: 20,
+    padding: 12,
+    marginBottom: 12,
+    marginTop: 60,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 100,
   },
   scrollViewContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
+    marginTop: 0,
   },
   logoStyle: {
     width: 200,
     height: 200,
     resizeMode: 'contain',
-    marginBottom: 20,
-  },
-  logoContainer: {
-    marginBottom: 5,
-    marginRight: 20,
   },
   logo: {
-    width: 200,
-    height: 200,
-    resizeMode: 'contain',
-    marginTop: 60,
+    width: 120,
+    height: 120,
+    marginRight: 16,
+    alignSelf: 'center',
   },
   titleContainer: {
     flexDirection: 'row',
@@ -60,34 +70,21 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   authContainer: {
-    borderWidth: 2,
-    borderColor: '#00e100',
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    width: '90%', // Adjusted to fit within container
+    width: '100%',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingVertical: 20, // Added padding for better spacing
+    marginTop: 24,
   },
   formContainer: {
-
-    borderColor: '#00FF00',
+    paddingVertical: 10,
     borderRadius: 20,
-    width: '90%',
-    paddingHorizontal: 20, // Added padding for internal spacing
-    maxWidth: 360,
+    width: '100%',
+    paddingHorizontal: 2, // Added padding for internal spacing
     alignSelf: 'center',
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25, // Increased opacity for more pronounced shadow
-    shadowRadius: 10,
-    elevation: 10, // Increased elevation for more depth
   },
   divider: {
-    height: 2, // Ensure this is sufficient to be visible
+    height: 1, // Ensure this is sufficient to be visible
     backgroundColor: '#fff', // Change color to white for maximum contrast
-    width: '85%', // Ensure it's less than the container width to see the edges
+    width: '100%', // Ensure it's less than the container width to see the edges
     alignSelf: 'center', // Center align in the container
   },
   signupHeader: {
@@ -95,7 +92,7 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     alignSelf: 'center',
-    paddingTop: 20,
+    paddingVertical: 20,
   },
   headerUploadContainer: {
     alignItems: 'center',
@@ -114,15 +111,29 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   button: {
+    width: '100%',
+    height: 80,
     borderRadius: 25,
-    marginTop: 10,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    height: 48,
+    borderWidth: 2,
+    borderColor: '#00ff00', // Bright green border
+    backgroundColor: 'transparent',
     justifyContent: 'center',
-    width: '80%',
+    alignItems: 'center',
+    marginVertical: 20,
+    paddingHorizontal: 60,
+  },
+  button2: {
+    width: '100%',
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: '#00ff00', // Bright green border
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    marginVertical: 10,
     alignSelf: 'center',
-    opacity: 0.9,
+    paddingHorizontal: 60,
+    justifyContent: 'center',
   },
   buttonPress: {
     opacity: 1, // Brighter on press
@@ -132,49 +143,33 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    color: '#fff',
     marginBottom: 10,
     borderRadius: 25,
-    paddingHorizontal: 60,
   },
   gradient: {
-    height: 50,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
-    color: '#fff',
-    marginBottom: 10,
-    paddingVertical: 10,
-    borderRadius: 25,
-  },
-  buttonText: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: 'bold',
   },
   toggleForm: {
-    marginTop: 20,
+    marginTop: 10,
   },
   toggleFormText: {
     color: '#007AFF',
     fontSize: 18,
     textAlign: 'center',
-    marginBottom: 10,
+    marginVertical: 10,
     textDecorationLine: 'underline',  // This will underline the text
   },
   footer: {
-    position: 'absolute',
-    bottom: 20,
     flexDirection: 'row',
-    left: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    right: 0,
+    justifyContent: 'space-around',
+    width: '90%',
+    paddingBottom: 20,
   },
   footerLink: {
-    fontSize: 14,
-    color: '#a0a0a0',
-    paddingHorizontal: 10,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 12,
   },
   footerDivider: {
     fontSize: 14,
@@ -185,19 +180,16 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',  // Changed from 'center' to 'flex-start'
     alignItems: 'center',
-    backgroundColor: '#1C1C1C',
-    paddingBottom: 40,  // Adjust this value as needed to move the content up
+    paddingHorizontal: 76,
   },
   welcomeText: {
-    fontSize: 44,
+    fontSize: 48,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 10,
-    marginTop: 30,
-    letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.25)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    color: '#ffffff', // Bright white for maximum contrast
+    textShadowColor: 'rgba(0, 255, 0, 0.5)', 
+    marginBottom: 40,
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 4,
   },
   available: {
     color: '#2ecc71',
@@ -238,59 +230,103 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 15,
+    marginTop: 10,
   },
   termsText: {
     fontSize: 12,
     color: '#111',
-    marginVertical: 10,
+    marginVertical: 6,
   },
   socialHeaderText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginVertical: 14,
+     color: '#cccccc',
+    fontSize: 16,
+    marginBottom: 15,
   },
   socialButtonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 40,
-  },
-  socialButton: {
-    width: 40,
-    height: 40,
-    marginHorizontal: 20,
-    opacity: 0.9,
+    justifyContent: 'space-around',
+    width: '100%',
+    alignSelf: 'center',
   },
   socialButtonIcon: {
     width: 60,
     height: 60,
   },
   separator: {
+    width: '100%',
     height: 1,
-    backgroundColor: '#fff',
-    width: '80%',
-    marginVertical: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    marginVertical: 20,
   },
   twitterButton: {
     tintColor: '#1DA1F2',
   },
-  appleButton: {
-    marginTop: 0,
-    width: 40,
-    height: 40,
+  socialContainer: {
+    width: '110%',
+    alignItems: 'center',
+    marginVertical: 20,
+    alignSelf: 'center',
   },
-  socialIcon: {
-    width: 40,
-    height: 40,
-    resizeMode: 'contain',
+  socialButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '80%',
+    marginBottom: 20,
+  },
+  socialButton: {
+    width: 60,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  continueButtonsContainer: {
+    width: '100%',
+    alignSelf: 'center',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4285F4',
+    borderRadius: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 36,
+    marginBottom: 10,
+  },
+  appleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 36,
+  },
+  buttonIcon: {
+    marginRight: 10,
+  },
+  buttonText: {
+    color: '#00ff00',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  buttonText2: {
+    color: 'black',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  appleButtonText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   inputFieldsContainer: {
-    marginTop: 50,
+    marginTop: 30,
   },
   inputField: {
-    height: 40,
+    height: 30,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
@@ -301,7 +337,6 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-
   },
   inputIcon: {
     position: 'absolute',
@@ -311,7 +346,7 @@ export const styles = StyleSheet.create({
     fontSize: 20,
   },
   inputStyle: {
-    height: 50,
+    height: 30,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,

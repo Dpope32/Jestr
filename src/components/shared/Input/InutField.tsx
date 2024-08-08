@@ -76,7 +76,7 @@ const InputField: React.FC<InputFieldProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 15,
+    marginVertical: 12,
   },
   label: {
     fontSize: 16,
@@ -91,15 +91,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     backgroundColor: '#fff',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
   },
   input: {
     flex: 1,
-    height: 50,
+    height: 40,
     paddingHorizontal: 15,
     fontSize: 16,
   },

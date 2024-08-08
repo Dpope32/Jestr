@@ -15,16 +15,16 @@ export interface UserState {
   likedMemes: Meme[];
   downloadedMemes: Meme[];
   viewedMemes: Meme[];
-  profilePic: string | null;
-  headerPic: string | null;
+  profilePic: string | ProfileImage | null; // Allow string or ProfileImage
+  headerPic: string | ProfileImage | null;  // Allow string or ProfileImage
   setBio: (bio: string) => void;
   setPosts: (posts: Meme[]) => void;
   setLikedMemes: (memes: Meme[]) => void;
   setDownloadedMemes: (memes: Meme[]) => void;
   setViewedMemes: (memes: Meme[]) => void;
   setUserDetails: (details: Partial<UserState>) => void;
-  setHeaderPic: (headerPic: string | null) => void;
-  setProfilePic: (profilePic: string | null) => void;
+  setHeaderPic: (headerPic: string | ProfileImage | null) => void;
+  setProfilePic: (profilePic: string | ProfileImage | null) => void;
 }
 
 export type ProfileImage = {
@@ -51,13 +51,13 @@ export const useUserStore = create<UserState>((set) => ({
   profilePic: null,
   headerPic: null,
   setBio: (bio: string ) => set({ bio }),
-  setHeaderPic: (headerPic: string | null) => set({ headerPic }),
-  setProfilePic: (profilePic: string | null) => set({ profilePic }),
+  setHeaderPic: (headerPic: string | ProfileImage | null) => set({ headerPic }),
+  setProfilePic: (profilePic: string | ProfileImage | null) => set({ profilePic }),
   setPosts: (posts) => set({ posts }),
   setLikedMemes: (memes) => set({ likedMemes: memes }),
   setDownloadedMemes: (memes) => set({ downloadedMemes: memes }),
   setViewedMemes: (memes) => set({ viewedMemes: memes }),
- setUserDetails: (details) => set((state) => ({
+  setUserDetails: (details) => set((state) => ({
     ...state,
     ...details,
     profilePic: details.profilePic || state.profilePic,

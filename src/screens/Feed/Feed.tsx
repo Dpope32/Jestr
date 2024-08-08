@@ -3,6 +3,7 @@ import { View, Dimensions, StyleSheet, Text, ViewStyle } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faSadTear } from '@fortawesome/free-solid-svg-icons';
 import { FlashList } from '@shopify/flash-list';
+import { CommonActions } from '@react-navigation/native';
 import MediaPlayer from '../../components/MediaPlayer/MediaPlayer';
 import TopPanel from '../../components/Panels/TopPanel';
 import BottomPanel from '../../components/Panels/BottomPanel';
@@ -21,6 +22,7 @@ import { debounce } from 'lodash';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import isEqual from 'lodash/isEqual';
 import { useUserStore } from '../userStore';
+import { handleSignOut } from '../../services/authFunctions';
 
 const { height, width } = Dimensions.get('window');
 
@@ -52,8 +54,8 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
   const isFetchingMore = useRef(false);
 
   useEffect(() => {
-   // console.log('Feed component mounted');
-   // console.log('User object:', JSON.stringify(user, null, 2));
+    console.log('Feed component mounted');
+    console.log('User object:', JSON.stringify(user, null, 2));
     const initializeFeed = async () => {
       setIsLoading(true);
       setError(null);
@@ -63,7 +65,6 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
           const parsedUser = JSON.parse(storedUser);
           useUserStore.getState().setUserDetails(parsedUser);
         }
-    //    console.log('Stored user data:', storedUser);
         const storedToken = await AsyncStorage.getItem('accessToken');
         if (!storedUser || !storedToken) {
           throw new Error('User data or access token not found in storage');
@@ -81,18 +82,25 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
           throw new Error('User email or access token is missing');
         }
       } catch (error) {
-        navigation.navigate('LandingPage');
         console.error('Error initializing feed:', error);
         setError('Failed to initialize feed. Please try again.');
-        // Navigate back to LandingPage if there's an error
-        
+        await handleSignOut();
+        await AsyncStorage.clear(); // Clear all stored data
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'LandingPage' }],
+          })
+        );
       } finally {
         setIsLoading(false);
       }
     };
-
+  
     initializeFeed();
   }, []);
+  
+  
 
   useEffect(() => {
     const logStorageAndState = async () => {

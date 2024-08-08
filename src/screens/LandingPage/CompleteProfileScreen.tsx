@@ -1,3 +1,4 @@
+// CompleteProfileScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/core';
@@ -9,7 +10,7 @@ import ProfilePicUpload from '../../components/Upload/ProfilePicUpload';
 import InputField from '../../components/shared/Input/InutField';
 import { LinearGradient } from 'expo-linear-gradient';
 import { handleCompleteProfile } from '../../services/authFunctions';
-import { useUserStore } from '../../screens/userStore';
+import { useUserStore, ProfileImage } from '../../screens/userStore'; // Ensure correct import
 import * as ImagePicker from 'expo-image-picker';
 import { BlurView } from 'expo-blur';
 import LottieView from 'lottie-react-native';
@@ -53,7 +54,7 @@ const CompleteProfileScreen: React.FC = () => {
   
     if (!result.canceled && result.assets && result.assets[0]) {
       useUserStore.getState().setUserDetails({
-        [type === 'header' ? 'headerPic' : 'profilePic']: result.assets[0]
+        [type === 'header' ? 'headerPic' : 'profilePic']: result.assets[0] as ProfileImage // Ensure the correct type
       });
     }
   };
@@ -61,16 +62,21 @@ const CompleteProfileScreen: React.FC = () => {
   const handleCompleteProfileButton = async () => {
     setIsLoading(true);
     try {
+      // Ensure the profilePic and headerPic are of type ProfileImage or null
+      const validProfilePic = profilePic && typeof profilePic !== 'string' ? profilePic : null;
+      const validHeaderPic = headerPic && typeof headerPic !== 'string' ? headerPic : null;
+  
       await handleCompleteProfile(
         email,
         username,
         displayName,
-        profilePic,
-        headerPic,
+        validProfilePic,
+        validHeaderPic,
         bio,
         setSuccessModalVisible,
         navigation
       );
+  
       setError(null);
     } catch (error: unknown) {
       console.error('Error completing profile:', error);
@@ -83,6 +89,7 @@ const CompleteProfileScreen: React.FC = () => {
       setIsLoading(false);
     }
   };
+  
 
   if (isLoading) {
     return (
