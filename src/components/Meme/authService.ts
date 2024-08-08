@@ -7,7 +7,7 @@ const CLIENT_ID = '4c19sf6mo8nbl9sfncrl86d1qv';
 
 export const refreshToken = async () => {
   try {
-    console.log('Attempting to refresh token');
+   // console.log('Attempting to refresh token');
     const storedRefreshToken = await AsyncStorage.getItem('refreshToken');
     if (!storedRefreshToken) {
       console.error('No refresh token available');
@@ -31,7 +31,7 @@ export const refreshToken = async () => {
       })
     });
 
-    console.log('Refresh token response status:', response.status);
+    //console.log('Refresh token response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -40,7 +40,7 @@ export const refreshToken = async () => {
     }
 
     const data = await response.json();
-    console.log('Refresh token successful. New token received.');
+   // console.log('Refresh token successful. New token received.');
 
     const newAccessToken = data.AuthenticationResult.AccessToken;
     await AsyncStorage.setItem('accessToken', newAccessToken);

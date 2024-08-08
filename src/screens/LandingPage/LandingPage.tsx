@@ -9,7 +9,7 @@ type LandingPageNavigationProp = NavigationProp<RootStackParamList>;
 
 
 const LandingPage: React.FC = () => {
-  console.log('App mounted mwaha');
+ // console.log('App mounted mwaha');
   const navigation = useNavigation<LandingPageNavigationProp>();
   const logoOpacity = useRef(new Animated.Value(1)).current;
   const [animationComplete, setAnimationComplete] = useState(false);
@@ -121,7 +121,7 @@ const LandingPage: React.FC = () => {
       titleAnimationRef.current.start(() => {
         setTitlePosition({ top: new Animated.Value(30), left: new Animated.Value(0) });
       });
-      console.log('Animation Complete');
+     // console.log('Animation Complete');
     }
   };
 

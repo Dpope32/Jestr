@@ -91,6 +91,7 @@ fullScreenContainer: {
   justifyContent: 'center',
   alignItems: 'center',
   backgroundColor: 'rgba(0,0,0,0.5)', // This will ensure a dim background even if BlurView doesn't work
+  marginTop: -40
 },
 interactionIcons: {
   flexDirection: 'row',

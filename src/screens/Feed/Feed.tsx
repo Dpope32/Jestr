@@ -72,6 +72,7 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
         setLocalUser(parsedUser);
         setAccessToken(storedToken);
 
+        
    //     console.log(parsedUser.email)
     //    console.log(storedToken)
         if (parsedUser.email && storedToken) {
@@ -93,13 +94,20 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
     initializeFeed();
   }, []);
 
-  const clearStoredData = async () => {
-    await AsyncStorage.removeItem('user');
-    await AsyncStorage.removeItem('accessToken');
-    await AsyncStorage.removeItem('idToken');
-  };
-
-
+  useEffect(() => {
+    const logStorageAndState = async () => {
+      // Log AsyncStorage
+      const keys = await AsyncStorage.getAllKeys();
+      const result = await AsyncStorage.multiGet(keys);
+    //  console.log('AsyncStorage contents:', result);
+  
+      // Log Zustand state
+      const state = useUserStore.getState();
+    //  console.log('Zustand state:', state);
+    };
+  
+    logStorageAndState();
+  }, []);
 
   const fetchInitialMemes = async (email: string, token: string) => {
     setIsLoading(true);
@@ -115,7 +123,8 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
         setLastEvaluatedKey(result.lastEvaluatedKey);
         updateLikeStatuses(result.memes);
       }
-      console.log('Initial memes Count:', result.memes.length);
+    //  console.log('Initial memes Count:', result.memes.length);
+     // console.log('initial fetch result:', result.memes);
     } catch (error) {
       console.error('Error fetching initial memes:', error);
       setError('Failed to fetch memes. Please try again later.');
@@ -135,7 +144,7 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
         setMemes(prevMemes => {
           const newMemes = [...prevMemes, ...result.memes];
           const uniqueMemes = Array.from(new Map(newMemes.map(meme => [meme.memeID, meme])).values());
-          console.log('Updated memes Count:', uniqueMemes.length);
+        //  console.log('Updated memes Count:', uniqueMemes.length);
           return uniqueMemes;
         });
         setLastEvaluatedKey(result.lastEvaluatedKey);
@@ -165,25 +174,46 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
   }, [localUser, accessToken]);
   
 
-  const updateLikeStatuses = useCallback(async (newMemes: Meme[]) => {
-    if (!localUser) return;
-    const statusPromises = newMemes.map(meme => 
-      getLikeStatus(meme.memeID, localUser.email)
-        .then(status => ({ [meme.memeID]: status }))
-        .catch(error => {
-          console.error('Error fetching like status:', error);
-          return null;
-        })
-    );
-  
-    const statuses = await Promise.all(statusPromises);
-    const validStatuses = statuses.filter(Boolean);
-    
-    setMemeLikeStatuses(prev => ({
-      ...prev,
-      ...Object.assign({}, ...validStatuses)
-    }));
-  }, [localUser]);
+// In Feed
+const updateLikeStatuses = useCallback(async (newMemes: Meme[]) => {
+  if (!localUser || !localUser.email) {
+    console.log('User email not available yet');
+    return;
+  }
+  const statusPromises = newMemes.map(meme =>
+    getLikeStatus(meme.memeID, localUser.email)
+      .then(result => {
+        if (result) {
+          return {
+            [meme.memeID]: {
+              liked: result.liked,
+              doubleLiked: result.doubleLiked,
+              memeInfo: result.memeInfo
+            }
+          };
+        }
+        return null;
+      })
+      .catch(error => {
+        console.error('Error fetching like status:', error);
+        return null;
+      })
+  );
+
+  const statuses = await Promise.all(statusPromises);
+  const validStatuses = statuses.filter(Boolean);
+
+  setMemeLikeStatuses(prev => ({
+    ...prev,
+    ...Object.assign({}, ...validStatuses)
+  }));
+
+  // You might want to update your memes state with the new info as well
+  setMemes(prevMemes => prevMemes.map(meme => {
+    const updatedInfo = validStatuses.find(status => status && status[meme.memeID]);
+    return updatedInfo ? { ...meme, ...updatedInfo[meme.memeID].memeInfo } : meme;
+  }));
+}, [localUser]);
 
 
 const updateCommentCount = useCallback((memeID: string, newCount: number) => {
@@ -264,7 +294,7 @@ const handleAdminClick = () => {
 
 useEffect(() => {
   if (currentMediaIndex >= memes.length - 2 && !isLoadingMore && !allMemesViewed) {
-    console.log('fetchingMoreMemes');
+   // console.log('fetchingMoreMemes');
     debouncedFetchMoreMemes();
   }
 }, [currentMediaIndex, memes.length, isLoadingMore, allMemesViewed, debouncedFetchMoreMemes]);

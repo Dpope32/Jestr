@@ -24,7 +24,7 @@ export const fetchMemes = async (
   accessToken: string
 ): Promise<FetchMemesResult> => {
   try {
-  //  console.log('fetchMemes called with:', { lastEvaluatedKey, userEmail, limit, accessToken: accessToken.substring(0, 10) + '...' });
+   //console.log('fetchMemes called with:', { lastEvaluatedKey, userEmail, limit, accessToken: accessToken.substring(0, 10) + '...' });
     
     const response = await fetch(`${API_URL}/fetchMemes`, {
       method: 'POST',
@@ -35,7 +35,7 @@ export const fetchMemes = async (
       body: JSON.stringify({ operation: 'fetchMemes', lastEvaluatedKey, userEmail, limit })
     });
     
-  //  console.log('fetchMemes response status:', response.status);
+   // console.log('fetchMemes response status:', response.status);
     
     if (!response.ok) {
       const errorBody = await response.text();
@@ -44,7 +44,7 @@ export const fetchMemes = async (
     }
     
     const data = await response.json();
-   // console.log('fetchMemes response data:', JSON.stringify(data, null, 2));
+   //console.log('fetchMemes response data:', JSON.stringify(data, null, 2));
     
     if (!data.data || !Array.isArray(data.data.memes)) {
       throw new Error('Invalid response format');
@@ -75,7 +75,7 @@ export const uploadMeme = async (
     const fileName = `${userEmail}-meme-${Date.now()}.${mediaType === 'video' ? 'mp4' : 'jpg'}`;
     const contentType = mediaType === 'video' ? 'video/mp4' : 'image/jpeg';
 
-    console.log('Requesting presigned URL for:', fileName);
+   // console.log('Requesting presigned URL for:', fileName);
 
     const presignedUrlResponse = await fetch(`${API_URL}/getPresignedUrl`, {
       method: 'POST',
@@ -94,7 +94,7 @@ export const uploadMeme = async (
     }
     
     const presignedData = await presignedUrlResponse.json();
-    console.log('Presigned URL data:', presignedData);
+   // console.log('Presigned URL data:', presignedData);
 
     const { uploadURL, fileKey } = presignedData.data;
 
@@ -102,14 +102,14 @@ export const uploadMeme = async (
       throw new Error('Received null or undefined uploadURL');
     }
 
-    console.log('Uploading file to:', uploadURL);
+   // console.log('Uploading file to:', uploadURL);
 
     const uploadResult = await FileSystem.uploadAsync(uploadURL, mediaUri, {
       httpMethod: 'PUT',
       headers: { 'Content-Type': contentType },
     });
 
-    console.log('Upload result:', uploadResult);
+   // console.log('Upload result:', uploadResult);
 
     if (uploadResult.status !== 200) {
       throw new Error(`Failed to upload file to S3: ${uploadResult.status}`);
@@ -146,6 +146,13 @@ export const uploadMeme = async (
 
 export const getLikeStatus = async (memeID: string, userEmail: string) => {
   try {
+    if (!memeID || !userEmail) {
+      console.error('getLikeStatus called with invalid parameters:', { memeID, userEmail });
+      return null;
+    }
+
+   // console.log(`Fetching like status for memeID: ${memeID}, userEmail: ${userEmail}`);
+    
     const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getLikeStatus', {
       method: 'POST',
       headers: {
@@ -158,18 +165,37 @@ export const getLikeStatus = async (memeID: string, userEmail: string) => {
       }),
     });
 
+   // console.log(`Response status: ${response.status}`);
+
     if (!response.ok) {
-      throw new Error('Failed to get like status');
+      const errorText = await response.text();
+      console.error(`Error response: ${errorText}`);
+      throw new Error(`Failed to get like status: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    //console.log(`Meme info and like status data:`, data);
+
     return {
-      liked: data.liked,
-      doubleLiked: data.doubleLiked,
+      liked: data.data.liked,
+      doubleLiked: data.data.doubleLiked,
+      memeInfo: {
+        MemeID: data.data.MemeID,
+        Email: data.data.Email,
+        Username: data.data.Username,
+        ProfilePicUrl: data.data.ProfilePicUrl,
+        mediaType: data.data.mediaType,
+        MemeURL: data.data.MemeURL,
+        LikeCount: data.data.LikeCount,
+        ShareCount: data.data.ShareCount,
+        CommentCount: data.data.CommentCount,
+        DownloadsCount: data.data.DownloadsCount,
+        UploadTimestamp: data.data.UploadTimestamp
+      }
     };
   } catch (error) {
-    console.error('Error getting like status:', error);
-    return { liked: false, doubleLiked: false };
+    console.error('Error getting meme info and like status:', error);
+    return null;
   }
 };
 
@@ -275,7 +301,7 @@ export const postComment = async (memeID: string, text: string, user: User, pare
     ParentCommentID: parentCommentID,
   };
 
-  console.log(`Posting comment for memeID: ${memeID} by user: ${user.username}`);
+ // console.log(`Posting comment for memeID: ${memeID} by user: ${user.username}`);
   const response = await fetch(`${API_URL}/postComment`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -288,7 +314,7 @@ export const postComment = async (memeID: string, text: string, user: User, pare
     throw new Error(data.message);
   }
 
-  console.log('Comment posted successfully:', data);
+  //console.log('Comment posted successfully:', data);
 };
 
 export const updateCommentReaction = async (
@@ -305,7 +331,7 @@ export const updateCommentReaction = async (
     incrementDislikes,
   };
 
-  console.log('Updating comment reaction for commentID:', commentID);
+ // console.log('Updating comment reaction for commentID:', commentID);
 
   const response = await fetch(`${API_URL}/updateCommentReaction`, {
     method: 'POST',
@@ -319,7 +345,7 @@ export const updateCommentReaction = async (
     throw new Error(data.message);
   }
 
-  console.log('Comment reaction updated successfully:', data);
+ // console.log('Comment reaction updated successfully:', data);
 };
 
 export const updateMemeReaction = async (memeID: string, incrementLikes: boolean, doubleLike: boolean, incrementDownloads: boolean, email: string): Promise<void> => {
@@ -332,7 +358,7 @@ export const updateMemeReaction = async (memeID: string, incrementLikes: boolean
     email,
   };
 
-  console.log('Updating meme reaction with requestBody:', requestBody);
+ // console.log('Updating meme reaction with requestBody:', requestBody);
 
   const response = await fetch(`${API_URL}/updateMemeReaction`, {
     method: 'POST',
@@ -348,5 +374,5 @@ export const updateMemeReaction = async (memeID: string, incrementLikes: boolean
     throw new Error(data.message);
   }
 
-  console.log('Meme reaction updated successfully:', data);
+ // console.log('Meme reaction updated successfully:', data);
 };

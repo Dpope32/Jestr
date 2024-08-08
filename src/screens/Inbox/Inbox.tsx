@@ -11,7 +11,6 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import NewMessageModal from '../../components/Modals/NewMessageModal';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
 import { Message } from './Conversations';
-import { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { Dimensions } from 'react-native';
 import ProfilePanel from '../../components/Panels/ProfilePanel';
 

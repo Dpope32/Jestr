@@ -149,20 +149,26 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
       recordViewAsync();
     }, [currentMedia, mediaType, user, memeID, fadeAnim, handleMediaError]);
   
-    useEffect(() => {
-      const checkLikeStatus = async () => {
-        if (user) {
-          try {
-            const likeStatus = await getLikeStatus(memeID, user.email);
-            setLiked(likeStatus.liked);
-            setDoubleLiked(likeStatus.doubleLiked);
-          } catch (error) {
-            console.error('Error checking like status:', error);
-          }
+// In MediaPlayer
+useEffect(() => {
+  const checkLikeStatus = async () => {
+    if (user && user.email) {
+      try {
+        const result = await getLikeStatus(memeID, user.email);
+        if (result) {
+          setLiked(result.liked);
+          setDoubleLiked(result.doubleLiked);
         }
-      };
-      checkLikeStatus();
-    }, [memeID, user]);
+      } catch (error) {
+        console.error('Error checking like status:', error);
+      }
+    } else {
+      console.log('User email not available yet');
+    }
+  };
+  checkLikeStatus();
+}, [memeID, user]);
+
   
     const handleLikePress = useCallback(async () => {
       if (user) {
@@ -335,7 +341,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
             source={{ uri: currentMedia }}
             style={[styles.memeImage]}
             width={imageSize.width}
-            height={imageSize.height}
+            height={imageSize.height + 20}
             resizeMode="cover"
             onError={(error) => {
               console.error('Image load error:', error);

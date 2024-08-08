@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy } from 'react';
+import React, { useState, useEffect, lazy, useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, UIManager } from 'react-native';
@@ -12,6 +12,9 @@ import * as Font from 'expo-font';
 import { RootStackParamList } from './src/types/types';
 import awsconfig from './src/aws-exports';
 import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync();
 
 if (UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(false);
@@ -78,25 +81,38 @@ const toastConfig: ToastConfig = {
   ),
 };
 
-function App(): React.JSX.Element {
+function App(): React.JSX.Element | null {
   const [isReady, setIsReady] = useState(false);
 
-  const loadFonts = async () => {
-    await Font.loadAsync({
-      Inter_400Regular,
-      Inter_700Bold,
-    });
-  };
+  const onLayoutRootView = useCallback(async () => {
+    if (isReady) {
+      await SplashScreen.hideAsync();
+    }
+  }, [isReady]);
 
   useEffect(() => {
-    loadFonts().then(() => setIsReady(true));
+    async function prepare() {
+      try {
+        await Font.loadAsync({
+          Inter_400Regular,
+          Inter_700Bold,
+        });
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setIsReady(true);
+      }
+    }
+
+    prepare();
   }, []);
 
   if (!isReady) {
-    return <Text>Loading...</Text>;
+    return null;
   }
 
   return (
+    <View style={{flex: 1}} onLayout={onLayoutRootView}>
     <ErrorBoundary>
       <ThemeProvider>
         <NavigationContainer>
@@ -122,6 +138,7 @@ function App(): React.JSX.Element {
         </NavigationContainer>
       </ThemeProvider>
     </ErrorBoundary>
+    </View>
   );
 }
 

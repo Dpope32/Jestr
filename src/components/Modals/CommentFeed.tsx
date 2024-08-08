@@ -52,9 +52,9 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
     const loadComments = async () => {
       if (user && memeID) {
         try {
-          console.log(`Fetching comments for memeID: ${memeID}`);
+       //   console.log(`Fetching comments for memeID: ${memeID}`);
           const fetchedComments = await fetchComments(memeID);
-          console.log(`Fetched comments for memeID ${memeID}:`, fetchedComments);
+        //  console.log(`Fetched comments for memeID ${memeID}:`, fetchedComments);
           setComments(organizeCommentsIntoThreads(fetchedComments));
           updateCommentCount(memeID, fetchedComments.length); // Pass memeID and new count
         } catch (error) {

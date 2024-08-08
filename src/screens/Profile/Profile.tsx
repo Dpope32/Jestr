@@ -31,7 +31,7 @@ type TabName = 'posts' | 'liked' | 'history' | 'downloaded';
 
 const Profile = () => {
   const user = useUserStore(state => state);
- 
+  const [gridHeight, setGridHeight] = useState(300);
   const route = useRoute<ProfileScreenRouteProp>();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const [followersCount, setFollowersCount] = useState(user.followersCount || 0);
@@ -63,7 +63,7 @@ const Profile = () => {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      console.log('Profile screen focused');
+   //   console.log('Profile screen focused');
     });
   
     return unsubscribe;
@@ -76,7 +76,7 @@ const Profile = () => {
   }, [user]);
 
   useEffect(() => {
-    console.log('User data in Profile:', user);
+    //console.log('User data in Profile:', user);
     if (user.email) {
       fetchTabMemes(selectedTab);
     } else {
@@ -96,7 +96,7 @@ const Profile = () => {
     if (user && user.email) {
       try {
         setIsLoading(true);
-        console.log(`Fetching memes for tab: ${tab}, page: ${page}`);
+       // console.log(`Fetching memes for tab: ${tab}, page: ${page}`);
         let result: FetchMemesResult;
         switch (tab) {
           case 'posts':
@@ -114,7 +114,7 @@ const Profile = () => {
           default:
             result = { memes: [], lastEvaluatedKey: null };
         }
-        console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
+       // console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
         setTabMemes(prevMemes => [...prevMemes, ...result.memes]);
         setLastEvaluatedKey(result.lastEvaluatedKey);
         setHasMoreMemes(result.memes.length === pageSize);
@@ -129,7 +129,7 @@ const Profile = () => {
   };
 
   const handleMemePress = (meme: Meme, index: number) => {
-    console.log("Meme selected", meme);
+   // console.log("Meme selected", meme);
     setSelectedMeme(meme);
     setCurrentMemeIndex(index);
     setIsCommentFeedVisible(false); // Ensure comment feed is closed when another meme is selected
@@ -165,6 +165,10 @@ const Profile = () => {
     );
   };
 
+  const handleHeightChange = (height: number) => {
+    setGridHeight(height);
+  };
+
   const handleCloseMediaPlayer = () => {
     setSelectedMeme(null);
     setCurrentMemeIndex(0);
@@ -178,7 +182,7 @@ const Profile = () => {
   };
 
   const toggleCommentFeed = () => {
-    console.log("Toggling Comment Feed", !isCommentFeedVisible);
+  //  console.log("Toggling Comment Feed", !isCommentFeedVisible);
     setIsCommentFeedVisible(!isCommentFeedVisible);
   };
 
@@ -237,20 +241,21 @@ const Profile = () => {
     }
   
     return (
-      <View style={{ flex: 1, minHeight: 300, maxHeight: 1200 }}>
+      <View style={{ flex: 1, height: gridHeight }}>
         <MemeGrid 
           memes={tabMemes} 
           renderMeme={renderMeme} 
           onLoadMore={loadMoreMemes}
-          onLayout={(event) => console.log('MemeGrid layout:', event.nativeEvent.layout)}
+          onHeightChange={handleHeightChange}
         />
       </View>
     );
   };
+  
 
   const handleImagePress = (type: 'profile' | 'header') => {
     const imageUri = type === 'profile' ? user?.profilePic || '' : user?.headerPic || '';
-    console.log('Image Pressed:', type, imageUri);
+  //  console.log('Image Pressed:', type, imageUri);
     setFullScreenImage(imageUri);
     setIsBlurVisible(true);
   };
@@ -353,9 +358,6 @@ const Profile = () => {
     <ScrollView 
       contentContainerStyle={{ flexGrow: 1 }}
       scrollEventThrottle={16}
-      onScroll={(event) => {
-        console.log('ScrollView scroll:', event.nativeEvent.contentOffset.y);
-      }}
     >
         <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => handleImagePress('header')}>
@@ -410,7 +412,6 @@ const Profile = () => {
       <View style={{ flex: 1, minHeight: 300, maxHeight: 1200 }}>
         {renderTabContent()}
       </View>
-    </ScrollView>
       <BottomPanel
     onHomeClick={() => navigation.navigate('Feed' as never)}
         handleLike={() => {}}
@@ -471,7 +472,7 @@ const Profile = () => {
             <TouchableOpacity style={styles.closeButton} onPress={handleCloseMediaPlayer}>
               <FontAwesomeIcon icon={faTimes} size={24} color="#FFF" />
             </TouchableOpacity>
-          </View>
+            </View>
         </Modal>
       )}
       {isEditProfileModalVisible && (
@@ -513,7 +514,6 @@ const Profile = () => {
               fullScreenImage === (user?.profilePic || '') ? styles.fullScreenProfileImage : styles.fullScreenHeaderImage,
               { zIndex: 1 }
             ]}
-            resizeMode="contain"
           />
           <TouchableOpacity
             style={[styles.editButton, { zIndex: 2 }]}
@@ -526,7 +526,7 @@ const Profile = () => {
     </BlurView>
   </Modal>
 )}
-
+    </ScrollView>
     </View>
   );
 };

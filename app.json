@@ -12,6 +12,12 @@
     "ios": {
       "bundleIdentifier": "com.jestrmobile.app"
     },
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1C1C1C"
+    },
+    "icon": "./assets/icon.png",
     "extra": {
       "eas": {
         "projectId": "project-id"

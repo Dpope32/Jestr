@@ -20,19 +20,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 160
   },
   blurContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 60,
+    bottom: 0,
     padding: 10,
   },
   textContainer: {
     position: 'absolute',
     flexDirection: 'row',
-    bottom: 120,
+    bottom: 100,
     left: 10,
     right: 10,
     padding: 10,

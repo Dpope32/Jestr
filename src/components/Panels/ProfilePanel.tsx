@@ -108,7 +108,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
 
   const handleProfileClick = () => {
     navigation.navigate('Profile', { user: localUser });
-    console.log(localUser)
+    //console.log(localUser)
     closePanel();
   };
 

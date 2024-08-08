@@ -105,17 +105,9 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
     
     try {
       const tagsArray = tags.split(',').map(tag => tag.trim());
-      console.log('Payload for upload:', {
-        mediaUri: media.uri,
-        userEmail,
-        username,
-        caption,
-        tags: tagsArray,
-        mediaType: media.type
-      });
   
       const result = await uploadMeme(media.uri, userEmail, username, caption, tagsArray, media.type);
-      console.log('Upload result:', result);
+     // console.log('Upload result:', result);
   
       Toast.show({
         type: 'success',

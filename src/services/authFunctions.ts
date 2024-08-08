@@ -1,4 +1,5 @@
 import { Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import Toast from 'react-native-toast-message';
 import { User, Meme, FetchMemesResult  } from '../types/types'
 import { API_URL } from '../components/Meme/config';
@@ -9,8 +10,8 @@ import { RootStackParamList } from '../types/types';
 import { ImagePickerAsset } from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { v4 as uuidv4 } from 'uuid';
-import { useUserStore } from '../screens/userStore';
-import { ProfileImage } from '../screens/userStore';
+import { ProfileImage,UserState, useUserStore  } from '../screens/userStore';
+
 type Asset = {
   uri: string;
   type: string;
@@ -76,9 +77,9 @@ export const handleLogin = async (
         });
       // Add this line to set isAdmin based on the email
       userDetails.isAdmin = userDetails.email === 'pope.dawson@gmail.com';
-      console.log('isAdmin set to:', userDetails.isAdmin);
+     // console.log('isAdmin set to:', userDetails.isAdmin);
   
-      console.log('User details before navigation:', JSON.stringify(userDetails, null, 2));
+    //  console.log('User details before navigation:', JSON.stringify(userDetails, null, 2));
       await AsyncStorage.setItem('user', JSON.stringify(userDetails));
       setModalUsername(userDetails.username);
       setSuccessModalVisible(true);
@@ -101,7 +102,7 @@ export const handleLogin = async (
         nextStep: nextStep 
       });
     } else {
-      console.log('Unexpected next step:', nextStep);
+   //   console.log('Unexpected next step:', nextStep);
       Alert.alert('Login Failed', 'Unexpected authentication step');
     }
   } catch (error: any) {
@@ -112,10 +113,23 @@ export const handleLogin = async (
   }
 };
 
+export const convertUserStateToUser = (userState: UserState): User => ({
+  profilePic: userState.profilePic || '',
+  headerPic: userState.headerPic || '',
+  displayName: userState.displayName || '',
+  username: userState.username || '',
+  email: userState.email || '',
+  bio: userState.bio || '',
+  creationDate: userState.creationDate || '',
+  followersCount: userState.followersCount || 0,
+  followingCount: userState.followingCount || 0,
+  // Add any other required properties of the User type
+});
+
 export const fetchUserDetails = async (username: string, token?: string) => {
-  console.log('Fetching user details for username:', username);
-  console.log('Using API endpoint:', API_ENDPOINT);
-  console.log('Token being sent:', token);
+//  console.log('Fetching user details for username:', username);
+  //console.log('Using API endpoint:', API_ENDPOINT);
+ // console.log('Token being sent:', token);
 
   // Extract email from username if it's an email, otherwise use username
   const identifier = username.includes('@') ? username : username;
@@ -124,7 +138,7 @@ export const fetchUserDetails = async (username: string, token?: string) => {
     operation: "getUser",
     identifier: identifier  // Changed from username to identifier
   };
-  console.log('Request body:', JSON.stringify(requestBody));
+//  console.log('Request body:', JSON.stringify(requestBody));
 
   const response = await fetch(API_ENDPOINT, {
     method: 'POST',
@@ -135,8 +149,8 @@ export const fetchUserDetails = async (username: string, token?: string) => {
     body: JSON.stringify(requestBody)
   });
 
-  console.log('Response status:', response.status);
-  console.log('Response headers:', JSON.stringify(response.headers));
+//  console.log('Response status:', response.status);
+//  console.log('Response headers:', JSON.stringify(response.headers));
 
   if (!response.ok) {
     const errorBody = await response.text();
@@ -144,7 +158,7 @@ export const fetchUserDetails = async (username: string, token?: string) => {
     throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
   }
   const data = await response.json();
-  console.log('User details fetched successfully:', JSON.stringify(data, null, 2));
+//  console.log('User details fetched successfully:', JSON.stringify(data, null, 2));
   
   if (!data.data) {
     throw new Error('No user data returned from server');
@@ -158,7 +172,7 @@ export const handleSignOut = async () => {
     await signOut({ global: true });
     await AsyncStorage.removeItem('user');
     await AsyncStorage.removeItem('accessToken');
-    console.log('Sign out successful');
+ //   console.log('Sign out successful');
   } catch (error) {
     console.error('Error signing out:', error);
     throw error;
@@ -183,7 +197,7 @@ export const handleSignup = async (
       name: defaultName, // Default name
     };
 
-    console.log('User attributes being sent:', userAttributes);
+   // console.log('User attributes being sent:', userAttributes);
 
     const { isSignUpComplete, userId, nextStep } = await signUp({
       username: email,
@@ -212,11 +226,11 @@ export const handleSignup = async (
         await AsyncStorage.setItem('user', JSON.stringify(user));
         navigation.navigate('CompleteProfileScreen', { email });
       } else {
-        console.log('Additional sign-in step required:', nextStep);
+    //    console.log('Additional sign-in step required:', nextStep);
         Alert.alert('Login Incomplete', 'Please complete the additional step to sign in');
       }
     } else {
-      console.log('Additional signup step required:', nextStep);
+   //   console.log('Additional signup step required:', nextStep);
 
       if (nextStep && nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
         navigateToConfirmSignUp(email);
@@ -227,6 +241,40 @@ export const handleSignup = async (
   } catch (error: any) {
     console.error('Signup error:', error);
     Alert.alert('Signup Failed', error.message || 'An unknown error occurred');
+  }
+};
+
+export const fetchTabMemes = async (
+  tab: 'posts' | 'liked' | 'history' | 'downloaded',
+  page: number = 1,
+  pageSize: number = 30,
+  userEmail: string,
+  lastEvaluatedKey: string | null
+): Promise<FetchMemesResult> => {
+  try {
+   // console.log(`Fetching memes for tab: ${tab}, page: ${page}`);
+    let result: FetchMemesResult;
+    switch (tab) {
+      case 'posts':
+        result = await getUserMemes(userEmail);
+        break;
+      case 'liked':
+        result = await fetchMemes(userEmail, 'liked', lastEvaluatedKey, pageSize);
+        break;
+      case 'history':
+        result = await fetchMemes(userEmail, 'viewed', lastEvaluatedKey, pageSize);
+        break;
+      case 'downloaded':
+        result = await fetchMemes(userEmail, 'downloaded', lastEvaluatedKey, pageSize);
+        break;
+      default:
+        result = { memes: [], lastEvaluatedKey: null };
+    }
+  //  console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
+    return result;
+  } catch (error) {
+    console.error(`Error fetching ${tab} memes:`, error);
+    return { memes: [], lastEvaluatedKey: null };
   }
 };
 
@@ -257,7 +305,7 @@ export const handleCompleteProfile = async (
       creationDate,
       userId,
     };
-    console.log('Sending profile data:', JSON.stringify(profileData));
+    //console.log('Sending profile data:', JSON.stringify(profileData));
 
     const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
       method: 'POST',
@@ -286,7 +334,7 @@ export const handleCompleteProfile = async (
         bio: responseData.data.bio || '',
         userId: responseData.data.userId || userId,
       };
-      console.log('Profile data being passed:', user);
+    //  console.log('Profile data being passed:', user);
       await AsyncStorage.setItem('user', JSON.stringify(user));
 
       setSuccessModalVisible(true);
@@ -384,7 +432,7 @@ export const handleChangePassword = async (
 
 export const sendMessage = async (senderID: string, receiverID: string, content: string) => {
   try {
-      console.log('Sending message from:', senderID, 'to:', receiverID);
+    //  console.log('Sending message from:', senderID, 'to:', receiverID);
       const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/sendMessage', {
           method: 'POST',
           headers: {
@@ -405,7 +453,7 @@ export const sendMessage = async (senderID: string, receiverID: string, content:
           throw new Error(data.message || 'Failed to send message');
       }
 
-      console.log('Message sent successfully:', data);
+  //    console.log('Message sent successfully:', data);
       return data;
   } catch (error) {
       console.error('Error sending message:', error);
@@ -419,7 +467,7 @@ export const fetchMemes = async (
   lastEvaluatedKey: string | null = null,
   limit: number = 5
 ): Promise<FetchMemesResult> => {
-  console.log(`Fetching ${type} memes for user: ${email}`);
+ // console.log(`Fetching ${type} memes for user: ${email}`);
   try {
     let endpoint;
     let operation;
@@ -447,7 +495,7 @@ export const fetchMemes = async (
       limit
     };
 
-    console.log('Request body:', JSON.stringify(requestBody));
+  //  console.log('Request body:', JSON.stringify(requestBody));
 
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
@@ -462,7 +510,7 @@ export const fetchMemes = async (
     }
 
     const responseData = await response.json();
-    console.log('Raw API response:', JSON.stringify(responseData));
+  //  console.log('Raw API response:', JSON.stringify(responseData));
 
     // Check for the nested data structure
     const data = responseData.data && responseData.data.data ? responseData.data.data : responseData.data;
@@ -493,7 +541,7 @@ export const fetchMemes = async (
       }
     }));
 
-    console.log(`Processed ${memes.length} memes`);
+  //  console.log(`Processed ${memes.length} memes`);
 
     return {
       memes,
@@ -536,7 +584,7 @@ export const removeFollow = async (unfollowerId: string, unfolloweeId: string): 
 };
 
 export const fetchConversations = async (userEmail: string) => {
-  console.log('Fetching conversations for:', userEmail);
+  //console.log('Fetching conversations for:', userEmail);
   try {
     const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getConversations', {
       method: 'POST',
@@ -554,7 +602,7 @@ export const fetchConversations = async (userEmail: string) => {
     }
 
     const responseData = await response.json();
-    console.log('Full API Response:', responseData);
+  //  console.log('Full API Response:', responseData);
     if (responseData.data && Array.isArray(responseData.data.conversations)) {
       return responseData.data.conversations;
     } else {
@@ -593,7 +641,7 @@ export const fetchConversations = async (userEmail: string) => {
       }
   
       const responseData = await response.json();
-      console.log('Fetched messages:', responseData);
+      //console.log('Fetched messages:', responseData);
   
       if (responseData && Array.isArray(responseData.data)) {
         return responseData.data;
@@ -624,7 +672,7 @@ export const fetchConversations = async (userEmail: string) => {
       });
   
       if (response.ok) {
-        console.log('Follow added successfully');
+     //   console.log('Follow added successfully');
       } else {
         console.error('Failed to add follow');
       }
@@ -693,10 +741,10 @@ export const fetchConversations = async (userEmail: string) => {
       message,
     };
   
-    console.log('Share data:', shareData);
+//    console.log('Share data:', shareData);
   
     try {
-      console.log('Initiating share operation...');
+   //   console.log('Initiating share operation...');
       const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/shareMeme', {
         method: 'POST',
         headers: {
@@ -705,8 +753,8 @@ export const fetchConversations = async (userEmail: string) => {
         body: JSON.stringify(shareData),
       });
   
-      console.log('Response status:', response.status);
-      console.log('Response body:', await response.text());
+  //    console.log('Response status:', response.status);
+  //    console.log('Response body:', await response.text());
   
       if (response.ok) {
         Toast.show({
@@ -776,10 +824,10 @@ export const fetchConversations = async (userEmail: string) => {
   
   export const updateProfileImage = async (email: string, imageType: 'profile' | 'header', imagePath: string) => {
     try {
-      console.log('Starting updateProfileImage');
-      console.log('Email:', email);
-      console.log('Image Type:', imageType);
-      console.log('Image Path:', imagePath);
+    //  console.log('Starting updateProfileImage');
+  //    console.log('Email:', email);
+   //   console.log('Image Type:', imageType);
+   //   console.log('Image Path:', imagePath);
     
       const imageBase64 = await FileSystem.readAsStringAsync(imagePath, { encoding: FileSystem.EncodingType.Base64 });
       if (!imageBase64) {
@@ -810,7 +858,7 @@ export const fetchConversations = async (userEmail: string) => {
       }
     
       const data = await response.json();
-      console.log('Response data:', data);
+    //  console.log('Response data:', data);
     
       // Update local storage with new image URL
       const user = JSON.parse(await AsyncStorage.getItem('user') || '{}');
