@@ -4,21 +4,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import styles from './ProfilePanel.styles';
 import { faUser , faRibbon, faBell, faHistory, faCog, faMoon, faSignOutAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
 import Anon1Image from '../../assets/images/Jestr5.jpg';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../../ThemeContext'; // Import useTheme
 import LogoutModal from '../Modals/LogoutModal';
 import { User } from '../../types/types';
 import NotificationsPanel from './NotificationsPanel';
 import { Switch } from 'react-native';
 import { handleSignOut } from '../../services/authFunctions';
 import { CommonActions } from '@react-navigation/native';
-
+import { useUserStore } from '../../utils/userStore'; 
+import * as SecureStore from 'expo-secure-store';
 
 const { width } = Dimensions.get('window');
 
 type ProfilePanelProps = {
   isVisible: boolean;
   onClose: () => void;
-  profilePicUrl: string;
+  profilePicUrl: string | null;
   username: string;
   displayName: string;
   followersCount: number;
@@ -32,7 +33,7 @@ type ProfilePanelProps = {
 
 const ProfilePanel: React.FC<ProfilePanelProps> = ({
   isVisible, onClose, profilePicUrl, username, displayName, followersCount: initialFollowersCount,
-  followingCount: initialFollowingCount, onDarkModeToggle, user, navigation, isDarkMode, setIsDarkMode,
+  followingCount: initialFollowingCount, user, navigation,
 }) => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
@@ -42,7 +43,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   const [followingCount] = useState(initialFollowingCount);
   const [showNotifications, setShowNotifications] = useState(false);
   const bio = localUser?.Bio || localUser?.bio || 'Default bio';
-
+  const { isDarkMode, toggleDarkMode } = useTheme(); // Use the theme context
   const panelTranslateX = useRef(new Animated.Value(-width)).current;
 
   const panResponder = useRef(
@@ -91,18 +92,17 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
     }).start(() => onClose());
   };
 
-  const handleDarkModeToggle = (value: boolean) => {
-    setIsDarkMode(value);
-    AsyncStorage.setItem('isDarkMode', JSON.stringify(value));
-    onDarkModeToggle(value);
+  const handleDarkModeToggle = async (value: boolean) => {
+    toggleDarkMode(); // This will update the context and save to SecureStore
   };
+
 
   const getProfilePic = () => {
     if (profilePicUrl) {
       return { uri: profilePicUrl };
     } else {
       console.log('Profile picture URL not available');
-      return Anon1Image;
+      return Anon1Image; // Make sure you have a default image imported
     }
   };
 
@@ -140,7 +140,10 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   const confirmSignOut = async () => {
     try {
       await handleSignOut();
-      await AsyncStorage.clear(); // Clear all stored data
+      // Clear SecureStore
+      await SecureStore.deleteItemAsync('accessToken');
+      // Clear Zustand store
+      useUserStore.getState().setUserDetails({});
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -212,19 +215,19 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
             <Text style={styles.signoutText}>Sign Out</Text>
           </TouchableOpacity>
           <View style={styles.darkModeContainer}>
-            <Switch
-              trackColor={{ false: "#767577", true: "#1bd40b" }}
-              thumbColor={isDarkMode ? "#f4f3f4" : "#f4f3f4"}
-              ios_backgroundColor="#3e3e3e"
-              onValueChange={handleDarkModeToggle}
-              value={isDarkMode}
-            />
-            <FontAwesomeIcon
-              icon={faMoon}
-              style={styles.darkModeIcon}
-              size={24}
-            />
-          </View>
+          <Switch
+            trackColor={{ false: "#767577", true: "#1bd40b" }}
+            thumbColor={isDarkMode ? "#f4f3f4" : "#f4f3f4"}
+            ios_backgroundColor="#3e3e3e"
+            onValueChange={handleDarkModeToggle}
+            value={isDarkMode}
+          />
+          <FontAwesomeIcon
+            icon={faMoon}
+            style={styles.darkModeIcon}
+            size={24}
+          />
+        </View>
         </View>
       </Animated.View>
       {isVisible && (

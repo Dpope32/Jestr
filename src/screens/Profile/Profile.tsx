@@ -19,7 +19,7 @@ import EditableBio from './EditableBio';
 import EditProfileModal from '../../components/Modals/EditProfileModal';
 import { COLORS} from '../../theme/theme';
 import { BlurView } from 'expo-blur';
-import { useUserStore, UserState } from '../userStore';
+import { useUserStore, UserState } from '../../utils/userStore';
 import MemeGrid from './MemeGrid';
 
 const { width, height } = Dimensions.get('window');

@@ -25,6 +25,7 @@ export interface UserState {
   setUserDetails: (details: Partial<UserState>) => void;
   setHeaderPic: (headerPic: string | ProfileImage | null) => void;
   setProfilePic: (profilePic: string | ProfileImage | null) => void;
+  isAdmin?: boolean;
 }
 
 export type ProfileImage = {
@@ -52,7 +53,13 @@ export const useUserStore = create<UserState>((set) => ({
   headerPic: null,
   setBio: (bio: string ) => set({ bio }),
   setHeaderPic: (headerPic: string | ProfileImage | null) => set({ headerPic }),
-  setProfilePic: (profilePic: string | ProfileImage | null) => set({ profilePic }),
+  setProfilePic: (profilePic: string | ProfileImage | null) => {
+    // Fallback to a default image if `profilePic` is empty
+    if (typeof profilePic === 'string' && !profilePic.trim()) {
+      profilePic = null;
+    }
+    set({ profilePic });
+  },
   setPosts: (posts) => set({ posts }),
   setLikedMemes: (memes) => set({ likedMemes: memes }),
   setDownloadedMemes: (memes) => set({ downloadedMemes: memes }),

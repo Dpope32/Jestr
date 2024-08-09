@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import * as SecureStore from 'expo-secure-store';
 
 interface ThemeContextProps {
   isDarkMode: boolean;
@@ -13,26 +12,25 @@ const ThemeContext = createContext<ThemeContextProps>({
 });
 
 interface ThemeProviderProps {
-    children: React.ReactNode;
-  }
-
+  children: React.ReactNode;
+}
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     // Load the saved theme preference
-    AsyncStorage.getItem('isDarkMode').then((value) => {
+    SecureStore.getItemAsync('isDarkMode').then((value) => {
       if (value !== null) {
         setIsDarkMode(JSON.parse(value));
       }
     });
   }, []);
 
-  const toggleDarkMode = () => {
+  const toggleDarkMode = async () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    AsyncStorage.setItem('isDarkMode', JSON.stringify(newMode));
+    await SecureStore.setItemAsync('isDarkMode', JSON.stringify(newMode));
   };
 
   return (

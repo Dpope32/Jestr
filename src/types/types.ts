@@ -9,9 +9,9 @@ export type LandingPageNavigationProp = StackNavigationProp<RootStackParamList, 
 export interface User {
     email: string;
     username: string;
-    profilePic: string;
+    profilePic: string | null;
+    headerPic: string | null;
     displayName: string;
-    headerPic: string;
     creationDate: string;
     followersCount: number;
     followingCount: number;

@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@aws-amplify/auth": "^6.3.11",
+    "@aws-amplify/auth": "^6.3.13",
     "@aws-amplify/backend": "^1.0.4",
     "@aws-amplify/core": "^6.3.5",
     "@aws-amplify/react-native": "^1.1.3",

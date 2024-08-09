@@ -10,7 +10,7 @@ import ProfilePicUpload from '../../components/Upload/ProfilePicUpload';
 import InputField from '../../components/shared/Input/InutField';
 import { LinearGradient } from 'expo-linear-gradient';
 import { handleCompleteProfile } from '../../services/authFunctions';
-import { useUserStore, ProfileImage } from '../../screens/userStore'; // Ensure correct import
+import { useUserStore, ProfileImage } from '../../utils/userStore'; // Ensure correct import
 import * as ImagePicker from 'expo-image-picker';
 import { BlurView } from 'expo-blur';
 import LottieView from 'lottie-react-native';

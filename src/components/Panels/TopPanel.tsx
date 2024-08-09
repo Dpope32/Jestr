@@ -6,11 +6,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronDown, faCog } from '@fortawesome/free-solid-svg-icons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS, COLORS } from '../../theme/theme';
-import { LinearGradient } from 'expo-linear-gradient';
 
 interface TopPanelProps {
   onProfileClick: () => void;
-  profilePicUrl: string;
+  profilePicUrl: string | null;
   username: string;
   enableDropdown: boolean;
   showLogo: boolean;
@@ -58,7 +57,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
         <TouchableOpacity onPress={handleProfileClick} style={styles.profileContainer}>
-          <Image source={{ uri: profilePicUrl }} style={styles.profilePic} />
+        <Image source={{ uri: profilePicUrl ?? '../../assets/images/Jestr.jpg' }} style={styles.profilePic} />
           <Text style={styles.username}>{username}</Text>
         </TouchableOpacity>
           

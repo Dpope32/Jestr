@@ -13,6 +13,9 @@ import { RootStackParamList } from './src/types/types';
 import awsconfig from './src/aws-exports';
 import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
+import { getToken } from './src/utils/secureStore';
+import { useUserStore } from './src/utils/userStore';
+import { getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -83,6 +86,61 @@ const toastConfig: ToastConfig = {
 
 function App(): React.JSX.Element | null {
   const [isReady, setIsReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const setUserDetails = useUserStore(state => state.setUserDetails);
+
+  useEffect(() => {
+    console.log('App useEffect running');
+    checkAuthStatus();
+  }, []);
+
+    async function checkAuthStatus() {
+      console.log('Checking auth status');
+      try {
+        const token = await getToken('accessToken');
+        console.log('Token:', token ? 'exists' : 'does not exist');
+        
+        if (token) {
+          try {
+            const user = await getCurrentUser();
+            const attributes = await fetchUserAttributes();
+            
+            const userDetails = {
+              email: attributes.email || '',
+              username: user.username,
+              displayName: attributes.name || '',
+              profilePic: attributes.picture || '',
+              headerPic: attributes['custom:headerPic'] || '',
+              bio: attributes['custom:bio'] || '',
+              creationDate: attributes['custom:creationDate'] || '',
+              followersCount: parseInt(attributes['custom:followersCount'] || '0', 10),
+              followingCount: parseInt(attributes['custom:followingCount'] || '0', 10),
+              isAdmin: attributes.email === 'pope.dawson@gmail.com',
+            };
+            
+            console.log('Fetched user details:', userDetails);
+            
+            setIsAuthenticated(true);
+            useUserStore.getState().setUserDetails(userDetails);
+          } catch (error) {
+            console.error('Error fetching user details:', error);
+            setIsAuthenticated(false);
+            useUserStore.getState().setUserDetails({});
+          }
+        } else {
+          console.log('No token found, user is not authenticated');
+          setIsAuthenticated(false);
+          useUserStore.getState().setUserDetails({});
+        }
+      } catch (error) {
+        console.error('Error checking authentication status:', error);
+        setIsAuthenticated(false);
+        useUserStore.getState().setUserDetails({});
+      } finally {
+        setIsReady(true);
+      }
+    }
+
 
   const onLayoutRootView = useCallback(async () => {
     if (isReady) {
@@ -107,37 +165,40 @@ function App(): React.JSX.Element | null {
     prepare();
   }, []);
 
+  useEffect(() => {
+    console.log('Authentication state changed:', isAuthenticated);
+  }, [isAuthenticated]);
+
   if (!isReady) {
     return null;
   }
 
   return (
     <View style={{flex: 1}} onLayout={onLayoutRootView}>
-    <ErrorBoundary>
-      <ThemeProvider>
-        <NavigationContainer>
-          <SafeAreaProvider>
-            <React.Suspense fallback={<Text>Loading...</Text>}>
-              <Stack.Navigator initialRouteName="Loading">
-                <Stack.Screen name="Loading" component={LoadingScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="LandingPage" component={LandingPage} options={{ headerShown: false }} />
-                <Stack.Screen name="ConfirmSignUp" component={ConfirmSignUpScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Feed" component={Feed} options={{ headerShown: false }} />
-                <Stack.Screen name="MemeUpload" component={MemeUploadScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Profile" component={Profile} options={{ headerShown: false }} />
-                <Stack.Screen name="AdminPage" component={AdminPage} options={{ headerShown: false }} />
-                <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ headerShown: false }} />
-                <Stack.Screen name="CompleteProfileScreen" component={CompleteProfileScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Inbox" component={Inbox} options={{ headerShown: false }} />
-                <Stack.Screen name="Conversations" component={Conversations} options={{ headerShown: false }} />
-                <Stack.Screen name="Settings" component={Settings} options={{ headerShown: false }} />
-              </Stack.Navigator>
-            </React.Suspense>
-          </SafeAreaProvider>
-          <Toast config={toastConfig} />
-        </NavigationContainer>
-      </ThemeProvider>
-    </ErrorBoundary>
+      <ErrorBoundary>
+        <ThemeProvider>
+          <NavigationContainer>
+            <SafeAreaProvider>
+              <React.Suspense fallback={<Text>Loading...</Text>}>
+                <Stack.Navigator initialRouteName={isAuthenticated ? "Feed" : "LandingPage"}>
+                  <Stack.Screen name="LandingPage" component={LandingPage} options={{ headerShown: false }} />
+                  <Stack.Screen name="ConfirmSignUp" component={ConfirmSignUpScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Loading" component={LoadingScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Feed" component={Feed} options={{ headerShown: false }} />     
+                  <Stack.Screen name="Profile" component={Profile} options={{ headerShown: false }} />
+                  <Stack.Screen name="AdminPage" component={AdminPage} options={{ headerShown: false }} />
+                  <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ headerShown: false }} />
+                  <Stack.Screen name="CompleteProfileScreen" component={CompleteProfileScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Inbox" component={Inbox} options={{ headerShown: false }} />
+                  <Stack.Screen name="Conversations" component={Conversations} options={{ headerShown: false }} />
+                  <Stack.Screen name="Settings" component={Settings} options={{ headerShown: false }} />
+                </Stack.Navigator>
+              </React.Suspense>
+            </SafeAreaProvider>
+            <Toast config={toastConfig} />
+          </NavigationContainer>
+        </ThemeProvider>
+      </ErrorBoundary>
     </View>
   );
 }

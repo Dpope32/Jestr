@@ -12,7 +12,6 @@ import CommentFeed from '../../components/Modals/CommentFeed';
 import styles from './Feed.styles';
 import { fetchMemes, getLikeStatus } from '../../components/Meme/memeService';
 import { User, Meme, OnViewableItemsChanged } from '../../types/types';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from 'expo-blur';
 import LottieView from 'lottie-react-native';
 import { useNavigation, useRoute } from '@react-navigation/core';
@@ -21,13 +20,15 @@ import { RootStackParamList } from '../../types/types';
 import { debounce } from 'lodash';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import isEqual from 'lodash/isEqual';
-import { useUserStore } from '../userStore';
+import { useUserStore } from '../../utils/userStore';
 import { handleSignOut } from '../../services/authFunctions';
+import { getToken } from '../../utils/secureStore';
 
 const { height, width } = Dimensions.get('window');
 
 const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
-  const user = useUserStore();
+  //console.log('Rendering Feed');
+  const user = useUserStore(state => state);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const userState = useUserStore();
@@ -52,62 +53,59 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   const isFetchingMore = useRef(false);
-
+  
   useEffect(() => {
-    console.log('Feed component mounted');
-    console.log('User object:', JSON.stringify(user, null, 2));
+    //console.log('Feed component mounted');
+    
     const initializeFeed = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const storedUser = await AsyncStorage.getItem('user');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          useUserStore.getState().setUserDetails(parsedUser);
-        }
-        const storedToken = await AsyncStorage.getItem('accessToken');
-        if (!storedUser || !storedToken) {
+        const storedToken = await getToken('accessToken');
+        const userState = useUserStore.getState();
+        
+        if (!storedToken || !userState.email) {
           throw new Error('User data or access token not found in storage');
         }
-        const parsedUser = JSON.parse(storedUser);
-        setLocalUser(parsedUser);
+  
         setAccessToken(storedToken);
-
-        
-   //     console.log(parsedUser.email)
-    //    console.log(storedToken)
-        if (parsedUser.email && storedToken) {
-          await fetchInitialMemes(parsedUser.email, storedToken);
-        } else {
-          throw new Error('User email or access token is missing');
-        }
+        setLocalUser({
+          email: userState.email,
+          username: userState.username,
+          displayName: userState.displayName,
+          profilePic: typeof userState.profilePic === 'string' ? userState.profilePic : null,
+          headerPic: typeof userState.headerPic === 'string' ? userState.headerPic : null,
+          creationDate: userState.creationDate,
+          followersCount: userState.followersCount,
+          followingCount: userState.followingCount,
+          bio: userState.bio
+        });
+  
+        await fetchInitialMemes(userState.email, storedToken);
       } catch (error) {
         console.error('Error initializing feed:', error);
         setError('Failed to initialize feed. Please try again.');
         await handleSignOut();
-        await AsyncStorage.clear(); // Clear all stored data
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
             routes: [{ name: 'LandingPage' }],
           })
         );
+        return; // Exit the function to prevent further execution
       } finally {
         setIsLoading(false);
       }
     };
-  
+    
     initializeFeed();
-  }, []);
-  
+  }, [navigation]); // Add navigation to the dependency array
   
 
   useEffect(() => {
     const logStorageAndState = async () => {
-      // Log AsyncStorage
-      const keys = await AsyncStorage.getAllKeys();
-      const result = await AsyncStorage.multiGet(keys);
-    //  console.log('AsyncStorage contents:', result);
+      const accessToken = await getToken('accessToken');
+     // console.log('Secure Store accessToken:', accessToken ? 'exists' : 'not found');
   
       // Log Zustand state
       const state = useUserStore.getState();
@@ -375,6 +373,12 @@ if (error) {
   );
 }
 
+if (!user.email) {
+  console.log('No user email in Feed, redirecting to LandingPage');
+  // You might want to add a redirect here
+  return null;
+}
+
 //  console.log('Rendering Feed component');
 //  console.log('Local user:', localUser);
  // console.log('Memes count:', memes.length);
@@ -421,19 +425,19 @@ if (error) {
       )}
       {profilePanelVisible && localUser && (
         <ProfilePanel
-          isVisible={profilePanelVisible}
-          onClose={() => setProfilePanelVisible(false)}
-          profilePicUrl={localUser.profilePic}
-          username={localUser.username}
-          displayName={localUser.displayName || 'N/A'}
-          followersCount={localUser.followersCount}
-          followingCount={localUser.followingCount}
-          onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-          user={localUser}
-          navigation={navigation}
-          isDarkMode={isDarkMode}
-          setIsDarkMode={setIsDarkMode}
-        />
+  isVisible={profilePanelVisible}
+  onClose={() => setProfilePanelVisible(false)}
+  profilePicUrl={localUser?.profilePic || null}
+  username={localUser?.username || ''}
+  displayName={localUser?.displayName || 'N/A'}
+  followersCount={localUser?.followersCount || 0}
+  followingCount={localUser?.followingCount || 0}
+  onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+  user={localUser}
+  navigation={navigation}
+  isDarkMode={isDarkMode}
+  setIsDarkMode={setIsDarkMode}
+/>
       )}
 
       {isCommentFeedVisible && currentMediaIndex < memes.length && (

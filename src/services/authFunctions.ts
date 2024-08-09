@@ -1,16 +1,16 @@
 import { Alert } from 'react-native';
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import Toast from 'react-native-toast-message';
 import { User, Meme, FetchMemesResult  } from '../types/types'
 import { API_URL } from '../components/Meme/config';
 import { signUp, signOut, confirmSignIn, getCurrentUser, fetchAuthSession, signIn, SignInOutput } from '@aws-amplify/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/types';
-import { ImagePickerAsset } from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { v4 as uuidv4 } from 'uuid';
-import { ProfileImage,UserState, useUserStore  } from '../screens/userStore';
+import { ProfileImage, useUserStore  } from '../utils/userStore';
+import { storeToken, getToken, removeToken } from '../utils/secureStore';
+import * as SecureStore from 'expo-secure-store';
 
 type Asset = {
   uri: string;
@@ -58,43 +58,26 @@ export const handleLogin = async (
       const { tokens } = await fetchAuthSession();
       const accessToken = tokens?.accessToken?.toString();
       if (accessToken) {
-        await AsyncStorage.setItem('accessToken', accessToken);
+        await SecureStore.setItemAsync('accessToken', accessToken);
       }
       const userDetails = await fetchUserDetails(username, accessToken || '');
 
-        // Update Zustand store
-        useUserStore.getState().setUserDetails({
-          email: userDetails.email,
-          username: userDetails.username,
-          displayName: userDetails.displayName,
-          profilePic: userDetails.profilePic,
-          headerPic: userDetails.headerPic,
-          bio: userDetails.bio,
-          creationDate: userDetails.CreationDate,
-          followersCount: userDetails.FollowersCount,
-          followingCount: userDetails.FollowingCount,
-          // ... any other relevant fields
-        });
-      // Add this line to set isAdmin based on the email
-      userDetails.isAdmin = userDetails.email === 'pope.dawson@gmail.com';
-     // console.log('isAdmin set to:', userDetails.isAdmin);
-  
-    //  console.log('User details before navigation:', JSON.stringify(userDetails, null, 2));
-      await AsyncStorage.setItem('user', JSON.stringify(userDetails));
-      setModalUsername(userDetails.username);
-      setSuccessModalVisible(true);
+      // Update Zustand store
+      useUserStore.getState().setUserDetails({
+        email: userDetails.email,
+        username: userDetails.username,
+        displayName: userDetails.displayName,
+        profilePic: userDetails.profilePic,
+        headerPic: userDetails.headerPic,
+        bio: userDetails.bio,
+        creationDate: userDetails.CreationDate,
+        followersCount: userDetails.FollowersCount,
+        followingCount: userDetails.FollowingCount,
+        isAdmin: userDetails.email === 'pope.dawson@gmail.com',
+      });
       
       navigation.navigate('Feed', { 
-        user: {
-          email: userDetails.email,
-          username: userDetails.username,
-          profilePic: userDetails.email,
-          displayName: userDetails.displayName,
-          headerPic: userDetails.headerPic,
-          creationDate: userDetails.creationDate,
-          followersCount: userDetails.followersCount,
-          followingCount: userDetails.followingCount
-        }
+        user: useUserStore.getState() as User // Cast to User type
       });
     } else if (nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
       navigation.navigate('ChangePassword', { 
@@ -102,7 +85,6 @@ export const handleLogin = async (
         nextStep: nextStep 
       });
     } else {
-   //   console.log('Unexpected next step:', nextStep);
       Alert.alert('Login Failed', 'Unexpected authentication step');
     }
   } catch (error: any) {
@@ -157,9 +139,9 @@ export const fetchUserDetails = async (username: string, token?: string) => {
 export const handleSignOut = async () => {
   try {
     await signOut({ global: true });
-    await AsyncStorage.removeItem('user');
-    await AsyncStorage.removeItem('accessToken');
- //   console.log('Sign out successful');
+    await removeToken('accessToken');
+    useUserStore.getState().setUserDetails({}); // Clear Zustand store
+    console.log('Sign out successful');
   } catch (error) {
     console.error('Error signing out:', error);
     throw error;
@@ -206,16 +188,15 @@ export const handleSignup = async (
           authFlowType: 'USER_PASSWORD_AUTH'
         }
       });
-
       if (isSignedIn) {
         const authUser = await getCurrentUser();
         const user = convertAuthUserToUser(authUser);
-        await AsyncStorage.setItem('user', JSON.stringify(user));
+        useUserStore.getState().setUserDetails(user);
         navigation.navigate('CompleteProfileScreen', { email });
       } else {
-    //    console.log('Additional sign-in step required:', nextStep);
         Alert.alert('Login Incomplete', 'Please complete the additional step to sign in');
       }
+    
     } else {
    //   console.log('Additional signup step required:', nextStep);
 
@@ -322,8 +303,6 @@ export const handleCompleteProfile = async (
         userId: responseData.data.userId || userId,
       };
       console.log('Profile data being passed:', user);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-      // Update Zustand store
       useUserStore.getState().setUserDetails(user);
 
       setSuccessModalVisible(true);
@@ -391,7 +370,7 @@ export const handleChangePassword = async (
       if (result.isSignedIn) {
         const authUser = await getCurrentUser();
         const user = convertAuthUserToUser(authUser);
-        await AsyncStorage.setItem('user', JSON.stringify(user));
+        useUserStore.getState().setUserDetails(user);
         navigation.navigate('Feed', { user });
       } else {
         throw new Error('Failed to change password');
@@ -814,25 +793,20 @@ export const fetchConversations = async (userEmail: string) => {
   
   export const updateProfileImage = async (email: string, imageType: 'profile' | 'header', imagePath: string) => {
     try {
-    //  console.log('Starting updateProfileImage');
-  //    console.log('Email:', email);
-   //   console.log('Image Type:', imageType);
-   //   console.log('Image Path:', imagePath);
-    
       const imageBase64 = await FileSystem.readAsStringAsync(imagePath, { encoding: FileSystem.EncodingType.Base64 });
       if (!imageBase64) {
         throw new Error('Failed to read image file');
       }
-    
+  
       console.log('Image converted to base64 successfully');
-    
+  
       const profileData = {
         operation: 'updateProfileImage',
         email,
         imageType,
         image: imageBase64,
       };
-    
+  
       const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updateProfileImage', {
         method: 'POST',
         headers: {
@@ -840,21 +814,26 @@ export const fetchConversations = async (userEmail: string) => {
         },
         body: JSON.stringify(profileData),
       });
-    
+  
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response:', errorText);
         throw new Error('Network response was not ok');
       }
-    
+  
       const data = await response.json();
-    //  console.log('Response data:', data);
-    
-      // Update local storage with new image URL
-      const user = JSON.parse(await AsyncStorage.getItem('user') || '{}');
-      user[imageType + 'Pic'] = data.data[imageType + 'Pic'];
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-    
+  
+      // Update Zustand store with new image URL
+      const userStore = useUserStore.getState();
+      const updatedUser = {
+        ...userStore,
+        [imageType + 'Pic']: data.data[imageType + 'Pic']
+      };
+      userStore.setUserDetails(updatedUser);
+  
+      // Optionally, you can still store the updated user data in SecureStore
+      await SecureStore.setItemAsync('user', JSON.stringify(updatedUser));
+  
       return data;
     } catch (error) {
       console.error('Error updating profile image:', error);

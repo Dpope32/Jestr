@@ -16,6 +16,7 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import LottieView from 'lottie-react-native';
 import { debounce } from 'lodash';
 
+
 interface IconButtonProps {
   icon: IconDefinition;
   count: number;
@@ -362,9 +363,12 @@ useEffect(() => {
         ]}
       >
         <View style={styles.textContainer}>
-          <Image source={{ uri: memeUser?.profilePic }} style={styles.profilePic} />
+          <Image 
+            source={memeUser?.profilePic ? { uri: memeUser.profilePic } : require('../../assets/images/Jestr.jpg')} 
+            style={styles.profilePic} 
+          />
           <View style={styles.textContent}>
-            <Text style={styles.username}>{memeUser?.username}</Text>
+            <Text style={styles.username}>{memeUser?.username || 'Anonymous'}</Text>
             {caption && <Text style={styles.caption}>{caption}</Text>}
             <Text style={styles.date}>{formatDate(uploadTimestamp)}</Text>
           </View>
@@ -377,7 +381,7 @@ useEffect(() => {
         </View>
       </AnimatedBlurView>
     ), [animatedBlurIntensity, memeUser, caption, uploadTimestamp, counts, debouncedHandleLike, liked, doubleLiked, handleDownloadPress, isSaved, toggleCommentFeed, formatDate]);
-  
+
     const IconButton: React.FC<IconButtonProps> = useCallback(({ icon, count, onPress, color = "#1bd40b" }) => (
       <TouchableOpacity onPress={onPress} style={styles.iconWrapper}>
         <FontAwesomeIcon icon={icon} size={28} color={color} />

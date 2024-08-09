@@ -50,7 +50,7 @@ interface Conversation {
   id: string;
   userEmail: string;
   username: string;
-  profilePicUrl: string;
+  profilePicUrl: string | null;
   lastMessage: string;
   timestamp: string;
   messages: any[];
@@ -156,7 +156,7 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
           id: conversationID,
           userEmail: selectedUser.email,
           username: selectedUser.username,
-          profilePicUrl: selectedUser.profilePic,
+          profilePicUrl: selectedUser.profilePic, // This line causes an error
           messages: [],
           lastMessage: '',
           timestamp: new Date().toISOString()
@@ -266,7 +266,7 @@ const getMessagePreview = (content: string) => {
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1C' : '#696969' }]}>
 <TopPanel
   onProfileClick={toggleProfilePanel}
-  profilePicUrl={localUser ? localUser.profilePic : ''}
+  profilePicUrl={localUser ? localUser.profilePic : ''} 
   username={localUser ? localUser.username : 'Default Username'}
   enableDropdown={true}
   showLogo={true}

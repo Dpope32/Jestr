@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Animated, View, ActivityIndicator } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import LP from './LP';
 import { User, RootStackParamList, LetterScale } from '../../types/types';
 
@@ -27,33 +26,17 @@ const LandingPage: React.FC = () => {
   const formOpacity = useRef(new Animated.Value(0)).current;
   const [titleMarginTop, setTitleMarginTop] = useState(-300);
   const [isLoading, setIsLoading] = useState(false);
+  
 
   useEffect(() => {
     console.log('LandingPage mounted');
+    startAnimation();
   }, []);
 
-  const checkAuthStatus = async () => {
-    try {
-      const user = await AsyncStorage.getItem('user');
-      if (user) {
-        setIsAuthenticated(true);
-        navigation.navigate('Feed', { user: JSON.parse(user) });
-      } else {
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.error('Error checking authentication status:', error);
-    }
-  };
 
   const navigateToConfirmSignUp = (email: string) => {
     navigation.navigate('ConfirmSignUp', { email });
   };
-
-  useEffect(() => {
-    checkAuthStatus();
-    startAnimation();
-  }, []);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
