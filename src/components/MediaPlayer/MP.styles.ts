@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { Dimensions } from 'react-native';
 import { COLORS, SPACING, FONT_SIZES, wp } from '../../theme/theme';
 
@@ -9,7 +9,10 @@ const styles = StyleSheet.create({
     flex: 1,
     height: height,
     width: width,
-    backgroundColor: '#000',
+  },
+  blurInner: {
+    padding: 10,
+    borderRadius: 10,
   },
   memeContainer: {
     flex: 1,
@@ -20,6 +23,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        marginTop: -100, // Adjust this value as needed for iOS
+      },
+    }),
   },
   blurContainer: {
     position: 'absolute',
@@ -40,7 +48,7 @@ const styles = StyleSheet.create({
   iconColumn: {
     position: 'absolute',
     right: 10,
-    bottom: 120,
+    bottom: 100,
     alignItems: 'center',
   },
   memeImage: {

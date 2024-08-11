@@ -9,6 +9,7 @@ export interface UserState {
   displayName: string;
   bio: string;
   creationDate: string;
+  CreationDate ? : string;
   followersCount: number;
   followingCount: number;
   posts: Meme[];

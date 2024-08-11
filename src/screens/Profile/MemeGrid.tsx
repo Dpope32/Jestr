@@ -8,9 +8,22 @@ interface MemeGridProps {
   renderMeme: (item: Meme, index: number) => React.ReactElement;
   onLoadMore: () => void;
   onHeightChange: (height: number) => void;
+  isLoading: boolean;
+  onDeleteMeme: (memeID: string) => Promise<void>;
+  onRemoveDownloadedMeme: (memeID: string) => Promise<void>;
+  selectedTab: string;
 }
 
-const MemeGrid: React.FC<MemeGridProps> = ({ memes, renderMeme, onLoadMore, onHeightChange }) => {
+const MemeGrid: React.FC<MemeGridProps> = ({ 
+  memes, 
+  renderMeme, 
+  onLoadMore, 
+  onHeightChange, 
+  isLoading, 
+  onDeleteMeme, 
+  onRemoveDownloadedMeme, 
+  selectedTab 
+}) => {
   const [containerHeight, setContainerHeight] = useState(300);
 
   const handleContentSizeChange = useCallback((width: number, height: number) => {
@@ -43,9 +56,7 @@ const MemeGrid: React.FC<MemeGridProps> = ({ memes, renderMeme, onLoadMore, onHe
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    minHeight: 300,
-    // Remove maxHeight constraint
-    backgroundColor: '#333',
+    minHeight: 500,
   },
   flashListContent: {
     paddingBottom: 20,

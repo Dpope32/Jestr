@@ -9,9 +9,40 @@ export const storeToken = async (key: string, value: string) => {
   }
 };
 
+// In secureStore.ts
+
+export const storeUserIdentifier = async (identifier: string) => {
+  try {
+    await SecureStore.setItemAsync('userIdentifier', identifier);
+  } catch (error) {
+    console.error('Error storing user identifier', error);
+  }
+};
+
+export const getUserIdentifier = async () => {
+  try {
+    const identifier = await SecureStore.getItemAsync('userIdentifier');
+    console.log('Retrieved user identifier:', identifier ? 'Identifier exists' : 'No identifier found');
+    return identifier;
+  } catch (error) {
+    console.error('Error retrieving user identifier', error);
+    return null;
+  }
+};
+
+export const removeUserIdentifier = async () => {
+  try {
+    await SecureStore.deleteItemAsync('userIdentifier');
+  } catch (error) {
+    console.error('Error removing user identifier', error);
+  }
+};
+
 export const getToken = async (key: string) => {
   try {
-    return await SecureStore.getItemAsync(key);
+    const token = await SecureStore.getItemAsync(key);
+    console.log(`Retrieved token for key ${key}:`, token ? 'Token exists' : 'No token found');
+    return token;
   } catch (error) {
     console.error('Error retrieving the token', error);
     return null;

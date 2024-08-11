@@ -7,6 +7,13 @@ export const styles = StyleSheet.create({
     padding: 0,
     borderRadius: 20,
   },
+  absoluteFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   formContainer1: {
     flex: 1,
     alignItems: 'center',
@@ -16,6 +23,15 @@ export const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     marginTop: 60,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#00ff00',
+    marginTop: 10,
   },
   logoContainer: {
     alignItems: 'center',

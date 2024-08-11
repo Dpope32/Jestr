@@ -1,14 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Animated, View, ActivityIndicator } from 'react-native';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { Animated, View, ActivityIndicator, Text } from 'react-native';
+import { NavigationProp, useNavigation, CommonActions } from '@react-navigation/native';
 import LP from './LP';
 import { User, RootStackParamList, LetterScale } from '../../types/types';
+import { getToken, getUserIdentifier, removeToken, removeUserIdentifier }  from 'utils/secureStore';
+import { getCurrentUser } from '@aws-amplify/auth';
+import { fetchUserDetails } from 'services/authFunctions';
 
 type LandingPageNavigationProp = NavigationProp<RootStackParamList>;
 
 const LandingPage: React.FC = () => {
- // console.log('App mounted mwaha');
+  console.log('LandingPage rendering');
   const navigation = useNavigation<LandingPageNavigationProp>();
+  const [isLoading, setIsLoading] = useState(false);
   const logoOpacity = useRef(new Animated.Value(1)).current;
   const [animationComplete, setAnimationComplete] = useState(false);
   const titleOpacity = useRef(new Animated.Value(0)).current;
@@ -25,14 +29,50 @@ const LandingPage: React.FC = () => {
   const [showSignUpForm, setShowSignUpForm] = useState(false);
   const formOpacity = useRef(new Animated.Value(0)).current;
   const [titleMarginTop, setTitleMarginTop] = useState(-300);
-  const [isLoading, setIsLoading] = useState(false);
-  
 
+  
   useEffect(() => {
     console.log('LandingPage mounted');
     startAnimation();
   }, []);
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await getToken('accessToken');
+      const identifier = await getUserIdentifier();
+      if (token && identifier) {
+        try {
+          const userDetails = await fetchUserDetails(identifier, token);
+          if (userDetails) {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Feed' }],
+              })
+            );
+          } else {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [
+                  { 
+                    name: 'CompleteProfileScreen', 
+                    params: { email: identifier }
+                  }
+                ],
+              })
+            );
+          }
+        } catch (error) {
+          console.error('Error checking auth in LandingPage:', error);
+          // Clear stored data on error
+          await removeToken('accessToken');
+          await removeUserIdentifier();
+        }
+      }
+    };
+    checkAuth();
+  }, [navigation]);
 
   const navigateToConfirmSignUp = (email: string) => {
     navigation.navigate('ConfirmSignUp', { email });
@@ -111,10 +151,11 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       {isLoading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#00ff00" />
+          <Text>Loading...</Text>
         </View>
       ) : (
         <LP
@@ -128,7 +169,7 @@ const LandingPage: React.FC = () => {
           setShowInitialScreen={setShowInitialScreen}
           setShowSignUpForm={setShowSignUpForm}
           navigateToConfirmSignUp={navigateToConfirmSignUp}
-          setIsLoading={setIsLoading} // Pass the setIsLoading function to LP
+          setIsLoading={setIsLoading}
         />
       )}
     </View>

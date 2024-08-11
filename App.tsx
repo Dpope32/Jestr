@@ -13,9 +13,11 @@ import { RootStackParamList } from './src/types/types';
 import awsconfig from './src/aws-exports';
 import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
-import { getToken } from './src/utils/secureStore';
 import { useUserStore } from './src/utils/userStore';
-import { getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
+import { getCurrentUser } from 'aws-amplify/auth';
+import { fetchUserDetails, handleSignOut } from './src/services/authFunctions';
+import Feed from './src/screens/Feed/Feed';
+import { storeToken, getToken, storeUserIdentifier, getUserIdentifier } from './src/utils/secureStore';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -27,7 +29,6 @@ Amplify.configure(awsconfig);
 
 const LandingPage = lazy(() => import('./src/screens/LandingPage/LandingPage'));
 const LoadingScreen = lazy(() => import('./src/screens/Loading/LoadingScreen'));
-const Feed = lazy(() => import('./src/screens/Feed/Feed'));
 const MemeUploadScreen = lazy(() => import('./src/screens/MemeUploadScreen/MemeUploadScreen'));
 const Profile = lazy(() => import('./src/screens/Profile/Profile'));
 const AdminPage = lazy(() => import('./src/screens/AdminPage/AdminPage'));
@@ -90,80 +91,60 @@ function App(): React.JSX.Element | null {
   const setUserDetails = useUserStore(state => state.setUserDetails);
 
   useEffect(() => {
-    console.log('App useEffect running');
-    checkAuthStatus();
+    const initializeApp = async () => {
+      try {
+        const [fontsLoaded, authStatus] = await Promise.all([
+          Font.loadAsync({ Inter_400Regular, Inter_700Bold }).then(() => true),
+          checkAuthStatus()
+        ]);
+        setIsReady(fontsLoaded && authStatus);
+      } catch (error) {
+        console.error('Initialization error', error);
+        setIsReady(false);
+      }
+    };
+    initializeApp();
   }, []);
 
-    async function checkAuthStatus() {
-      console.log('Checking auth status');
-      try {
-        const token = await getToken('accessToken');
-        console.log('Token:', token ? 'exists' : 'does not exist');
-        
-        if (token) {
-          try {
-            const user = await getCurrentUser();
-            const attributes = await fetchUserAttributes();
-            
-            const userDetails = {
-              email: attributes.email || '',
-              username: user.username,
-              displayName: attributes.name || '',
-              profilePic: attributes.picture || '',
-              headerPic: attributes['custom:headerPic'] || '',
-              bio: attributes['custom:bio'] || '',
-              creationDate: attributes['custom:creationDate'] || '',
-              followersCount: parseInt(attributes['custom:followersCount'] || '0', 10),
-              followingCount: parseInt(attributes['custom:followingCount'] || '0', 10),
-              isAdmin: attributes.email === 'pope.dawson@gmail.com',
-            };
-            
-            console.log('Fetched user details:', userDetails);
-            
-            setIsAuthenticated(true);
-            useUserStore.getState().setUserDetails(userDetails);
-          } catch (error) {
-            console.error('Error fetching user details:', error);
-            setIsAuthenticated(false);
-            useUserStore.getState().setUserDetails({});
-          }
-        } else {
-          console.log('No token found, user is not authenticated');
-          setIsAuthenticated(false);
-          useUserStore.getState().setUserDetails({});
+  async function checkAuthStatus(): Promise<boolean> {
+    try {
+      const token = await getToken('accessToken');
+      if (token) {
+        const cognitoUser = await getCurrentUser();
+        const identifier = cognitoUser.signInDetails?.loginId || cognitoUser.username;
+        if (!identifier) {
+          throw new Error('No valid identifier found for user');
         }
-      } catch (error) {
-        console.error('Error checking authentication status:', error);
+        const userDetails = await fetchUserDetails(identifier, token);
+        if (userDetails) {
+          useUserStore.getState().setUserDetails(userDetails);
+          setIsAuthenticated(true);
+          await storeUserIdentifier(userDetails.email);
+          return true;
+        } else {
+          setIsAuthenticated(true);
+          useUserStore.getState().setUserDetails({ email: identifier });
+          await storeUserIdentifier(identifier);
+          return true;
+        }
+      } else {
         setIsAuthenticated(false);
         useUserStore.getState().setUserDetails({});
-      } finally {
-        setIsReady(true);
+        return false;
       }
+    } catch (error) {
+      console.error('Error checking authentication status:', error);
+      setIsAuthenticated(false);
+      useUserStore.getState().setUserDetails({});
+      return false;
     }
-
+  }
 
   const onLayoutRootView = useCallback(async () => {
     if (isReady) {
       await SplashScreen.hideAsync();
     }
   }, [isReady]);
-
-  useEffect(() => {
-    async function prepare() {
-      try {
-        await Font.loadAsync({
-          Inter_400Regular,
-          Inter_700Bold,
-        });
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setIsReady(true);
-      }
-    }
-
-    prepare();
-  }, []);
 
   useEffect(() => {
     console.log('Authentication state changed:', isAuthenticated);
@@ -185,7 +166,7 @@ function App(): React.JSX.Element | null {
                   <Stack.Screen name="ConfirmSignUp" component={ConfirmSignUpScreen} options={{ headerShown: false }} />
                   <Stack.Screen name="Loading" component={LoadingScreen} options={{ headerShown: false }} />
                   <Stack.Screen name="Feed" component={Feed} options={{ headerShown: false }} />     
-                  <Stack.Screen name="Profile" component={Profile} options={{ headerShown: false }} />
+                  <Stack.Screen name="Profile" component={Profile as React.ComponentType<any>} options={{ headerShown: false }} />
                   <Stack.Screen name="AdminPage" component={AdminPage} options={{ headerShown: false }} />
                   <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ headerShown: false }} />
                   <Stack.Screen name="CompleteProfileScreen" component={CompleteProfileScreen} options={{ headerShown: false }} />

@@ -69,9 +69,9 @@ editButton: {
 },
 modalContainer: {
   flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.9)',
   justifyContent: 'center',
   alignItems: 'center',
-  backgroundColor: 'rgba(0, 0, 0, 0.8)', // Semi-transparent background
 },
 editIcon: {
   color: '#000',
@@ -111,13 +111,7 @@ interactionIcons: {
     position: 'absolute',
     top: 40,
     right: 20,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1001,
+    padding: 10,
   },
   closeButtonText: {
     color: '#FFF',
@@ -176,7 +170,7 @@ safeView: {
   },
   userInfoContainer: {
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 70,
     paddingHorizontal: 20,
     zIndex: 10,
   },
@@ -326,5 +320,50 @@ safeView: {
   edit: {
     color : 'green',
     marginLeft: 10,
+  },
+  deleteMemeButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 15,
+    padding: 5,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 5,
+  },
+  removeMemeButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 15,
+    padding: 5,
+  },
+  removeButton: {
+    position: 'absolute',
+    bottom: 40,
+    right: 20,
+    backgroundColor: 'orange',
+    padding: 10,
+    borderRadius: 5,
+  },
+  removeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  settingsIcon: {
+    position: 'absolute',
+    top: -30,
+    right: 10,
   },
 });

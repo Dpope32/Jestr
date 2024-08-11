@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Animated, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/core';
 import { styles } from './LandingPage.styles';
 import InputField from '../../components/shared/Input/InutField';
@@ -12,6 +12,7 @@ import { RootStackParamList, LandingPageNavigationProp, LetterScale } from '../.
 import Icon from 'react-native-vector-icons/FontAwesome';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import WelcomeText from './WelcomeText';
+import { BlurView } from 'expo-blur';
 import RainEffect from './RainEffect';
 
 import { 
@@ -98,13 +99,11 @@ const LP: React.FC<LPProps> = ({
     // TODO: Implement Instagram authentication
   };
 
-  const toggleAuthMode = () => {
-    setCurrentScreen(currentScreen === 'login' ? 'signup' : 'login');
-    // Reset form fields if necessary
-    setEmail('');
-    setPassword('');
-    // ... reset other fields
+  const handleLoginPress = async () => {
+    setIsLoading(true);
+    await handleLogin(email, password, setIsLoading, navigation, setSuccessModalVisible, setModalUsername);
   };
+
 
   return (
     <LinearGradient
@@ -266,6 +265,14 @@ const LP: React.FC<LPProps> = ({
                     </View>
                   </View>
                 )}
+                 {isLoading && (
+        <BlurView intensity={100} style={StyleSheet.absoluteFill}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#00ff00" />
+            <Text style={styles.loadingText}>Logging in...</Text>
+          </View>
+        </BlurView>
+      )}
               </Animated.View>
             )}
           </ScrollView>

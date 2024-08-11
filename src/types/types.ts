@@ -31,6 +31,7 @@ export type FetchMemesResult = {
   lastEvaluatedKey: string | null;
 };
 
+export type ShareType = 'copy' | 'message' | 'snapchat' | 'facebook' | 'twitter' | 'email' | 'friend' | 'instagram';
 
 export type RootStackParamList = {
   Loading: undefined;

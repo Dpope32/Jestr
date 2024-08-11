@@ -12,6 +12,7 @@ import { ProfileImage, useUserStore  } from '../utils/userStore';
 import { storeToken, getToken, removeToken } from '../utils/secureStore';
 import * as SecureStore from 'expo-secure-store';
 
+
 type Asset = {
   uri: string;
   type: string;
@@ -95,19 +96,55 @@ export const handleLogin = async (
   }
 };
 
-export const fetchUserDetails = async (username: string, token?: string) => {
-//  console.log('Fetching user details for username:', username);
-  //console.log('Using API endpoint:', API_ENDPOINT);
- // console.log('Token being sent:', token);
+// Remove the API import
 
-  // Extract email from username if it's an email, otherwise use username
-  const identifier = username.includes('@') ? username : username;
+export const deleteMeme = async (memeID: string, userEmail: string) => {
+  try {
+    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/deleteMeme', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ operation: 'deleteMeme', memeID, userEmail }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete meme');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting meme:', error);
+    throw error;
+  }
+};
+
+export const removeDownloadedMeme = async (userEmail: string, memeID: string) => {
+  try {
+    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/removeDownloadedMeme', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ operation: 'removeDownloadedMeme', userEmail, memeID }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to remove downloaded meme');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error removing downloaded meme:', error);
+    throw error;
+  }
+};
+
+export const fetchUserDetails = async (identifier: string, token?: string) => {
+  console.log('Fetching user details for identifier:', identifier);
+  console.log('Using API endpoint:', API_ENDPOINT);
+  console.log('Token being sent:', token);
 
   const requestBody = {
     operation: "getUser",
-    identifier: identifier  // Changed from username to identifier
+    identifier: identifier
   };
-//  console.log('Request body:', JSON.stringify(requestBody));
 
   const response = await fetch(API_ENDPOINT, {
     method: 'POST',
@@ -117,8 +154,7 @@ export const fetchUserDetails = async (username: string, token?: string) => {
     },
     body: JSON.stringify(requestBody)
   });
-
-//  console.log('Response status:', response.status);
+ console.log('Response status:', response.status);
 //  console.log('Response headers:', JSON.stringify(response.headers));
 
   if (!response.ok) {
@@ -127,7 +163,7 @@ export const fetchUserDetails = async (username: string, token?: string) => {
     throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
   }
   const data = await response.json();
-//  console.log('User details fetched successfully:', JSON.stringify(data, null, 2));
+ console.log('User details fetched successfully:', JSON.stringify(data, null, 2));
   
   if (!data.data) {
     throw new Error('No user data returned from server');
@@ -238,7 +274,7 @@ export const fetchTabMemes = async (
       default:
         result = { memes: [], lastEvaluatedKey: null };
     }
-  //  console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
+  console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
     return result;
   } catch (error) {
     console.error(`Error fetching ${tab} memes:`, error);
@@ -522,14 +558,18 @@ export const fetchMemes = async (
   }
 };
 
-export const getUserMemes = async (email: string): Promise<FetchMemesResult> => {
+export const getUserMemes = async (email: string, lastEvaluatedKey: string | null = null): Promise<FetchMemesResult> => {
   try {
     const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUserMemes', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ operation: 'getUserMemes', email }),
+      body: JSON.stringify({ 
+        operation: 'getUserMemes', 
+        email,
+        lastEvaluatedKey
+      }),
     });
 
     if (!response.ok) {
@@ -537,9 +577,9 @@ export const getUserMemes = async (email: string): Promise<FetchMemesResult> => 
     }
 
     const data = await response.json();
-    return { 
-      memes: data.data,
-      lastEvaluatedKey: data.LastEvaluatedKey || null
+    return {
+      memes: data.data.memes,
+      lastEvaluatedKey: data.data.lastEvaluatedKey
     };
   } catch (error) {
     console.error('Error fetching user memes:', error);

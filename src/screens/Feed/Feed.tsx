@@ -22,11 +22,18 @@ import ErrorBoundary from '../../components/ErrorBoundary';
 import isEqual from 'lodash/isEqual';
 import { useUserStore } from '../../utils/userStore';
 import { handleSignOut } from '../../services/authFunctions';
+import { RouteProp } from '@react-navigation/native';
 import { getToken } from '../../utils/secureStore';
+
+type FeedScreenRouteProp = RouteProp<RootStackParamList, 'Feed'>;
+
+type FeedProps = {
+  route: FeedScreenRouteProp;
+};
 
 const { height, width } = Dimensions.get('window');
 
-const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
+const Feed: React.FC<FeedProps> = ({ route }) => {
   //console.log('Rendering Feed');
   const user = useUserStore(state => state);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -55,14 +62,14 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
   const isFetchingMore = useRef(false);
   
   useEffect(() => {
-    //console.log('Feed component mounted');
-    
     const initializeFeed = async () => {
+      console.log('Initializing Feed');
       setIsLoading(true);
       setError(null);
       try {
         const storedToken = await getToken('accessToken');
         const userState = useUserStore.getState();
+        console.log('User state in Feed:', userState);
         
         if (!storedToken || !userState.email) {
           throw new Error('User data or access token not found in storage');
@@ -78,8 +85,7 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
           creationDate: userState.creationDate,
           followersCount: userState.followersCount,
           followingCount: userState.followingCount,
-          bio: userState.bio
-        });
+        } as User);
   
         await fetchInitialMemes(userState.email, storedToken);
       } catch (error) {
@@ -92,14 +98,13 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
             routes: [{ name: 'LandingPage' }],
           })
         );
-        return; // Exit the function to prevent further execution
       } finally {
         setIsLoading(false);
       }
     };
     
     initializeFeed();
-  }, [navigation]); // Add navigation to the dependency array
+  }, [navigation]);
   
 
   useEffect(() => {
@@ -109,7 +114,7 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
   
       // Log Zustand state
       const state = useUserStore.getState();
-    //  console.log('Zustand state:', state);
+   // console.log('Zustand state:', state);
     };
   
     logStorageAndState();
@@ -129,8 +134,9 @@ const Feed: React.FC<{ route: { params: { user?: User } } }> = ({ route }) => {
         setLastEvaluatedKey(result.lastEvaluatedKey);
         updateLikeStatuses(result.memes);
       }
-    //  console.log('Initial memes Count:', result.memes.length);
-     // console.log('initial fetch result:', result.memes);
+     // console.log('Initial memes Count:', result.memes.length);
+    //console.log('initial fetch result:', result.memes);
+     
     } catch (error) {
       console.error('Error fetching initial memes:', error);
       setError('Failed to fetch memes. Please try again later.');

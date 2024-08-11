@@ -57,7 +57,10 @@ const TopPanel: React.FC<TopPanelProps> = ({
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
         <TouchableOpacity onPress={handleProfileClick} style={styles.profileContainer}>
-        <Image source={{ uri: profilePicUrl ?? '../../assets/images/Jestr.jpg' }} style={styles.profilePic} />
+        <Image 
+  source={profilePicUrl ? { uri: profilePicUrl } : require('../../assets/images/Jestr.jpg')} 
+  style={styles.profilePic} 
+/>
           <Text style={styles.username}>{username}</Text>
         </TouchableOpacity>
           
