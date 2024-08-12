@@ -6,11 +6,11 @@ import { User, RootStackParamList, LetterScale } from '../../types/types';
 import { getToken, getUserIdentifier, removeToken, removeUserIdentifier }  from 'utils/secureStore';
 import { getCurrentUser } from '@aws-amplify/auth';
 import { fetchUserDetails } from 'services/authFunctions';
-
+import { storeUserIdentifier } from 'utils/secureStore';
 type LandingPageNavigationProp = NavigationProp<RootStackParamList>;
 
 const LandingPage: React.FC = () => {
-  console.log('LandingPage rendering');
+  console.log('LandingPage rendering start');
   const navigation = useNavigation<LandingPageNavigationProp>();
   const [isLoading, setIsLoading] = useState(false);
   const logoOpacity = useRef(new Animated.Value(1)).current;
@@ -32,16 +32,31 @@ const LandingPage: React.FC = () => {
 
   
   useEffect(() => {
-    console.log('LandingPage mounted');
+    console.log('LandingPage useEffect: Animation start');
     startAnimation();
   }, []);
 
   useEffect(() => {
+    console.log('LandingPage useEffect: Auth check start');
     const checkAuth = async () => {
       const token = await getToken('accessToken');
-      const identifier = await getUserIdentifier();
-      if (token && identifier) {
+      let identifier = await getUserIdentifier();
+      console.log('Token in LandingPage:', token ? 'exists' : 'does not exist');
+      console.log('Identifier in LandingPage:', identifier ? 'exists' : 'does not exist');
+  
+      if (token) {
         try {
+          if (!identifier) {
+            // Token exists but identifier doesn't. We need to get the user's email.
+            const user = await getCurrentUser();
+            identifier = user.signInDetails?.loginId || user.username;
+            if (identifier) {
+              await storeUserIdentifier(identifier);
+            } else {
+              throw new Error('Unable to retrieve user email');
+            }
+          }
+  
           const userDetails = await fetchUserDetails(identifier, token);
           if (userDetails) {
             navigation.dispatch(
@@ -68,7 +83,12 @@ const LandingPage: React.FC = () => {
           // Clear stored data on error
           await removeToken('accessToken');
           await removeUserIdentifier();
+          // Stay on LandingPage
+          setIsAuthenticated(false);
         }
+      } else {
+        // No token, stay on LandingPage
+        setIsAuthenticated(false);
       }
     };
     checkAuth();
@@ -150,7 +170,10 @@ const LandingPage: React.FC = () => {
     }
   };
 
-  return (
+
+  console.log('LandingPage rendering end, isLoading:', isLoading);
+
+   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       {isLoading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

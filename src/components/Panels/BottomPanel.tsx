@@ -30,7 +30,7 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
   };
 
   const handleUploadClick = () => {
-    navigation.navigate('MemeUpload', { user });
+    navigation.navigate('MemeUploadScreen', { user });
   };
 
   const handleInboxClick = () => {

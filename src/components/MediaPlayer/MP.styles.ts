@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        marginTop: -100, // Adjust this value as needed for iOS
+        marginTop: -140, // Adjust this value as needed for iOS
       },
     }),
   },
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   textContainer: {
     position: 'absolute',
     flexDirection: 'row',
-    bottom: 100,
+    bottom: 200,
     left: 10,
     right: 10,
     padding: 10,
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   iconColumn: {
     position: 'absolute',
     right: 10,
-    bottom: 100,
+    bottom: 200,
     alignItems: 'center',
   },
   memeImage: {

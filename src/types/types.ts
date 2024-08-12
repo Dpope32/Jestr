@@ -38,7 +38,7 @@ export type RootStackParamList = {
   LandingPage: undefined;
   Feed: { user: User };
   Settings: { email: string };
-  MemeUpload: { user: any };
+  MemeUploadScreen: { user: any };
   CompleteProfileScreen: { email: string };
   Inbox: { user: any };
   ConfirmSignUp: { email: string };

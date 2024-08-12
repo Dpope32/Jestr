@@ -5,7 +5,7 @@ import ModalDropdown from 'react-native-modal-dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronDown, faCog } from '@fortawesome/free-solid-svg-icons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { FONTS, COLORS } from '../../theme/theme';
+import { FONTS } from '../../theme/theme';
 
 interface TopPanelProps {
   onProfileClick: () => void;
@@ -99,7 +99,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
 
 const styles = StyleSheet.create({
   safeArea: {
-    marginTop: 0,
+    marginTop: 50,
     zIndex:10,
     backgroundColor: 'rgba(0, 0, 0, 1)',
   },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   container: {
     position: 'absolute',
-    top: 60,
+    top: 20,
     left: 0,
     flexDirection: 'row',
     alignItems: 'center',
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: wp('4%'), // Adjusted font size for better readability
-    color: '#1bd40b',
+    color: '#999',
     fontFamily: FONTS.regular,
     fontWeight: 'bold',
   },
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   dropdownItemText: {
     color: '#fff',
     fontFamily: FONTS.regular,
-    fontSize: wp('4%'),
+    fontSize: wp('3.5%'),
   },
   dropdownTextStyle: {
     color: 'white',

@@ -18,6 +18,8 @@ import { getCurrentUser } from 'aws-amplify/auth';
 import { fetchUserDetails, handleSignOut } from './src/services/authFunctions';
 import Feed from './src/screens/Feed/Feed';
 import { storeToken, getToken, storeUserIdentifier, getUserIdentifier } from './src/utils/secureStore';
+import LandingPage from './src/screens/LandingPage/LandingPage';
+// Remove the lazy import if it exists
 
 SplashScreen.preventAutoHideAsync();
 
@@ -27,7 +29,6 @@ if (UIManager.setLayoutAnimationEnabledExperimental) {
 
 Amplify.configure(awsconfig);
 
-const LandingPage = lazy(() => import('./src/screens/LandingPage/LandingPage'));
 const LoadingScreen = lazy(() => import('./src/screens/Loading/LoadingScreen'));
 const MemeUploadScreen = lazy(() => import('./src/screens/MemeUploadScreen/MemeUploadScreen'));
 const Profile = lazy(() => import('./src/screens/Profile/Profile'));
@@ -87,20 +88,24 @@ const toastConfig: ToastConfig = {
 
 function App(): React.JSX.Element | null {
   const [isReady, setIsReady] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(false);
   const setUserDetails = useUserStore(state => state.setUserDetails);
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        console.log('Starting app initialization');
         const [fontsLoaded, authStatus] = await Promise.all([
           Font.loadAsync({ Inter_400Regular, Inter_700Bold }).then(() => true),
           checkAuthStatus()
         ]);
-        setIsReady(fontsLoaded && authStatus);
+        console.log('Fonts loaded:', fontsLoaded, 'Auth status:', authStatus);
+        setIsReady(fontsLoaded);
+        setIsAuthenticated(authStatus);
       } catch (error) {
         console.error('Initialization error', error);
-        setIsReady(false);
+        setIsReady(true);
+        setIsAuthenticated(false);
       }
     };
     initializeApp();
@@ -109,6 +114,7 @@ function App(): React.JSX.Element | null {
   async function checkAuthStatus(): Promise<boolean> {
     try {
       const token = await getToken('accessToken');
+      console.log('Token status:', token ? 'exists' : 'does not exist');
       if (token) {
         const cognitoUser = await getCurrentUser();
         const identifier = cognitoUser.signInDetails?.loginId || cognitoUser.username;
@@ -118,23 +124,19 @@ function App(): React.JSX.Element | null {
         const userDetails = await fetchUserDetails(identifier, token);
         if (userDetails) {
           useUserStore.getState().setUserDetails(userDetails);
-          setIsAuthenticated(true);
           await storeUserIdentifier(userDetails.email);
           return true;
         } else {
-          setIsAuthenticated(true);
           useUserStore.getState().setUserDetails({ email: identifier });
           await storeUserIdentifier(identifier);
           return true;
         }
       } else {
-        setIsAuthenticated(false);
         useUserStore.getState().setUserDetails({});
         return false;
       }
     } catch (error) {
       console.error('Error checking authentication status:', error);
-      setIsAuthenticated(false);
       useUserStore.getState().setUserDetails({});
       return false;
     }
@@ -145,14 +147,26 @@ function App(): React.JSX.Element | null {
       await SplashScreen.hideAsync();
     }
   }, [isReady]);
+  
+  useEffect(() => {
+    if (isReady) {
+      onLayoutRootView();
+    }
+  }, [isReady, onLayoutRootView]);
 
   useEffect(() => {
     console.log('Authentication state changed:', isAuthenticated);
   }, [isAuthenticated]);
 
   if (!isReady) {
-    return null;
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <Text>Loading...</Text>
+      </View>
+    );
   }
+
+  
 
   return (
     <View style={{flex: 1}} onLayout={onLayoutRootView}>
@@ -161,11 +175,12 @@ function App(): React.JSX.Element | null {
           <NavigationContainer>
             <SafeAreaProvider>
               <React.Suspense fallback={<Text>Loading...</Text>}>
-                <Stack.Navigator initialRouteName={isAuthenticated ? "Feed" : "LandingPage"}>
+              <Stack.Navigator initialRouteName={isAuthenticated ? "Feed" : "LandingPage"}>
                   <Stack.Screen name="LandingPage" component={LandingPage} options={{ headerShown: false }} />
                   <Stack.Screen name="ConfirmSignUp" component={ConfirmSignUpScreen} options={{ headerShown: false }} />
                   <Stack.Screen name="Loading" component={LoadingScreen} options={{ headerShown: false }} />
                   <Stack.Screen name="Feed" component={Feed} options={{ headerShown: false }} />     
+                  <Stack.Screen name="MemeUploadScreen" component={MemeUploadScreen} options={{ headerShown: false }} />     
                   <Stack.Screen name="Profile" component={Profile as React.ComponentType<any>} options={{ headerShown: false }} />
                   <Stack.Screen name="AdminPage" component={AdminPage} options={{ headerShown: false }} />
                   <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ headerShown: false }} />
