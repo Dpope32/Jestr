@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     zIndex: 999999,
-    elevation: 10
+    elevation: 9
   },
   profilePic: {
     width: wp('10%'),
