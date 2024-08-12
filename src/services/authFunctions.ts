@@ -9,7 +9,7 @@ import { RootStackParamList } from '../types/types';
 import * as FileSystem from 'expo-file-system';
 import { v4 as uuidv4 } from 'uuid';
 import { ProfileImage, useUserStore  } from '../utils/userStore';
-import { storeToken, getToken, removeToken } from '../utils/secureStore';
+import { storeToken, getToken, removeToken, storeUserIdentifier } from '../utils/secureStore';
 import * as SecureStore from 'expo-secure-store';
 
 
@@ -47,8 +47,9 @@ export const handleLogin = async (
     // Clear any existing session
     await signOut({ global: true });
 
+    const lowercaseUsername = username.toLowerCase();
     const { isSignedIn, nextStep } = await signIn({
-      username,
+      username: lowercaseUsername,
       password,
       options: {
         authFlowType: 'USER_PASSWORD_AUTH'
@@ -309,7 +310,6 @@ export const handleCompleteProfile = async (
       creationDate,
       userId,
     };
-    //console.log('Sending profile data:', JSON.stringify(profileData));
 
     const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
       method: 'POST',
@@ -338,14 +338,25 @@ export const handleCompleteProfile = async (
         bio: responseData.data.bio || '',
         userId: responseData.data.userId || userId,
       };
-      console.log('Profile data being passed:', user);
+
+      // Update Zustand store
       useUserStore.getState().setUserDetails(user);
 
+      // Store user identifier in SecureStore
+      await storeUserIdentifier(user.email);
+
+      // Store access token if available
+      if (responseData.data.accessToken) {
+        await storeToken('accessToken', responseData.data.accessToken);
+      }
+
       setSuccessModalVisible(true);
-      setTimeout(() => {
-        setSuccessModalVisible(false);
-        navigation.navigate('Feed', { user });
-      }, 3000);
+      
+      // Use navigation.reset to clear the navigation stack
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Feed', params: { user } }],
+      });
     } else {
       throw new Error('Invalid response data');
     }

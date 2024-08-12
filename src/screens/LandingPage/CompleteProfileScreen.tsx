@@ -53,8 +53,18 @@ const CompleteProfileScreen: React.FC = () => {
     });
   
     if (!result.canceled && result.assets && result.assets[0]) {
+      const imageAsset = result.assets[0];
+      const profileImage: ProfileImage = {
+        uri: imageAsset.uri,
+        width: imageAsset.width,
+        height: imageAsset.height,
+        type: imageAsset.type,
+        fileName: imageAsset.fileName,
+        fileSize: imageAsset.fileSize,
+      };
+  
       useUserStore.getState().setUserDetails({
-        [type === 'header' ? 'headerPic' : 'profilePic']: result.assets[0] as ProfileImage // Ensure the correct type
+        [type === 'header' ? 'headerPic' : 'profilePic']: profileImage
       });
     }
   };
