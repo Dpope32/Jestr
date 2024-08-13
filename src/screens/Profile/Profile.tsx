@@ -62,7 +62,6 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
   const {
     handleUpdateImage,
     handleEditImagePress,
-    handleImagePress,
     onLikeStatusChange,
     handleBioUpdate,
     handleHeightChange,
@@ -85,9 +84,18 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       // console.log('Profile screen focused');
     });
+
   
     return unsubscribe;
   }, [navigation]);
+
+  const handleImagePress = (type: 'profile' | 'header') => {
+    const imageUri = type === 'profile' ? user?.profilePic || '' : user?.headerPic || '';
+    const finalImageUri: string | null = typeof imageUri === 'string' ? imageUri : null;
+    console.log('Image Pressed:', type, finalImageUri);
+    setFullScreenImage(finalImageUri);
+    setIsBlurVisible(true);
+  };
 
   useEffect(() => {
     setFollowersCount(user.followersCount || 0);
@@ -130,13 +138,12 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
     setLastEvaluatedKey(null); // Reset lastEvaluatedKey
     fetchTabMemes(tabName); // Fetch new tab memes
   };
-  
-
 
   const convertUserStateToUser = (userState: UserState): User => ({
     ...userState,
     profilePic: typeof userState.profilePic === 'string' ? userState.profilePic : '',
     headerPic: typeof userState.headerPic === 'string' ? userState.headerPic : '',
+    CreationDate: userState.CreationDate || userState.creationDate || '',
   });
 
   const renderTabContent = () => {

@@ -11,7 +11,7 @@ import {
 import { RouteProp } from '@react-navigation/core';
 import { confirmSignUp } from 'aws-amplify/auth';
 import { COLORS, SPACING, FONT_SIZES, FONTS, wp, elevationShadowStyle } from '../../theme/theme';
-
+import { storeUserIdentifier } from '../../utils/secureStore';
 type ConfirmSignUpScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, 'ConfirmSignUp'>;
   route: RouteProp<RootStackParamList, 'ConfirmSignUp'>;
@@ -31,6 +31,7 @@ const ConfirmSignUpScreen: React.FC<ConfirmSignUpScreenProps> = ({ navigation, r
   const handleConfirmSignUp = async () => {
     try {
       await confirmSignUp({ username: email, confirmationCode: value });
+      await storeUserIdentifier(email);
       Alert.alert('Success', 'Your email has been confirmed.');
       navigation.navigate('CompleteProfileScreen', { email });
     } catch (error: any) {

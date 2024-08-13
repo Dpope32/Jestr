@@ -3,7 +3,9 @@ import * as SecureStore from 'expo-secure-store';
 
 export const storeToken = async (key: string, value: string) => {
   try {
-    await SecureStore.setItemAsync(key, value);
+    console.log('Storing token:', value);
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    await SecureStore.setItemAsync(key, stringValue);
   } catch (error) {
     console.error('Error storing the token', error);
   }

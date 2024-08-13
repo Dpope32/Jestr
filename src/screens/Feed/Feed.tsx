@@ -82,7 +82,7 @@ const Feed: React.FC<FeedProps> = ({ route }) => {
           displayName: userState.displayName,
           profilePic: typeof userState.profilePic === 'string' ? userState.profilePic : null,
           headerPic: typeof userState.headerPic === 'string' ? userState.headerPic : null,
-          creationDate: userState.creationDate,
+          CreationDate: userState.CreationDate,
           followersCount: userState.followersCount,
           followingCount: userState.followingCount,
         } as User);
@@ -399,8 +399,6 @@ if (!user.email) {
         enableDropdown={true}
         showLogo={true}
         isAdmin={localUser?.isAdmin || false}
-        isDarkMode={isDarkMode}
-        setIsDarkMode={setIsDarkMode}
         isUploading={false}
         onAdminClick={handleAdminClick}
 />
@@ -441,8 +439,6 @@ if (!user.email) {
   onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
   user={localUser}
   navigation={navigation}
-  isDarkMode={isDarkMode}
-  setIsDarkMode={setIsDarkMode}
 />
       )}
 

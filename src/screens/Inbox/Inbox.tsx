@@ -82,7 +82,7 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
           profilePic: conversation.profilePicUrl,
           headerPic: null,
           displayName: '',
-          creationDate: '',
+          CreationDate: '',
           followersCount: 0,
           followingCount: 0
         },
@@ -281,7 +281,7 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
           profilePic: '', 
           displayName: '', 
           headerPic: '', 
-          creationDate: '', 
+          CreationDate: '', 
           followersCount: 0,  
           followingCount: 0 
         }}

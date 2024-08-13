@@ -12,7 +12,7 @@ export interface User {
     profilePic: string | null;
     headerPic: string | null;
     displayName: string;
-    creationDate: string;
+    CreationDate: string;
     followersCount: number;
     followingCount: number;
     Bio?: string;

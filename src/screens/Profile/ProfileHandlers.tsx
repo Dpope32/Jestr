@@ -94,13 +94,6 @@ export const useProfileHandlers = (
     }
   };
 
-  const handleImagePress = (type: 'profile' | 'header') => {
-    const imageUri = type === 'profile' ? user?.profilePic || '' : user?.headerPic || '';
-    const finalImageUri: string | null = typeof imageUri === 'string' ? imageUri : null;
-    console.log('Image Pressed:', type, finalImageUri);
-    setFullScreenImage(finalImageUri);
-    setIsBlurVisible(true);
-  };
 
   const onLikeStatusChange = (memeID: string, status: { liked: boolean; doubleLiked: boolean }, newLikeCount?: number) => {
     setTabMemes(prevMemes =>
@@ -243,7 +236,6 @@ export const useProfileHandlers = (
   return {
     handleUpdateImage,
     handleEditImagePress,
-    handleImagePress,
     onLikeStatusChange,
     handleBioUpdate,
     handleHeightChange,

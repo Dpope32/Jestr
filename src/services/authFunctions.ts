@@ -307,7 +307,7 @@ export const handleCompleteProfile = async (
       profilePic: profilePicBase64,
       headerPic: headerPicBase64,
       bio,
-      creationDate,
+      CreationDate: creationDate,
       userId,
     };
 
@@ -332,7 +332,7 @@ export const handleCompleteProfile = async (
         profilePic: responseData.data.profilePic || '',
         displayName: responseData.data.displayName || '',
         headerPic: responseData.data.headerPic || '',
-        creationDate: responseData.data.creationDate || creationDate,
+        CreationDate: responseData.data.creationDate || creationDate,
         followersCount: responseData.data.followersCount || 0,
         followingCount: responseData.data.followingCount || 0,
         bio: responseData.data.bio || '',
@@ -341,14 +341,10 @@ export const handleCompleteProfile = async (
 
       // Update Zustand store
       useUserStore.getState().setUserDetails(user);
+      await storeToken('accessToken', responseData.data.accessToken);
 
       // Store user identifier in SecureStore
       await storeUserIdentifier(user.email);
-
-      // Store access token if available
-      if (responseData.data.accessToken) {
-        await storeToken('accessToken', responseData.data.accessToken);
-      }
 
       setSuccessModalVisible(true);
       
@@ -397,7 +393,7 @@ const convertAuthUserToUser = (authUser: any): User => {
     profilePic: '',
     displayName: '',
     headerPic: '',
-    creationDate: new Date().toISOString(),
+    CreationDate: new Date().toISOString(),
     followersCount: 0,
     followingCount: 0,
     bio: '',  // Add this line
