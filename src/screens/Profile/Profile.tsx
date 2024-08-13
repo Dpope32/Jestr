@@ -210,14 +210,7 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#696969' : '#1C1C1C', flexDirection: 'column' }]}>
-      <Animated.ScrollView 
-        contentContainerStyle={{ flexGrow: 1 }}
-        scrollEventThrottle={16}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-      >
+      <ScrollView>
         <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
           <TouchableOpacity onPress={() => handleImagePress('header')}>
             <Image 
@@ -274,7 +267,7 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
         <Animated.View style={{ flex: 1, minHeight: 300, maxHeight: Animated.add(300, Animated.multiply(scrollY, 2)) }}>
           {renderTabContent()}
         </Animated.View>
-      </Animated.ScrollView>
+      </ScrollView>
       <BottomPanel
         onHomeClick={() => navigation.navigate('Feed' as never)}
         handleLike={() => {}}

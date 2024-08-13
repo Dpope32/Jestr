@@ -10,6 +10,8 @@ import BottomPanel from '../../components/Panels/BottomPanel';
 import { sendMessage, fetchMessages } from '../../services/authFunctions';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
+ // Update this import path
+ import { useTheme } from '../../ThemeContext'; // Update this import path
 
 export type Message = {
   MessageID: string;
@@ -49,6 +51,7 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
   const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const navigation = useNavigation();
   const [isTyping, setIsTyping] = useState(false);
+  const { isDarkMode } = useTheme();
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === '') return;
@@ -143,6 +146,7 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
     return (
       <View style={[
         styles.messageBubble,
+
         item.SenderID === localUser.email ? styles.sentMessage : styles.receivedMessage
       ]}>
         {isMemeShare && (
@@ -158,7 +162,10 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
     );
   };
   return (
-    <View style={styles.container}>
+    <View style={[
+      styles.container,
+      { backgroundColor: isDarkMode ? '#1C1C1C' : '#696969'   }
+    ]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <FontAwesomeIcon icon={faArrowLeft} size={24} color="#1bd40b" />
@@ -175,7 +182,8 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
         keyExtractor={(item) => item.MessageID}
         inverted
         contentContainerStyle={styles.messagesContainer}
-      />
+        estimatedItemSize={79}
+/>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -195,13 +203,14 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1C1C1C',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
     borderBottomWidth: 1,
+    backgroundColor: '#1C1C1C',
+    marginTop: 40,
     borderBottomColor: '#444',
   },
   backButton: {

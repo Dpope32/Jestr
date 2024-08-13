@@ -27,8 +27,6 @@ type ProfilePanelProps = {
   onDarkModeToggle: (isDarkMode: boolean) => void;
   user: User | null;
   navigation: any;
-  isDarkMode: boolean;
-  setIsDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const ProfilePanel: React.FC<ProfilePanelProps> = ({

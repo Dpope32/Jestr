@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ModalDropdown from 'react-native-modal-dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronDown, faCog } from '@fortawesome/free-solid-svg-icons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../../theme/theme';
+import { useTheme } from '../../ThemeContext'; // Update this import path
 
 interface TopPanelProps {
   onProfileClick: () => void;
@@ -15,8 +15,6 @@ interface TopPanelProps {
   showLogo: boolean;
   isAdmin: boolean;
   onAdminClick: () => void;
-  isDarkMode: boolean;
-  setIsDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
   isUploading: boolean; // Add this prop
 }
 
@@ -28,14 +26,12 @@ const TopPanel: React.FC<TopPanelProps> = ({
   showLogo,
   isAdmin,
   onAdminClick,
-  isDarkMode,
-  setIsDarkMode,
   isUploading // Use this prop
 }) => {
   const [selectedTab, setSelectedTab] = useState("Flow");
  // console.log('TopPanel rendered, isAdmin:', isAdmin);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+  const { isDarkMode } = useTheme();
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -54,7 +50,10 @@ const TopPanel: React.FC<TopPanelProps> = ({
   };
 
   return (
-      <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[
+      styles.safeArea,
+      { backgroundColor: isDarkMode ? '#1C1C1C' : '#696969'  }
+    ]}>
         <View style={styles.container}>
         <TouchableOpacity onPress={handleProfileClick} style={styles.profileContainer}>
         <Image 

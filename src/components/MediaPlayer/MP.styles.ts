@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        marginTop: -140, // Adjust this value as needed for iOS
+        marginTop: -100, // Reduced from -140
       },
     }),
   },
@@ -39,22 +39,29 @@ const styles = StyleSheet.create({
   textContainer: {
     position: 'absolute',
     flexDirection: 'row',
-    bottom: 200,
+    bottom: 90, // Adjusted from 200
     left: 10,
     right: 10,
     padding: 10,
     borderRadius: 10,
   },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 120, // Add space for bottom navigation
+  },
   iconColumn: {
     position: 'absolute',
     right: 10,
-    bottom: 200,
+    bottom: 120, // Adjusted from 200
     alignItems: 'center',
   },
   memeImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
+    maxHeight: height * 0.7, // Limit to 70% of screen height
   },
   followButton: {
     position: 'absolute',

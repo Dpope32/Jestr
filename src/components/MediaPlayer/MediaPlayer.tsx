@@ -13,7 +13,7 @@ import { debounce } from 'lodash';
 import { usePanResponder } from './usePanResponder';
 import { IconsAndContent } from './MediaPlayerContent';
 import { useMediaPlayerLogic } from './useMediaPlayerLogic';
-
+import { useTheme } from '../../ThemeContext';
 const SaveSuccessModal = React.lazy(() => import('../Modals/SaveSuccessModal'));
 const ShareModal = React.lazy(() => import('../Modals/ShareModal'));
 
@@ -82,7 +82,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   });
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [isLoading, setIsLoading] = useState(true);
-
+  const { isDarkMode } = useTheme();
   const [responseModalVisible, setResponseModalVisible] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
   const [isPlaying, setIsPlaying] = useState(true);
@@ -208,8 +208,18 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
     }, [isLoading, mediaLoadError, currentMedia, mediaType, fadeAnim, imageSize, handleMediaError]);
   
   
-    return (
-      <Animated.View style={[styles.container, { transform: [{ translateY }] }]} {...panHandlers}>
+      return (
+        <Animated.View 
+          style={[
+            styles.container, 
+            { 
+              transform: [{ translateY }],
+              backgroundColor: isDarkMode ? '#1C1C1C' : '#696969'  
+            }
+          ]} 
+          {...panHandlers}
+        >
+          <View style={styles.contentContainer}>
         <TouchableWithoutFeedback onPress={handleDoubleTap}>
           <Animated.View style={[styles.mediaContainer, { opacity: fadeAnim }]}>
             {renderMedia}
@@ -264,6 +274,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
         {responseModalVisible && (
           <Text>{responseMessage}</Text>
         )}
+        </View>
       </Animated.View>
     );
   });
