@@ -1,11 +1,14 @@
 // src/utils/secureStore.ts
 import * as SecureStore from 'expo-secure-store';
 
-export const storeToken = async (key: string, value: string) => {
+export const storeToken = async (key: string, value: string | undefined) => {
   try {
-    console.log('Storing token:', value);
-    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-    await SecureStore.setItemAsync(key, stringValue);
+    if (typeof value !== 'string') {
+      console.error('Invalid token type:', typeof value);
+      return;
+    }
+    console.log('Storing token:', value.substring(0, 10) + '...');
+    await SecureStore.setItemAsync(key, value);
   } catch (error) {
     console.error('Error storing the token', error);
   }

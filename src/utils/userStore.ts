@@ -11,6 +11,10 @@ export interface UserState {
   creationDate: string;
   CreationDate ? : string;
   followersCount: number;
+  language: 'en' | 'es' | 'fr'; // We'll just use 'en' for now
+  notificationsEnabled: boolean;
+  likesPublic: boolean;
+  darkMode: boolean;
   followingCount: number;
   posts: Meme[];
   likedMemes: Meme[];
@@ -18,6 +22,10 @@ export interface UserState {
   viewedMemes: Meme[];
   profilePic: string | ProfileImage | null; // Allow string or ProfileImage
   headerPic: string | ProfileImage | null;  // Allow string or ProfileImage
+  setDarkMode: (darkMode: boolean) => void;
+  setLanguage: (language: 'en' | 'es' | 'fr') => void;
+  setLikesPublic: (likesPublic: boolean) => void;
+  setNotificationsEnabled: (notificationsEnabled: boolean) => void;
   setBio: (bio: string) => void;
   setPosts: (posts: Meme[]) => void;
   setLikedMemes: (memes: Meme[]) => void;
@@ -51,6 +59,14 @@ export const useUserStore = create<UserState>((set) => ({
   downloadedMemes: [],
   viewedMemes: [],
   profilePic: null,
+   darkMode: false,
+      language: 'en',
+      likesPublic: true,
+      notificationsEnabled: true,
+      setDarkMode: (darkMode) => set({ darkMode }),
+      setLanguage: (language) => set({ language }),
+      setLikesPublic: (likesPublic) => set({ likesPublic }),
+      setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
   headerPic: null,
   setBio: (bio: string ) => set({ bio }),
   setHeaderPic: (headerPic: string | ProfileImage | null) => set({ headerPic }),

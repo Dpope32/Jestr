@@ -19,9 +19,6 @@ type Asset = {
   name: string;
 };
 
-const defaultProfilePicUrl = 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg';
-const defaultHeaderPicUrl = 'https://jestr-bucket.s3.amazonaws.com/HeaderPictures/default-header-pic.jpg';
-
 type LandingPageNavigationProp = StackNavigationProp<RootStackParamList, 'Feed'>;
 const API_ENDPOINT = 'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser';
 
@@ -285,19 +282,31 @@ export const fetchTabMemes = async (
 
 export const handleCompleteProfile = async (
   email: string,
-  username: string,
+  username: string, 
   displayName: string,
   profilePicAsset: ProfileImage | null,
   headerPicAsset: ProfileImage | null,
   bio: string,
   setSuccessModalVisible: (visible: boolean) => void,
-  navigation: StackNavigationProp<RootStackParamList>
+  navigation: StackNavigationProp<RootStackParamList>,
+  preferences: {
+    darkMode: boolean,
+    likesPublic: boolean,
+    notificationsEnabled: boolean
+  }
 ) => {
   try {
     const profilePicBase64 = profilePicAsset ? await fileToBase64(profilePicAsset) : null;
     const headerPicBase64 = headerPicAsset ? await fileToBase64(headerPicAsset) : null;
-    const creationDate = new Date().toISOString();
-    const userId = uuidv4();
+
+    console.log('Sending to server:', {
+      email,
+      username,
+      displayName,
+      profilePic: profilePicBase64 ? 'Base64 data' : null,
+      headerPic: headerPicBase64 ? 'Base64 data' : null,
+      bio
+    });
 
     const profileData = {
       operation: 'completeProfile',
@@ -307,24 +316,24 @@ export const handleCompleteProfile = async (
       profilePic: profilePicBase64,
       headerPic: headerPicBase64,
       bio,
-      CreationDate: creationDate,
-      userId,
+      darkMode: preferences.darkMode,
+      likesPublic: preferences.likesPublic,
+      notificationsEnabled: preferences.notificationsEnabled,
     };
 
     const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(profileData),
     });
 
+    const responseData = await response.json();
+    console.log('Raw response:', JSON.stringify(responseData));
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to complete profile');
+      throw new Error(responseData.message || 'Failed to complete profile');
     }
 
-    const responseData = await response.json();
     if (responseData.data && responseData.data.email) {
       const user: User = {
         email: responseData.data.email,
@@ -332,22 +341,28 @@ export const handleCompleteProfile = async (
         profilePic: responseData.data.profilePic || '',
         displayName: responseData.data.displayName || '',
         headerPic: responseData.data.headerPic || '',
-        CreationDate: responseData.data.creationDate || creationDate,
+        CreationDate: responseData.data.CreationDate || new Date().toISOString(),
         followersCount: responseData.data.followersCount || 0,
         followingCount: responseData.data.followingCount || 0,
         bio: responseData.data.bio || '',
-        userId: responseData.data.userId || userId,
+        userId: responseData.data.userId || uuidv4(),
+        darkMode: responseData.data.darkMode || true,
+        likesPublic: responseData.data.likesPublic || true,
+        notificationsEnabled: responseData.data.notificationsEnabled || true,
       };
 
-      // Update Zustand store
       useUserStore.getState().setUserDetails(user);
-      await storeToken('accessToken', responseData.data.accessToken);
+
+      // Store the access token in SecureStore
+      if (responseData.data.accessToken) {
+        await storeToken('accessToken', responseData.data.accessToken);
+      }
 
       // Store user identifier in SecureStore
       await storeUserIdentifier(user.email);
 
       setSuccessModalVisible(true);
-      
+
       // Use navigation.reset to clear the navigation stack
       navigation.reset({
         index: 0,
@@ -361,19 +376,13 @@ export const handleCompleteProfile = async (
     throw error;
   }
 };
-
-const fileToBase64 = async (asset: ProfileImage): Promise<string | null> => {
-  if (asset.uri) {
-    try {
-      const base64 = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.Base64 });
-      return base64;
-    } catch (error) {
-      console.error('Error converting file to base64:', error);
-      return null;
-    }
-  }
-  return null;
-};
+                                                                
+const fileToBase64 = async (asset: ProfileImage): Promise<string | null> => { 
+    if (asset.uri) {     try {     
+        const base64 = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.Base64 });  
+             return base64;     } catch (error) {       console.error('Error converting file to base64:', error);     
+                return null;     }   } 
+                  return null; }; 
 
 
 async function uriToAsset(uri: string): Promise<Asset> {

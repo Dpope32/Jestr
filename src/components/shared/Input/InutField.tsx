@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ViewStyle, TextStyle, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ViewStyle, TextStyle, TouchableOpacity, Keyboard } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faEye, faEyeSlash, faLock } from '@fortawesome/free-solid-svg-icons';
+import { COLORS } from '../../../theme/theme'
 
 interface InputFieldProps {
   label: string;
@@ -16,6 +17,9 @@ interface InputFieldProps {
   placeholderTextColor?: string;
   multiline?: boolean;
   numberOfLines?: number;
+  maxLength?: number;
+  textAlignVertical?: 'auto' | 'top' | 'bottom' | 'center';
+  onSubmitEditing?: () => void;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -24,11 +28,16 @@ const InputField: React.FC<InputFieldProps> = ({
   value,
   onChangeText,
   secureTextEntry = false,
+  multiline,
+  numberOfLines,
+  textAlignVertical,
   onBlur,
   containerStyle,
   labelStyle,
   inputStyle,
   placeholderTextColor = '#999',
+  maxLength,
+  onSubmitEditing,
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isAllCaps, setIsAllCaps] = useState(false);
@@ -42,18 +51,27 @@ const InputField: React.FC<InputFieldProps> = ({
     setIsAllCaps(text === text.toUpperCase() && text !== '');
   };
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <View style={styles.inputContainer}>
-        <TextInput
-          style={StyleSheet.flatten([styles.input, inputStyle])}
-          placeholder={placeholder}
-          value={value}
-          onChangeText={handleTextChange}
+      <TextInput
+        style={[styles.input, inputStyle]}
+        placeholder={placeholder}
+        value={value}
+        onChangeText={handleTextChange}
+        multiline={multiline}
+        numberOfLines={numberOfLines}
+        maxLength={maxLength}
+        textAlignVertical={textAlignVertical}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           onBlur={onBlur}
           placeholderTextColor={placeholderTextColor}
+          onSubmitEditing={onSubmitEditing}
         />
         {secureTextEntry && (
           <TouchableOpacity style={styles.eyeIcon} onPress={togglePasswordVisibility}>
@@ -76,27 +94,28 @@ const InputField: React.FC<InputFieldProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 12,
+    marginVertical: 8,
   },
   label: {
     fontSize: 16,
-    marginBottom: 8,
+    marginBottom: 14,
     color: '#333',
     fontWeight: 'bold',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#ccc',
+    borderColor: COLORS.primary,
     borderWidth: 1,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    paddingVertical: 8,
+    backgroundColor: '#1c1c1c',
   },
   input: {
     flex: 1,
-    height: 40,
     paddingHorizontal: 15,
     fontSize: 16,
+    color: 'white'
   },
   eyeIcon: {
     padding: 10,

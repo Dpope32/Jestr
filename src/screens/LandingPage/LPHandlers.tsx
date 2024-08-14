@@ -30,23 +30,3 @@ export const handleHeaderPicChange = (file: string | null, setter: React.Dispatc
   export const handleProfilePicChange = (file: string | null, setter: React.Dispatch<React.SetStateAction<string | null>>) => {
     setter(file);
   };
-
-  export const handleCompleteProfileButtonClick = (
-    email: string,
-    username: string,
-    displayName: string,
-    profilePic: string | null,
-    headerPicFile: string | null,
-    setSuccessModalVisible: (visible: boolean) => void,
-    navigation: LandingPageNavigationProp
-  ) => {
-    handleCompleteProfile(
-      email,
-      username,
-      displayName,
-      profilePic,
-      headerPicFile,
-      setSuccessModalVisible,
-      navigation
-    );
-  };

@@ -1,75 +1,53 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import React from 'react';
+import { TouchableOpacity, StyleSheet, View, Image } from 'react-native';
+import { useUserStore } from '../../utils/userStore';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { ProfileImage } from '../../utils/userStore';
 
 interface ProfilePicUploadProps {
-  onProfilePicChange: (file: string | null) => void;
-  style?: ViewStyle;
+  onProfilePicChange: () => void;
 }
 
-const ProfilePicUpload = ({ onProfilePicChange }: ProfilePicUploadProps) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const handleProfilePicChange = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets[0]) {
-      setPreviewUrl(result.assets[0].uri);
-      onProfilePicChange(result.assets[0].uri);
-      setErrorMessage('');
-    } else {
-      console.log('No image selected');
-      setPreviewUrl(null);
-      onProfilePicChange(null);
-      setErrorMessage('');
-    }
-  };
+const ProfilePicUpload: React.FC<ProfilePicUploadProps> = ({ onProfilePicChange }) => {
+  const { profilePic } = useUserStore();
 
   return (
-    <TouchableOpacity style={styles.profilePicBtn} onPress={handleProfilePicChange}>
-      {previewUrl ? (
-        <Image style={styles.profilePreview} source={{ uri: previewUrl }} />
+    <TouchableOpacity style={styles.container} onPress={onProfilePicChange}>
+      {profilePic ? (
+        <Image
+          source={{ uri: typeof profilePic === 'string' ? profilePic : profilePic.uri }}
+          style={styles.profileImage}
+        />
       ) : (
-        <Text style={styles.plusIcon}>+</Text>
+        <View style={styles.placeholder}>
+          <FontAwesomeIcon icon={faPlus} size={30} color="#666" />
+        </View>
       )}
-      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  profilePicBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'lightgray',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    position: 'absolute',
-    top: '22%',
-    zIndex: 4,
-    left: '5%',
-    borderWidth: 2,
-    borderColor: '#fff',
+  container: {
+    width: 135,
+    height: 135,
+    borderRadius: 70,
+    overflow: 'hidden',
+    marginTop: -110,
+    backgroundColor: '#e0e0e0',
   },
-  profilePreview: {
+  placeholder: {
     width: '100%',
     height: '100%',
-    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ccc',
   },
-  plusIcon: {
-    fontSize: 40,
-    color: 'gray',
-  },
-  errorMessage: {
-    color: 'red',
-    marginTop: 10,
+  profileImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
 });
 

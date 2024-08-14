@@ -20,14 +20,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mediaContainer: {
-    flex: 1,
+    flex: 1, // Takes up 70% of the available space
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        marginTop: -100, // Reduced from -140
-      },
-    }),
   },
   blurContainer: {
     position: 'absolute',
@@ -38,23 +34,24 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     position: 'absolute',
-    flexDirection: 'row',
-    bottom: 90, // Adjusted from 200
+    bottom: Platform.OS === 'ios' ? 200 : 120, // Adjust based on platform
     left: 10,
     right: 10,
+    flexDirection: 'row',
     padding: 10,
     borderRadius: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0)', // Semi-transparent background
   },
   contentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 120, // Add space for bottom navigation
+    paddingBottom: Platform.OS === 'ios' ? 200 : 120, // Adjust for bottom navigation
   },
   iconColumn: {
     position: 'absolute',
     right: 10,
-    bottom: 120, // Adjusted from 200
+    bottom: Platform.OS === 'ios' ? 200 : 120,
     alignItems: 'center',
   },
   memeImage: {

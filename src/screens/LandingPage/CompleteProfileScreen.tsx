@@ -1,6 +1,6 @@
 // CompleteProfileScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, ScrollView ,Switch, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/core';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/core';
@@ -14,20 +14,27 @@ import { useUserStore, ProfileImage } from '../../utils/userStore'; // Ensure co
 import * as ImagePicker from 'expo-image-picker';
 import { BlurView } from 'expo-blur';
 import LottieView from 'lottie-react-native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faMoon, faLanguage, faHeart, faBell } from '@fortawesome/free-solid-svg-icons';
+import { useTheme } from '../../ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 const CompleteProfileScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'CompleteProfileScreen'>>();
-  const { headerPic, profilePic, bio, setBio } = useUserStore();
-
+  const { headerPic, profilePic, bio, setBio, setLikesPublic, setNotificationsEnabled } = useUserStore();
   const { email } = route.params;
+  const { isDarkMode, toggleDarkMode } = useTheme();
+  const { setDarkMode } = useUserStore();
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [darkMode, setDarkModeLocal] = useState(false);
+  const [likesPublic, setLikesPublicLocal] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabledLocal] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -38,34 +45,46 @@ const CompleteProfileScreen: React.FC = () => {
     })();
   }, []);
 
+  const handleDarkModeToggle = () => {
+    toggleDarkMode();
+    setDarkMode(!isDarkMode);
+  };
+
   const handleImagePick = async (type: 'header' | 'profile') => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please grant permission to access your photos.');
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant permission to access your photos.');
+        return;
+      }
   
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: type === 'header' ? [16, 9] : [1, 1],
-      quality: 1,
-    });
-  
-    if (!result.canceled && result.assets && result.assets[0]) {
-      const imageAsset = result.assets[0];
-      const profileImage: ProfileImage = {
-        uri: imageAsset.uri,
-        width: imageAsset.width,
-        height: imageAsset.height,
-        type: imageAsset.type,
-        fileName: imageAsset.fileName,
-        fileSize: imageAsset.fileSize,
-      };
-  
-      useUserStore.getState().setUserDetails({
-        [type === 'header' ? 'headerPic' : 'profilePic']: profileImage
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: type === 'header' ? [16, 9] : [1, 1],
+        quality: 1,
       });
+  
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const imageAsset = result.assets[0];
+        const profileImage: ProfileImage = {
+          uri: imageAsset.uri,
+          width: imageAsset.width,
+          height: imageAsset.height,
+          type: imageAsset.type,
+          fileName: imageAsset.fileName,
+          fileSize: imageAsset.fileSize,
+        };
+  
+        if (type === 'header') {
+          useUserStore.getState().setHeaderPic(profileImage);
+        } else {
+          useUserStore.getState().setProfilePic(profileImage);
+        }
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
 
@@ -76,6 +95,11 @@ const CompleteProfileScreen: React.FC = () => {
       const validProfilePic = profilePic && typeof profilePic !== 'string' ? profilePic : null;
       const validHeaderPic = headerPic && typeof headerPic !== 'string' ? headerPic : null;
   
+      // Update Zustand store with preferences
+      setDarkMode(darkMode);
+      setLikesPublic(likesPublic);
+      setNotificationsEnabled(notificationsEnabled);
+
       await handleCompleteProfile(
         email,
         username,
@@ -83,8 +107,9 @@ const CompleteProfileScreen: React.FC = () => {
         validProfilePic,
         validHeaderPic,
         bio,
-        setSuccessModalVisible,
-        navigation
+        () => {}, // setSuccessModalVisible
+        navigation,
+        { darkMode, likesPublic, notificationsEnabled }
       );
   
       setError(null);
@@ -118,37 +143,72 @@ const CompleteProfileScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <HeaderPicUpload onHeaderPicChange={() => handleImagePick('header')} />
-      <ProfilePicUpload onProfilePicChange={() => handleImagePick('profile')} />
+    <ScrollView style={styles.container}>
+    <HeaderPicUpload onHeaderPicChange={() => handleImagePick('header')} />
+    <ProfilePicUpload onProfilePicChange={() => handleImagePick('profile')} />
       <View style={styles.inputsContainer}>
         <InputField
           label="Display Name"
-          placeholder="Enter Display Name (Optional)"
+          placeholder="Enter Display Name"
           value={displayName}
+          labelStyle={styles.whiteText}
           onChangeText={setDisplayName}
-          containerStyle={styles.inputContainer}
-          inputStyle={styles.input}
         />
         <InputField
           label="Username"
-          placeholder="Enter Username (Required)"
+          placeholder="Enter Username"
           value={username}
+          labelStyle={styles.whiteText}
           onChangeText={setUsername}
-          containerStyle={styles.inputContainer}
-          inputStyle={styles.input}
         />
         <InputField
           label="Bio"
           placeholder="Enter your bio"
+          labelStyle={styles.whiteText}
           value={bio}
           onChangeText={setBio}
-          containerStyle={styles.inputContainer}
-          inputStyle={[styles.input, styles.bioInput]}
           multiline
           numberOfLines={4}
         />
       </View>
+
+      <View style={styles.preferencesContainer}>
+        <View style={styles.preferenceItem}>
+          <FontAwesomeIcon icon={faMoon} size={24} color="#1bd40b" />
+          <Text style={styles.preferenceText}>Dark Mode</Text>
+          <Switch
+            value={darkMode}
+            onValueChange={handleDarkModeToggle}
+            trackColor={{ false: "#767577", true: "#1bd40b" }}
+            thumbColor={darkMode ? "#f4f3f4" : "#f4f3f4"}
+          />
+        </View>
+        <View style={styles.preferenceItem}>
+          <FontAwesomeIcon icon={faLanguage} size={24} color="#1bd40b" />
+          <Text style={styles.preferenceText}>Language: English</Text>
+        </View>
+        <View style={styles.preferenceItem}>
+          <FontAwesomeIcon icon={faHeart} size={24} color="#1bd40b" />
+          <Text style={styles.preferenceText}>Likes Public</Text>
+          <Switch
+            value={likesPublic}
+            onValueChange={setLikesPublicLocal}
+            trackColor={{ false: "#767577", true: "#1bd40b" }}
+            thumbColor={likesPublic ? "#f4f3f4" : "#f4f3f4"}
+          />
+        </View>
+        <View style={styles.preferenceItem}>
+          <FontAwesomeIcon icon={faBell} size={24} color="#1bd40b" />
+          <Text style={styles.preferenceText}>Notifications</Text>
+          <Switch
+            value={notificationsEnabled}
+            onValueChange={setNotificationsEnabledLocal}
+            trackColor={{ false: "#767577", true: "#1bd40b" }}
+            thumbColor={notificationsEnabled ? "#f4f3f4" : "#f4f3f4"}
+          />
+        </View>
+      </View>
+
       <TouchableOpacity onPress={handleCompleteProfileButton} style={styles.button}>
         <LinearGradient
           colors={['#002400', '#00e100']}
@@ -156,23 +216,37 @@ const CompleteProfileScreen: React.FC = () => {
           end={{ x: 1, y: 0.5 }}
           style={styles.gradient}
         >
-          {error && <Text style={styles.errorText}>{error}</Text>}
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Complete Profile</Text>
-          )}
+          <Text style={styles.buttonText}>Complete Profile</Text>
         </LinearGradient>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1C1C1C',
     padding: 20,
+  },
+  preferencesContainer: {
+    marginTop: 20,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 10,
+    padding: 15,
+  },
+  preferenceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  preferenceText: {
+    color: '#FFFFFF', // This makes the text white
+    fontSize: 16,
+    flex: 1,
+    marginLeft: 15,
   },
   loadingContainer: {
     flex: 1,
@@ -188,27 +262,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginTop: 20,
   },
+  whiteText: {
+    color: '#FFF',
+  },
   inputsContainer: {
     width: '100%',
-    marginTop: 20,
+    marginTop: 4,
   },
-  inputContainer: {
-    marginBottom: 15,
+  label: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginBottom: 5,
   },
   errorText: {
     color: 'red',
     fontSize: 14,
     marginTop: 10,
     textAlign: 'center',
-  },
-  input: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    color: '#fff',
-    fontSize: 16,
-    width: width - 40, // Adjust width based on screen size
   },
   bioInput: {
     height: 100,
@@ -222,6 +292,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
+    marginHorizontal: 50
   },
   buttonText: {
     color: '#fff',

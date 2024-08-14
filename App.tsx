@@ -94,12 +94,12 @@ function App(): React.JSX.Element | null {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log('Starting app initialization');
+      //  console.log('Starting app initialization');
         const [fontsLoaded, authStatus] = await Promise.all([
           Font.loadAsync({ Inter_400Regular, Inter_700Bold }).then(() => true),
           checkAuthStatus()
         ]);
-        console.log('Fonts loaded:', fontsLoaded, 'Auth status:', authStatus);
+       // console.log('Fonts loaded:', fontsLoaded, 'Auth status:', authStatus);
         setIsReady(fontsLoaded);
         setIsAuthenticated(authStatus);
       } catch (error) {
@@ -114,7 +114,7 @@ function App(): React.JSX.Element | null {
   async function checkAuthStatus(): Promise<boolean> {
     try {
       const token = await getToken('accessToken');
-      console.log('Token status:', token ? 'exists' : 'does not exist');
+      console.log('Token status in app.tsx:', token ? 'exists' : 'does not exist');
       if (token) {
         const cognitoUser = await getCurrentUser();
         const identifier = cognitoUser.signInDetails?.loginId || cognitoUser.username;
@@ -155,7 +155,7 @@ function App(): React.JSX.Element | null {
   }, [isReady, onLayoutRootView]);
 
   useEffect(() => {
-    console.log('Authentication state changed:', isAuthenticated);
+   // console.log('Authentication state changed:', isAuthenticated);
   }, [isAuthenticated]);
 
   if (!isReady) {

@@ -5,6 +5,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 0,
+    width: '100%',
     borderRadius: 20,
   },
   absoluteFill: {
@@ -17,12 +18,14 @@ export const styles = StyleSheet.create({
   formContainer1: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '97%', 
     borderWidth: 2,
     borderColor: '#00ff00',
-    borderRadius: 20,
-    paddingHorizontal: 24,
-    marginBottom: 12,
-    marginTop: 60,
+    borderRadius: 40,
+    paddingHorizontal: 20,
+    marginBottom: 4,
+    marginTop: 50,
   },
   loadingContainer: {
     flex: 1,
@@ -339,10 +342,10 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   inputFieldsContainer: {
-    marginTop: 30,
+    marginTop: 20,
   },
   inputField: {
-    height: 30,
+    height: 20,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
@@ -362,11 +365,11 @@ export const styles = StyleSheet.create({
     fontSize: 20,
   },
   inputStyle: {
-    height: 30,
+    height: 20,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     backgroundColor: '#fff',
     elevation: 1,
     shadowColor: '#000',

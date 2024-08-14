@@ -18,7 +18,6 @@ import RainEffect from './RainEffect';
 import { 
   handleSignup, 
   handleLogin, 
-  handleCompleteProfile, 
   handleGoogleSignIn, 
   handleAppleSignIn, 
   handleTwitterSignIn,
@@ -29,7 +28,6 @@ import {
   handleForgotPassword,
   handleHeaderPicChange,
   handleProfilePicChange,
-  handleCompleteProfileButtonClick,
   handleSignUpClick,
 } from './LPHandlers';
 
@@ -74,15 +72,7 @@ const LP: React.FC<LPProps> = ({
   const [letterScale, setLetterScale] = useState<LetterScale>([]);
   const [currentScreen, setCurrentScreen] = useState('initial'); // 'initial', 'login', or 'signup'
   const handleLoginWrapper = () => handleLoginClick(setShowInitialScreen, setShowSignUpForm);
-  const handleCompleteProfileButton = () => handleCompleteProfileButtonClick(
-    email,
-    username,
-    displayName,
-    profilePic,
-    headerPicFile,
-    setSuccessModalVisible,
-    navigation as LandingPageNavigationProp
-  );
+
 
   const handleFacebookSignIn = () => {
     console.log('Facebook sign-in initiated');

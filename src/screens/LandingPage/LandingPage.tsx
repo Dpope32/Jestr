@@ -171,7 +171,7 @@ const LandingPage: React.FC = () => {
   };
 
 
-  console.log('LandingPage rendering end, isLoading:', isLoading);
+  //console.log('LandingPage rendering end, isLoading:', isLoading);
 
    return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>

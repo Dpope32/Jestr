@@ -95,7 +95,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   const prevOpacity = useRef(new Animated.Value(0)).current;
   const nextOpacity = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const SWIPE_THRESHOLD = height * 0.1; // Reduced from 0.25 to 0.15
+  const SWIPE_THRESHOLD = height * 0.05; // Reduced from 0.25 to 0.15
   
     const handleMediaError = useCallback(() => {
       //console.error('Failed to load media:', currentMedia);
@@ -112,7 +112,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 300,
+        duration: 200,
         useNativeDriver: true,
       }).start();
   
@@ -196,7 +196,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
             source={{ uri: currentMedia }}
             style={[styles.memeImage]}
             width={imageSize.width}
-            height={imageSize.height + 20}
+            height={imageSize.height}
             resizeMode="cover"
             onError={(error) => {
               console.error('Image load error:', error);

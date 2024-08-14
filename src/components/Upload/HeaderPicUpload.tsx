@@ -1,72 +1,66 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import React from 'react';
+import { TouchableOpacity, Image, StyleSheet, View, Text } from 'react-native';
+import { useUserStore, ProfileImage } from '../../utils/userStore';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faImage } from '@fortawesome/free-solid-svg-icons';
 
 interface HeaderPicUploadProps {
-  onHeaderPicChange: (file: string | null) => void;
+  onHeaderPicChange: () => void;
 }
 
-const HeaderPicUpload = ({ onHeaderPicChange }: HeaderPicUploadProps) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
+const HeaderPicUpload: React.FC<HeaderPicUploadProps> = ({ onHeaderPicChange }) => {
+  const { headerPic } = useUserStore();
 
-  const handleHeaderPicChange = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets[0]) {
-      setPreviewUrl(result.assets[0].uri);
-      onHeaderPicChange(result.assets[0].uri);
-      setErrorMessage('');
-    } else {
-      console.log('No image selected');
-      setPreviewUrl(null);
-      onHeaderPicChange(null);
-      setErrorMessage('');
+  const getImageSource = () => {
+    if (!headerPic) {
+      return require('../../assets/images/Jestr5.jpg');
     }
+    if (typeof headerPic === 'string') {
+      return { uri: headerPic };
+    }
+    return { uri: (headerPic as ProfileImage).uri };
   };
 
   return (
-    <TouchableOpacity style={styles.headerPicUpload} onPress={handleHeaderPicChange}>
-      {previewUrl ? (
-        <Image style={styles.headerPreview} source={{ uri: previewUrl }} />
+    <TouchableOpacity style={styles.container} onPress={onHeaderPicChange}>
+      {headerPic ? (
+        <Image
+          source={{ uri: typeof headerPic === 'string' ? headerPic : (headerPic as ProfileImage).uri }}
+          style={styles.headerImage}
+        />
       ) : (
-        <Text style={styles.headerPicLabel}>Click here to upload a header</Text>
+        <View style={styles.placeholder}>
+          <FontAwesomeIcon icon={faImage} size={24} color="#666" />
+          <Text style={styles.placeholderText}>Click here to upload a header pic</Text>
+        </View>
       )}
-      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  headerPicUpload: {
-    alignItems: 'center',
+  container: {
+    width: '110%',
+    height: 200,
+    marginLeft: -20,
+    marginVertical: 12,
+    backgroundColor: '#e0e0e0',
     justifyContent: 'center',
-    backgroundColor: 'lightgray',
-    height: 250,
-    marginTop: 50,
-    width: '100%',
-    borderTopLeftRadius: 20,  // Add rounded corners on the top left
-    borderTopRightRadius: 20, // Add rounded corners on the top right
+    alignItems: 'center',
   },
-  headerPreview: {
+  headerImage: {
     width: '100%',
-    height: '110%',
+    height: '100%',
     resizeMode: 'cover',
-    borderTopLeftRadius: 20,  // Add rounded corners on the top left
-    borderTopRightRadius: 20, // Add rounded corners on the top right
   },
-  headerPicLabel: {
-    fontSize: 16,
-    color: 'gray',
+  placeholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  errorMessage: {
-    color: 'red',
+  placeholderText: {
     marginTop: 10,
+    color: '#666',
+    fontSize: 16,
   },
 });
 

@@ -23,6 +23,9 @@ export interface User {
     location?: string;
     website?: string;
     birthDate?: string;
+    darkMode?: boolean;
+    likesPublic?: boolean;
+    notificationsEnabled?: boolean;
   }
   
 
