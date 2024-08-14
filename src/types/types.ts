@@ -101,6 +101,7 @@ export type MediaPlayerProps = {
   uploadTimestamp: string;
   handleLike: () => void;
   handleDownload: () => void;
+  handleSingleTap?: () => void;
   toggleCommentFeed: () => void;
   goToPrevMedia: () => void;
   goToNextMedia: () => void;
@@ -126,6 +127,6 @@ export type MediaPlayerProps = {
   liked: boolean; // Add this line
   doubleLiked: boolean; // Add this line
   isDarkMode: boolean;
-  setIsDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsDarkMode?: React.Dispatch<React.SetStateAction<boolean>>;
   
 };

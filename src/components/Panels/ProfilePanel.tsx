@@ -33,7 +33,6 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   isVisible, onClose, profilePicUrl, username, displayName, followersCount: initialFollowersCount,
   followingCount: initialFollowingCount, user, navigation,
 }) => {
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [followersCount] = useState(initialFollowersCount);
@@ -41,8 +40,10 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   const [followingCount] = useState(initialFollowingCount);
   const [showNotifications, setShowNotifications] = useState(false);
   const bio = localUser?.Bio || localUser?.bio || 'Default bio';
-  const { isDarkMode, toggleDarkMode } = useTheme(); // Use the theme context
+  const [darkMode, setDarkModeLocal] = useState(false);
   const panelTranslateX = useRef(new Animated.Value(-width)).current;
+  const { setDarkMode } = useUserStore();
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   const panResponder = useRef(
     PanResponder.create({
@@ -90,8 +91,12 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
     }).start(() => onClose());
   };
 
-  const handleDarkModeToggle = async (value: boolean) => {
-    toggleDarkMode(); // This will update the context and save to SecureStore
+  
+  const handleDarkModeToggle = () => {
+    const newMode = !darkMode;
+    setDarkModeLocal(newMode);
+    toggleDarkMode();
+    setDarkMode(newMode);
   };
 
 

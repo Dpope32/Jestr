@@ -4,34 +4,45 @@ import { debounce } from 'lodash';
 import { updateMemeReaction, getLikeStatus } from '../Meme/memeService';
 import { handleShareMeme } from '../../services/authFunctions';
 import { ShareType, User } from '../../types/types';
-
+import { Video, AVPlaybackStatus } from 'expo-av';
 
 interface UseMediaPlayerLogicProps {
-    initialLiked: boolean;
-    initialDoubleLiked: boolean;
-    initialLikeCount: number;
-    initialDownloadCount: number;
-    initialShareCount: number;
-    initialCommentCount: number;
-    user: User | null;
-    memeID: string;
-    handleDownload: () => void;
-    onLikeStatusChange: (memeId: string, likeStatus: { liked: boolean; doubleLiked: boolean }, newLikeCount: number) => void;
-  }
-  
-  export const useMediaPlayerLogic = ({
-    initialLiked,
-    initialDoubleLiked,
-    initialLikeCount,
-    initialDownloadCount,
-    initialShareCount,
-    initialCommentCount,
-    user,
-    memeID,
-    handleDownload,
-    onLikeStatusChange,
-  }: UseMediaPlayerLogicProps) => {
+  initialLiked: boolean;
+  initialDoubleLiked: boolean;
+  mediaType: 'image' | 'video';
+  initialLikeCount: number;
+  initialDownloadCount: number;
+  video: React.RefObject<Video>;
+  status: AVPlaybackStatus;
+  initialShareCount: number;
+  initialCommentCount: number;
+  user: User | null;
+  memeID: string;
+  handleDownload: () => void;
+  handleSingleTap: () => void;
+  onLikeStatusChange: (
+    memeId: string,
+    likeStatus: { liked: boolean; doubleLiked: boolean },
+    newLikeCount: number
+  ) => void;
+}
 
+export const useMediaPlayerLogic = ({
+  initialLiked,
+  initialDoubleLiked,
+  initialLikeCount,
+  initialDownloadCount,
+  initialShareCount,
+  initialCommentCount,
+  user,
+  memeID,
+  handleDownload,
+  onLikeStatusChange,
+  mediaType,
+  video,
+  status,
+  handleSingleTap,
+}: UseMediaPlayerLogicProps) => {
   const [liked, setLiked] = useState(initialLiked);
   const [doubleLiked, setDoubleLiked] = useState(initialDoubleLiked);
   const [isSaved, setIsSaved] = useState(false);
@@ -45,7 +56,7 @@ interface UseMediaPlayerLogicProps {
     likes: initialLikeCount,
     downloads: initialDownloadCount,
     shares: initialShareCount,
-    comments: initialCommentCount
+    comments: initialCommentCount,
   });
   const [friends, setFriends] = useState([]);
 
@@ -71,7 +82,7 @@ interface UseMediaPlayerLogicProps {
       const newLikedState = !liked;
       let newDoubleLikedState = doubleLiked;
       let newLikeCount = counts.likes;
-
+  
       if (newLikedState) {
         if (doubleLiked) {
           newDoubleLikedState = false;
@@ -82,16 +93,20 @@ interface UseMediaPlayerLogicProps {
       } else {
         newLikeCount -= 1;
       }
-
-      setLiked(newLikedState);
-      setDoubleLiked(newDoubleLikedState);
-      setCounts(prevCounts => ({ ...prevCounts, likes: newLikeCount }));
-
+  
+      // Update only if there's a change to reduce unnecessary renders
+      if (newLikedState !== liked || newDoubleLikedState !== doubleLiked) {
+        setLiked(newLikedState);
+        setDoubleLiked(newDoubleLikedState);
+        setCounts(prevCounts => ({ ...prevCounts, likes: newLikeCount }));
+      }
+  
       try {
         await updateMemeReaction(memeID, newLikedState, newDoubleLikedState, false, user.email);
         onLikeStatusChange(memeID, { liked: newLikedState, doubleLiked: newDoubleLikedState }, newLikeCount);
       } catch (error) {
         console.error('Error updating meme reaction:', error);
+        // Revert changes if the request fails
         setLiked(initialLiked);
         setDoubleLiked(initialDoubleLiked);
         setCounts(prevCounts => ({ ...prevCounts, likes: initialLikeCount }));
@@ -99,6 +114,7 @@ interface UseMediaPlayerLogicProps {
     }
   }, [user, liked, doubleLiked, counts.likes, memeID, onLikeStatusChange, initialLiked, initialDoubleLiked, initialLikeCount]);
 
+  
   const debouncedHandleLike = useCallback(
     debounce(() => {
       handleLikePress();
@@ -107,16 +123,20 @@ interface UseMediaPlayerLogicProps {
   );
 
   const handleDoubleTap = useCallback((event: GestureResponderEvent) => {
-    const { locationX, locationY } = event.nativeEvent;
+    const { pageX, pageY } = event.nativeEvent;
+    
+    // Adjust these values as needed
     setLikePosition({ 
-      x: locationX - 50,
-      y: locationY + 50
-    });
+      x: pageX  - 100, // Adjust to -10 instead of -50 for finer control
+      y: pageY  -200  // Adjust to -100 instead of -50 for finer control
+    }); 
+    
     setShowLikeAnimation(true);
     debouncedHandleLike();
+  
     setTimeout(() => {
       setShowLikeAnimation(false);
-    }, 1000);
+    }, 1000); // Hide the animation after 1 second
   }, [debouncedHandleLike]);
 
   const handleDownloadPress = useCallback(async () => {
@@ -186,5 +206,6 @@ interface UseMediaPlayerLogicProps {
     formatDate,
     setShowSaveModal,
     setShowShareModal,
+    handleSingleTap,
   };
 };

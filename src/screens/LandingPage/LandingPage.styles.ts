@@ -6,7 +6,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 0,
     width: '100%',
-    borderRadius: 20,
   },
   absoluteFill: {
     position: 'absolute',
@@ -14,6 +13,30 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  blurView: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+  },
+  termsText: {
+    color: '#BDBDBD',
+    fontSize: 14,
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  termsHighlight: {
+    color: '#1bd40b',
+  },
+  forgotPasswordText: {
+    color: '#007AFF',
+    textDecorationLine: 'underline',
+    marginTop: 10,
+    fontSize: 18,
+    textAlign: 'center',
   },
   formContainer1: {
     flex: 1,
@@ -31,6 +54,8 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    height: '100%',
+    width: '100%',
   },
   loadingText: {
     color: '#00ff00',
@@ -251,11 +276,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 10,
   },
-  termsText: {
-    fontSize: 12,
-    color: '#111',
-    marginVertical: 6,
-  },
+
   socialHeaderText: {
      color: '#cccccc',
     fontSize: 16,

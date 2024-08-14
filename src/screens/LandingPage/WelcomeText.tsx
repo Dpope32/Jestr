@@ -113,7 +113,7 @@ const WelcomeText = () => {
   });
 
   const textStyle: Animated.WithAnimatedObject<TextStyle> = {
-    fontSize: 92,
+    fontSize: 88,
     fontWeight: 'bold',
     color: textColor,
     textShadowColor: 'rgba(0, 255, 0, 0.7)',

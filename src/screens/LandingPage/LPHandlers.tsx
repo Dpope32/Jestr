@@ -1,7 +1,7 @@
 import { NavigationProp } from '@react-navigation/native';
-import { handleCompleteProfile } from '../../services/authFunctions';
+import { handleForgotPassword, handleCompleteProfile } from '../../services/authFunctions';
 import { RootStackParamList, LandingPageNavigationProp } from '../../types/types'; // Make sure this import points to the correct location
-
+import { Alert } from 'react-native';
 
 export const handleSignUpClick = (
     setShowInitialScreen: React.Dispatch<React.SetStateAction<boolean>>, 
@@ -17,10 +17,6 @@ export const handleLoginClick = (
 ) => {
     setShowInitialScreen(false);
     setShowSignUpForm(false);
-};
-
-export const handleForgotPassword = () => {
-    console.log('Forgot Password clicked');
 };
 
 export const handleHeaderPicChange = (file: string | null, setter: React.Dispatch<React.SetStateAction<string | null>>) => {

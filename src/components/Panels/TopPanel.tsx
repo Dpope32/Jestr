@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronDown, faCog } from '@fortawesome/free-solid-svg-icons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../../theme/theme';
-import { useTheme } from '../../ThemeContext'; // Update this import path
+import { useUserStore } from '../../utils/userStore';
 
 interface TopPanelProps {
   onProfileClick: () => void;
@@ -31,7 +31,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   const [selectedTab, setSelectedTab] = useState("Flow");
  // console.log('TopPanel rendered, isAdmin:', isAdmin);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { isDarkMode } = useTheme();
+  const { darkMode, setDarkMode } = useUserStore();
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -52,7 +52,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   return (
     <SafeAreaView style={[
       styles.safeArea,
-      { backgroundColor: isDarkMode ? '#1C1C1C' : '#696969'  }
+      { backgroundColor: darkMode ? '#000' : '#2E2E2E'  }
     ]}>
         <View style={styles.container}>
         <TouchableOpacity onPress={handleProfileClick} style={styles.profileContainer}>

@@ -164,7 +164,7 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
   return (
     <View style={[
       styles.container,
-      { backgroundColor: isDarkMode ? '#1C1C1C' : '#696969'   }
+      { backgroundColor: isDarkMode ? '#000' : '#2E2E2E'   }
     ]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>

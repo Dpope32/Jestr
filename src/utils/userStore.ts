@@ -35,6 +35,7 @@ export interface UserState {
   setHeaderPic: (headerPic: string | ProfileImage | null) => void;
   setProfilePic: (profilePic: string | ProfileImage | null) => void;
   isAdmin?: boolean;
+  userId?: string;
 }
 
 export type ProfileImage = {

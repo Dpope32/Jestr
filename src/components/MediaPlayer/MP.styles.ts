@@ -60,6 +60,12 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     maxHeight: height * 0.7, // Limit to 70% of screen height
   },
+  thumbsUpContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -50 }, { translateY: -50 }],
+  },
   followButton: {
     position: 'absolute',
     left: 35,

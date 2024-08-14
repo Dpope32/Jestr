@@ -46,8 +46,10 @@ const CompleteProfileScreen: React.FC = () => {
   }, []);
 
   const handleDarkModeToggle = () => {
+    const newMode = !darkMode;
+    setDarkModeLocal(newMode);
     toggleDarkMode();
-    setDarkMode(!isDarkMode);
+    setDarkMode(newMode);
   };
 
   const handleImagePick = async (type: 'header' | 'profile') => {
@@ -183,10 +185,10 @@ const CompleteProfileScreen: React.FC = () => {
             thumbColor={darkMode ? "#f4f3f4" : "#f4f3f4"}
           />
         </View>
-        <View style={styles.preferenceItem}>
+      {/* <View style={styles.preferenceItem}>
           <FontAwesomeIcon icon={faLanguage} size={24} color="#1bd40b" />
           <Text style={styles.preferenceText}>Language: English</Text>
-        </View>
+        </View> */}
         <View style={styles.preferenceItem}>
           <FontAwesomeIcon icon={faHeart} size={24} color="#1bd40b" />
           <Text style={styles.preferenceText}>Likes Public</Text>
@@ -207,9 +209,7 @@ const CompleteProfileScreen: React.FC = () => {
             thumbColor={notificationsEnabled ? "#f4f3f4" : "#f4f3f4"}
           />
         </View>
-      </View>
-
-      <TouchableOpacity onPress={handleCompleteProfileButton} style={styles.button}>
+        <TouchableOpacity onPress={handleCompleteProfileButton} style={styles.button}>
         <LinearGradient
           colors={['#002400', '#00e100']}
           start={{ x: 0, y: 0.5 }}
@@ -219,6 +219,7 @@ const CompleteProfileScreen: React.FC = () => {
           <Text style={styles.buttonText}>Complete Profile</Text>
         </LinearGradient>
       </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   preferencesContainer: {
-    marginTop: 20,
+    marginTop: 10,
     backgroundColor: '#2A2A2A',
     borderRadius: 10,
     padding: 15,
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 10,
   },
   preferenceText: {
     color: '#FFFFFF', // This makes the text white
@@ -264,6 +265,7 @@ const styles = StyleSheet.create({
   },
   whiteText: {
     color: '#FFF',
+    marginBottom: 0,
   },
   inputsContainer: {
     width: '100%',
@@ -281,18 +283,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   bioInput: {
-    height: 100,
+    height: 80,
     textAlignVertical: 'top',
   },
   button: {
-    marginTop: 20,
     width: '100%',
   },
   gradient: {
     borderRadius: 8,
-    padding: 15,
+    padding: 10,
     alignItems: 'center',
-    marginHorizontal: 50
+    marginHorizontal: 80,
   },
   buttonText: {
     color: '#fff',

@@ -14,12 +14,11 @@ import awsconfig from './src/aws-exports';
 import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { useUserStore } from './src/utils/userStore';
-import { getCurrentUser } from 'aws-amplify/auth';
 import { fetchUserDetails, handleSignOut } from './src/services/authFunctions';
 import Feed from './src/screens/Feed/Feed';
-import { storeToken, getToken, storeUserIdentifier, getUserIdentifier } from './src/utils/secureStore';
+import { getToken, getUserIdentifier } from './src/utils/secureStore';
 import LandingPage from './src/screens/LandingPage/LandingPage';
-// Remove the lazy import if it exists
+import * as SecureStore from 'expo-secure-store';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -115,28 +114,27 @@ function App(): React.JSX.Element | null {
     try {
       const token = await getToken('accessToken');
       console.log('Token status in app.tsx:', token ? 'exists' : 'does not exist');
-      if (token) {
-        const cognitoUser = await getCurrentUser();
-        const identifier = cognitoUser.signInDetails?.loginId || cognitoUser.username;
-        if (!identifier) {
-          throw new Error('No valid identifier found for user');
-        }
-        const userDetails = await fetchUserDetails(identifier, token);
-        if (userDetails) {
-          useUserStore.getState().setUserDetails(userDetails);
-          await storeUserIdentifier(userDetails.email);
-          return true;
-        } else {
-          useUserStore.getState().setUserDetails({ email: identifier });
-          await storeUserIdentifier(identifier);
-          return true;
-        }
-      } else {
+      if (!token) {
         useUserStore.getState().setUserDetails({});
         return false;
       }
+  
+      const identifier = await getUserIdentifier();
+      if (!identifier) {
+        throw new Error('No valid identifier found for user');
+      }
+  
+      const userDetails = await fetchUserDetails(identifier, token);
+      if (userDetails) {
+        useUserStore.getState().setUserDetails(userDetails);
+        return true;
+      } else {
+        throw new Error('Failed to fetch user details');
+      }
     } catch (error) {
       console.error('Error checking authentication status:', error);
+      await SecureStore.deleteItemAsync('accessToken');
+      await SecureStore.deleteItemAsync('userIdentifier');
       useUserStore.getState().setUserDetails({});
       return false;
     }

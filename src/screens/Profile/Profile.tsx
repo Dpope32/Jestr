@@ -216,7 +216,7 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
   if (!user) return <ActivityIndicator />;
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? '#696969' : '#1C1C1C', flexDirection: 'column' }]}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#2E2E2E', flexDirection: 'column' }]}>
       <ScrollView>
         <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
           <TouchableOpacity onPress={() => handleImagePress('header')}>

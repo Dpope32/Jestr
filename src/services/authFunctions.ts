@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ProfileImage, useUserStore  } from '../utils/userStore';
 import { storeToken, getToken, removeToken, storeUserIdentifier } from '../utils/secureStore';
 import * as SecureStore from 'expo-secure-store';
-
+import { resetPassword } from '@aws-amplify/auth';
 
 type Asset = {
   uri: string;
@@ -96,43 +96,6 @@ export const handleLogin = async (
 
 // Remove the API import
 
-export const deleteMeme = async (memeID: string, userEmail: string) => {
-  try {
-    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/deleteMeme', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ operation: 'deleteMeme', memeID, userEmail }),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to delete meme');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error deleting meme:', error);
-    throw error;
-  }
-};
-
-export const removeDownloadedMeme = async (userEmail: string, memeID: string) => {
-  try {
-    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/removeDownloadedMeme', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ operation: 'removeDownloadedMeme', userEmail, memeID }),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to remove downloaded meme');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error removing downloaded meme:', error);
-    throw error;
-  }
-};
 
 export const fetchUserDetails = async (identifier: string, token?: string) => {
   console.log('Fetching user details for identifier:', identifier);
@@ -189,7 +152,8 @@ export const handleSignup = async (
   setIsSignedUp: React.Dispatch<React.SetStateAction<boolean>>,
   setSignupSuccessModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
   navigation: StackNavigationProp<RootStackParamList>,
-  navigateToConfirmSignUp: (email: string) => void
+  navigateToConfirmSignUp: (email: string) => void,
+  setCurrentScreen: React.Dispatch<React.SetStateAction<string>>
 ) => {
   const defaultName = 'jestruser';
 
@@ -242,43 +206,22 @@ export const handleSignup = async (
     }
   } catch (error: any) {
     console.error('Signup error:', error);
-    Alert.alert('Signup Failed', error.message || 'An unknown error occurred');
+    if (error.name === 'UsernameExistsException') {
+      Alert.alert(
+        "Account Already Exists",
+        "Looks like you already have an account. Try to sign in or click 'Forgot Password'.",
+        [
+          { text: "OK", onPress: () => {} },
+          { text: "Sign In", onPress: () => setCurrentScreen('login') }, // Assuming you have a function to switch forms
+          { text: "Forgot Password", onPress: () => handleForgotPassword(email) }
+        ]
+      );
+    } else {
+      Alert.alert('Signup Failed', error.message || 'An unknown error occurred');
+    }
   }
 };
 
-export const fetchTabMemes = async (
-  tab: 'posts' | 'liked' | 'history' | 'downloaded',
-  page: number = 1,
-  pageSize: number = 30,
-  userEmail: string,
-  lastEvaluatedKey: string | null
-): Promise<FetchMemesResult> => {
-  try {
-   // console.log(`Fetching memes for tab: ${tab}, page: ${page}`);
-    let result: FetchMemesResult;
-    switch (tab) {
-      case 'posts':
-        result = await getUserMemes(userEmail);
-        break;
-      case 'liked':
-        result = await fetchMemes(userEmail, 'liked', lastEvaluatedKey, pageSize);
-        break;
-      case 'history':
-        result = await fetchMemes(userEmail, 'viewed', lastEvaluatedKey, pageSize);
-        break;
-      case 'downloaded':
-        result = await fetchMemes(userEmail, 'downloaded', lastEvaluatedKey, pageSize);
-        break;
-      default:
-        result = { memes: [], lastEvaluatedKey: null };
-    }
-  console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
-    return result;
-  } catch (error) {
-    console.error(`Error fetching ${tab} memes:`, error);
-    return { memes: [], lastEvaluatedKey: null };
-  }
-};
 
 export const handleCompleteProfile = async (
   email: string,
@@ -346,16 +289,38 @@ export const handleCompleteProfile = async (
         followingCount: responseData.data.followingCount || 0,
         bio: responseData.data.bio || '',
         userId: responseData.data.userId || uuidv4(),
-        darkMode: responseData.data.darkMode || true,
+        darkMode: responseData.data.darkMode || false,
         likesPublic: responseData.data.likesPublic || true,
         notificationsEnabled: responseData.data.notificationsEnabled || true,
       };
 
-      useUserStore.getState().setUserDetails(user);
+      useUserStore.getState().setUserDetails({
+        email: responseData.data.email,
+        username: responseData.data.username,
+        displayName: responseData.data.displayName,
+        profilePic: responseData.data.profilePic,
+        headerPic: responseData.data.headerPic,
+        bio: responseData.data.bio,
+        creationDate: responseData.data.CreationDate,
+        darkMode: responseData.data.darkMode,
+        likesPublic: responseData.data.likesPublic,
+        notificationsEnabled: responseData.data.notificationsEnabled,
+        userId: responseData.data.userId,
+      });
 
       // Store the access token in SecureStore
       if (responseData.data.accessToken) {
-        await storeToken('accessToken', responseData.data.accessToken);
+        await SecureStore.setItemAsync('accessToken', responseData.data.accessToken);
+        console.log('Token stored successfully');
+      } else {
+        const { tokens } = await fetchAuthSession();
+        const accessToken = tokens?.accessToken?.toString();
+        if (accessToken) {
+          await SecureStore.setItemAsync('accessToken', accessToken);
+          console.log('Token stored successfully from session');
+        } else {
+          console.warn('No access token available to store');
+        }
       }
 
       // Store user identifier in SecureStore
@@ -366,7 +331,17 @@ export const handleCompleteProfile = async (
       // Use navigation.reset to clear the navigation stack
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Feed', params: { user } }],
+        routes: [{ 
+          name: 'Feed', 
+          params: { 
+            user: {
+              email: user.email,
+              username: user.username,
+              // ... other serializable properties
+              // Do not include function properties like setDarkMode
+            } 
+          }
+        }],
       });
     } else {
       throw new Error('Invalid response data');
@@ -394,6 +369,40 @@ async function uriToAsset(uri: string): Promise<Asset> {
     name: uri.split('/').pop() || 'file',
   };
 }
+
+export const fetchTabMemes = async (
+  tab: 'posts' | 'liked' | 'history' | 'downloaded',
+  page: number = 1,
+  pageSize: number = 30,
+  userEmail: string,
+  lastEvaluatedKey: string | null
+): Promise<FetchMemesResult> => {
+  try {
+   // console.log(`Fetching memes for tab: ${tab}, page: ${page}`);
+    let result: FetchMemesResult;
+    switch (tab) {
+      case 'posts':
+        result = await getUserMemes(userEmail);
+        break;
+      case 'liked':
+        result = await fetchMemes(userEmail, 'liked', lastEvaluatedKey, pageSize);
+        break;
+      case 'history':
+        result = await fetchMemes(userEmail, 'viewed', lastEvaluatedKey, pageSize);
+        break;
+      case 'downloaded':
+        result = await fetchMemes(userEmail, 'downloaded', lastEvaluatedKey, pageSize);
+        break;
+      default:
+        result = { memes: [], lastEvaluatedKey: null };
+    }
+  console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
+    return result;
+  } catch (error) {
+    console.error(`Error fetching ${tab} memes:`, error);
+    return { memes: [], lastEvaluatedKey: null };
+  }
+};
 
 const convertAuthUserToUser = (authUser: any): User => {
   return {
@@ -436,6 +445,43 @@ export const handleChangePassword = async (
   }
 };
 
+export const deleteMeme = async (memeID: string, userEmail: string) => {
+  try {
+    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/deleteMeme', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ operation: 'deleteMeme', memeID, userEmail }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete meme');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting meme:', error);
+    throw error;
+  }
+};
+
+export const removeDownloadedMeme = async (userEmail: string, memeID: string) => {
+  try {
+    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/removeDownloadedMeme', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ operation: 'removeDownloadedMeme', userEmail, memeID }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to remove downloaded meme');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error removing downloaded meme:', error);
+    throw error;
+  }
+};
 
   export const handleGoogleSignIn = async () => {
       // Implementation based on '@react-native-google-signin/google-signin'
@@ -921,6 +967,36 @@ export const getUserById = async (userId: string): Promise<User> => {
   } catch (error) {
     console.error('Error fetching user data:', error);
     throw error;
+  }
+};
+
+export const handleForgotPassword = async (email: string) => {
+  try {
+    if (!email) {
+      Alert.alert('Error', 'Please enter your email address on the login screen');
+      return;
+    }
+    await resetPassword({ username: email });
+    Alert.alert('Success', 'Check your email for password reset instructions');
+  } catch (error) {
+    console.error('Error in forgotPassword:', error);
+    Alert.alert('Error', (error as Error).message || 'An error occurred');
+  }
+};
+
+export const verifyToken = async (token: string) => {
+  try {
+    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/verifyToken', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    return false;
   }
 };
 

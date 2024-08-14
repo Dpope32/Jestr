@@ -208,7 +208,7 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
   };
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim, backgroundColor: isDarkMode ? '#1C1C1C' : '#696969' }]}>
+    <Animated.View style={[styles.container, { opacity: fadeAnim, backgroundColor: isDarkMode ? '#000' : '#2E2E2E' }]}>
       <View style={styles.header}>
         <Text style={styles.sectionHeaderIn}>Inbox</Text>
         {localUser && (

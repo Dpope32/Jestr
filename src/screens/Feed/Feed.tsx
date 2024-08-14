@@ -36,6 +36,7 @@ const { height, width } = Dimensions.get('window');
 const Feed: React.FC<FeedProps> = ({ route }) => {
   //console.log('Rendering Feed');
   const user = useUserStore(state => state);
+  const { darkMode, setDarkMode } = useUserStore();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const userState = useUserStore();
@@ -53,7 +54,6 @@ const Feed: React.FC<FeedProps> = ({ route }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
   const [allMemesViewed, setAllMemesViewed] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [memeLikeStatuses, setMemeLikeStatuses] = useState<Record<string, { liked: boolean; doubleLiked: boolean }>>({});
@@ -82,9 +82,10 @@ const Feed: React.FC<FeedProps> = ({ route }) => {
           displayName: userState.displayName,
           profilePic: typeof userState.profilePic === 'string' ? userState.profilePic : null,
           headerPic: typeof userState.headerPic === 'string' ? userState.headerPic : null,
-          CreationDate: userState.CreationDate,
+          CreationDate: userState.CreationDate || '',
           followersCount: userState.followersCount,
           followingCount: userState.followingCount,
+          bio: userState.bio,
         } as User);
   
         await fetchInitialMemes(userState.email, storedToken);
@@ -192,6 +193,7 @@ const updateLikeStatuses = useCallback(async (newMemes: Meme[]) => {
     console.log('User email not available yet');
     return;
   }
+
   const statusPromises = newMemes.map(meme =>
     getLikeStatus(meme.memeID, localUser.email)
       .then(result => {
@@ -200,8 +202,8 @@ const updateLikeStatuses = useCallback(async (newMemes: Meme[]) => {
             [meme.memeID]: {
               liked: result.liked,
               doubleLiked: result.doubleLiked,
-              memeInfo: result.memeInfo
-            }
+              memeInfo: result.memeInfo,
+            },
           };
         }
         return null;
@@ -217,15 +219,18 @@ const updateLikeStatuses = useCallback(async (newMemes: Meme[]) => {
 
   setMemeLikeStatuses(prev => ({
     ...prev,
-    ...Object.assign({}, ...validStatuses)
+    ...Object.assign({}, ...validStatuses),
   }));
 
-  // You might want to update your memes state with the new info as well
-  setMemes(prevMemes => prevMemes.map(meme => {
-    const updatedInfo = validStatuses.find(status => status && status[meme.memeID]);
-    return updatedInfo ? { ...meme, ...updatedInfo[meme.memeID].memeInfo } : meme;
-  }));
+  // Only update the meme that has its like status changed
+  setMemes(prevMemes =>
+    prevMemes.map(meme => {
+      const updatedInfo = validStatuses.find(status => status && status[meme.memeID]);
+      return updatedInfo ? { ...meme, ...updatedInfo[meme.memeID].memeInfo } : meme;
+    })
+  );
 }, [localUser]);
+
 
 
 const updateCommentCount = useCallback((memeID: string, newCount: number) => {
@@ -284,11 +289,10 @@ const renderItem = useCallback(({ item, index }: { item: Meme; index: number }) 
       memeID={item.memeID}
       liked={memeLikeStatuses[item.memeID]?.liked || false}
       doubleLiked={memeLikeStatuses[item.memeID]?.doubleLiked || false}
-      isDarkMode={isDarkMode}
-      setIsDarkMode={setIsDarkMode}
+      isDarkMode={darkMode}
       onLikeStatusChange={(memeID, status, newLikeCount) => {
         setMemeLikeStatuses(prev => ({ ...prev, [memeID]: status }));
-        setMemes(prev => prev.map(meme => meme.memeID === memeID ? { ...meme, LikeCount: newLikeCount } : meme));
+        setMemes(prev => prev.map(meme => meme.memeID === memeID ? { ...meme, likeCount: newLikeCount } : meme));
       }}
       initialLikeStatus={memeLikeStatuses[item.memeID] || { liked: false, doubleLiked: false }}
       likedIndices={new Set()}
@@ -297,7 +301,8 @@ const renderItem = useCallback(({ item, index }: { item: Meme; index: number }) 
       likeDislikeCounts={{}}
     />
   );
-}, [memes, localUser, isDarkMode, memeLikeStatuses, commentCounts, toggleCommentFeed, debouncedFetchMoreMemes]);
+}, [memes, localUser, darkMode, memeLikeStatuses, commentCounts, toggleCommentFeed, debouncedFetchMoreMemes]);
+
 
 const handleAdminClick = () => {
   navigation.navigate('AdminPage');
@@ -391,7 +396,7 @@ if (!user.email) {
 
   return (
     <ErrorBoundary>
-    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+    <View style={[styles.container, darkMode && styles.darkContainer]}>
       <TopPanel
         onProfileClick={toggleProfilePanel}
         profilePicUrl={localUser?.profilePic || ''}
@@ -436,7 +441,7 @@ if (!user.email) {
   displayName={localUser?.displayName || 'N/A'}
   followersCount={localUser?.followersCount || 0}
   followingCount={localUser?.followingCount || 0}
-  onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+  onDarkModeToggle={() => setDarkMode(!darkMode)}
   user={localUser}
   navigation={navigation}
 />
