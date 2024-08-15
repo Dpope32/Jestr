@@ -9,10 +9,10 @@ export type LandingPageNavigationProp = StackNavigationProp<RootStackParamList, 
 export interface User {
     email: string;
     username: string;
-    profilePic: string | null;
-    headerPic: string | null;
+    profilePic: string | ProfileImage | null; 
+    headerPic: string | ProfileImage | null; 
     displayName: string;
-    CreationDate: string;
+    CreationDate?: string | undefined;
     followersCount: number;
     followingCount: number;
     Bio?: string;
@@ -28,7 +28,16 @@ export interface User {
     notificationsEnabled?: boolean;
   }
   
+  export type ProfileImage = {
+    uri: string;
+    width: number;
+    height: number;
+    type?: 'image' | 'video';
+    fileName?: string | null;
+    fileSize?: number;
+  };
 
+  
 export type FetchMemesResult = {
   memes: Meme[];
   lastEvaluatedKey: string | null;

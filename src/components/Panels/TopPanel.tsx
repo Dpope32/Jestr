@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronDown, faCog } from '@fortawesome/free-solid-svg-icons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../../theme/theme';
 import { useUserStore } from '../../utils/userStore';
+import { ProfileImage } from 'types/types';
 
 interface TopPanelProps {
   onProfileClick: () => void;
-  profilePicUrl: string | null;
+  profilePicUrl: string | ProfileImage | null;
   username: string;
   enableDropdown: boolean;
   showLogo: boolean;
@@ -52,7 +53,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   return (
     <SafeAreaView style={[
       styles.safeArea,
-      { backgroundColor: darkMode ? '#000' : '#2E2E2E'  }
+      { backgroundColor: darkMode ? '#000' : '#1C1C1C'  }
     ]}>
         <View style={styles.container}>
         <TouchableOpacity onPress={handleProfileClick} style={styles.profileContainer}>
@@ -60,7 +61,8 @@ const TopPanel: React.FC<TopPanelProps> = ({
   source={profilePicUrl ? { uri: profilePicUrl } : require('../../assets/images/Jestr.jpg')} 
   style={styles.profilePic} 
 />
-          <Text style={styles.username}>{username}</Text>
+{/* <Text style={styles.username}>{username}</Text> */}
+
         </TouchableOpacity>
           
           {showLogo && (
@@ -98,16 +100,16 @@ const TopPanel: React.FC<TopPanelProps> = ({
 
 const styles = StyleSheet.create({
   safeArea: {
-    marginTop: 50,
+    marginTop: 0,
     zIndex:10,
-    backgroundColor: 'rgba(0, 0, 0, 1)',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
   },
   dimmedBackground: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
   },
   container: {
     position: 'absolute',
-    top: 20,
+    top:Platform.OS === 'ios' ?  wp('10.5%'):  wp('5%'),
     left: 0,
     flexDirection: 'row',
     alignItems: 'center',
@@ -138,10 +140,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   logo: {
-    width: wp('20%'), // Adjusted size for better fit
+    position: 'absolute',
+    width: wp('20%'), // Adjust size as needed
     height: hp('6%'),
     resizeMode: 'contain',
-    marginRight: -35,
+    left: '54.5%',
+    top: '50%',
+    transform: [{ translateX: -wp('10%') }, { translateY: -hp('3%') }],
+    zIndex: 999999, // Ensure it's above other elements
   },
   dropdownContainer: {
     position: 'relative',
@@ -174,8 +180,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#1bd40b',
     marginTop: -20,
-    minWidth: wp('25%'),
+    minWidth: wp('2%'),
     overflow: 'hidden',
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
   },
   dropdownItem: {
     paddingVertical: wp('3%'),

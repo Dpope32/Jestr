@@ -113,10 +113,13 @@ const WelcomeText = () => {
   });
 
   const textStyle: Animated.WithAnimatedObject<TextStyle> = {
-    fontSize: 88,
+    fontSize: 92,
     fontWeight: 'bold',
     color: textColor,
     textShadowColor: 'rgba(0, 255, 0, 0.7)',
+    alignContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
     marginTop: -20,
     textShadowOffset: { width: -2, height: 2 },
     transform: [
@@ -169,10 +172,11 @@ const WelcomeText = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: -50,
+    marginTop: 0,
     flex: 1,
-    justifyContent: 'center',
+    alignContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
   },
   textContainer: {
     borderColor: '#00FF00',

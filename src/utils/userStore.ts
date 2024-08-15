@@ -1,7 +1,7 @@
 // userStore.ts
 import { create } from 'zustand';
 import { ImagePickerAsset } from 'expo-image-picker';
-import { Meme } from '../types/types';  // Adjust the import path as needed
+import { Meme, ProfileImage } from '../types/types';  // Adjust the import path as needed
 
 export interface UserState {
   email: string;
@@ -38,14 +38,6 @@ export interface UserState {
   userId?: string;
 }
 
-export type ProfileImage = {
-  uri: string;
-  width: number;
-  height: number;
-  type?: 'image' | 'video';
-  fileName?: string | null;
-  fileSize?: number;
-};
 
 export const useUserStore = create<UserState>((set) => ({
   bio: '',

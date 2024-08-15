@@ -4,7 +4,7 @@ import { View, Text, TextInput, Animated, TouchableOpacity, Image, Dimensions, S
 import Comment from './Comment';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowUp, faReply, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { User } from '../../types/types';
+import { User, ProfileImage } from '../../types/types';
 import { fetchComments, postComment, updateCommentReaction } from '../Meme/memeService';
 import DefaultPfp from '../assets/images/db/JestrLogo.jpg';
 
@@ -14,7 +14,7 @@ export type CommentType = {
   commentID: string;
   text: string;
   username: string;
-  profilePicUrl: string;
+  profilePicUrl: string | ProfileImage | null;
   likesCount: number;
   dislikesCount: number;
   timestamp: string;
@@ -25,7 +25,7 @@ export type CommentType = {
 type CommentFeedProps = {
   mediaIndex: number;
   memeID: string;
-  profilePicUrl: string;
+  profilePicUrl: string | ProfileImage | null;
   user: User | null;  // Ensure this is present
   isCommentFeedVisible: boolean;
   toggleCommentFeed: () => void;
@@ -197,6 +197,17 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
     />
   );
 
+  const getImageSource = (profilePic: string | ProfileImage | null) => {
+    if (typeof profilePic === 'string') {
+      return { uri: profilePic };
+    } else if (profilePic && 'uri' in profilePic) {
+      return { uri: profilePic.uri };
+    } else {
+      // Return a default image source or null
+      return require('../../assets/images/apple.jpg'); // Adjust the path as needed
+    }
+  };
+
   return (
     <Animated.View
       style={[styles.modalContainer, { transform: [{ translateY: modalY }] }]}
@@ -225,7 +236,7 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
             </View>
           )}
           <View style={styles.inputWrapper}>
-            <Image source={{ uri: profilePicUrl }} style={styles.profilePic} />
+          <Image source={getImageSource(profilePicUrl)} style={styles.profilePic} />
             <TextInput
               ref={inputRef}
               style={styles.newCommentInput}

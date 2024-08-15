@@ -43,8 +43,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   debouncedHandleLike,
   liked,
   doubleLiked,
-  handleDownloadPress,
-  isSaved,
+
   toggleCommentFeed,
   formatDate,
   animatedBlurIntensity
@@ -52,7 +51,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   <Animated.View 
     style={[
       styles.blurContainer,
-      { opacity: Animated.subtract(1, Animated.divide(animatedBlurIntensity, 100)) }
+      { opacity: Animated.subtract(1, Animated.divide(animatedBlurIntensity, 150)) }
     ]}
   >
     <BlurView intensity={100} tint="dark" style={styles.blurInner}>
@@ -69,7 +68,6 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
       </View>
       <View style={styles.iconColumn}>
         <IconButton icon={faThumbsUp} count={counts.likes} onPress={debouncedHandleLike} color={liked || doubleLiked ? '#006400' : "#1bd40b"} />
-        <IconButton icon={faSave} count={counts.downloads} onPress={handleDownloadPress} color={isSaved ? "#006400" : "#1bd40b"} />
         <IconButton icon={faComment} count={counts.comments} onPress={toggleCommentFeed} />
         <IconButton icon={faShare} count={counts.shares} onPress={() => {}} />
       </View>

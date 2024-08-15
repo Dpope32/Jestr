@@ -10,6 +10,7 @@ export const styles = StyleSheet.create({
   absoluteFill: {
     position: 'absolute',
     top: 0,
+    borderRadius: 20,
     left: 0,
     right: 0,
     bottom: 0,
@@ -19,6 +20,7 @@ export const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+    borderRadius: 20,
     bottom: 0,
     zIndex: 1000,
   },

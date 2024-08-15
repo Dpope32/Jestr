@@ -45,13 +45,14 @@ export const useMediaPlayerLogic = ({
 }: UseMediaPlayerLogicProps) => {
   const [liked, setLiked] = useState(initialLiked);
   const [doubleLiked, setDoubleLiked] = useState(initialDoubleLiked);
-  const [isSaved, setIsSaved] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
   const [likePosition, setLikePosition] = useState({ x: 0, y: 0 });
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [counts, setCounts] = useState({
     likes: initialLikeCount,
     downloads: initialDownloadCount,
@@ -59,6 +60,10 @@ export const useMediaPlayerLogic = ({
     comments: initialCommentCount,
   });
   const [friends, setFriends] = useState([]);
+  const handleLongPress = () => {
+    console.log('longpress pressed')
+    setModalVisible(true);
+  };
 
   useEffect(() => {
     const checkLikeStatus = async () => {
@@ -207,5 +212,8 @@ export const useMediaPlayerLogic = ({
     setShowSaveModal,
     setShowShareModal,
     handleSingleTap,
+    setIsSaved,
+    setCounts,
+    handleLongPress,
   };
 };

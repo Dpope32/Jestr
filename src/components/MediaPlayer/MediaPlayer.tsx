@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, Image, TouchableOpacity, GestureResponderEvent, Dimensions, Animated, PanResponder, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, Image, TouchableOpacity, GestureResponderEvent, Dimensions, Animated, PanResponder, ActivityIndicator, TouchableWithoutFeedback, StyleSheet } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import SafeImage from './SafeImage';
@@ -13,6 +13,9 @@ import { usePanResponder } from './usePanResponder';
 import { IconsAndContent } from './MediaPlayerContent';
 import { useMediaPlayerLogic } from './useMediaPlayerLogic';
 import { useUserStore } from '../../utils/userStore';
+import { LongPressModal } from './LongPressModal';
+import { BlurView } from 'expo-blur';
+
 const SaveSuccessModal = React.lazy(() => import('../Modals/SaveSuccessModal'));
 const ShareModal = React.lazy(() => import('../Modals/ShareModal'));
 
@@ -74,6 +77,8 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
     formatDate,
     setShowSaveModal,
     setShowShareModal,
+    setIsSaved, // Add this
+    setCounts, // Add this
   } = useMediaPlayerLogic({
     initialLiked,
     initialDoubleLiked,
@@ -91,94 +96,176 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
     handleSingleTap,
   });
 
-  useEffect(() => {
-    console.log(`MediaPlayer mounted for memeID: ${memeID}`);
-    return () => {
-      console.log(`MediaPlayer unmounted for memeID: ${memeID}`);
-    };
-  }, [memeID]);
-
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const { darkMode } = useUserStore();
+  const blurOpacity = useRef(new Animated.Value(0)).current;
   const [responseModalVisible, setResponseModalVisible] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
   const [mediaLoadError, setMediaLoadError] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const SWIPE_THRESHOLD = height * 0.05;
+  const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
   const lottieRef = useRef(null);
   const [lastTap, setLastTap] = useState(0);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isLongPressModalVisible, setIsLongPressModalVisible] = useState(false);
 
-  const handleTap = useCallback((event: GestureResponderEvent) => {
-    const now = Date.now();
-    const DOUBLE_PRESS_DELAY = 300;
 
-    if (now - lastTap < DOUBLE_PRESS_DELAY) {
-      handleDoubleTap(event);
-    } else {
-      handleSingleTap();
-    }
-    setLastTap(now);
-  }, [lastTap, handleDoubleTap, handleSingleTap]);
-  
+
+  const closeLongPressModal = useCallback(() => {
+    setIsLongPressModalVisible(false);
+    Animated.timing(blurOpacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [blurOpacity]);
+
   const handleMediaError = useCallback(() => {
     setMediaLoadError(true);
     goToNextMedia();
   }, [goToNextMedia]);
 
+  const isSupportedImageFormat = (url: string) => {
+    const supportedFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    const extension = url.split('.').pop()?.toLowerCase(); // Use optional chaining
+    return extension ? supportedFormats.includes(extension) : false;
+};
+
+
+
   useEffect(() => {
+    //console.log('MediaPlayer useEffect triggered');
+   // console.log('currentMedia:', currentMedia);
+   // console.log('mediaType:', mediaType);
+    
     setMediaLoadError(false);
     setIsLoading(true);
+    
     fadeAnim.setValue(0);
     translateY.setValue(0);
     animatedBlurIntensity.setValue(0);
+    console.log('Animations reset');
 
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 200,
+      duration: 100,
       useNativeDriver: true,
-    }).start();
+    }).start(() => console.log('Fade-in animation started'));
 
     const isVideo = currentMedia.toLowerCase().endsWith('.mp4') || mediaType === 'video';
     const screenWidth = Dimensions.get('window').width;
+    const screenHeight= Dimensions.get('window').height;    
+   // console.log('Is video:', isVideo);
+ //   console.log('Screen width:', screenWidth);
+ //   console.log('Screen width:', height);
 
     if (isVideo) {
-      setImageSize({ width: screenWidth, height: screenWidth * (9 / 16) });
+      const videoSize = { width: screenWidth, height: screenHeight };
+      setImageSize(videoSize);
+      console.log('Video size set:', videoSize);
       setIsLoading(false);
-    } else {
-      Image.getSize(
-        currentMedia,
-        (width, height) => {
-          const aspectRatio = width / height;
-          const calculatedHeight = screenWidth / aspectRatio;
-          setImageSize({ width: screenWidth, height: calculatedHeight });
-          setIsLoading(false);
-        },
-        (error) => {
-          console.error('Failed to load image:', error);
-          handleMediaError();
-        }
-      );
-    }
-
-    const recordViewAsync = async () => {
-      if (user && memeID) {
-        try {
-          await recordMemeView(user.email, memeID);
-        } catch (error) {
-          console.error('Failed to record meme view:', error);
-        }
+  } else {
+      console.log('Attempting to load image:', currentMedia);
+  
+      if (!isSupportedImageFormat(currentMedia)) {
+          console.error('Unsupported image format:', currentMedia);
+          setMediaLoadError(true);
+          return;
       }
+  
+      Image.getSize(
+          currentMedia,
+          (width, height) => {
+          //    console.log('Image dimensions fetched:', { width, height });
+              const aspectRatio = width / height;
+  
+              let calculatedWidth, calculatedHeight;
+  
+              if (aspectRatio > 1) {
+                  // Landscape image
+                  calculatedWidth = screenWidth;
+                  calculatedHeight = screenWidth / aspectRatio;
+              } else {
+                  // Portrait or square image
+                  calculatedWidth = screenHeight * aspectRatio;
+                  calculatedHeight = screenHeight;
+              }
+  
+              // Ensure the image covers as much of the screen as possible
+              if (calculatedHeight > screenHeight) {
+                  calculatedHeight = screenHeight;
+                  calculatedWidth = screenHeight * aspectRatio;
+              }
+  
+              const imageSize = { width: calculatedWidth, height: calculatedHeight };
+           //   console.log('Calculated image size:', imageSize);
+              setImageSize(imageSize);
+              setIsLoading(false);
+           //   console.log('Image loaded successfully');
+          },
+          (error) => {
+              console.error('Failed to load image:', {
+                  url: currentMedia,
+                  error: error.message,
+                  errorCode: error.code,
+              });
+              setMediaLoadError(true);
+              handleMediaError();
+          }
+      );
+  }
+
+    return () => {
+      console.log(`MediaPlayer unmounted for memeID: ${memeID}`);
     };
-    recordViewAsync();
-  }, [currentMedia, mediaType, user, memeID, fadeAnim, handleMediaError]);
+}, [currentMedia, mediaType, user, memeID, fadeAnim, handleMediaError]);
+
+
+const handleLongPress = useCallback(() => {
+  setIsLongPressModalVisible(true);
+  Animated.timing(blurOpacity, {
+    toValue: 1,
+    duration: 100,
+    useNativeDriver: false,
+  }).start();
+}, [blurOpacity]);
+
+const handleTap = useCallback((event: GestureResponderEvent) => {
+  const now = Date.now();
+  const DOUBLE_PRESS_DELAY = 300; // Reduced from 500
+
+  if (now - lastTap < DOUBLE_PRESS_DELAY) {
+    handleDoubleTap(event);
+  } else {
+    // Add a small delay to differentiate from long press
+    setTimeout(() => {
+      if (!isLongPressModalVisible) {
+        handleSingleTap();
+      }
+    }, 50);
+  }
+  setLastTap(now);
+}, [lastTap, handleDoubleTap, handleSingleTap, isLongPressModalVisible]);
 
   const { panHandlers, translateY, animatedBlurIntensity } = usePanResponder({
     nextMedia,
     prevMedia,
     goToNextMedia,
     goToPrevMedia,
+    handleLongPress, 
+    handleTap, // No need to adjust
   });
+  
+
+  const closeModal = useCallback(() => {
+    setIsModalVisible(false);
+    Animated.timing(blurOpacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, []);
 
   const renderMedia = useMemo(() => {
     if (isLoading) {
@@ -201,7 +288,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
             resizeMode={ResizeMode.CONTAIN}
             useNativeControls
             shouldPlay={!isLoading}
-            onPlaybackStatusUpdate={status => {}}
+            onPlaybackStatusUpdate={() => {}}
             isLooping
             isMuted={true}
             onError={(error) => {
@@ -229,17 +316,16 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   }, [currentMedia, mediaType, isLoading, mediaLoadError, fadeAnim, imageSize, handleMediaError]);
   
 
-  return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          transform: [{ translateY }],
-          backgroundColor: darkMode ? '#000' : '#2E2E2E',
-        },
-      ]}
-      {...panHandlers}
-    >
+return (
+  <Animated.View
+    style={[
+      styles.container,
+      {
+        transform: [{ translateY }],
+        backgroundColor: darkMode ? '#000' : '#2E2E2E'
+      }
+    ]}
+    {...panHandlers}>
       
       <View style={styles.contentContainer}>
         <TouchableWithoutFeedback onPress={handleTap}>
@@ -295,6 +381,36 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
         />
         {responseModalVisible && <Text>{responseMessage}</Text>}
       </View>
+      <Animated.View 
+  style={[
+    StyleSheet.absoluteFill, 
+    { 
+      opacity: blurOpacity,
+      backgroundColor: 'rgba(0,0,0,0.5)' // Add a semi-transparent background
+    }
+  ]}
+>
+  <BlurView intensity={20} style={StyleSheet.absoluteFill} />
+</Animated.View>
+
+      <LongPressModal
+        isVisible={isLongPressModalVisible}
+        onClose={closeLongPressModal}
+        meme={{
+          id: memeID,
+          url: currentMedia,
+          caption: caption,
+        }}
+        onSaveToProfile={handleDownloadPress}
+        onShare={() => setShowShareModal(true)}
+        onReport={() => {/* Implement report functionality */}}
+        user={user}
+        memeID={memeID}
+        isSaved={isSaved}
+        setIsSaved={setIsSaved}
+        setCounts={setCounts}
+      />
+
     </Animated.View>
   );
 });

@@ -60,7 +60,14 @@ const Feed: React.FC<FeedProps> = ({ route }) => {
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   const isFetchingMore = useRef(false);
-  
+  const flashListRef = useRef<FlashList<Meme>>(null);
+
+  useEffect(() => {
+    if (flashListRef.current) {
+      flashListRef.current.scrollToIndex({ index: currentMediaIndex, animated: true });
+    }
+  }, [currentMediaIndex]);
+
   useEffect(() => {
     const initializeFeed = async () => {
       console.log('Initializing Feed');
@@ -247,6 +254,26 @@ const toggleCommentFeed = useCallback(() => {
   setIsCommentFeedVisible(prev => !prev);
 }, []);
 
+const goToNextMedia = useCallback(() => {
+  console.log('goToNextMedia called');
+  setCurrentMediaIndex(prevIndex => {
+    const nextIndex = Math.min(memes.length - 1, prevIndex + 1);
+    console.log('Current index:', prevIndex, 'New index:', nextIndex);
+    if (nextIndex >= memes.length - 2) {
+      debouncedFetchMoreMemes();
+    }
+    return nextIndex;
+  });
+}, [memes.length, debouncedFetchMoreMemes]);
+
+const goToPrevMedia = useCallback(() => {
+  console.log('goToPrevMedia called');
+  setCurrentMediaIndex(prevIndex => {
+    const nextIndex = Math.max(0, prevIndex - 1);
+    console.log('Current index:', prevIndex, 'New index:', nextIndex);
+    return nextIndex;
+  });
+}, []);
 
 const renderItem = useCallback(({ item, index }: { item: Meme; index: number }) => {
   const prevMedia = index > 0 ? memes[index - 1].url : null;
@@ -261,24 +288,14 @@ const renderItem = useCallback(({ item, index }: { item: Meme; index: number }) 
       }}
       currentMedia={item.url}
       mediaType={item.mediaType}
-      prevMedia={prevMedia}
-      nextMedia={nextMedia}
+      goToPrevMedia={goToPrevMedia}
+      goToNextMedia={goToNextMedia}
       username={item.username}
       caption={item.caption}
       uploadTimestamp={item.uploadTimestamp}
-      handleLike={() => {}}
-      handleDownload={() => {}}
+      handleLike={() => { } }
+      handleDownload={() => { } }
       toggleCommentFeed={toggleCommentFeed}
-      goToPrevMedia={() => setCurrentMediaIndex(prev => Math.max(0, prev - 1))}
-      goToNextMedia={() => {
-        setCurrentMediaIndex(prev => {
-          const nextIndex = prev + 1;
-          if (nextIndex >= memes.length - 2) {
-            debouncedFetchMoreMemes();
-          }
-          return Math.min(memes.length - 1, nextIndex);
-        });
-      }}
       currentMediaIndex={index}
       user={localUser}
       likeCount={item.likeCount}
@@ -293,13 +310,12 @@ const renderItem = useCallback(({ item, index }: { item: Meme; index: number }) 
       onLikeStatusChange={(memeID, status, newLikeCount) => {
         setMemeLikeStatuses(prev => ({ ...prev, [memeID]: status }));
         setMemes(prev => prev.map(meme => meme.memeID === memeID ? { ...meme, likeCount: newLikeCount } : meme));
-      }}
+      } }
       initialLikeStatus={memeLikeStatuses[item.memeID] || { liked: false, doubleLiked: false }}
       likedIndices={new Set()}
       doubleLikedIndices={new Set()}
       downloadedIndices={new Set()}
-      likeDislikeCounts={{}}
-    />
+      likeDislikeCounts={{}} nextMedia={null} prevMedia={null}    />
   );
 }, [memes, localUser, darkMode, memeLikeStatuses, commentCounts, toggleCommentFeed, debouncedFetchMoreMemes]);
 
@@ -336,26 +352,27 @@ const keyExtractor = useCallback((item: Meme, index: number) => `${item.memeID}-
     return ref.current;
   }
   
-  const memoizedFlashList = useMemo(() => (
-    <FlashList
-      data={memes}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      estimatedItemSize={height}
-      onEndReachedThreshold={0.5}
-      showsVerticalScrollIndicator={false}
-      snapToInterval={height}
-      snapToAlignment="start"
-      decelerationRate="fast"
-      pagingEnabled={true}
-      initialScrollIndex={currentMediaIndex}
-      onViewableItemsChanged={onViewableItemsChanged}
-      viewabilityConfig={{
-        itemVisiblePercentThreshold: 50
-      }}
-      removeClippedSubviews={true}
-    />
-  ), [memoizedMemes, renderItem, keyExtractor, debouncedFetchMoreMemes, currentMediaIndex, onViewableItemsChanged]);
+const memoizedFlashList = useMemo(() => (
+  <FlashList
+    ref={flashListRef}
+    data={memes}
+    renderItem={renderItem}
+    keyExtractor={keyExtractor}
+    estimatedItemSize={height}
+    onEndReachedThreshold={0.5}
+    showsVerticalScrollIndicator={false}
+    snapToInterval={height}
+    snapToAlignment="start"
+    decelerationRate="fast"
+    pagingEnabled={true}
+    initialScrollIndex={currentMediaIndex}
+    onViewableItemsChanged={onViewableItemsChanged}
+    viewabilityConfig={{
+      itemVisiblePercentThreshold: 50
+    }}
+    removeClippedSubviews={true}
+  />
+), [memes, renderItem, keyExtractor, currentMediaIndex, onViewableItemsChanged]);
   
 
   if (isLoading) {

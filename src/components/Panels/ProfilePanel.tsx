@@ -6,7 +6,7 @@ import { faUser , faRibbon, faBell, faHistory, faCog, faMoon, faSignOutAlt, faTi
 import Anon1Image from '../../assets/images/Jestr5.jpg';
 import { useTheme } from '../../ThemeContext'; // Import useTheme
 import LogoutModal from '../Modals/LogoutModal';
-import { User } from '../../types/types';
+import { User, ProfileImage } from '../../types/types';
 import NotificationsPanel from './NotificationsPanel';
 import { Switch } from 'react-native';
 import { handleSignOut } from '../../services/authFunctions';
@@ -19,7 +19,7 @@ const { width } = Dimensions.get('window');
 type ProfilePanelProps = {
   isVisible: boolean;
   onClose: () => void;
-  profilePicUrl: string | null;
+  profilePicUrl: string | ProfileImage | null;
   username: string;
   displayName: string;
   followersCount: number;

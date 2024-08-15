@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, UIManager } from 'react-native';
 import { enableScreens } from 'react-native-screens';
-import Toast, { ToastConfig, ToastConfigParams } from 'react-native-toast-message';
+import Toast, {BaseToast, BaseToastProps, ErrorToast , ToastConfig, ToastConfigParams } from 'react-native-toast-message';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { ThemeProvider } from './src/ThemeContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -43,45 +43,51 @@ enableScreens();
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const toastConfig: ToastConfig = {
-  success: (internalState: ToastConfigParams<any>) => (
-    <View style={{
-      height: 60,
-      width: '70%',
-      backgroundColor: internalState.props.backgroundColor,
-      padding: 15,
-      borderRadius: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 2,
-      borderColor: '#00ff00'
-    }}>
-      <Text style={{
-        color: internalState.props.textColor,
-        textAlign: 'center'
-      }}>
-        {internalState.text1}
-      </Text>
-    </View>
+const toastConfig = {
+  success: (props: React.JSX.IntrinsicAttributes & BaseToastProps) => (
+    <BaseToast
+      {...props}
+      style={{
+        borderWidth: 1,
+        borderColor: 'green',
+        backgroundColor: '#2E2E2E',
+        borderRadius: 5,
+        marginTop: 40, // Adjust this value to move the toast down
+        alignContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center'
+      }}
+      contentContainerStyle={{ paddingHorizontal: 15 }}
+      text1Style={{
+        fontSize: 15,
+        fontWeight: '400',
+        color: '#FFFFFF'
+      }}
+      text2Style={{
+        fontSize: 12,
+        color: '#CCCCCC'
+      }}
+    />
   ),
-  error: (internalState: ToastConfigParams<any>) => (
-    <View style={{
-      height: 60,
-      width: '100%',
-      backgroundColor: internalState.props.backgroundColor,
-      padding: 15,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 2,
-      borderColor: '#00ff00'
-    }}>
-      <Text style={{
-        color: internalState.props.textColor,
-        textAlign: 'center'
-      }}>
-        {internalState.text1}
-      </Text>
-    </View>
+  error: (props: React.JSX.IntrinsicAttributes & BaseToastProps) => (
+    <ErrorToast
+      {...props}
+      style={{
+        borderWidth: 1,
+        borderColor: 'red',
+        backgroundColor: '#2E2E2E',
+        borderRadius: 5,
+        marginTop: 40, // Adjust this value to move the toast down
+      }}
+      text1Style={{
+        fontSize: 15,
+        color: '#FFFFFF'
+      }}
+      text2Style={{
+        fontSize: 12,
+        color: '#CCCCCC'
+      }}
+    />
   ),
 };
 

@@ -3,7 +3,7 @@ import { Dimensions } from 'react-native';
 import { COLORS, SPACING, FONT_SIZES, wp } from '../../theme/theme';
 
 const { width, height } = Dimensions.get('window');
-const SWIPE_THRESHOLD = height * 0.25;
+const SWIPE_THRESHOLD = height * 0.1;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -11,8 +11,12 @@ const styles = StyleSheet.create({
     width: width,
   },
   blurInner: {
-    padding: 10,
     borderRadius: 10,
+  },
+  videoWrapper: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   memeContainer: {
     flex: 1,
@@ -34,7 +38,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 200 : 120, // Adjust based on platform
+    bottom: Platform.OS === 'ios' ? 160 : 100, // Adjust based on platform
     left: 10,
     right: 10,
     flexDirection: 'row',
@@ -46,12 +50,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: Platform.OS === 'ios' ? 200 : 120, // Adjust for bottom navigation
+    paddingBottom: Platform.OS === 'ios' ? 220 : 100, // Adjust for bottom navigation
   },
   iconColumn: {
     position: 'absolute',
+    flexDirection: 'column',
     right: 10,
-    bottom: Platform.OS === 'ios' ? 200 : 120,
+    paddingHorizontal: 10,
+    gap: 5,
+    bottom: Platform.OS === 'ios' ? 160 : 80,
     alignItems: 'center',
   },
   memeImage: {
@@ -59,12 +66,6 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'contain',
     maxHeight: height * 0.7, // Limit to 70% of screen height
-  },
-  thumbsUpContainer: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -50 }, { translateY: -50 }],
   },
   followButton: {
     position: 'absolute',
