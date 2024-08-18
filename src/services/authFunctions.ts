@@ -5,13 +5,15 @@ import { User, Meme, FetchMemesResult  } from '../types/types'
 import { API_URL } from '../components/Meme/config';
 import { signUp, signOut, confirmSignIn, getCurrentUser, fetchAuthSession, signIn, SignInOutput } from '@aws-amplify/auth';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../types/types';
+import { RootStackParamList, ProfileImage } from '../types/types';
 import * as FileSystem from 'expo-file-system';
 import { v4 as uuidv4 } from 'uuid';
-import { ProfileImage, useUserStore  } from '../utils/userStore';
+import { useUserStore  } from '../utils/userStore';
 import { storeToken, getToken, removeToken, storeUserIdentifier } from '../utils/secureStore';
 import * as SecureStore from 'expo-secure-store';
 import { resetPassword } from '@aws-amplify/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 type Asset = {
   uri: string;
@@ -94,9 +96,6 @@ export const handleLogin = async (
   }
 };
 
-// Remove the API import
-
-
 export const fetchUserDetails = async (identifier: string, token?: string) => {
   console.log('Fetching user details for identifier:', identifier);
   console.log('Using API endpoint:', API_ENDPOINT);
@@ -137,6 +136,8 @@ export const handleSignOut = async () => {
   try {
     await signOut({ global: true });
     await removeToken('accessToken');
+    await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem('accessToken');
     useUserStore.getState().setUserDetails({}); // Clear Zustand store
     console.log('Sign out successful');
   } catch (error) {
@@ -144,7 +145,6 @@ export const handleSignOut = async () => {
     throw error;
   }
 };
-
 
 export const handleSignup = async (
   email: string,
@@ -221,7 +221,6 @@ export const handleSignup = async (
     }
   }
 };
-
 
 export const handleCompleteProfile = async (
   email: string,
@@ -359,16 +358,6 @@ const fileToBase64 = async (asset: ProfileImage): Promise<string | null> => {
                 return null;     }   } 
                   return null; }; 
 
-
-async function uriToAsset(uri: string): Promise<Asset> {
-  const response = await fetch(uri);
-  const blob = await response.blob();
-  return {
-    uri,
-    type: blob.type,
-    name: uri.split('/').pop() || 'file',
-  };
-}
 
 export const fetchTabMemes = async (
   tab: 'posts' | 'liked' | 'history' | 'downloaded',

@@ -133,8 +133,6 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
         showLogo={true}
         isAdmin={false}
         onAdminClick={console.log}
-        isDarkMode={isDarkMode}
-        setIsDarkMode={setIsDarkMode}
         isUploading={isUploading} // Pass the isUploading state to TopPanel
       />
       {profilePanelVisible && (
@@ -152,8 +150,6 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
           onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
           user={localUser}
           navigation={navigation}
-          isDarkMode={isDarkMode}
-          setIsDarkMode={setIsDarkMode}
         />
       )}
       <Animated.View style={[styles.card, { opacity: cardFadeAnim }]}>

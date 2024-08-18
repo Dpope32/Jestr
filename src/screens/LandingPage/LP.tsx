@@ -8,7 +8,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import SuccessModal from '../../components/Modals/SuccessModal'; 
 import SignupSuccessModal from '../../components/Modals/SignupSuccessModal';
 import { RootStackParamList, LandingPageNavigationProp, LetterScale } from '../../types/types';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import WelcomeText from './WelcomeText';
 import { BlurView } from 'expo-blur';
@@ -106,26 +105,10 @@ const LP: React.FC<LPProps> = ({
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.formContainer1}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
         >
           <ScrollView contentContainerStyle={styles.scrollViewContainer}>
             <View style={[styles.titleContainer, { marginTop: titleMarginTop }]}>
-              {letterScale.map((anim, index) => (
-                <Animated.Text
-                  key={index}
-                  style={[
-                    styles.titleLetter,
-                    {
-                      opacity: anim.opacity,
-                      transform: [
-                        { scale: anim.scale },
-                        { translateY: anim.translateY }
-                      ]
-                    }
-                  ]}
-                >
-                  {['J', 'e', 's', 't', 'r'][index]}
-                </Animated.Text>
-              ))}
             </View>
   
             {animationComplete && (

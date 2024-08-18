@@ -18,6 +18,7 @@ import { useUserStore, UserState } from '../../utils/userStore';
 import MemeGrid from './MemeGrid';
 import { useProfileHandlers } from './ProfileHandlers';
 import { getDaysSinceCreation } from 'utils/dateUtils';
+import { useTheme } from '../../theme/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -45,7 +46,7 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
   const [currentMemeIndex, setCurrentMemeIndex] = useState(0);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode } = useTheme();
   const [isEditProfileModalVisible, setIsEditProfileModalVisible] = useState(false);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [isBlurVisible, setIsBlurVisible] = useState<boolean>(false);
@@ -216,7 +217,7 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
   if (!user) return <ActivityIndicator />;
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#2E2E2E', flexDirection: 'column' }]}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#1C1C1C', flexDirection: 'column' }]}>
       <ScrollView>
         <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
           <TouchableOpacity onPress={() => handleImagePress('header')}>
@@ -341,7 +342,6 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
               liked={false}
               doubleLiked={false}
               isDarkMode={isDarkMode}
-              setIsDarkMode={setIsDarkMode}
             />
             <TouchableOpacity 
               style={styles.closeButton} 

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Platform, TextInput, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronDown, faCog } from '@fortawesome/free-solid-svg-icons';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { FONTS } from '../../theme/theme';
-import { useUserStore } from '../../utils/userStore';
 import { ProfileImage } from 'types/types';
+import { useTheme } from '../../theme/ThemeContext';
 
 interface TopPanelProps {
   onProfileClick: () => void;
@@ -30,114 +30,158 @@ const TopPanel: React.FC<TopPanelProps> = ({
   isUploading // Use this prop
 }) => {
   const [selectedTab, setSelectedTab] = useState("Flow");
- // console.log('TopPanel rendered, isAdmin:', isAdmin);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { darkMode, setDarkMode } = useUserStore();
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const { isDarkMode } = useTheme();
+
+  const handleTabClick = (tab: string) => {
+    setSelectedTab(tab);
   };
 
-  const selectOption = (option: string) => {
-    setSelectedTab(option);
-    setIsDropdownOpen(false);
-  };
-
-  const handleSelect = (index: string | number, value: string) => {
-    setSelectedTab(value);
+  const handleSearchClick = () => {
+    setIsSearchActive(!isSearchActive);
   };
 
   const handleProfileClick = () => {
     onProfileClick();
   };
 
+  // Close search when keyboard is closed
+  const handleKeyboardDismiss = () => {
+    setIsSearchActive(false);
+  };
+
+  React.useEffect(() => {
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', handleKeyboardDismiss);
+    return () => {
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
   return (
     <SafeAreaView style={[
       styles.safeArea,
-      { backgroundColor: darkMode ? '#000' : '#1C1C1C'  }
+      { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' }
     ]}>
-        <View style={styles.container}>
+      <View style={[
+        styles.container,
+        { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' } // Inline styling for the container
+      ]}>
         <TouchableOpacity onPress={handleProfileClick} style={styles.profileContainer}>
-        <Image 
-  source={profilePicUrl ? { uri: profilePicUrl } : require('../../assets/images/Jestr.jpg')} 
-  style={styles.profilePic} 
-/>
-{/* <Text style={styles.username}>{username}</Text> */}
-
+          <Image 
+            source={profilePicUrl ? { uri: profilePicUrl } : require('../../assets/images/Jestr.jpg')} 
+            style={styles.profilePic} 
+          />
         </TouchableOpacity>
-          
-          {showLogo && (
-            <Image source={require('../../assets/images/Jestr.jpg')} style={styles.logo} />
-          )}
-          
-          {enableDropdown && (
-          <View style={styles.dropdownContainer}>
-            <TouchableOpacity style={styles.dropdown} onPress={toggleDropdown}>
-              <Text style={styles.dropdownText}>{selectedTab}</Text>
-              <FontAwesomeIcon icon={faChevronDown} size={wp('4%')} color="#1bd40b" />
-            </TouchableOpacity>
-            {isDropdownOpen && (
-              <View style={styles.dropdownMenu}>
-                <TouchableOpacity onPress={() => selectOption('Flow')} style={styles.dropdownItem}>
-                  <Text style={styles.dropdownItemText}>Flow</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => selectOption('Following')} style={styles.dropdownItem}>
-                  <Text style={styles.dropdownItemText}>Following</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
+
+        {showLogo && (
+          <Image source={require('../../assets/images/Jestr.jpg')} style={styles.logo} />
         )}
-          
-          {isAdmin && (
-            <TouchableOpacity onPress={onAdminClick} style={styles.adminIcon}>
-              <FontAwesomeIcon icon={faCog} size={wp('6%')} color="#1bd40b" />
-            </TouchableOpacity>
+
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'Flow' && styles.activeTab]}
+            onPress={() => handleTabClick('Flow')}
+          >
+            <Text style={[styles.tabText, selectedTab === 'Flow' && styles.activeTabText]}>Flow</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'Following' && styles.activeTab]}
+            onPress={() => handleTabClick('Following')}
+          >
+            <Text style={[styles.tabText, selectedTab === 'Following' && styles.activeTabText]}>Following</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.searchContainer}>
+          {isSearchActive && (
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search"
+              placeholderTextColor="#888"
+              value={searchText}
+              onChangeText={setSearchText}
+            />
           )}
+          <TouchableOpacity style={styles.searchIconContainer} onPress={handleSearchClick}>
+            <FontAwesomeIcon icon={faSearch} size={wp('5%')} style={styles.searchIcon} />
+          </TouchableOpacity>
+        </View>
       </View>
-      </SafeAreaView>
+    </SafeAreaView>
   );
 };
 
+
 const styles = StyleSheet.create({
   safeArea: {
-    marginTop: 0,
-    zIndex:10,
-    backgroundColor: 'rgba(0, 0, 0, 0)',
-  },
-  dimmedBackground: {
+    marginTop: -20,
+    zIndex: 10,
     backgroundColor: 'rgba(0, 0, 0, 0)',
   },
   container: {
-    position: 'absolute',
-    top:Platform.OS === 'ios' ?  wp('10.5%'):  wp('5%'),
-    left: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 2,
     paddingHorizontal: wp('5%'),
+    paddingVertical: 5,
     width: '100%',
-    marginTop: 0,
-    fontFamily: FONTS.regular,
-    zIndex: 999999,
+    zIndex: 555,
   },
   profileContainer: {
     flexDirection: 'column',
     alignItems: 'center',
-    zIndex: 999999,
-    elevation: 9
+    zIndex: 555,
   },
   profilePic: {
     width: wp('10%'),
     height: wp('10%'),
     borderRadius: wp('5%'),
-    marginTop: 4
+    marginTop: 4,
   },
-  username: {
-    fontSize: wp('4%'), // Adjusted font size for better readability
-    color: '#999',
+  tabsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: hp('7%'), // Moved tabs further down
+    marginLeft: 15
+  },
+  tab: {
+    marginHorizontal: wp('10%'),
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#1bd40b', // Green underline for active tab
+  },
+  tabText: {
+    color: '#888', // Inactive tab color
+    fontSize: wp('5%'), // Increased font size
     fontFamily: FONTS.regular,
-    fontWeight: 'bold',
+  },
+  activeTabText: {
+    color: '#fff', // Active tab color
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchInput: {
+    height: hp('4%'), // Maintained height for better usability
+    width: wp('30%'), // Reduced width by half
+    backgroundColor: '#1C1C1C',
+    color: '#fff',
+    marginLeft: -150,
+    borderRadius: 8,
+    paddingHorizontal: wp('2%'),
+    marginRight: wp('0%'),
+    fontFamily: FONTS.regular,
+    fontSize: wp('4%'),
+  },
+  searchIconContainer: {
+    padding: wp('2%'),
+  },
+  searchIcon: {
+    color: '#fff', // White search icon
   },
   logo: {
     position: 'absolute',
@@ -145,67 +189,8 @@ const styles = StyleSheet.create({
     height: hp('6%'),
     resizeMode: 'contain',
     left: '54.5%',
-    top: '50%',
-    transform: [{ translateX: -wp('10%') }, { translateY: -hp('3%') }],
+    transform: [{ translateX: -wp('10%') }],
     zIndex: 999999, // Ensure it's above other elements
-  },
-  dropdownContainer: {
-    position: 'relative',
-    zIndex: 1000,
-  },
-  dropdown: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    paddingHorizontal: wp('4%'),
-    paddingVertical: wp('2%'),
-    borderRadius: wp('5%'),
-    borderWidth: 2,
-    borderColor: '#1bd40b',
-    minWidth: wp('25%'),
-  },
-  dropdownText: {
-    color: '#1bd40b',
-    marginRight: wp('2%'),
-    fontFamily: FONTS.regular,
-    fontWeight: 'bold',
-    fontSize: wp('4%'),
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    top: '100%',
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    borderRadius: wp('3%'),
-    borderWidth: 2,
-    borderColor: '#1bd40b',
-    marginTop: -20,
-    minWidth: wp('2%'),
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignContent: 'center',
-    alignItems: 'center',
-  },
-  dropdownItem: {
-    paddingVertical: wp('3%'),
-    paddingHorizontal: wp('4%'),
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(27, 212, 11, 0.3)',
-  },
-  dropdownItemText: {
-    color: '#fff',
-    fontFamily: FONTS.regular,
-    fontSize: wp('3.5%'),
-  },
-  dropdownTextStyle: {
-    color: 'white',
-    fontSize: wp('3.5%'),
-    padding: wp('2.5%'),
-    textAlign: 'center',
-    fontFamily: FONTS.regular,
-  },
-  adminIcon: {
-    padding: wp('2.5%'),
   },
 });
 

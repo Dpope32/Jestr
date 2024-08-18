@@ -9,7 +9,7 @@ const styles = StyleSheet.create({
     width: width * 0.7,
     height: height,
     left: 0,
-    top: 50,
+    top: 0,
     bottom: 20,
     zIndex: 30000,
     elevation: 1000000000000,

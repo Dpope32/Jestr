@@ -6,6 +6,7 @@ import { faLink, faSave, faShare, faFlag, faUser, faDownload } from '@fortawesom
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
 import * as Haptics from 'expo-haptics';
+import Toast, {BaseToast, BaseToastProps, ErrorToast , ToastConfig, ToastConfigParams } from 'react-native-toast-message';
 
 const { width, height } = Dimensions.get('window');
 
@@ -67,32 +68,77 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
   const copyLink = async () => {
     await Clipboard.setStringAsync(`https://jestr.com/meme/${meme.id}`);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Toast.show({
+      type: 'success',
+      text1: 'Link Copied',
+      text2: 'Meme link copied to clipboard',
+    });
     onClose();
   };
 
   const saveToGallery = async () => {
-    const { status } = await MediaLibrary.requestPermissionsAsync();
-    if (status === 'granted') {
-      const asset = await MediaLibrary.createAssetAsync(meme.url);
-      await MediaLibrary.createAlbumAsync('Jestr', asset, false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try {
+      if (Platform.OS === 'android' && Platform.isTV) {
+        console.log('Saving to gallery not supported on Android TV or emulators');
+        Toast.show({
+          type: 'info',
+          text1: 'Gallery Save',
+          text2: 'Saving to gallery is not supported on this device.',
+        });
+      } else {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status === 'granted') {
+          const asset = await MediaLibrary.createAssetAsync(meme.url);
+          await MediaLibrary.createAlbumAsync('Jestr', asset, false);
+          Toast.show({
+            type: 'success',
+            text1: 'Image Saved',
+            text2: 'Successfully saved image to gallery!',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error saving to gallery:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Save Failed',
+        text2: 'Failed to save image to gallery.',
+      });
     }
     onClose();
   };
 
   const handleSaveToProfile = () => {
-    onSaveToProfile();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      onSaveToProfile();
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      Toast.show({
+        type: 'success',
+        text1: 'Meme Saved',
+        text2: 'Saved image to your gallery inside your profile',
+      });
+    } catch (error) {
+      console.error('Error updating meme reaction:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to save meme to profile',
+      });
+    }
     onClose();
   };
+
+  
+  
 
   if (!isVisible) return null;
 
   return (
-    <BlurView intensity={100} style={StyleSheet.absoluteFill}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.container}>
-          <Animated.View style={[styles.modalContainer, { transform: [{ scale }] }]}>
+    <View style={StyleSheet.absoluteFill}>
+      <BlurView intensity={100} style={StyleSheet.absoluteFill} tint="dark">
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={styles.container}>
+            <Animated.View style={[styles.modalContainer, { transform: [{ scale }] }]}>
             <TouchableWithoutFeedback onPress={onClose}>
               <View style={styles.memePreview}>
                 <Image source={{ uri: meme.url }} style={styles.memeImage} resizeMode="contain" />
@@ -115,10 +161,11 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
                 </TouchableOpacity>
               ))}
             </View>
-          </Animated.View>
-        </View>
-      </TouchableWithoutFeedback>
-    </BlurView>
+            </Animated.View>
+          </View>
+        </TouchableWithoutFeedback>
+      </BlurView>
+    </View>
   );
 };
 
@@ -127,16 +174,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: -100,
-    zIndex: 4
+    position: 'absolute',
+    top: -200,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000, 
+    elevation: 999, // For Android
   },
   modalContainer: {
     width: width * 0.75,
-    maxHeight: height ,
+    maxHeight: height,
     backgroundColor: '#2E2E2E',
     borderRadius: 20,
     padding: 10,
     alignItems: 'center',
+    zIndex: 10000,
+    elevation: 1000,
+    
   },
   memePreview: {
     width: '100%',

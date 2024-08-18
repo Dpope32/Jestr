@@ -17,51 +17,15 @@ const WelcomeText = () => {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
-    const animation = Animated.loop(
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(animatedValue, {
-            toValue: 1,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(animatedValue, {
-            toValue: 2,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(animatedValue, {
-            toValue: 3,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(animatedValue, {
-            toValue: 0,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.loop(
-          Animated.timing(rotateY, {
-            toValue: 360,
-            duration: 8000,
-            useNativeDriver: true,
-          })
-        ),
-      ])
-    );
-
-    animation.start();
-
     const newParticles: Particle[] = Array(20).fill(0).map(() => ({
       left: Math.random() * width,
       top: Math.random() * height,
       size: Math.random() * 5 + 2,
       animated: new Animated.Value(0),
     }));
-
+  
     setParticles(newParticles);
-
+  
     newParticles.forEach(particle => {
       Animated.loop(
         Animated.sequence([
@@ -78,9 +42,7 @@ const WelcomeText = () => {
         ])
       ).start();
     });
-
-    return () => animation.stop();
-  }, [animatedValue, rotateY]);
+  }, []);
 
   const textColor = animatedValue.interpolate({
     inputRange: [0, 1, 2, 3],
@@ -113,15 +75,12 @@ const WelcomeText = () => {
   });
 
   const textStyle: Animated.WithAnimatedObject<TextStyle> = {
-    fontSize: 92,
+    fontSize: 72,
     fontWeight: 'bold',
     color: textColor,
     textShadowColor: 'rgba(0, 255, 0, 0.7)',
-    alignContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginTop: -20,
     textShadowOffset: { width: -2, height: 2 },
+    textShadowRadius: 10,
     transform: [
       { scale },
       { translateY },
@@ -172,18 +131,16 @@ const WelcomeText = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 0,
     flex: 1,
-    alignContent: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
-    alignSelf: 'center',
   },
   textContainer: {
     borderColor: '#00FF00',
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 2,
-    width: '120%',  // Increased the width of the text container
+    width: '110%',
   },
   gradient: {
     padding: 20,

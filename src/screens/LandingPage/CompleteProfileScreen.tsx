@@ -16,7 +16,7 @@ import { BlurView } from 'expo-blur';
 import LottieView from 'lottie-react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faMoon, faLanguage, faHeart, faBell } from '@fortawesome/free-solid-svg-icons';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 

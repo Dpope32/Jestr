@@ -140,10 +140,10 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   darkScrollViewContainer: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#000',
   },
   darkContainer: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#000',
   },
   cardMedia: {
     width: '100%',

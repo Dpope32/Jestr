@@ -11,15 +11,10 @@ const ThemeContext = createContext<ThemeContextProps>({
   toggleDarkMode: () => {},
 });
 
-interface ThemeProviderProps {
-  children: React.ReactNode;
-}
-
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    // Load the saved theme preference
     SecureStore.getItemAsync('isDarkMode').then((value) => {
       if (value !== null) {
         setIsDarkMode(JSON.parse(value));

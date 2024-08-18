@@ -91,7 +91,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    height: 100, // Ensure enough space for the animation
+    height: 50, // Ensure enough space for the animation
   },
   titleLetter: {
     fontSize: 55,

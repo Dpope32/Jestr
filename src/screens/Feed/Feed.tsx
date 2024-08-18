@@ -61,6 +61,7 @@ const Feed: React.FC<FeedProps> = ({ route }) => {
   const [error, setError] = useState<string | null>(null);
   const isFetchingMore = useRef(false);
   const flashListRef = useRef<FlashList<Meme>>(null);
+  const [isLongPressActive, setIsLongPressActive] = useState(false);
 
   useEffect(() => {
     if (flashListRef.current) {
@@ -290,6 +291,8 @@ const renderItem = useCallback(({ item, index }: { item: Meme; index: number }) 
       mediaType={item.mediaType}
       goToPrevMedia={goToPrevMedia}
       goToNextMedia={goToNextMedia}
+      onLongPressStart={() => setIsLongPressActive(true)}
+      onLongPressEnd={() => setIsLongPressActive(false)}
       username={item.username}
       caption={item.caption}
       uploadTimestamp={item.uploadTimestamp}
@@ -424,6 +427,20 @@ if (!user.email) {
         isUploading={false}
         onAdminClick={handleAdminClick}
 />
+{profilePanelVisible && localUser && (
+        <ProfilePanel
+  isVisible={profilePanelVisible}
+  onClose={() => setProfilePanelVisible(false)}
+  profilePicUrl={localUser?.profilePic || null}
+  username={localUser?.username || ''}
+  displayName={localUser?.displayName || 'N/A'}
+  followersCount={localUser?.followersCount || 0}
+  followingCount={localUser?.followingCount || 0}
+  user={localUser}
+  navigation={navigation}
+/>
+      )}
+<View style={styles.mediaPlayerContainer}>
       {memes.length === 0 ? (
         <View style={styles.noMemesContainer}>
           <FontAwesomeIcon icon={faSadTear} size={50} color="#1bd40b" />
@@ -449,20 +466,6 @@ if (!user.email) {
       {profilePanelVisible && (
         <View style={styles.overlay} />
       )}
-      {profilePanelVisible && localUser && (
-        <ProfilePanel
-  isVisible={profilePanelVisible}
-  onClose={() => setProfilePanelVisible(false)}
-  profilePicUrl={localUser?.profilePic || null}
-  username={localUser?.username || ''}
-  displayName={localUser?.displayName || 'N/A'}
-  followersCount={localUser?.followersCount || 0}
-  followingCount={localUser?.followingCount || 0}
-  onDarkModeToggle={() => setDarkMode(!darkMode)}
-  user={localUser}
-  navigation={navigation}
-/>
-      )}
 
       {isCommentFeedVisible && currentMediaIndex < memes.length && (
         <CommentFeed
@@ -475,6 +478,7 @@ if (!user.email) {
           updateCommentCount={updateCommentCount}
         />
       )}
+    </View>
     </View>
     </ErrorBoundary>
   );

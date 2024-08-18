@@ -48,6 +48,7 @@ export type ShareType = 'copy' | 'message' | 'snapchat' | 'facebook' | 'twitter'
 export type RootStackParamList = {
   Loading: undefined;
   LandingPage: undefined;
+  Onboarding: undefined;
   Feed: { user: User };
   Settings: { email: string };
   MemeUploadScreen: { user: any };
@@ -137,5 +138,18 @@ export type MediaPlayerProps = {
   doubleLiked: boolean; // Add this line
   isDarkMode: boolean;
   setIsDarkMode?: React.Dispatch<React.SetStateAction<boolean>>;
-  
+  onLongPressStart: () => void;
+  onLongPressEnd: () => void;
+};
+
+export type ProfilePanelProps = {
+  isVisible: boolean;
+  onClose: () => void;
+  profilePicUrl: string | ProfileImage | null;
+  username: string;
+  displayName: string;
+  followersCount: number;
+  followingCount: number;
+  user: User | null;
+  navigation: any;
 };

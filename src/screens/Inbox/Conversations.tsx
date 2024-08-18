@@ -11,7 +11,7 @@ import { sendMessage, fetchMessages } from '../../services/authFunctions';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
  // Update this import path
- import { useTheme } from '../../ThemeContext'; // Update this import path
+ import { useTheme } from '../../theme/ThemeContext'; // Update this import path
 
 export type Message = {
   MessageID: string;

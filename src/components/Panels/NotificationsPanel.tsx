@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../theme/ThemeContext';
 import { FlashList } from '@shopify/flash-list';
 
 interface Notification {

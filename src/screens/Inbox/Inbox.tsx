@@ -10,7 +10,7 @@ import { format, formatDistanceToNow, isToday } from 'date-fns';
 import { Message } from './Conversations';
 import styles from './Inbox.styles';
 import { Dimensions } from 'react-native';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../theme/ThemeContext';
 
 const windowWidth = Dimensions.get('window').width;
 

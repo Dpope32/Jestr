@@ -23,11 +23,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  mediaContainer: {
-    flex: 1, // Takes up 70% of the available space
+   mediaContainer: {
+    flex: 1,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: Platform.OS === 'ios' ? 260 : 100, // Adjust for bottom navigation
   },
   blurContainer: {
     position: 'absolute',
@@ -35,10 +36,12 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     padding: 10,
+    zIndex: 10,
+    elevation: 10, // for Android
   },
   textContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 160 : 100, // Adjust based on platform
+    bottom: Platform.OS === 'ios' ? 220 : 100, // Adjust based on platform
     left: 10,
     right: 10,
     flexDirection: 'row',
@@ -50,22 +53,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: Platform.OS === 'ios' ? 220 : 100, // Adjust for bottom navigation
+    zIndex: 10,
+    paddingBottom: Platform.OS === 'ios' ? 260 : 100, // Adjust for bottom navigation
   },
   iconColumn: {
     position: 'absolute',
     flexDirection: 'column',
-    right: 10,
-    paddingHorizontal: 10,
-    gap: 5,
-    bottom: Platform.OS === 'ios' ? 160 : 80,
+    right: 0,
+    zIndex: 10,
+    paddingHorizontal: 0,
+    gap: 1,
+    bottom: Platform.OS === 'ios' ? 240 : 80,
     alignItems: 'center',
   },
   memeImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
-    maxHeight: height * 0.7, // Limit to 70% of screen height
+    maxHeight: height *0.50, // Limit to 70% of screen height
   },
   followButton: {
     position: 'absolute',

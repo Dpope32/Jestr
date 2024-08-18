@@ -4,9 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import styles from './ProfilePanel.styles';
 import { faUser , faRibbon, faBell, faHistory, faCog, faMoon, faSignOutAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
 import Anon1Image from '../../assets/images/Jestr5.jpg';
-import { useTheme } from '../../ThemeContext'; // Import useTheme
+import { useTheme } from '../../theme/ThemeContext'; // Import useTheme
 import LogoutModal from '../Modals/LogoutModal';
-import { User, ProfileImage } from '../../types/types';
+import { User, ProfileImage, ProfilePanelProps } from '../../types/types';
 import NotificationsPanel from './NotificationsPanel';
 import { Switch } from 'react-native';
 import { handleSignOut } from '../../services/authFunctions';
@@ -15,19 +15,6 @@ import { useUserStore } from '../../utils/userStore';
 import * as SecureStore from 'expo-secure-store';
 
 const { width } = Dimensions.get('window');
-
-type ProfilePanelProps = {
-  isVisible: boolean;
-  onClose: () => void;
-  profilePicUrl: string | ProfileImage | null;
-  username: string;
-  displayName: string;
-  followersCount: number;
-  followingCount: number;
-  onDarkModeToggle: (isDarkMode: boolean) => void;
-  user: User | null;
-  navigation: any;
-};
 
 const ProfilePanel: React.FC<ProfilePanelProps> = ({
   isVisible, onClose, profilePicUrl, username, displayName, followersCount: initialFollowersCount,
@@ -40,9 +27,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   const [followingCount] = useState(initialFollowingCount);
   const [showNotifications, setShowNotifications] = useState(false);
   const bio = localUser?.Bio || localUser?.bio || 'Default bio';
-  const [darkMode, setDarkModeLocal] = useState(false);
   const panelTranslateX = useRef(new Animated.Value(-width)).current;
-  const { setDarkMode } = useUserStore();
   const { isDarkMode, toggleDarkMode } = useTheme();
 
   const panResponder = useRef(
@@ -93,12 +78,8 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
 
   
   const handleDarkModeToggle = () => {
-    const newMode = !darkMode;
-    setDarkModeLocal(newMode);
     toggleDarkMode();
-    setDarkMode(newMode);
   };
-
 
   const getProfilePic = () => {
     if (profilePicUrl) {
@@ -240,7 +221,6 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
       {showNotifications && (
         <NotificationsPanel onClose={() => setShowNotifications(false)} />
       )}
-      {/* Add SettingsModal component here when implemented */}
     </>
   );
 }
