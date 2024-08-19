@@ -3,7 +3,7 @@ import { fetchConversations } from '../../services/authFunctions';
 import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPlus, faThumbtack, faBell } from '@fortawesome/free-solid-svg-icons';
-import { User } from '../../types/types'; 
+import { User, ProfileImage } from '../../types/types'; 
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import NewMessageModal from '../../components/Modals/NewMessageModal';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
@@ -11,6 +11,7 @@ import { Message } from './Conversations';
 import styles from './Inbox.styles';
 import { Dimensions } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
+import { useUserStore } from 'utils/userStore';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -25,7 +26,6 @@ type RootStackParamList = {
     conversation: Conversation;
   };
 };
-
 
 interface ConversationResponse {
   ConversationID: string;
@@ -50,7 +50,7 @@ interface Conversation {
   id: string;
   userEmail: string;
   username: string;
-  profilePicUrl: string | null;
+  profilePicUrl: string | ProfileImage | null;
   lastMessage: string;
   timestamp: string;
   messages: any[];
@@ -67,7 +67,8 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
   const [pinnedConversations, setPinnedConversations] = useState<Conversation[]>([]);
   const [notifications, setNotifications] = useState<string[]>([]);
   const fadeAnim = useState(new Animated.Value(0))[0];
-  
+  const setDarkMode = useUserStore((state) => state.setDarkMode);
+
   const toggleNewMessageModal = () => {
     setIsNewMessageModalVisible(!isNewMessageModalVisible);
   };
@@ -144,7 +145,7 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
           id: conversationID,
           userEmail: selectedUser.email,
           username: selectedUser.username,
-          profilePicUrl: selectedUser.profilePic, // This line causes an error
+          profilePicUrl: selectedUser.profilePic,
           messages: [],
           lastMessage: '',
           timestamp: new Date().toISOString()
@@ -213,10 +214,16 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
         <Text style={styles.sectionHeaderIn}>Inbox</Text>
         {localUser && (
           <TouchableOpacity onPress={handleProfileClick}>
-            <Image 
-              source={{ uri: localUser.profilePic || 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg' }} 
-              style={styles.profilePicTop} 
-            />
+<Image
+  source={{
+    uri:
+      typeof localUser.profilePic === 'string'
+        ? localUser.profilePic
+        : localUser.profilePic?.uri || undefined,
+  }}
+  style={styles.profilePic}
+/>
+
           </TouchableOpacity>
         )}
       </View>
@@ -244,6 +251,8 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
           ))}
         </View>
 
+
+      
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>All Conversations</Text>
           <View style={styles.separator} />
@@ -253,10 +262,16 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
               style={styles.conversationItem}
               onPress={() => handleThreadClick(conversation)}
             >
-              <Image 
-                source={{uri: conversation.profilePicUrl || 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg'}} 
-                style={styles.profilePic} 
-              />
+<Image
+  source={{
+    uri:
+      typeof conversation.profilePicUrl === 'string'
+        ? conversation.profilePicUrl
+        : conversation.profilePicUrl?.uri || undefined,
+  }}
+  style={styles.profilePic}
+/>
+
               <View style={styles.conversationInfo}>
                 <Text style={styles.username}>{conversation.username}</Text>
                 <Text style={styles.timestamp}>{conversation.timestamp}</Text>

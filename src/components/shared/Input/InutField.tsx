@@ -20,7 +20,9 @@ interface InputFieldProps {
   maxLength?: number;
   textAlignVertical?: 'auto' | 'top' | 'bottom' | 'center';
   onSubmitEditing?: () => void;
+  style?: TextStyle | TextStyle[]; // Added this line
 }
+
 
 const InputField: React.FC<InputFieldProps> = ({
   label,

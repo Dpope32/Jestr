@@ -13,6 +13,7 @@ import WelcomeText from './WelcomeText';
 import { BlurView } from 'expo-blur';
 import RainEffect from './RainEffect';
 import { handleForgotPassword } from '../../services/authFunctions'
+import  ContentModal  from './ContentModal'
 import { 
   handleSignup, 
   handleLogin, 
@@ -63,8 +64,10 @@ const LP: React.FC<LPProps> = ({
   const handleTermsCheckbox = () => setTermsAccepted(!termsAccepted);
   const handleSignUp = () => handleSignUpClick(setShowInitialScreen, setShowSignUpForm);
   const [letterScale, setLetterScale] = useState<LetterScale>([]);
-  const [currentScreen, setCurrentScreen] = useState('initial'); // 'initial', 'login', or 'signup'
   const handleLoginWrapper = () => handleLoginClick(setShowInitialScreen, setShowSignUpForm);
+  const [currentScreen, setCurrentScreen] = useState('initial'); // 'initial', 'login', or 'signup'
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState<'privacy' | 'terms' | 'contact'>('privacy');
 
 
   const handleFacebookSignIn = () => {
@@ -87,6 +90,11 @@ const LP: React.FC<LPProps> = ({
     await handleLogin(email, password, setIsLoading, navigation, setSuccessModalVisible, setModalUsername);
   };
 
+  const openModal = (content: 'privacy' | 'terms' | 'contact') => {
+    setModalContent(content);
+    setModalVisible(true);
+  };
+
 
   return (
     <LinearGradient
@@ -105,7 +113,7 @@ const LP: React.FC<LPProps> = ({
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.formContainer1}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
           <ScrollView contentContainerStyle={styles.scrollViewContainer}>
             <View style={[styles.titleContainer, { marginTop: titleMarginTop }]}>
@@ -222,11 +230,11 @@ const LP: React.FC<LPProps> = ({
                     <View style={styles.continueButtonsContainer}>
                       <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
                         <FontAwesome name="google" size={20} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText}>Continue with Google</Text>
+                        <Text style={styles.buttonText1}>Continue with Google</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.appleButton} onPress={handleAppleSignIn}>
                         <FontAwesome name="apple" size={20} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText}>Sign in with Apple</Text>
+                        <Text style={styles.buttonText1}>Sign in with Apple</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -243,11 +251,17 @@ const LP: React.FC<LPProps> = ({
             </BlurView>
           )}
           <View style={styles.footer}>
-            <Text style={styles.footerLink}>Privacy Policy</Text>
-            <Text style={styles.footerDivider}> | </Text>
-            <Text style={styles.footerLink}>Terms of Service</Text>
-            <Text style={styles.footerDivider}> | </Text>
-            <Text style={styles.footerLink}>Contact Us</Text>
+          <TouchableOpacity onPress={() => openModal('privacy')}>
+          <Text style={styles.footerLink}>Privacy Policy</Text>
+        </TouchableOpacity>
+        <Text style={styles.footerDivider}> | </Text>
+        <TouchableOpacity onPress={() => openModal('terms')}>
+          <Text style={styles.footerLink}>Terms of Service</Text>
+        </TouchableOpacity>
+        <Text style={styles.footerDivider}> | </Text>
+        <TouchableOpacity onPress={() => openModal('contact')}>
+          <Text style={styles.footerLink}>Contact Us</Text>
+        </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       )}
@@ -259,6 +273,11 @@ const LP: React.FC<LPProps> = ({
       <SignupSuccessModal
         visible={signupSuccessModalVisible}
         onClose={() => setSignupSuccessModalVisible(false)}
+      />
+       <ContentModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        content={modalContent}
       />
     </LinearGradient>
   );

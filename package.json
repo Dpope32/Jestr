@@ -97,7 +97,9 @@
     "stream-browserify": "^3.0.0",
     "uuid": "^10.0.0",
     "web-streams-polyfill": "^4.0.0",
-    "zustand": "^4.5.4"
+    "zustand": "^4.5.4",
+    "expo-keep-awake": "~13.0.2",
+    "expo-screen-orientation": "~7.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

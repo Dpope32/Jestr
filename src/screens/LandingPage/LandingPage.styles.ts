@@ -4,7 +4,6 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    padding: 0,
     width: '100%',
   },
   absoluteFill: {
@@ -121,6 +120,7 @@ export const styles = StyleSheet.create({
     marginTop: 24,
   },
   formContainer: {
+    marginTop: -30,
     paddingVertical: 10,
     borderRadius: 20,
     width: '100%',
@@ -134,7 +134,7 @@ export const styles = StyleSheet.create({
     alignSelf: 'center', // Center align in the container
   },
   signupHeader: {
-    fontSize: 28,
+    fontSize: 35,
     fontWeight: 'bold',
     color: 'white',
     alignSelf: 'center',
@@ -306,7 +306,7 @@ export const styles = StyleSheet.create({
   socialContainer: {
     width: '110%',
     alignItems: 'center',
-    marginVertical: 20,
+    marginTop: 50,
     alignSelf: 'center',
   },
   socialButtonsRow: {
@@ -316,9 +316,9 @@ export const styles = StyleSheet.create({
     marginBottom: 20,
   },
   socialButton: {
-    width: 60,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -326,22 +326,21 @@ export const styles = StyleSheet.create({
   continueButtonsContainer: {
     width: '100%',
     alignSelf: 'center',
+    marginBottom: -100
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4285F4',
     borderRadius: 4,
     paddingVertical: 10,
     paddingHorizontal: 36,
-    marginBottom: 10,
+    marginBottom: 22,
   },
   appleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 4,
     paddingVertical: 10,
     paddingHorizontal: 36,
@@ -353,6 +352,10 @@ export const styles = StyleSheet.create({
     color: '#00ff00',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  buttonText1: {
+    color: '#FFFFFF',
+    fontSize: 16,
   },
   buttonText2: {
     color: 'black',

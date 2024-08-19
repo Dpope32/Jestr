@@ -123,7 +123,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
 
   const confirmSignOut = async () => {
     try {
-      await handleSignOut();
+      await handleSignOut(navigation);
       // Clear SecureStore
       await SecureStore.deleteItemAsync('accessToken');
       // Clear Zustand store

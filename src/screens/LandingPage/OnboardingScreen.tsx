@@ -24,26 +24,27 @@ const slides = [
   {
     id: '2',
     title: 'Discover Memes',
-    description: 'Swipe through a curated stream of hilarity. Our AI-powered algorithm learns your taste in humor, serving you the freshest and funniest memes tailored just for you.',
+    description: 'Just swipe! Our AI-powered algorithm learns your taste in humor over time, serving you the freshest and funniest memes tailored just for you (with little moderation of course).',
     colors: ['#6B5B95', '#FF7B54'],
     animation: require('../../assets/animations/search.json'),
-    particleColor: '#88D8B0'
+    particleColor: '#88D8B0',
+    textColor: '#520775'
   },
   {
     id: '3',
     title: 'Create & Share',
-    description: 'Unleash your inner comedian with our easy-to-use meme creator. Mix templates, add captions, and share your wit with the world. Your next viral meme is just a tap away!',
-    colors: ['#45B7D1', '#F6EA8C'],
+    description: 'Unleash your inner comedian with our easy-to-use meme creator. Upload videos, add captions, and share your wit with the world. Your next viral meme is just a tap away!',
+    colors: ['#6a7069', '#07fa02'],
     animation: require('../../assets/animations/create.json'),
     particleColor: '#FF6B6B'
   },
   {
     id: '4',
-    title: 'Join the Fun',
-    description: 'Connect with fellow jesters, follow your favorite meme creators, and become part of a global community of humor enthusiasts. In Jestr, every laugh is shared!',
-    colors: ['#FF8C94', '#9CFFFA'],
+    title: 'Interact with your Friends!',
+    description: 'Connect with fellow jesters, follow your favorite meme creators, send private encrypted messages, and become part of a global community of dank meme enthusiasts. Once you are part of the ship, you are a part of the crew.',
+    colors: ['#2f4f40', '#9CFFFA'],
     animation: require('../../assets/animations/join.json'),
-    particleColor: '#A0E7E5'
+    particleColor: '#A0E7E5',
   },
 ];
 
@@ -247,14 +248,14 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
       paddingHorizontal: 30, // Slightly reduce padding for better fit on smaller screens
     },
     lottieAnimation: {
-      width: 250,
+      width: 350,
       height: 250,
       marginTop: -100, // Adjusted for a better layout
     },
     title: {
-      fontSize: 36, // Slightly larger for emphasis
+      fontSize: 40, // Slightly larger for emphasis
       fontWeight: 'bold',
-      marginBottom: 10,
+      marginVertical: 10,
       color: '#FFF',
       textAlign: 'center',
       textShadowColor: 'rgba(0, 0, 0, 0.85)',
@@ -265,7 +266,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
       fontSize: 18,
       textAlign: 'center',
       color: '#EAEAEA', // Use a lighter color for better readability
-      lineHeight: 26,
+      lineHeight: 36,
       marginHorizontal: 10,
       textShadowColor: 'rgba(0, 0, 0, 0.85)',
       textShadowOffset: { width: 1, height: 1 },

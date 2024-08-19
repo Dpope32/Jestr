@@ -25,13 +25,17 @@ const { width, height } = Dimensions.get('window');
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'Profile'>;
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Profile'>;
 
+type ProfileProps = {
+  route: ProfileScreenRouteProp;
+  navigation: ProfileScreenNavigationProp;
+};
+
+
 export type TabName = 'posts' | 'liked' | 'history' | 'downloaded';
 
-const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
+const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
   const user = useUserStore(state => state);
   const [gridHeight, setGridHeight] = useState(300);
-  const route = useRoute<ProfileScreenRouteProp>();
-  const navigation = useNavigation<ProfileScreenNavigationProp>();
   const [followersCount, setFollowersCount] = useState(user.followersCount || 0);
   const [followingCount, setFollowingCount] = useState(user.followingCount || 0);
   const [daysSinceCreation, setDaysSinceCreation] = useState(getDaysSinceCreation(user.creationDate || ''));
@@ -302,7 +306,7 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
         >
           <View style={styles.modalContainer}>
             <MediaPlayer
-               memeUser={selectedMeme?.memeUser || {}}
+              memeUser={selectedMeme?.memeUser || {}}
               mediaType={selectedMeme.mediaType}
               currentMedia={selectedMeme.url}
               prevMedia={currentMemeIndex > 0 ? tabMemes[currentMemeIndex - 1].url : null}
@@ -310,21 +314,21 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
               username={selectedMeme.username}
               caption={selectedMeme.caption}
               uploadTimestamp={selectedMeme.uploadTimestamp}
-              handleLike={() => {}}
-              handleDownload={() => {}}
+              handleLike={() => { } }
+              handleDownload={() => { } }
               toggleCommentFeed={() => setIsCommentFeedVisible(!isCommentFeedVisible)}
               goToPrevMedia={() => {
                 if (currentMemeIndex > 0) {
                   setCurrentMemeIndex(currentMemeIndex - 1);
                   setSelectedMeme(tabMemes[currentMemeIndex - 1]);
                 }
-              }}
+              } }
               goToNextMedia={() => {
                 if (currentMemeIndex < tabMemes.length - 1) {
                   setCurrentMemeIndex(currentMemeIndex + 1);
                   setSelectedMeme(tabMemes[currentMemeIndex + 1]);
                 }
-              }}
+              } }
               likedIndices={new Set()}
               doubleLikedIndices={new Set()}
               downloadedIndices={new Set()}
@@ -341,8 +345,11 @@ const Profile: React.FC<ProfileScreenRouteProp> = React.memo(() => {
               onLikeStatusChange={onLikeStatusChange}
               liked={false}
               doubleLiked={false}
-              isDarkMode={isDarkMode}
-            />
+              isDarkMode={isDarkMode} onLongPressStart={function (): void {
+                throw new Error('Function not implemented.');
+              } } onLongPressEnd={function (): void {
+                throw new Error('Function not implemented.');
+              } }            />
             <TouchableOpacity 
               style={styles.closeButton} 
               onPress={() => setSelectedMeme(null)}

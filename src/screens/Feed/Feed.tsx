@@ -100,7 +100,7 @@ const Feed: React.FC<FeedProps> = ({ route }) => {
       } catch (error) {
         console.error('Error initializing feed:', error);
         setError('Failed to initialize feed. Please try again.');
-        await handleSignOut();
+        await handleSignOut(navigation);
         navigation.dispatch(
           CommonActions.reset({
             index: 0,

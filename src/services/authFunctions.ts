@@ -13,7 +13,9 @@ import { storeToken, getToken, removeToken, storeUserIdentifier } from '../utils
 import * as SecureStore from 'expo-secure-store';
 import { resetPassword } from '@aws-amplify/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImageManipulator from 'expo-image-manipulator';
 
+type ProfileImageOrString = ProfileImage | string;
 
 type Asset = {
   uri: string;
@@ -45,6 +47,12 @@ export const handleLogin = async (
   try {
     // Clear any existing session
     await signOut({ global: true });
+    await removeToken('accessToken');
+    await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem('accessToken');
+    await SecureStore.deleteItemAsync('accessToken');
+    await AsyncStorage.clear(); // Clears everything in AsyncStorage
+    useUserStore.getState().resetUserState();
 
     const lowercaseUsername = username.toLowerCase();
     const { isSignedIn, nextStep } = await signIn({
@@ -132,19 +140,39 @@ export const fetchUserDetails = async (identifier: string, token?: string) => {
   return data.data; // Return only the data part
 };
  
-export const handleSignOut = async () => {
+export const handleSignOut = async (navigation: StackNavigationProp<RootStackParamList>) => {
   try {
     await signOut({ global: true });
     await removeToken('accessToken');
     await AsyncStorage.removeItem('user');
     await AsyncStorage.removeItem('accessToken');
-    useUserStore.getState().setUserDetails({}); // Clear Zustand store
+    await SecureStore.deleteItemAsync('accessToken');
+    await AsyncStorage.clear(); // Clears everything in AsyncStorage
+
+    // Clear Zustand store
+    useUserStore.getState().resetUserState();
+
     console.log('Sign out successful');
+
+    // Log current navigation state
+    console.log('Current navigation state before reset:', navigation.getState());
+
+    // Perform reset
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'LandingPage' }],
+    });
+
+    // Log navigation state after reset
+    console.log('Navigation state after reset:', navigation.getState());
   } catch (error) {
     console.error('Error signing out:', error);
     throw error;
   }
 };
+
+
+
 
 export const handleSignup = async (
   email: string,
@@ -222,6 +250,22 @@ export const handleSignup = async (
   }
 };
 
+const compressImage = async (image: ProfileImage): Promise<ProfileImage> => {
+  const manipulatedImage = await ImageManipulator.manipulateAsync(
+    image.uri,
+    [{ resize: { width: 800 } }], // Resize the image
+    { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+  );
+  return {
+    uri: manipulatedImage.uri,
+    width: manipulatedImage.width,
+    height: manipulatedImage.height,
+    type: image.type,
+    fileName: image.fileName,
+    fileSize: image.fileSize,
+  };
+};
+
 export const handleCompleteProfile = async (
   email: string,
   username: string, 
@@ -238,8 +282,8 @@ export const handleCompleteProfile = async (
   }
 ) => {
   try {
-    const profilePicBase64 = profilePicAsset ? await fileToBase64(profilePicAsset) : null;
-    const headerPicBase64 = headerPicAsset ? await fileToBase64(headerPicAsset) : null;
+    const profilePicBase64 = profilePicAsset ? await fileToBase64(await compressImage(profilePicAsset)) : null;
+    const headerPicBase64 = headerPicAsset ? await fileToBase64(await compressImage(headerPicAsset)) : null;
 
     console.log('Sending to server:', {
       email,
@@ -327,6 +371,9 @@ export const handleCompleteProfile = async (
 
       setSuccessModalVisible(true);
 
+      // Log current navigation state
+      console.log('Current navigation state before reset:', navigation.getState());
+
       // Use navigation.reset to clear the navigation stack
       navigation.reset({
         index: 0,
@@ -337,11 +384,13 @@ export const handleCompleteProfile = async (
               email: user.email,
               username: user.username,
               // ... other serializable properties
-              // Do not include function properties like setDarkMode
             } 
           }
         }],
       });
+
+      // Log navigation state after reset
+      console.log('Navigation state after reset:', navigation.getState());
     } else {
       throw new Error('Invalid response data');
     }
@@ -350,6 +399,7 @@ export const handleCompleteProfile = async (
     throw error;
   }
 };
+
                                                                 
 const fileToBase64 = async (asset: ProfileImage): Promise<string | null> => { 
     if (asset.uri) {     try {     
