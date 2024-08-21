@@ -1,141 +1,125 @@
-import { useRef, useMemo, useState, RefObject } from 'react';
-import { PanResponder, Animated, Dimensions, GestureResponderEvent, Easing, View } from 'react-native';
+import { useRef, useMemo, useState, RefObject, useCallback } from 'react';
+import { PanResponder, Animated, Dimensions, GestureResponderEvent, View } from 'react-native';
 
 const { height } = Dimensions.get('window');
 const SWIPE_THRESHOLD = height * 0.15; // Reduced from 0.2 to 0.15
 const SWIPE_VELOCITY_THRESHOLD = 0.3;
 const LONG_PRESS_DURATION = 800;
+const LONG_PRESS_DELAY = 500;
+
 
 interface PanResponderProps {
-  nextMedia: string | null;
-  prevMedia: string | null;
-  goToNextMedia: () => void;
-  goToPrevMedia: () => void;
+  onSwipeUp: () => void;
+  onSwipeDown: () => void;
   handleTap: (event: GestureResponderEvent) => void;
   handleLongPress: () => void;
   iconAreaRef: RefObject<View>;
 }
 
 export const usePanResponder = ({
-  nextMedia,
-  prevMedia,
-  goToNextMedia,
-  goToPrevMedia,
-  handleLongPress,
+  onSwipeUp,
+  onSwipeDown,
   handleTap,
+  handleLongPress,
   iconAreaRef,
 }: PanResponderProps) => {
   const translateY = useRef(new Animated.Value(0)).current;
   const animatedBlurIntensity = useRef(new Animated.Value(0)).current;
+  const [isLongPressing, setIsLongPressing] = useState(false);
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
-  const isResponding = useRef(false);
-  const startTime = useRef(0);
-  const [isIconAreaTouched, setIsIconAreaTouched] = useState(false);
+  const startY = useRef(0);
   const isSwiping = useRef(false);
 
-  const resetPosition = () => {
-    Animated.spring(translateY, {
-      toValue: 0,
-      useNativeDriver: true,
-      tension: 180,
-      friction: 8,
-    }).start(() => {
-      isResponding.current = false;
-      isSwiping.current = false;
-    });
-    Animated.timing(animatedBlurIntensity, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  };
+  const handleSwipe = useCallback(
+    (isUpSwipe: boolean) => {
+      if (isSwiping.current) return;
+      isSwiping.current = true;
+
+      const swipeDistance = isUpSwipe ? -height : height;
+
+      Animated.timing(translateY, {
+        toValue: swipeDistance,
+        duration: 50,
+        useNativeDriver: true,
+      }).start(() => {
+        if (isUpSwipe) {
+          onSwipeUp();
+        } else {
+          onSwipeDown();
+        }
+        // Don't reset the translateY value here
+        isSwiping.current = false;
+      });
+    },
+    [translateY, onSwipeUp, onSwipeDown]
+  );
 
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: (evt) => {
-          const { pageX, pageY } = evt.nativeEvent;
-          if (iconAreaRef.current) {
-            iconAreaRef.current.measure((x, y, width, height, pageX, pageY) => {
-              const touchIsInIconArea =
-                pageX >= x &&
-                pageX <= x + width &&
-                pageY >= y &&
-                pageY <= y + height;
-              setIsIconAreaTouched(touchIsInIconArea);
-            });
-          }
-          return !isIconAreaTouched;
-        },
+        onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: (_, gestureState) => {
-          return !isIconAreaTouched && Math.abs(gestureState.dy) > 5; // Reduced from 10 to 5
+          return Math.abs(gestureState.dy) > 10;
+        },
+        onPanResponderGrant: (event) => {
+          startY.current = event.nativeEvent.pageY;
+          longPressTimeout.current = setTimeout(() => {
+            setIsLongPressing(true);
+            handleLongPress();
+          }, LONG_PRESS_DELAY);
         },
         onPanResponderMove: (_, gestureState) => {
-          if (!isIconAreaTouched && !isSwiping.current) {
-            translateY.setValue(gestureState.dy);
-            animatedBlurIntensity.setValue(Math.abs(gestureState.dy));
+          if (isSwiping.current) return;
+
+          if (Math.abs(gestureState.dy) > 10 && longPressTimeout.current) {
+            clearTimeout(longPressTimeout.current);
+            longPressTimeout.current = null;
           }
+          translateY.setValue(gestureState.dy);
+          animatedBlurIntensity.setValue(Math.abs(gestureState.dy));
         },
         onPanResponderRelease: (event, gestureState) => {
-          if (isIconAreaTouched) {
-            setIsIconAreaTouched(false);
-            return;
-          }
-        
           if (longPressTimeout.current) {
             clearTimeout(longPressTimeout.current);
           }
-          
-          const elapsedTime = Date.now() - startTime.current;
-          
-          if (elapsedTime < 300 && Math.abs(gestureState.dx) < 10 && Math.abs(gestureState.dy) < 10) {
-            handleTap(event);
-          } else if (Math.abs(gestureState.dy) > SWIPE_THRESHOLD || Math.abs(gestureState.vy) > SWIPE_VELOCITY_THRESHOLD) {
-            if (!isSwiping.current) {
-              isSwiping.current = true;
-              if (gestureState.dy < 0) {
-                console.log('Swiping up, calling goToNextMedia');
-                goToNextMedia();
-                Animated.timing(translateY, {
-                  toValue: -height,
-                  duration: 300,
-                  useNativeDriver: true,
-                }).start(() => {
-                  translateY.setValue(0);
-                  isSwiping.current = false;
-                });
-              } else {
-                console.log('Swiping down, calling goToPrevMedia');
-                goToPrevMedia();
-                Animated.timing(translateY, {
-                  toValue: height,
-                  duration: 300,
-                  useNativeDriver: true,
-                }).start(() => {
-                  translateY.setValue(0);
-                  isSwiping.current = false;
-                });
-              }
-            }
-          } else {
-            resetPosition();
+
+          if (isLongPressing) {
+            setIsLongPressing(false);
+            return;
           }
-        },
-        onPanResponderGrant: () => {
-          if (!isIconAreaTouched) {
-            isResponding.current = true;
-            startTime.current = Date.now();
-            longPressTimeout.current = setTimeout(handleLongPress, LONG_PRESS_DURATION);
+
+          const endY = event.nativeEvent.pageY;
+          const verticalDistance = endY - startY.current;
+
+          if (Math.abs(verticalDistance) < 10 && Math.abs(gestureState.dx) < 10) {
+            handleTap(event);
+          } else if (gestureState.dy < -SWIPE_THRESHOLD) {
+            handleSwipe(true);
+          } else if (gestureState.dy > SWIPE_THRESHOLD) {
+            handleSwipe(false);
+          } else {
+            // Only reset if not swiping
+            Animated.spring(translateY, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
           }
         },
         onPanResponderTerminate: () => {
           if (longPressTimeout.current) {
             clearTimeout(longPressTimeout.current);
           }
-          resetPosition();
+          setIsLongPressing(false);
+          // Only reset if not swiping
+          if (!isSwiping.current) {
+            Animated.spring(translateY, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
+          }
         },
       }),
-    [translateY, iconAreaRef, isIconAreaTouched, animatedBlurIntensity, goToNextMedia, goToPrevMedia, handleTap, handleLongPress]
+    [translateY, animatedBlurIntensity, handleTap, handleLongPress, handleSwipe]
   );
 
 

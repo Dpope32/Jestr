@@ -4,11 +4,11 @@ import { COLORS, SPACING, FONT_SIZES, wp, elevationShadowStyle, FONTS } from '..
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#000'
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+        backgroundColor: '#000',
     zIndex: 5
   },
   flash: {

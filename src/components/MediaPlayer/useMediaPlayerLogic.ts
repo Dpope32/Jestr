@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { GestureResponderEvent } from 'react-native';
+import { GestureResponderEvent, Platform } from 'react-native';
 import { debounce } from 'lodash';
 import { updateMemeReaction, getLikeStatus } from '../Meme/memeService';
 import { handleShareMeme } from '../../services/authFunctions';
@@ -128,14 +128,20 @@ export const useMediaPlayerLogic = ({
   );
 
   const handleDoubleTap = useCallback((event: GestureResponderEvent) => {
-    const { pageX, pageY } = event.nativeEvent;
+    const { pageX, pageY }: { pageX: number; pageY: number } = event.nativeEvent;
     
     // Adjust these values as needed
-    setLikePosition({ 
-      x: pageX  - 100, // Adjust to -10 instead of -50 for finer control
-      y: pageY  -200  // Adjust to -100 instead of -50 for finer control
-    }); 
+    const updateLikePosition = (x: number, y: number) => {
+      const xOffset = Platform.OS === 'ios' ? -100 : -100;
+      const yOffset = Platform.OS === 'ios' ? -250 : -200;
     
+      setLikePosition({
+        x: x + xOffset,
+        y: y + yOffset
+      });
+    };
+  
+    updateLikePosition(pageX, pageY);  // Ensure both pageX and pageY are passed
     setShowLikeAnimation(true);
     debouncedHandleLike();
   
@@ -143,6 +149,8 @@ export const useMediaPlayerLogic = ({
       setShowLikeAnimation(false);
     }, 1000); // Hide the animation after 1 second
   }, [debouncedHandleLike]);
+  
+  
 
   const handleDownloadPress = useCallback(async () => {
     if (user) {
