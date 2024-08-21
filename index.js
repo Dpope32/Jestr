@@ -1,7 +1,6 @@
 import { registerRootComponent } from 'expo';
 import App from './App'; // Make sure this path is correct
 import { enableScreens } from 'react-native-screens';
-import 'react-native-gesture-handler';
 import { LogBox } from 'react-native';
 import '@azure/core-asynciterator-polyfill';
 

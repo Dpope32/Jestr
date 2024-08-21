@@ -63,7 +63,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   const [retryCount, setRetryCount] = useState(0);
   const videoRef = useRef<Video>(null);
   const iconAreaRef = useRef<View>(null);
-
+  
   const closeLongPressModal = useCallback(() => {
     setIsLongPressModalVisible(false);
     Animated.timing(blurOpacity, {
@@ -225,16 +225,43 @@ const handleTap = useCallback((event: GestureResponderEvent) => {
   setLastTap(now);
 }, [lastTap, handleDoubleTap, handleSingleTap, isLongPressModalVisible]);
 
+
+const preloadNextMeme = useCallback(() => {
+  if (nextMedia) {
+    Image.prefetch(nextMedia);
+  }
+}, [nextMedia]);
+
+const preloadPrevMeme = useCallback(() => {
+  if (prevMedia) {
+    Image.prefetch(prevMedia);
+  }
+}, [prevMedia]);
+
+const handleSwipeUp = useCallback(() => {
+  goToNextMedia();
+}, [goToNextMedia]);
+
+const handleSwipeDown = useCallback(() => {
+  goToPrevMedia();
+}, [goToPrevMedia]);
+
 const { panHandlers, translateY, animatedBlurIntensity } = usePanResponder({
-  nextMedia,
-  prevMedia,
-  goToNextMedia,
-  goToPrevMedia,
-  handleLongPress,
+  onSwipeUp: handleSwipeUp,
+  onSwipeDown: handleSwipeDown,
   handleTap,
+  handleLongPress,
   iconAreaRef,
 });
-  
+useEffect(() => {
+  if (nextMedia) {
+    Image.prefetch(nextMedia);
+  }
+  if (prevMedia) {
+    Image.prefetch(prevMedia);
+  }
+}, [nextMedia, prevMedia]);
+
 
   const closeModal = useCallback(() => {
     setIsModalVisible(false);

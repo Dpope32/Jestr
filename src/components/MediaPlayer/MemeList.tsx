@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react';
-import { Dimensions, FlatList, ViewToken } from 'react-native';
+import { Dimensions, FlatList, ViewToken, ListRenderItem } from 'react-native';
 import MediaPlayer from './MediaPlayer';
-import { Meme, User } from '../../types/types';
+import { Meme, User, MediaPlayerProps } from '../../types/types';
 
 const { height } = Dimensions.get('window');
 
@@ -12,8 +12,6 @@ type MemeListProps = {
   onEndReached: () => void;
   toggleCommentFeed: () => void;
   updateLikeStatus: (memeID: string, status: any, newLikeCount: number) => void;
-  goToPrevMedia: () => void;
-  goToNextMedia: () => void;
   currentMediaIndex: number;
   setCurrentMediaIndex: (index: number) => void;
 };
@@ -25,55 +23,53 @@ const MemeList: React.FC<MemeListProps> = ({
   onEndReached,
   toggleCommentFeed,
   updateLikeStatus,
-  goToPrevMedia,
-  goToNextMedia,
   currentMediaIndex,
   setCurrentMediaIndex,
 }) => {
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<Meme>>(null);
 
-  const renderItem = useCallback(
-    ({ item, index }: { item: Meme; index: number }) => (
+  const goToNextMedia = useCallback(() => {
+    if (currentMediaIndex < memes.length - 1) {
+      setCurrentMediaIndex(currentMediaIndex + 1);
+    }
+  }, [currentMediaIndex, memes.length, setCurrentMediaIndex]);
+
+  const goToPrevMedia = useCallback(() => {
+    if (currentMediaIndex > 0) {
+      setCurrentMediaIndex(currentMediaIndex - 1);
+    }
+  }, [currentMediaIndex, setCurrentMediaIndex]);
+
+  const renderItem: ListRenderItem<Meme> = useCallback(
+    ({ item, index }) => (
       <MediaPlayer
-        memeUser={{
-          email: item.email,
-          username: item.username,
-          profilePic: item.profilePicUrl,
-        }}
+        {...item}
+        liked={item.liked ?? false}
+        doubleLiked={item.doubleLiked ?? false}
+        memeUser={item.memeUser || {}}
         currentMedia={item.url}
-        mediaType={item.mediaType}
+        user={user}
+        isDarkMode={isDarkMode}
+        toggleCommentFeed={toggleCommentFeed}
         goToPrevMedia={goToPrevMedia}
         goToNextMedia={goToNextMedia}
-        username={item.username}
-        caption={item.caption}
-        uploadTimestamp={item.uploadTimestamp}
-        handleLike={() => {}}
-        handleDownload={() => {}}
-        toggleCommentFeed={toggleCommentFeed}
-        currentMediaIndex={index}
-        user={user}
-        likeCount={item.likeCount}
-        downloadCount={item.downloadCount}
-        commentCount={item.commentCount}
-        shareCount={item.shareCount}
-        profilePicUrl={item.profilePicUrl}
-        memeID={item.memeID}
-        liked={false}
-        doubleLiked={false}
-        isDarkMode={isDarkMode}
         onLikeStatusChange={updateLikeStatus}
+        prevMedia={index > 0 ? memes[index - 1].url : null}
+        nextMedia={index < memes.length - 1 ? memes[index + 1].url : null}
+        handleLike={() => {}}  // Placeholder, should be handled inside MediaPlayer
+        handleDownload={() => {}}  // Placeholder, should be handled inside MediaPlayer
+        likedIndices={new Set()}  // Placeholder, should be handled inside MediaPlayer
+        doubleLikedIndices={new Set()}  // Placeholder, should be handled inside MediaPlayer
+        downloadedIndices={new Set()}  // Placeholder, should be handled inside MediaPlayer
+        likeDislikeCounts={{}}  // Placeholder, should be handled inside MediaPlayer
+        currentMediaIndex={index}
         initialLikeStatus={{ liked: false, doubleLiked: false }}
-        likedIndices={new Set()}
-        doubleLikedIndices={new Set()}
-        downloadedIndices={new Set()}
-        likeDislikeCounts={{}}
-        nextMedia={null}
-        prevMedia={null}
+        onLongPressStart={() => {}}
+        onLongPressEnd={() => {}}
       />
     ),
-    [user, isDarkMode, toggleCommentFeed, updateLikeStatus, goToPrevMedia, goToNextMedia]
+    [memes, user, isDarkMode, toggleCommentFeed, updateLikeStatus, goToPrevMedia, goToNextMedia]
   );
-
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0) {
@@ -92,7 +88,7 @@ const MemeList: React.FC<MemeListProps> = ({
       ref={flatListRef}
       data={memes}
       renderItem={renderItem}
-      keyExtractor={(item) => item.memeID}
+      keyExtractor={(item: Meme) => item.memeID}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       showsVerticalScrollIndicator={false}

@@ -50,15 +50,18 @@ const CompleteProfileScreen: React.FC = () => {
     const newMode = !darkMode;
     setDarkModeLocal(newMode);
     toggleDarkMode();
-    setDarkMode(newMode);
+    setDarkMode?.(newMode);
   };
 
   const handleImagePick = async (type: 'header' | 'profile') => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant permission to access your photos.');
-        return;
+        const { status: newStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (newStatus !== 'granted') {
+          Alert.alert('Permission needed', 'Please grant permission to access your photos.');
+          return;
+        }
       }
   
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -99,9 +102,9 @@ const CompleteProfileScreen: React.FC = () => {
       const validHeaderPic = headerPic && typeof headerPic !== 'string' ? headerPic : null;
   
       // Update Zustand store with preferences
-      setDarkMode(darkMode);
-      setLikesPublic(likesPublic);
-      setNotificationsEnabled(notificationsEnabled);
+      setDarkMode?.(darkMode);
+      setLikesPublic?.(likesPublic);
+      setNotificationsEnabled?.(notificationsEnabled);
 
       await handleCompleteProfile(
         email,
@@ -164,15 +167,15 @@ const CompleteProfileScreen: React.FC = () => {
           labelStyle={styles.whiteText}
           onChangeText={setUsername}
         />
-        <InputField
-          label="Bio"
-          placeholder="Enter your bio"
-          labelStyle={styles.whiteText}
-          value={bio}
-          onChangeText={setBio}
-          multiline
-          numberOfLines={4}
-        />
+<InputField
+  label="Bio"
+  placeholder="Enter your bio"
+  labelStyle={styles.whiteText}
+  value={bio}
+  onChangeText={(text) => setBio?.(text)}
+  multiline
+  numberOfLines={4}
+/>
       </View>
 
       <View style={styles.preferencesContainer}>

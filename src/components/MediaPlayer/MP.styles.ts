@@ -9,6 +9,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: height,
     width: width,
+    backgroundColor: '#000', // Ensure the background is black
   },
   blurInner: {
     borderRadius: 10,
@@ -29,6 +30,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingBottom: Platform.OS === 'ios' ? 260 : 100, // Adjust for bottom navigation
+    backgroundColor: '#000', 
   },
   blurContainer: {
     position: 'absolute',
