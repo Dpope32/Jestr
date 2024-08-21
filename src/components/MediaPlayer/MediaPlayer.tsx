@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, Image, TouchableOpacity, GestureResponderEvent, Dimensions, Animated, PanResponder, ActivityIndicator, TouchableWithoutFeedback, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, GestureResponderEvent, Platform, Dimensions, Animated, PanResponder, ActivityIndicator, TouchableWithoutFeedback, StyleSheet } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import SafeImage from '../shared/SafeImage';
 import styles from './MP.styles';
 import { MediaPlayerProps } from '../../types/types';
 import { updateMemeReaction, getLikeStatus } from '../Meme/memeService';
-import { handleShareMeme, recordMemeView } from '../../services/authFunctions';
+import { addFollow, handleShareMeme, recordMemeView } from '../../services/authFunctions';
 import { Video, AVPlaybackStatus, ResizeMode } from 'expo-av';
 import LottieView from 'lottie-react-native';
 import { usePanResponder } from './usePanResponder';
@@ -15,10 +15,17 @@ import { useMediaPlayerLogic } from './useMediaPlayerLogic';
 import { useUserStore } from '../../utils/userStore';
 import { LongPressModal } from './LongPressModal';
 import { BlurView } from 'expo-blur';
+import { checkFollowStatus } from '../../services/authFunctions';
 import { useTheme } from '../../theme/ThemeContext';
+import Toast from 'react-native-toast-message';
 
 const SaveSuccessModal = React.lazy(() => import('../Modals/SaveSuccessModal'));
 const ShareModal = React.lazy(() => import('../Modals/ShareModal'));
+
+type FollowStatus = {
+  isFollowing: boolean;
+  canFollow: boolean;
+};
 
 const { width, height } = Dimensions.get('window');
 
@@ -27,12 +34,11 @@ const AnimatedSafeImage = Animated.createAnimatedComponent(SafeImage);
 const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   memeUser = {}, currentMedia,mediaType,
   prevMedia, nextMedia, caption, uploadTimestamp, handleDownload,toggleCommentFeed, goToPrevMedia,goToNextMedia,
-  user,memeID,liked: initialLiked,doubleLiked: initialDoubleLiked,likeCount: initialLikeCount,
+  user,memeID,liked: initialLiked,doubleLiked: initialDoubleLiked,likeCount: initialLikeCount, currentUserId,
   downloadCount: initialDownloadCount,shareCount: initialShareCount,commentCount: initialCommentCount,onLikeStatusChange,
 }) => {
   const video = useRef<Video>(null);
   const [status, setStatus] = useState<AVPlaybackStatus>({} as AVPlaybackStatus);
-
   const handleSingleTap = useCallback(() => {
     if (mediaType === 'video' && video.current) {
       if ('isPlaying' in status && status.isPlaying) {
@@ -63,6 +69,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   const [retryCount, setRetryCount] = useState(0);
   const videoRef = useRef<Video>(null);
   const iconAreaRef = useRef<View>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [canFollow, setCanFollow] = useState(true);
+  const adjustedTop = Platform.OS === 'android' ? likePosition.y - 20 : likePosition.y;
 
   const closeLongPressModal = useCallback(() => {
     setIsLongPressModalVisible(false);
@@ -84,6 +93,47 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
     return extension ? supportedFormats.includes(extension) : false;
 };
 
+const handleFollow = async () => {
+  console.log('handleFollow called with currentUserId:', currentUserId, 'memeUser:', memeUser);
+  if (!currentUserId || !memeUser.email) {
+    console.error('Missing currentUserId or memeUser.email', { currentUserId, memeUser });
+    return;
+  }
+  try {
+    await addFollow(currentUserId, memeUser.email);
+    setIsFollowing(true);
+    const prevCount = useUserStore.getState().followingCount;
+    useUserStore.getState().incrementFollowingCount();
+    const newCount = useUserStore.getState().followingCount;
+    console.log('Following count updated:', prevCount, '->', newCount);
+    Toast.show({
+      type: 'success',
+      text1: 'Successfully followed user',
+      position: 'bottom',
+      visibilityTime: 2000,
+    });
+    console.log('Successfully followed user');
+  } catch (error) {
+    console.error('Error following user:', error);
+  }
+};
+
+
+
+const FollowButton = () => {
+  console.log('FollowButton rendering, canFollow:', canFollow, 'isFollowing:', isFollowing);
+  
+  if (!canFollow || isFollowing) {
+    console.log('FollowButton not shown');
+    return null;
+  }
+  console.log('FollowButton shown');
+  return (
+    <TouchableOpacity onPress={handleFollow} style={styles.followButton}>
+      <Text style={styles.followButtonText}>Follow</Text>
+    </TouchableOpacity>
+  );
+};
 
 
   useEffect(() => {
@@ -97,13 +147,13 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
     fadeAnim.setValue(0);
     translateY.setValue(0);
     animatedBlurIntensity.setValue(0);
-    console.log('Animations reset');
+   // console.log('Animations reset');
 
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 100,
       useNativeDriver: true,
-    }).start(() => console.log('Fade-in animation started'));
+    }).start();
 
     const isVideo = currentMedia.toLowerCase().endsWith('.mp4') || mediaType === 'video';
     const screenWidth = Dimensions.get('window').width;
@@ -118,7 +168,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
       console.log('Video size set:', videoSize);
       setIsLoading(false);
   } else {
-      console.log('Attempting to load image:', currentMedia);
+   //   console.log('Attempting to load image:', currentMedia);
   
       if (!isSupportedImageFormat(currentMedia)) {
           console.error('Unsupported image format:', currentMedia);
@@ -169,7 +219,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   }
 
     return () => {
-      console.log(`MediaPlayer unmounted for memeID: ${memeID}`);
+     // console.log(`MediaPlayer unmounted for memeID: ${memeID}`);
     };
 }, [currentMedia, mediaType, user, memeID, fadeAnim, handleMediaError]);
 
@@ -245,6 +295,26 @@ const { panHandlers, translateY, animatedBlurIntensity } = usePanResponder({
     }).start();
   }, []);
 
+  useEffect(() => {
+    const checkStatus = async () => {
+    //  console.log('checkStatus called with currentUserId:', currentUserId, 'memeUser:', memeUser);
+      if (!currentUserId || !memeUser.email) {
+        console.error('Missing currentUserId or memeUser.email in checkStatus', { currentUserId, memeUser });
+        return;
+      }
+      try {
+        const status = await checkFollowStatus(currentUserId, memeUser.email);
+     //   console.log('Follow status:', status);
+        setIsFollowing(status.isFollowing);
+        setCanFollow(status.canFollow);
+      } catch (error) {
+        console.error('Error checking follow status:', error);
+      }
+    };
+  
+    checkStatus();
+  }, [currentUserId, memeUser.email]);
+
   const renderMedia = useMemo(() => {
     if (isLoading) {
       return <ActivityIndicator size="large" color="#1bd40b" />;
@@ -310,11 +380,12 @@ const { panHandlers, translateY, animatedBlurIntensity } = usePanResponder({
             {renderMedia}
           </Animated.View>
         </TouchableWithoutFeedback>
-
           <IconsAndContent
             memeUser={memeUser}
             caption={caption}
             uploadTimestamp={uploadTimestamp}
+            isFollowing={isFollowing}
+            handleFollow={handleFollow}
             counts={counts}
             debouncedHandleLike={debouncedHandleLike}
             liked={liked}
@@ -340,7 +411,7 @@ const { panHandlers, translateY, animatedBlurIntensity } = usePanResponder({
             style={{
               position: 'absolute',
               left: likePosition.x,
-              top: likePosition.y,
+              top: adjustedTop,
               width: 200,
               height: 200,
             }}

@@ -22,14 +22,18 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
 }) => {
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-  const [followersCount] = useState(initialFollowersCount);
+  const followersCount  = useUserStore(state => state.followingCount);
+  const followingCount = useUserStore(state => state.FollowingCount || state.followingCount);
   const [localUser, setLocalUser] = useState<User | null>(user || null);
-  const [followingCount] = useState(initialFollowingCount);
   const [showNotifications, setShowNotifications] = useState(false);
   const bio = localUser?.Bio || localUser?.bio || 'Default bio';
   const panelTranslateX = useRef(new Animated.Value(-width)).current;
   const { isDarkMode, toggleDarkMode } = useTheme();
 
+  useEffect(() => {
+    console.log('ProfilePanel: followingCount changed to', followingCount);
+  }, [followingCount]);
+  
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => {

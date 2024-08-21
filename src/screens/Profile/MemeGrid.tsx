@@ -12,6 +12,7 @@ interface MemeGridProps {
   onDeleteMeme: (memeID: string) => Promise<void>;
   onRemoveDownloadedMeme: (memeID: string) => Promise<void>;
   selectedTab: string;
+  itemSize: number;
 }
 
 const MemeGrid: React.FC<MemeGridProps> = ({ 
@@ -22,8 +23,10 @@ const MemeGrid: React.FC<MemeGridProps> = ({
   isLoading, 
   onDeleteMeme, 
   onRemoveDownloadedMeme, 
-  selectedTab 
+  selectedTab,
+  itemSize
 }) => {
+  
   const [containerHeight, setContainerHeight] = useState(300);
 
   const handleContentSizeChange = useCallback((width: number, height: number) => {
@@ -36,23 +39,37 @@ const MemeGrid: React.FC<MemeGridProps> = ({
     return renderMeme(item, index);
   }, [renderMeme]);
 
-  return (
-    <View style={[styles.container, { height: containerHeight }]}>
-     <FlashList
-  data={memes}
-  renderItem={renderItemWrapper}
-  keyExtractor={(item: Meme, index: number) => `${item.memeID}-${index}`}
-        numColumns={3}
-        estimatedItemSize={135}
-        onEndReached={onLoadMore}
-        onEndReachedThreshold={0.5}
-        onContentSizeChange={handleContentSizeChange}
-        contentContainerStyle={styles.flashListContent}
-      />
+  const renderSkeletonItem = () => (
+    <View style={styles.skeletonItem}>
+      <View style={styles.skeletonInner} />
     </View>
   );
-};
-
+  
+    return (
+      <View style={styles.memeGridContainer}>
+        {isLoading ? (
+          <View style={styles.skeletonContainer}>
+            {Array(12).fill(0).map((_, index) => (
+              <View key={index} style={styles.skeletonItem}>
+                <View style={styles.skeletonInner} />
+              </View>
+            ))}
+          </View>
+        ) : (
+          <FlashList
+            data={memes}
+            renderItem={renderItemWrapper}
+            keyExtractor={(item: Meme, index: number) => `${item.memeID}-${index}`}
+            numColumns={3}
+            estimatedItemSize={itemSize}
+            onEndReached={onLoadMore}
+            onEndReachedThreshold={0.5}
+            contentContainerStyle={styles.memeGrid}
+          />
+        )}
+      </View>
+    );
+  }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -60,6 +77,28 @@ const styles = StyleSheet.create({
   },
   flashListContent: {
     paddingBottom: 20,
+  },
+  skeletonItem: {
+    width: '33%',
+    aspectRatio: 1,
+    padding: 2,
+  },
+  skeletonInner: {
+    flex: 1,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+  },
+  memeGrid: {
+    padding: 2,
+  },
+  skeletonContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 2,
+  },
+  memeGridContainer: {
+    flex: 1,
   },
 });
 

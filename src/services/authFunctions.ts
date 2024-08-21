@@ -45,15 +45,6 @@ export const handleLogin = async (
 ) => {
   setIsLoading(true);
   try {
-    // Clear any existing session
-    await signOut({ global: true });
-    await removeToken('accessToken');
-    await AsyncStorage.removeItem('user');
-    await AsyncStorage.removeItem('accessToken');
-    await SecureStore.deleteItemAsync('accessToken');
-    await AsyncStorage.clear(); // Clears everything in AsyncStorage
-    useUserStore.getState().resetUserState();
-
     const lowercaseUsername = username.toLowerCase();
     const { isSignedIn, nextStep } = await signIn({
       username: lowercaseUsername,
@@ -84,6 +75,9 @@ export const handleLogin = async (
         followingCount: userDetails.FollowingCount,
         isAdmin: userDetails.email === 'pope.dawson@gmail.com',
       });
+
+      // Store user identifier
+      await storeUserIdentifier(userDetails.email);
       
       navigation.navigate('Feed', { 
         user: useUserStore.getState() as User // Cast to User type
@@ -105,9 +99,9 @@ export const handleLogin = async (
 };
 
 export const fetchUserDetails = async (identifier: string, token?: string) => {
-  console.log('Fetching user details for identifier:', identifier);
-  console.log('Using API endpoint:', API_ENDPOINT);
-  console.log('Token being sent:', token);
+ // console.log('Fetching user details for identifier:', identifier);
+ // console.log('Using API endpoint:', API_ENDPOINT);
+ // console.log('Token being sent:', token);
 
   const requestBody = {
     operation: "getUser",
@@ -131,7 +125,7 @@ export const fetchUserDetails = async (identifier: string, token?: string) => {
     throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
   }
   const data = await response.json();
- console.log('User details fetched successfully:', JSON.stringify(data, null, 2));
+// console.log('User details fetched successfully:', JSON.stringify(data, null, 2));
   
   if (!data.data) {
     throw new Error('No user data returned from server');
@@ -170,9 +164,27 @@ export const handleSignOut = async (navigation: StackNavigationProp<RootStackPar
     throw error;
   }
 };
+console.log('Current user:', JSON.stringify(useUserStore.getState(), null, 2));
+const clearSecureStore = async () => {
+  const keys = ['accessToken', 'userIdentifier', /* add any other keys you use */];
+  for (const key of keys) {
+    try {
+      await SecureStore.deleteItemAsync(key);
+      console.log(`Cleared ${key} from SecureStore`);
+    } catch (e) {
+      console.error(`Failed to clear ${key} from SecureStore`, e);
+    }
+  }
+};
 
-
-
+const clearAsyncStorage = async () => {
+  try {
+    await AsyncStorage.clear();
+    console.log('AsyncStorage has been cleared!');
+  } catch (e) {
+    console.error('Failed to clear AsyncStorage', e);
+  }
+};
 
 export const handleSignup = async (
   email: string,
@@ -782,12 +794,19 @@ export const fetchConversations = async (userEmail: string) => {
       });
   
       if (response.ok) {
-     //   console.log('Follow added successfully');
+        const result = await response.json();
+        return {
+          success: true,
+          followersCount: result.followersCount,
+          followingCount: result.followingCount
+        };
       } else {
         console.error('Failed to add follow');
+        return { success: false };
       }
     } catch (error) {
       console.error('Error adding follow:', error);
+      return { success: false };
     }
   };
 
@@ -902,6 +921,7 @@ export const fetchConversations = async (userEmail: string) => {
   };
 
   export const checkFollowStatus = async (followerId: string, followeeId: string): Promise<{ isFollowing: boolean, canFollow: boolean }> => {
+  //  console.log(`Checking follow status for follower ${followerId} and followee ${followeeId}`);
     if (!followerId || !followeeId) {
       console.error('Missing required parameters: followerId or followeeId');
       return { isFollowing: false, canFollow: false };
@@ -924,6 +944,7 @@ export const fetchConversations = async (userEmail: string) => {
       }
   
       const data = await response.json();
+   //   console.log('Follow status response:', data);
       return data.data;
     } catch (error) {
       console.error('Error checking follow status:', error);

@@ -17,6 +17,7 @@ export interface UserState {
   likesPublic: boolean;
   darkMode: boolean;
   followingCount: number;
+  FollowingCount?: number;
   posts: Meme[];
   likedMemes: Meme[];
   downloadedMemes: Meme[];
@@ -35,8 +36,14 @@ export interface UserState {
   setUserDetails: (details: Partial<UserState>) => void;
   setHeaderPic: (headerPic: string | ProfileImage | null) => void;
   setProfilePic: (profilePic: string | ProfileImage | null) => void;
+  setFollowersCount: (count: number) => void;
+  setFollowingCount: (count: number) => void;
   isAdmin?: boolean;
   userId?: string;
+  incrementFollowersCount: () => void;
+  decrementFollowersCount: () => void;
+  incrementFollowingCount: () => void;
+  decrementFollowingCount: () => void;
 }
 export const useUserStore = create<UserState>((set) => ({
   bio: '',
@@ -45,6 +52,12 @@ export const useUserStore = create<UserState>((set) => ({
   email: '',
   followersCount: 0,
   followingCount: 0,
+  setFollowersCount: (count) => set({ followersCount: count }),
+  setFollowingCount: (count) => set({ followingCount: count }),
+  incrementFollowersCount: () => set((state) => ({ followersCount: state.followersCount + 1 })),
+  decrementFollowersCount: () => set((state) => ({ followersCount: Math.max(0, state.followersCount - 1) })),
+  incrementFollowingCount: () => set((state) => ({ followingCount: state.followingCount + 1 })),
+  decrementFollowingCount: () => set((state) => ({ followingCount: Math.max(0, state.followingCount - 1) })),
   creationDate: '',
   posts: [],
   likedMemes: [],
@@ -56,7 +69,6 @@ export const useUserStore = create<UserState>((set) => ({
   language: 'en',
   likesPublic: true,
   notificationsEnabled: true,
-
   setDarkMode: (darkMode: boolean) => set({ darkMode }),
   setLanguage: (language) => set({ language }),
   setLikesPublic: (likesPublic: boolean) => set({ likesPublic }),
@@ -77,6 +89,7 @@ export const useUserStore = create<UserState>((set) => ({
   setUserDetails: (details) => set((state) => ({
     ...state,
     ...details,
+    followingCount: details.followingCount, // Make sure this line exists
     profilePic: details.profilePic || state.profilePic,
     headerPic: details.headerPic || state.headerPic,
   })),

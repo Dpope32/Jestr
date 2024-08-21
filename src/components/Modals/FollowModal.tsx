@@ -16,6 +16,7 @@ interface FollowModalProps {
     userId: string; // This ensures userId is always present for FollowUser
     animatedValue: Animated.Value;
 }
+type ProfileImage = string | { uri: string };
 
 const FollowModal: React.FC<FollowModalProps> = ({ visible, onClose, userId, initialTab }) => {
     const [activeTab, setActiveTab] = useState<'followers' | 'following'>(initialTab);
@@ -113,10 +114,14 @@ const FollowModal: React.FC<FollowModalProps> = ({ visible, onClose, userId, ini
 
     return (
       <View style={styles.userRow}>
-        <Image 
-          source={{ uri: item.profilePic || 'https://via.placeholder.com/150' }} 
-          style={styles.profilePic} 
-        />
+       <Image 
+  source={{ 
+    uri: typeof item.profilePic === 'string' 
+      ? item.profilePic 
+      : item.profilePic?.uri || 'https://via.placeholder.com/150'
+  }} 
+  style={styles.profilePic} 
+/>
         <View style={styles.userInfo}>
           <Text style={styles.username}>{item.username}</Text>
           <Text style={styles.displayName}>{item.displayName}</Text>

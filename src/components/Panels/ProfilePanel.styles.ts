@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 import { COLORS, SPACING, FONT_SIZES, wp, elevationShadowStyle, FONTS } from '../../theme/theme';
 
 const { width, height } = Dimensions.get('window');
@@ -7,10 +7,10 @@ const styles = StyleSheet.create({
   profilePanel: {
     position: 'absolute',
     width: width * 0.7,
-    height: height,
+    height: height * 1.08,
     left: 0,
     top: 0,
-    bottom: 20,
+    bottom: Platform.OS === 'ios' ? 20 : 0, // Adjust for bottom navigation20,
     zIndex: 30000,
     elevation: 1000000000000,
     marginTop: 0,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   },
   bottomContainer: {
     position: 'absolute',
-    bottom: 100,
+    bottom:  Platform.OS === 'ios' ? 100 : 20,
     fontFamily: FONTS.regular,
     left: 0,
     right: 0,
@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 30,
+    
   },
   signoutButton: {
     flexDirection: 'row',

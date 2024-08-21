@@ -28,7 +28,7 @@ const Settings = () => {
       {settingsOptions.map((option, index) => (
         <TouchableOpacity key={index} style={styles.buttonContainer}>
           <LinearGradient
-            colors={['#111111','#111111','#111111','#111111', '#111111','#111111','#111111','#111111','#222222','#222222']}
+            colors={['#111111','#111111','#111111','#111111', '#111111','#111111','#111111','#111111']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.button}

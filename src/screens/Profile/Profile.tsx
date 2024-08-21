@@ -19,8 +19,10 @@ import MemeGrid from './MemeGrid';
 import { useProfileHandlers } from './ProfileHandlers';
 import { getDaysSinceCreation } from 'utils/dateUtils';
 import { useTheme } from '../../theme/ThemeContext';
+import * as VideoThumbnails from 'expo-video-thumbnails';
 
 const { width, height } = Dimensions.get('window');
+const itemSize = width / 3 - 4; // 3 items per row with 2px margin on each side
 
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'Profile'>;
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Profile'>;
@@ -36,13 +38,13 @@ export type TabName = 'posts' | 'liked' | 'history' | 'downloaded';
 const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
   const user = useUserStore(state => state);
   const [gridHeight, setGridHeight] = useState(300);
-  const [followersCount, setFollowersCount] = useState(user.followersCount || 0);
-  const [followingCount, setFollowingCount] = useState(user.followingCount || 0);
+  const followersCount = useUserStore(state => state.followersCount);
+  const followingCount = useUserStore(state => state.followingCount);
   const [daysSinceCreation, setDaysSinceCreation] = useState(getDaysSinceCreation(user.creationDate || ''));
   const { absoluteFill } = StyleSheet;
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState<TabName>('posts');
-
+  const [thumbnails, setThumbnails] = useState<{[key: string]: string}>({});
   const [tabMemes, setTabMemes] = useState<Meme[]>([]);
   const [isFollowModalVisible, setIsFollowModalVisible] = useState(false);
   const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
@@ -56,7 +58,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
   const [isBlurVisible, setIsBlurVisible] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreMemes, setHasMoreMemes] = useState(true);
-
+  const [contentHeight, setContentHeight] = useState(height);
   const scrollY = new Animated.Value(0);
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 200],
@@ -94,6 +96,19 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
     return unsubscribe;
   }, [navigation]);
 
+  useEffect(() => {
+    tabMemes.forEach(async (meme: Meme) => {
+      if (meme.mediaType === 'video' && !thumbnails[meme.memeID]) {
+        try {
+          const { uri } = await VideoThumbnails.getThumbnailAsync(meme.url);
+          setThumbnails(prev => ({ ...prev, [meme.memeID]: uri }));
+        } catch (e) {
+          console.warn("Couldn't generate thumbnail", e);
+        }
+      }
+    });
+  }, [tabMemes]);
+
   const handleImagePress = (type: 'profile' | 'header') => {
     const imageUri = type === 'profile' ? user?.profilePic || '' : user?.headerPic || '';
     const finalImageUri: string | null = typeof imageUri === 'string' ? imageUri : null;
@@ -103,8 +118,6 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
   };
 
   useEffect(() => {
-    setFollowersCount(user.followersCount || 0);
-    setFollowingCount(user.followingCount || 0);
     setDaysSinceCreation(getDaysSinceCreation(user.CreationDate || ''));
     const calculatedDaysSinceCreation = getDaysSinceCreation(user.creationDate || user.CreationDate || '');
     setDaysSinceCreation(calculatedDaysSinceCreation);
@@ -151,6 +164,10 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
     CreationDate: userState.CreationDate || userState.creationDate || '',
   });
 
+  const handleContentSizeChange = (width: number, newHeight: number) => {
+    setContentHeight(Math.max(height, newHeight));
+  };
+
   const renderTabContent = () => {
     if (isLoading) {
       return (
@@ -191,39 +208,43 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
   
 
   const renderMeme = (item: Meme, index: number) => {
+    const source = item.mediaType === 'video' && thumbnails[item.memeID] 
+    ? { uri: thumbnails[item.memeID] } 
+    : { uri: item.url };
     return (
       <TouchableOpacity
         key={item.memeID}
         style={styles.memeContainer}
         onPress={() => handleMemePress(item, index)}
       >
-        <Image
-          source={{ uri: item.url }}
-          style={styles.memeImage}
-          resizeMode="cover"
-        />
+ <Image
+      source={source}
+      style={styles.memeImage}
+      resizeMode="cover"
+    />
       </TouchableOpacity>
     );
   };
   return (
-    <MemeGrid 
-      memes={tabMemes} 
-      renderMeme={renderMeme} 
-      onLoadMore={loadMoreMemes}
-      onHeightChange={handleHeightChange}
-      isLoading={isLoading}
-      onDeleteMeme={handleDeleteMeme}
-      onRemoveDownloadedMeme={handleRemoveDownloadedMeme}
-      selectedTab={selectedTab}
-    />
+<MemeGrid 
+  memes={tabMemes} 
+  renderMeme={renderMeme} 
+  onLoadMore={loadMoreMemes}
+  onHeightChange={handleHeightChange}
+  isLoading={isLoading}
+  onDeleteMeme={handleDeleteMeme}
+  onRemoveDownloadedMeme={handleRemoveDownloadedMeme}
+  selectedTab={selectedTab}
+  itemSize={itemSize}
+/>
   );
 };
   if (!user) return <ActivityIndicator />;
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#1C1C1C', flexDirection: 'column' }]}>
+    <ScrollView style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#1C1C1C'}]}>
       <ScrollView>
-        <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
+      <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
           <TouchableOpacity onPress={() => handleImagePress('header')}>
             <Image 
               source={{ uri: typeof user.headerPic === 'string' ? user.headerPic : undefined }} 
@@ -240,7 +261,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
         <View style={styles.userInfoContainer}>
           <TouchableOpacity style={styles.editContainer} onPress={() => setIsEditProfileModalVisible(true)}>
             <FontAwesomeIcon icon={faEdit} size={24} color="#1bd40b" />
-            <Text style={styles.edit}>Edit Profile</Text>
+            <Text style={styles.edit}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.settingsIcon} onPress={handleSettingsClick}>
             <FontAwesomeIcon icon={faCog} size={24} color="#1bd40b" />
@@ -258,16 +279,32 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
         </View>
         <View style={styles.statsContainer}>
           <View style={styles.followInfo}>
+          <TouchableOpacity 
+            style={styles.followInfo}
+            onPress={() => {
+              setFollowModalTab('followers');
+              setIsFollowModalVisible(true);
+            }}
+          >
             <Text style={styles.followCount}>{followersCount || 0}</Text>
             <Text style={styles.followLabel}>Followers</Text>
+          </TouchableOpacity>
           </View>
           <View style={styles.jestrForContainer}>
             <Text style={styles.jestrFor}>Jestr for</Text>
             <Text style={styles.jestrForDays}>{daysSinceCreation} days</Text>
           </View>
           <View style={styles.followInfo}>
+          <TouchableOpacity 
+            style={styles.followInfo}
+            onPress={() => {
+              setFollowModalTab('following');
+              setIsFollowModalVisible(true);
+            }}
+          >
             <Text style={styles.followCount}>{followingCount || 0}</Text>
             <Text style={styles.followLabel}>Following</Text>
+          </TouchableOpacity>
           </View>
         </View>
         <View style={styles.tabContainer}>
@@ -276,9 +313,9 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
     {renderTabButton('history', faHistory, 'History')}
     {renderTabButton('liked', faHeart, 'Likes')}
   </View>
-        <Animated.View style={{ flex: 1, minHeight: 300, maxHeight: Animated.add(300, Animated.multiply(scrollY, 2)) }}>
-          {renderTabContent()}
-        </Animated.View>
+  <View style={styles.memeGridContainer}>
+        {renderTabContent()}
+      </View>
       </ScrollView>
       <BottomPanel
         onHomeClick={() => navigation.navigate('Feed' as never)}
@@ -410,12 +447,12 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
             { zIndex: 1 }
           ]}
         />
-        <TouchableOpacity
-          style={[styles.editButton, { zIndex: 2 }]}
-          onPress={() => handleEditImagePress(fullScreenImage === (user?.profilePic || '') ? 'profile' : 'header')}
-        >
-          <FontAwesomeIcon icon={faEdit} size={24} color="#000" />
-        </TouchableOpacity>
+<TouchableOpacity
+  style={[styles.editButton, styles.editButtonOverlay]}
+  onPress={() => handleEditImagePress(fullScreenImage === (user?.profilePic || '') ? 'profile' : 'header')}
+>
+  <FontAwesomeIcon icon={faEdit} size={24} color="#000" />
+</TouchableOpacity>
         <TouchableOpacity 
           style={styles.closeButton} 
           onPress={() => { setFullScreenImage(null); setIsBlurVisible(false); }}
@@ -427,7 +464,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
   </Modal>
 )}
 
-    </View>
+    </ScrollView>
   );
 });
 

@@ -22,7 +22,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 import OnboardingScreen from './src/screens/LandingPage/OnboardingScreen';
-import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'; // Import keep-awake functions
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'; 
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 const DEVELOPMENT_MODE = __DEV__;
@@ -109,39 +109,46 @@ function App(): React.JSX.Element | null {
   const setUserDetails = useUserStore((state) => state.setUserDetails);
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    const checkFirstLaunch = async () => {
-      if (DEVELOPMENT_MODE) {
-        const forceOnboarding = await AsyncStorage.getItem('forceOnboarding');
-        if (forceOnboarding === 'true') {
-          setIsFirstLaunch(true);
-          return;
-        }
-      }
+  console.log('App component rendering');
+  console.log('isFirstLaunch:', isFirstLaunch);
+  console.log('isReady:', isReady);
+  console.log('isAuthenticated:', isAuthenticated);
 
-      const alreadyLaunched = await AsyncStorage.getItem('alreadyLaunched');
-      if (alreadyLaunched === null) {
-        await AsyncStorage.setItem('alreadyLaunched', 'true');
-        setIsFirstLaunch(true);
-      } else {
-        setIsFirstLaunch(false);
-      }
-    };
 
-    checkFirstLaunch();
-  }, []);
+  const checkFirstLaunch = async (): Promise<boolean> => {
+    console.log('Checking if this is the first launch...');
+    if (DEVELOPMENT_MODE) {
+      const forceOnboarding = await AsyncStorage.getItem('forceOnboarding');
+      console.log('DEVELOPMENT_MODE forceOnboarding:', forceOnboarding);
+      if (forceOnboarding === 'true') {
+        console.log('Force onboarding is true, setting isFirstLaunch to true');
+        return true;
+      }
+    }
+  
+    const alreadyLaunched = await AsyncStorage.getItem('alreadyLaunched');
+    console.log('alreadyLaunched value:', alreadyLaunched);
+    if (alreadyLaunched === null) {
+      await AsyncStorage.setItem('alreadyLaunched', 'true');
+      console.log('First launch detected, setting isFirstLaunch to true');
+      return true;
+    } else {
+      console.log('Not first launch, setting isFirstLaunch to false');
+      return false;
+    }
+  };
 
   const onboardingComplete = useCallback(async () => {
+    console.log('Onboarding complete called');
     setIsFirstLaunch(false);
     if (DEVELOPMENT_MODE) {
       await AsyncStorage.setItem('forceOnboarding', 'false');
+      console.log('DEVELOPMENT_MODE: Set forceOnboarding to false');
     }
   }, []);
 
   useEffect(() => {
-    activateKeepAwakeAsync(); // Keep the app awake
-
-    // Lock the screen orientation to portrait
+    activateKeepAwakeAsync(); 
     const lockOrientation = async () => {
       await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     };
@@ -150,23 +157,27 @@ function App(): React.JSX.Element | null {
 
     const initializeApp = async () => {
       try {
-        const [fontsLoaded, authStatus] = await Promise.all([
+        const [fontsLoaded, authStatus, firstLaunch] = await Promise.all([
           Font.loadAsync({ Inter_400Regular, Inter_700Bold }).then(() => true),
           checkAuthStatus(),
+          checkFirstLaunch(),
         ]);
         setIsReady(fontsLoaded);
         setIsAuthenticated(authStatus);
+        setIsFirstLaunch(!authStatus && firstLaunch); // Only set isFirstLaunch to true if not authenticated and it's actually the first launch
       } catch (error) {
         console.error('Initialization error', error);
         setIsReady(true);
         setIsAuthenticated(false);
+        setIsFirstLaunch(true);
       }
     };
     initializeApp();
     return () => {
-      deactivateKeepAwake(); // Deactivate keep awake when the app is unmounted
+      deactivateKeepAwake(); 
     };
   }, []);
+
 
   async function checkAuthStatus(): Promise<boolean> {
     try {
@@ -216,8 +227,7 @@ function App(): React.JSX.Element | null {
       </View>
     );
   }
-
-
+  console.log('About to render Stack.Navigator');
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
@@ -225,20 +235,23 @@ function App(): React.JSX.Element | null {
           <NavigationContainer>
             <SafeAreaProvider>
               <React.Suspense fallback={<Text>Loading...</Text>}>
-                <Stack.Navigator initialRouteName={isAuthenticated ? 'Feed' : 'LandingPage'}>
+                <Stack.Navigator 
+                  initialRouteName={isFirstLaunch ? 'Onboarding' : (isAuthenticated ? 'Feed' : 'LandingPage')}
+                >
                   {isFirstLaunch && (
                     <Stack.Screen
                       name="Onboarding"
                       options={{ headerShown: false }}
                     >
-                      {(props) => <OnboardingScreen {...props} onComplete={onboardingComplete} />}
+                      {(props) => {
+                        console.log('Rendering Onboarding screen');
+                        return <OnboardingScreen {...props} onComplete={onboardingComplete} />;
+                      }}
                     </Stack.Screen>
                   )}
-
                   <Stack.Screen name="LandingPage" component={LandingPage} options={{ headerShown: false }} />
                   <Stack.Screen name="Feed" component={Feed} options={{ headerShown: false }} />
                   <Stack.Screen name="Profile" component={Profile} options={{ headerShown: false }} />
-
                   <Stack.Screen name="ConfirmSignUp" component={ConfirmSignUpScreen} options={{ headerShown: false }} />
                   <Stack.Screen name="Loading" component={LoadingScreen} options={{ headerShown: false }} />
                   <Stack.Screen name="MemeUploadScreen" component={MemeUploadScreen} options={{ headerShown: false }} />

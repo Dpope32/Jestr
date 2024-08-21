@@ -106,12 +106,12 @@ const EditableBio: React.FC<EditableBioProps> = ({ initialBio, userEmail, onBioU
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
+    alignItems: 'center',
   },
   bioContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',  // Add a slight background
     borderRadius: 5,
   },
   bioText: {
@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
     padding: 20,
     borderRadius: 10,
+        alignItems: 'center',
     width: '80%',
   },
   input: {

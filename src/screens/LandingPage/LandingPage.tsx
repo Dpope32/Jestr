@@ -10,7 +10,7 @@ import { storeUserIdentifier } from 'utils/secureStore';
 type LandingPageNavigationProp = NavigationProp<RootStackParamList>;
 
 const LandingPage: React.FC = () => {
-  console.log('LandingPage rendering start');
+//  console.log('LandingPage rendering start');
   const navigation = useNavigation<LandingPageNavigationProp>();
   const [isLoading, setIsLoading] = useState(false);
   const logoOpacity = useRef(new Animated.Value(1)).current;
@@ -32,17 +32,17 @@ const LandingPage: React.FC = () => {
 
   
   useEffect(() => {
-    console.log('LandingPage useEffect: Animation start');
+  //  console.log('LandingPage useEffect: Animation start');
     startAnimation();
   }, []);
 
   useEffect(() => {
-    console.log('LandingPage useEffect: Auth check start');
+  //  console.log('LandingPage useEffect: Auth check start');
     const checkAuth = async () => {
       const token = await getToken('accessToken');
       let identifier = await getUserIdentifier();
-      console.log('Token in LandingPage:', token ? 'exists' : 'does not exist');
-      console.log('Identifier in LandingPage:', identifier ? 'exists' : 'does not exist');
+  //    console.log('Token in LandingPage:', token ? 'exists' : 'does not exist');
+  //    console.log('Identifier in LandingPage:', identifier ? 'exists' : 'does not exist');
   
       if (token) {
         try {

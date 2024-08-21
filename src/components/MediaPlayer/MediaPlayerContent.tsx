@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faThumbsUp, faComment, faShare, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faThumbsUp, faComment, faShare, faSave, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { BlurView } from 'expo-blur';
 import { Animated } from 'react-native';
 import styles from './MP.styles';
@@ -28,6 +28,8 @@ interface IconsAndContentProps {
   memeUser: any;
   caption: string;
   uploadTimestamp: string;
+  isFollowing: boolean;
+  handleFollow: () => void;
   counts: {
     likes: number;
     comments: number;
@@ -58,9 +60,11 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   toggleCommentFeed,
   formatDate,
   animatedBlurIntensity,
-  iconAreaRef
+  iconAreaRef,
+  isFollowing,
+  handleFollow
 }) => {
-  console.log('IconsAndContent rendered');
+  //console.log('IconsAndContent rendered');
 
   const handleLikePress = () => {
     console.log('Like button pressed');
@@ -68,12 +72,12 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   };
 
   const handleCommentPress = () => {
-    console.log('Comment button pressed');
+
     toggleCommentFeed();
   };
 
   const handleSharePress = () => {
-    console.log('Share button pressed');
+  //  console.log('Share button pressed');
     // Implement share functionality
   };
 
@@ -82,6 +86,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
     handleDownloadPress();
   };
 
+ 
   return (
     <Animated.View 
       style={[
@@ -91,10 +96,17 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
     >
       <BlurView intensity={100} tint="dark" style={styles.blurInner}>
         <View style={styles.textContainer}>
-          <Image 
-            source={memeUser?.profilePic ? { uri: memeUser.profilePic } : require('../../assets/images/Jestr.jpg')} 
-            style={styles.profilePic} 
-          />
+          <View style={styles.profilePicContainer}>
+            <Image 
+              source={memeUser?.profilePic ? { uri: memeUser.profilePic } : require('../../assets/images/Jestr.jpg')} 
+              style={styles.profilePic} 
+            />
+            {!isFollowing && (
+              <TouchableOpacity onPress={handleFollow} style={styles.followButton}>
+                <FontAwesomeIcon icon={faPlus} size={12} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+          </View>
           <View style={styles.textContent}>
             <Text style={styles.username}>{memeUser?.username || 'Anonymous'}</Text>
             {caption && <Text style={styles.caption}>{caption}</Text>}
@@ -106,7 +118,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   style={styles.iconColumn}
   onLayout={(event) => {
     const {x, y, width, height} = event.nativeEvent.layout;
-    console.log('Icon area layout:', {x, y, width, height});
+  //  console.log('Icon area layout:', {x, y, width, height});
   }}
 >
   <IconButton

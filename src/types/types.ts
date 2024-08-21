@@ -108,6 +108,7 @@ export type MediaPlayerProps = {
   mediaType: 'image' | 'video';
   username: string;
   caption: string;
+  currentUserId?: string;
   uploadTimestamp: string;
   handleLike: () => void;
   handleDownload: () => void;
@@ -150,6 +151,7 @@ export type ProfilePanelProps = {
   displayName: string;
   followersCount: number;
   followingCount: number;
+  FollowingCount?: number;
   user: User | null;
   navigation: any;
 };

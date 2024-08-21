@@ -55,7 +55,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isVisible, onClose,
             />
             <Text style={styles.label}>Bio</Text>
             <TextInput
-              style={[styles.input, styles.centeredText]}
+              style={[styles.input]}
               placeholder="Bio"
               value={bio}
               onChangeText={setBio}

@@ -1,24 +1,25 @@
 import React, { useCallback, useRef } from 'react';
-import { Dimensions, FlatList, ViewToken } from 'react-native';
-import MediaPlayer from './MediaPlayer';
+import { Dimensions, Animated } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import MediaPlayer from '../../components/MediaPlayer/MediaPlayer';
 import { Meme, User } from '../../types/types';
 
 const { height } = Dimensions.get('window');
 
 type MemeListProps = {
-  memes: Meme[];
-  user: User | null;
-  isDarkMode: boolean;
-  onEndReached: () => void;
-  toggleCommentFeed: () => void;
-  updateLikeStatus: (memeID: string, status: any, newLikeCount: number) => void;
-  goToPrevMedia: () => void;
-  goToNextMedia: () => void;
-  currentMediaIndex: number;
-  setCurrentMediaIndex: (index: number) => void;
-  currentUserId: string | undefined;
-};
+    memes: Meme[];
+    user: User | null;
+    isDarkMode: boolean;
+    onEndReached: () => void;
+    toggleCommentFeed: () => void;
+    updateLikeStatus: (memeID: string, status: any, newLikeCount: number) => void;
+    goToPrevMedia: () => void;
+    goToNextMedia: () => void;
+    currentMediaIndex: number;
+    currentUserId: string | undefined;
+  };
 
+    const translateY = useRef(new Animated.Value(0)).current;
 const MemeList: React.FC<MemeListProps> = ({
   memes,
   user,
@@ -28,12 +29,8 @@ const MemeList: React.FC<MemeListProps> = ({
   updateLikeStatus,
   goToPrevMedia,
   goToNextMedia,
-  currentMediaIndex,
-  setCurrentMediaIndex,
   currentUserId,
 }) => {
-  const flatListRef = useRef<FlatList>(null);
-
   const renderItem = useCallback(
     ({ item, index }: { item: Meme; index: number }) => (
       <MediaPlayer
@@ -49,8 +46,8 @@ const MemeList: React.FC<MemeListProps> = ({
         username={item.username}
         caption={item.caption}
         uploadTimestamp={item.uploadTimestamp}
-        handleLike={() => {}}
-        handleDownload={() => {}}
+        handleLike={() => {}} // Implement this if needed
+        handleDownload={() => {}} // Implement this if needed
         toggleCommentFeed={toggleCommentFeed}
         currentMediaIndex={index}
         user={user}
@@ -60,8 +57,8 @@ const MemeList: React.FC<MemeListProps> = ({
         shareCount={item.shareCount}
         profilePicUrl={item.profilePicUrl}
         memeID={item.memeID}
-        liked={false}
-        doubleLiked={false}
+        liked={false} // You might want to manage this state
+        doubleLiked={false} // You might want to manage this state
         isDarkMode={isDarkMode}
         onLikeStatusChange={updateLikeStatus}
         initialLikeStatus={{ liked: false, doubleLiked: false }}
@@ -69,50 +66,29 @@ const MemeList: React.FC<MemeListProps> = ({
         doubleLikedIndices={new Set()}
         downloadedIndices={new Set()}
         likeDislikeCounts={{}}
-        currentUserId={currentUserId}
         nextMedia={null}
+        currentUserId={currentUserId}
         prevMedia={null}
         onLongPressStart={() => {}} // Add this line
-        onLongPressEnd={() => {}} 
+        onLongPressEnd={() => {}} // Add this line
       />
     ),
     [user, isDarkMode, toggleCommentFeed, updateLikeStatus, goToPrevMedia, goToNextMedia]
   );
 
-  const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0) {
-        setCurrentMediaIndex(viewableItems[0].index || 0);
-      }
-    },
-    [setCurrentMediaIndex]
-  );
-
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 50,
-  };
-
   return (
-    <FlatList
-      ref={flatListRef}
+    <FlashList
       data={memes}
       renderItem={renderItem}
-      keyExtractor={(item, index) => `${item.memeID}-${index}`}
+      estimatedItemSize={height}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
+      keyExtractor={(item) => item.memeID}
       showsVerticalScrollIndicator={false}
       snapToInterval={height}
       snapToAlignment="start"
       decelerationRate="fast"
-      pagingEnabled
-      initialScrollIndex={currentMediaIndex}
-      getItemLayout={(_, index) => ({
-        length: height,
-        offset: height * index,
-        index,
-      })}
-      onViewableItemsChanged={onViewableItemsChanged}
-      viewabilityConfig={viewabilityConfig}
+      pagingEnabled={true}
     />
   );
 };

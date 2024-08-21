@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Platform, TextInput, Keyboard } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Image, StyleSheet, TextInput, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
@@ -16,7 +16,7 @@ interface TopPanelProps {
   showLogo: boolean;
   isAdmin: boolean;
   onAdminClick: () => void;
-  isUploading: boolean; // Add this prop
+  isUploading: boolean;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({ 
@@ -27,7 +27,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   showLogo,
   isAdmin,
   onAdminClick,
-  isUploading // Use this prop
+  isUploading 
 }) => {
   const [selectedTab, setSelectedTab] = useState("Flow");
   const [isSearchActive, setIsSearchActive] = useState(false);
@@ -39,80 +39,91 @@ const TopPanel: React.FC<TopPanelProps> = ({
   };
 
   const handleSearchClick = () => {
-    setIsSearchActive(!isSearchActive);
+    setIsSearchActive((prevState) => !prevState);
   };
 
   const handleProfileClick = () => {
     onProfileClick();
   };
 
-  // Close search when keyboard is closed
-  const handleKeyboardDismiss = () => {
-    setIsSearchActive(false);
+  const handleOutsideClick = () => {
+    if (isSearchActive) {
+      setIsSearchActive(false);
+      setSearchText('');
+      Keyboard.dismiss();  // Dismiss keyboard when clicking outside
+    }
   };
 
-  React.useEffect(() => {
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', handleKeyboardDismiss);
-    return () => {
-      keyboardDidHideListener.remove();
-    };
-  }, []);
+  useEffect(() => {
+    if (isSearchActive) {
+      // Automatically focus the search input when activated
+      // The keyboard will automatically show because of the autoFocus prop
+    } else {
+      Keyboard.dismiss();  // Dismiss the keyboard when search is deactivated
+    }
+  }, [isSearchActive]);
 
   return (
-    <SafeAreaView style={[
-      styles.safeArea,
-      { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' }
-    ]}>
-      <View style={[
-        styles.container,
-        { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' } // Inline styling for the container
+    <TouchableWithoutFeedback onPress={handleOutsideClick}>
+      <SafeAreaView style={[
+        styles.safeArea,
+        { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' }
       ]}>
-        <TouchableOpacity onPress={handleProfileClick} style={styles.profileContainer}>
-          <Image 
-            source={profilePicUrl ? { uri: profilePicUrl } : require('../../assets/images/Jestr.jpg')} 
-            style={styles.profilePic} 
-          />
-        </TouchableOpacity>
-
-        {showLogo && (
-          <Image source={require('../../assets/images/Jestr.jpg')} style={styles.logo} />
-        )}
-
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity
-            style={[styles.tab, selectedTab === 'Flow' && styles.activeTab]}
-            onPress={() => handleTabClick('Flow')}
-          >
-            <Text style={[styles.tabText, selectedTab === 'Flow' && styles.activeTabText]}>Flow</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tab, selectedTab === 'Following' && styles.activeTab]}
-            onPress={() => handleTabClick('Following')}
-          >
-            <Text style={[styles.tabText, selectedTab === 'Following' && styles.activeTabText]}>Following</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.searchContainer}>
-          {isSearchActive && (
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search"
-              placeholderTextColor="#888"
-              value={searchText}
-              onChangeText={setSearchText}
+        <View style={[
+          styles.container,
+          { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' }
+        ]}>
+          <TouchableOpacity onPress={handleProfileClick} style={styles.profileContainer}>
+            <Image 
+              source={profilePicUrl ? { uri: profilePicUrl } : require('../../assets/images/Jestr.jpg')} 
+              style={styles.profilePic} 
             />
-          )}
-          <TouchableOpacity style={styles.searchIconContainer} onPress={handleSearchClick}>
-            <FontAwesomeIcon icon={faSearch} size={wp('5%')} style={styles.searchIcon} />
           </TouchableOpacity>
+
+          {showLogo && (
+            <Image source={require('../../assets/images/Jestr.jpg')} style={styles.logo} />
+          )}
+
+          <View style={styles.tabsContainer}>
+            <TouchableOpacity
+              style={[styles.tab, selectedTab === 'Flow' && styles.activeTab]}
+              onPress={() => handleTabClick('Flow')}
+            >
+              <Text style={[styles.tabText, selectedTab === 'Flow' && styles.activeTabText]}>Flow</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tab, selectedTab === 'Following' && styles.activeTab]}
+              onPress={() => handleTabClick('Following')}
+            >
+              <Text style={[styles.tabText, selectedTab === 'Following' && styles.activeTabText]}>Following</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[
+            styles.searchContainer,
+            isSearchActive && styles.searchContainerActive
+          ]}>
+            {isSearchActive && (
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search"
+                placeholderTextColor="#888"
+                value={searchText}
+                onChangeText={setSearchText}
+                autoFocus={true}
+                onBlur={() => setIsSearchActive(false)} // Closes the search on blur
+              />
+            )}
+            <TouchableOpacity style={styles.searchIconContainer} onPress={handleSearchClick}>
+              <FontAwesomeIcon icon={faSearch} size={wp('5%')} style={styles.searchIcon} />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 };
-
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -143,7 +154,7 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: hp('7%'), // Moved tabs further down
+    paddingTop: hp('7%'),
     marginLeft: 15
   },
   tab: {
@@ -151,29 +162,31 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#1bd40b', // Green underline for active tab
+    borderBottomColor: '#1bd40b',
   },
   tabText: {
-    color: '#888', // Inactive tab color
-    fontSize: wp('5%'), // Increased font size
+    color: '#888',
+    fontSize: wp('5%'),
     fontFamily: FONTS.regular,
   },
   activeTabText: {
-    color: '#fff', // Active tab color
+    color: '#fff',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: wp('10%'), // Default width when search is not active
+  },
+  searchContainerActive: {
+    width: wp('60%'), // Expand width when search is active
   },
   searchInput: {
-    height: hp('4%'), // Maintained height for better usability
-    width: wp('30%'), // Reduced width by half
+    height: hp('4%'),
+    width: '80%',
     backgroundColor: '#1C1C1C',
     color: '#fff',
-    marginLeft: -150,
     borderRadius: 8,
     paddingHorizontal: wp('2%'),
-    marginRight: wp('0%'),
     fontFamily: FONTS.regular,
     fontSize: wp('4%'),
   },
@@ -181,16 +194,16 @@ const styles = StyleSheet.create({
     padding: wp('2%'),
   },
   searchIcon: {
-    color: '#fff', // White search icon
+    color: '#fff',
   },
   logo: {
     position: 'absolute',
-    width: wp('20%'), // Adjust size as needed
+    width: wp('20%'),
     height: hp('6%'),
     resizeMode: 'contain',
     left: '54.5%',
     transform: [{ translateX: -wp('10%') }],
-    zIndex: 999999, // Ensure it's above other elements
+    zIndex: 999999,
   },
 });
 

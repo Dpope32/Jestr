@@ -41,11 +41,11 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 220 : 100, // Adjust based on platform
-    left: 10,
-    right: 10,
+    bottom: Platform.OS === 'ios' ? 220 : 150, // Adjust based on platform
+    left: 0,
+    right: 20,
     flexDirection: 'row',
-    padding: 10,
+    padding: 5,
     borderRadius: 10,
     backgroundColor: 'rgba(0, 0, 0, 0)', // Semi-transparent background
   },
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-    paddingBottom: Platform.OS === 'ios' ? 260 : 100, // Adjust for bottom navigation
+    paddingBottom: Platform.OS === 'ios' ? 260 : 150, // Adjust for bottom navigation
   },
   iconColumn: {
     position: 'absolute',
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
     paddingHorizontal: 0,
     gap: 1,
-    bottom: Platform.OS === 'ios' ? 240 : 80,
+    bottom: Platform.OS === 'ios' ? 240 : 150,
     alignItems: 'center',
   },
   memeImage: {
@@ -74,15 +74,19 @@ const styles = StyleSheet.create({
   },
   followButton: {
     position: 'absolute',
-    left: 35,
-    top: 5,
-    width: 30,
-    height: 30,
+    top: -5,
+    right: 5,
+    backgroundColor: '#1bd40b',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 8,
-    borderRadius: 15,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    zIndex: 1,
+  },
+  followButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   followedButton: {
     backgroundColor: '#1bd40b',
@@ -106,6 +110,9 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 10,
+  },
+  profilePicContainer: {
+    position: 'relative',
   },
   textContent: {
     flex: 1,

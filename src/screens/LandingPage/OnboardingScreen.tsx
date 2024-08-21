@@ -53,6 +53,7 @@ interface OnboardingScreenProps {
 }
 
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
+  console.log('Onboarding screen component rendered');
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const scrollX = useRef(new Animated.Value(0)).current;
