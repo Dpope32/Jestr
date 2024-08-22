@@ -15,7 +15,7 @@ import styles from './Feed.styles';
 import { RootStackParamList, User } from '../../types/types';
 import { getToken } from '../../utils/secureStore';
 
-const Feed: React.FC = () => {
+const Feed: React.FC = React.memo(() => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { isDarkMode } = useTheme();
   const user = useUserStore(state => state as User);
@@ -25,7 +25,7 @@ const Feed: React.FC = () => {
   const { memes, isLoading, isLoadingMore, error, fetchMoreMemes, fetchInitialMemes } = useMemes(user, accessToken);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
-
+  // Fetch access token
   useEffect(() => {
     const fetchToken = async () => {
       const token = await getToken('accessToken');
@@ -33,44 +33,45 @@ const Feed: React.FC = () => {
     };
     fetchToken();
   }, []);
-  
 
-
-
+  // Toggle Profile Panel
   const toggleProfilePanel = useCallback(() => {
     setProfilePanelVisible(prev => !prev);
   }, []);
 
+  // Toggle Comment Feed
   const toggleCommentFeed = useCallback(() => {
     setIsCommentFeedVisible(prev => !prev);
   }, []);
 
+  // Debounced Fetch More Memes
   const debouncedFetchMoreMemes = useMemo(
     () => debounce(fetchMoreMemes, 500, { leading: true, trailing: false }),
     [fetchMoreMemes]
   );
 
+  // Handle Home Click
   const handleHomeClick = useCallback(() => {
     fetchInitialMemes();
     setCurrentMediaIndex(0);
   }, [fetchInitialMemes]);
 
+  // Update Like Status
   const updateLikeStatus = useCallback((memeID: string, status: any, newLikeCount: number) => {
-    // Implement this function to update like status
     console.log('Like status updated:', { memeID, status, newLikeCount });
   }, []);
 
+  // Handle End Reached
   const handleEndReached = useCallback(() => {
     if (!isLoadingMore && memes.length > 0) {
-      console.log('Fetching more memes...');
-      fetchMoreMemes();
+      debouncedFetchMoreMemes();
     }
-  }, [isLoadingMore, memes.length, fetchMoreMemes]);
+  }, [isLoadingMore, memes.length, debouncedFetchMoreMemes]);
 
+  // Go to Next Media
   const goToNextMedia = useCallback(() => {
     setCurrentMediaIndex((prevIndex) => {
       const nextIndex = Math.min(memes.length - 1, prevIndex + 1);
-      console.log('Going to next media. New index:', nextIndex);
       if (nextIndex === memes.length - 1) {
         handleEndReached();
       }
@@ -78,15 +79,51 @@ const Feed: React.FC = () => {
     });
   }, [memes.length, handleEndReached]);
 
+  // Go to Previous Media
   const goToPrevMedia = useCallback(() => {
-    setCurrentMediaIndex((prevIndex) => {
-      const nextIndex = Math.max(0, prevIndex - 1);
-      console.log('Going to previous media. New index:', nextIndex);
-      return nextIndex;
-    });
+    setCurrentMediaIndex((prevIndex) => Math.max(0, prevIndex - 1));
   }, []);
 
+  // Memoized Top Panel
+  const memoizedTopPanel = useMemo(() => (
+    <TopPanel
+      onProfileClick={toggleProfilePanel}
+      profilePicUrl={user.profilePic || ''}
+      username={user.username || ''}
+      enableDropdown={true}
+      showLogo={true}
+      isAdmin={user.isAdmin || false}
+      isUploading={false}
+      onAdminClick={() => navigation.navigate('AdminPage')}
+    />
+  ), [user.profilePic, user.username, user.isAdmin, toggleProfilePanel, navigation]);
 
+  // Memoized MemeList
+  const memoizedMemeList = useMemo(() => (
+    <MemeList
+      memes={memes}
+      user={user}
+      isDarkMode={isDarkMode}
+      onEndReached={handleEndReached}
+      toggleCommentFeed={toggleCommentFeed}
+      updateLikeStatus={updateLikeStatus}
+      currentMediaIndex={currentMediaIndex}
+      setCurrentMediaIndex={setCurrentMediaIndex}
+      currentUserId={user.email}
+    />
+  ), [memes, user, isDarkMode, handleEndReached, toggleCommentFeed, updateLikeStatus, currentMediaIndex]);
+
+  // Memoized Bottom Panel
+  const memoizedBottomPanel = useMemo(() => (
+    <BottomPanel
+      onHomeClick={handleHomeClick}
+      currentMediaIndex={currentMediaIndex}
+      toggleCommentFeed={toggleCommentFeed}
+      user={user}
+    />
+  ), [handleHomeClick, currentMediaIndex, toggleCommentFeed, user]);
+
+  // Rendering
   if (isLoading) {
     return <Text>Loading...</Text>;
   }
@@ -101,35 +138,9 @@ const Feed: React.FC = () => {
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <TopPanel
-        onProfileClick={toggleProfilePanel}
-        profilePicUrl={user.profilePic || ''}
-        username={user.username || ''}
-        enableDropdown={true}
-        showLogo={true}
-        isAdmin={user.isAdmin || false}
-        isUploading={false}
-        onAdminClick={() => navigation.navigate('AdminPage')}
-      />
-      <MemeList
-        memes={memes}
-        user={user}
-        isDarkMode={isDarkMode}
-        onEndReached={handleEndReached}
-        toggleCommentFeed={toggleCommentFeed}
-        updateLikeStatus={updateLikeStatus}
-        goToNextMedia={goToNextMedia}
-        goToPrevMedia={goToPrevMedia}
-        currentMediaIndex={currentMediaIndex}
-        setCurrentMediaIndex={setCurrentMediaIndex}
-        currentUserId={user.email} // Add this line
-      />
-      <BottomPanel
-        onHomeClick={handleHomeClick}
-        currentMediaIndex={currentMediaIndex}
-        toggleCommentFeed={toggleCommentFeed}
-        user={user}
-      />
+      {memoizedTopPanel}
+      {memoizedMemeList}
+      {memoizedBottomPanel}
       {profilePanelVisible && (
         <ProfilePanel
           isVisible={profilePanelVisible}
@@ -141,7 +152,6 @@ const Feed: React.FC = () => {
           followingCount={user.followingCount || 0}
           user={user}
           navigation={navigation}
-          key={user.followingCount}
         />
       )}
       {isCommentFeedVisible && memes[currentMediaIndex] && (
@@ -157,6 +167,6 @@ const Feed: React.FC = () => {
       )}
     </View>
   );
-};
+});
 
 export default Feed;

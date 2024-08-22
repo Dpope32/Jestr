@@ -2,11 +2,10 @@ import { useRef, useMemo, useState, RefObject, useCallback } from 'react';
 import { PanResponder, Animated, Dimensions, GestureResponderEvent, View } from 'react-native';
 
 const { height } = Dimensions.get('window');
-const SWIPE_THRESHOLD = height * 0.15; // Reduced from 0.2 to 0.15
-const SWIPE_VELOCITY_THRESHOLD = 0.3;
+const SWIPE_THRESHOLD = height * 0.15; // Adjusted to make swiping easier
+const SWIPE_VELOCITY_THRESHOLD = 0.2; // Lowered threshold for velocity
 const LONG_PRESS_DURATION = 800;
 const LONG_PRESS_DELAY = 500;
-
 
 interface PanResponderProps {
   onSwipeUp: () => void;
@@ -14,6 +13,7 @@ interface PanResponderProps {
   handleTap: (event: GestureResponderEvent) => void;
   handleLongPress: () => void;
   iconAreaRef: RefObject<View>;
+  isSwiping: RefObject<boolean>;
 }
 
 export const usePanResponder = ({
@@ -34,20 +34,22 @@ export const usePanResponder = ({
     (isUpSwipe: boolean) => {
       if (isSwiping.current) return;
       isSwiping.current = true;
+      console.log('Swiping started:', isUpSwipe ? 'Up' : 'Down');
 
       const swipeDistance = isUpSwipe ? -height : height;
 
       Animated.timing(translateY, {
         toValue: swipeDistance,
-        duration: 50,
+        duration: 300,
         useNativeDriver: true,
       }).start(() => {
+        console.log('Swipe completed:', isUpSwipe ? 'Up' : 'Down');
         if (isUpSwipe) {
           onSwipeUp();
         } else {
           onSwipeDown();
         }
-        // Don't reset the translateY value here
+        translateY.setValue(0);
         isSwiping.current = false;
       });
     },
@@ -57,71 +59,111 @@ export const usePanResponder = ({
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponder: () => {
+          console.log('PanResponder start should set');
+          return true;
+        },
         onMoveShouldSetPanResponder: (_, gestureState) => {
-          return Math.abs(gestureState.dy) > 10;
+          const shouldSet = Math.abs(gestureState.dy) > 5;
+          console.log('PanResponder move should set:', shouldSet);
+          return shouldSet;
         },
         onPanResponderGrant: (event) => {
+          console.log('PanResponder granted');
           startY.current = event.nativeEvent.pageY;
           longPressTimeout.current = setTimeout(() => {
             setIsLongPressing(true);
             handleLongPress();
+            console.log('Long press triggered');
           }, LONG_PRESS_DELAY);
         },
         onPanResponderMove: (_, gestureState) => {
-          if (isSwiping.current) return;
+          if (isSwiping.current) {
+            console.log('Already swiping, ignoring move');
+            return;
+          }
 
-          if (Math.abs(gestureState.dy) > 10 && longPressTimeout.current) {
+          if (Math.abs(gestureState.dy) > 5 && longPressTimeout.current) {
             clearTimeout(longPressTimeout.current);
             longPressTimeout.current = null;
+            console.log('Long press timeout cleared due to movement');
           }
           translateY.setValue(gestureState.dy);
           animatedBlurIntensity.setValue(Math.abs(gestureState.dy));
         },
         onPanResponderRelease: (event, gestureState) => {
+          console.log('PanResponder released');
           if (longPressTimeout.current) {
             clearTimeout(longPressTimeout.current);
+            console.log('Long press timeout cleared on release');
           }
 
           if (isLongPressing) {
             setIsLongPressing(false);
+            console.log('Was long pressing, stopping further action');
             return;
           }
 
           const endY = event.nativeEvent.pageY;
           const verticalDistance = endY - startY.current;
 
-          if (Math.abs(verticalDistance) < 10 && Math.abs(gestureState.dx) < 10) {
-            handleTap(event);
-          } else if (gestureState.dy < -SWIPE_THRESHOLD) {
+          console.log('Vertical distance:', verticalDistance);
+          console.log('Velocity Y:', gestureState.vy);
+          console.log('Swipe Threshold:', SWIPE_THRESHOLD);
+          console.log('Swipe Velocity Threshold:', SWIPE_VELOCITY_THRESHOLD);
+
+          // Handle swipe based on distance and velocity
+          if (
+            (gestureState.dy < -SWIPE_THRESHOLD && Math.abs(gestureState.vy) > SWIPE_VELOCITY_THRESHOLD) ||
+            (gestureState.dy < 0 && Math.abs(gestureState.vy) > SWIPE_VELOCITY_THRESHOLD)
+          ) {
+            console.log('Triggering swipe up');
             handleSwipe(true);
-          } else if (gestureState.dy > SWIPE_THRESHOLD) {
+          } else if (
+            (gestureState.dy > SWIPE_THRESHOLD && Math.abs(gestureState.vy) > SWIPE_VELOCITY_THRESHOLD) ||
+            (gestureState.dy > 0 && Math.abs(gestureState.vy) > SWIPE_VELOCITY_THRESHOLD)
+          ) {
+            console.log('Triggering swipe down');
             handleSwipe(false);
           } else {
-            // Only reset if not swiping
+            console.log('Swipe did not meet threshold, bouncing back');
+            // If swipe doesn't meet threshold, bounce back
             Animated.spring(translateY, {
               toValue: 0,
               useNativeDriver: true,
+              velocity: gestureState.vy,
+              tension: 40,
+              friction: 7,
             }).start();
           }
         },
-        onPanResponderTerminate: () => {
+        onPanResponderTerminate: (_, gestureState) => {
+          console.log('PanResponder terminated');
+        
           if (longPressTimeout.current) {
             clearTimeout(longPressTimeout.current);
+            console.log('Long press timeout cleared on terminate');
           }
+        
           setIsLongPressing(false);
-          // Only reset if not swiping
-          if (!isSwiping.current) {
+        
+          // If termination happens during a valid swipe, force the swipe to complete
+          if (!isSwiping.current && Math.abs(gestureState.dy) > SWIPE_THRESHOLD) {
+            const isUpSwipe = gestureState.dy < 0;
+            console.log('Force completing swipe due to termination');
+            handleSwipe(isUpSwipe);
+          } else {
+            // Otherwise, reset as usual
             Animated.spring(translateY, {
               toValue: 0,
               useNativeDriver: true,
             }).start();
           }
-        },
+        }        
+        
       }),
     [translateY, animatedBlurIntensity, handleTap, handleLongPress, handleSwipe]
   );
-
 
   return {
     panHandlers: panResponder.panHandlers,

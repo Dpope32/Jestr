@@ -1,7 +1,7 @@
-import React, { useCallback, useRef } from 'react';
-import { Dimensions, FlatList, ViewToken, ListRenderItem } from 'react-native';
+import React, { useCallback, useRef, useMemo } from 'react';
+import { Dimensions, ViewToken, View, FlatList } from 'react-native';
 import MediaPlayer from './MediaPlayer';
-import { Meme, User, MediaPlayerProps } from '../../types/types';
+import { Meme, User } from '../../types/types';
 
 const { height } = Dimensions.get('window');
 
@@ -28,23 +28,22 @@ const MemeList: React.FC<MemeListProps> = ({
   setCurrentMediaIndex,
   currentUserId,
 }) => {
-  const flatListRef = useRef<FlatList<Meme>>(null);
+  const flatListRef = useRef<FlatList>(null);
+
+  const memoizedMemes = useMemo(() => memes, [memes]);
 
   const goToNextMedia = useCallback(() => {
-    if (currentMediaIndex < memes.length - 1) {
-      setCurrentMediaIndex(currentMediaIndex + 1);
-    }
-  }, [currentMediaIndex, memes.length, setCurrentMediaIndex]);
+    setCurrentMediaIndex(Math.min(currentMediaIndex + 1, memes.length - 1));
+  }, [memes.length, setCurrentMediaIndex, currentMediaIndex]);
 
   const goToPrevMedia = useCallback(() => {
-    if (currentMediaIndex > 0) {
-      setCurrentMediaIndex(currentMediaIndex - 1);
-    }
-  }, [currentMediaIndex, setCurrentMediaIndex]);
+    setCurrentMediaIndex(Math.max(currentMediaIndex - 1, 0));
+  }, [setCurrentMediaIndex, currentMediaIndex]);
 
-  const renderItem: ListRenderItem<Meme> = useCallback(
-    ({ item, index }) => (
+  const renderItem = useCallback(
+    ({ item, index }: { item: Meme; index: number }) => (
       <MediaPlayer
+        key={item.memeID}
         {...item}
         liked={item.liked ?? false}
         doubleLiked={item.doubleLiked ?? false}
@@ -58,39 +57,39 @@ const MemeList: React.FC<MemeListProps> = ({
         onLikeStatusChange={updateLikeStatus}
         prevMedia={index > 0 ? memes[index - 1].url : null}
         nextMedia={index < memes.length - 1 ? memes[index + 1].url : null}
-        handleLike={() => {}}  // Placeholder, should be handled inside MediaPlayer
-        handleDownload={() => {}}  // Placeholder, should be handled inside MediaPlayer
-        likedIndices={new Set()}  // Placeholder, should be handled inside MediaPlayer
-        doubleLikedIndices={new Set()}  // Placeholder, should be handled inside MediaPlayer
-        downloadedIndices={new Set()}  // Placeholder, should be handled inside MediaPlayer
-        likeDislikeCounts={{}}  // Placeholder, should be handled inside MediaPlayer
+        handleLike={() => {}}
+        handleDownload={() => {}}
+        likedIndices={new Set()}
+        doubleLikedIndices={new Set()}
+        downloadedIndices={new Set()}
+        likeDislikeCounts={{}}
         currentMediaIndex={index}
         initialLikeStatus={{ liked: false, doubleLiked: false }}
         onLongPressStart={() => {}}
         onLongPressEnd={() => {}}
+        currentUserId={currentUserId}
       />
     ),
-    [memes, user, isDarkMode, toggleCommentFeed, updateLikeStatus, goToPrevMedia, goToNextMedia]
+    [user, isDarkMode, toggleCommentFeed, updateLikeStatus, goToPrevMedia, goToNextMedia, currentUserId, memes]
   );
+
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0) {
-        setCurrentMediaIndex(viewableItems[0].index || 0);
+      if (viewableItems.length > 0 && typeof viewableItems[0].index === 'number') {
+        setCurrentMediaIndex(viewableItems[0].index);
       }
     },
     [setCurrentMediaIndex]
   );
 
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 50,
-  };
+  const viewabilityConfig = useMemo(() => ({ itemVisiblePercentThreshold: 50 }), []);
 
   return (
     <FlatList
       ref={flatListRef}
-      data={memes}
+      data={memoizedMemes}
       renderItem={renderItem}
-      keyExtractor={(item: Meme) => item.memeID}
+      keyExtractor={(item) => item.memeID}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       showsVerticalScrollIndicator={false}
@@ -98,14 +97,14 @@ const MemeList: React.FC<MemeListProps> = ({
       snapToAlignment="start"
       decelerationRate="fast"
       pagingEnabled
-      initialScrollIndex={currentMediaIndex}
+      initialScrollIndex={Math.max(0, currentMediaIndex)}
+      onViewableItemsChanged={onViewableItemsChanged}
+      viewabilityConfig={viewabilityConfig}
       getItemLayout={(_, index) => ({
         length: height,
         offset: height * index,
         index,
       })}
-      onViewableItemsChanged={onViewableItemsChanged}
-      viewabilityConfig={viewabilityConfig}
     />
   );
 };

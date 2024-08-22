@@ -72,6 +72,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   const [isFollowing, setIsFollowing] = useState(false);
   const [canFollow, setCanFollow] = useState(true);
   const adjustedTop = Platform.OS === 'android' ? likePosition.y - 20 : likePosition.y;
+  const isSwiping = useRef(false);
 
   const closeLongPressModal = useCallback(() => {
     setIsLongPressModalVisible(false);
@@ -81,6 +82,16 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
       useNativeDriver: false,
     }).start();
   }, [blurOpacity]);
+
+  useEffect(() => {
+    console.log('Loaded Meme:', {
+      memeID,
+      currentMedia,
+      nextMedia,
+      prevMedia,
+    });
+  }, [memeID, currentMedia, nextMedia, prevMedia]);
+  
 
   const handleMediaError = useCallback(() => {
     setMediaLoadError(true);
@@ -302,6 +313,7 @@ const { panHandlers, translateY, animatedBlurIntensity } = usePanResponder({
   handleTap,
   handleLongPress,
   iconAreaRef,
+  isSwiping,
 });
 useEffect(() => {
   if (nextMedia) {
@@ -348,11 +360,17 @@ useEffect(() => {
     }
   
     if (mediaLoadError) {
+      console.log(`Failed to load media for memeID: ${memeID}`);
       return <Text style={styles.errorText}>Failed to load media.</Text>;
     }
   
+    if (!currentMedia) {
+      console.error(`No media URL provided for memeID: ${memeID}`);
+      return <Text style={styles.errorText}>Media not available.</Text>;
+    }
+  
     const isVideo = currentMedia.toLowerCase().endsWith('.mp4') || mediaType === 'video';
-
+  
     if (isVideo) {
       return (
         <Animated.View style={[styles.videoContainer, { opacity: fadeAnim }]}>
@@ -389,6 +407,7 @@ useEffect(() => {
       );
     }
   }, [currentMedia, mediaType, isLoading, mediaLoadError, fadeAnim, imageSize, handleMediaError]);
+  
   
 
   return (
