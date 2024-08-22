@@ -23,7 +23,11 @@ export const fetchMemes = async (
   limit: number = 5,
   accessToken: string
 ): Promise<FetchMemesResult> => {
-  try {
+  const maxRetries = 3;
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    try {
    //console.log('fetchMemes called with:', { lastEvaluatedKey, userEmail, limit, accessToken: accessToken.substring(0, 10) + '...' });
     
     const response = await fetch(`${API_URL}/fetchMemes`, {
@@ -55,14 +59,17 @@ export const fetchMemes = async (
       lastEvaluatedKey: data.data.lastEvaluatedKey
     };
   } catch (error) {
-    console.error('Error in fetchMemes:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+    console.error(`Attempt ${retries + 1} failed:`, error);
+    retries++;
+    if (retries === maxRetries) {
+      throw error;
     }
-    return { memes: [], lastEvaluatedKey: null };
+    await new Promise(resolve => setTimeout(resolve, 1000 * retries));
   }
+}
+throw new Error('Max retries reached');
 };
+
 export const uploadMeme = async (
   mediaUri: string,
   userEmail: string,

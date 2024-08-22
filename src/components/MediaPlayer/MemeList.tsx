@@ -1,9 +1,11 @@
 import React, { useCallback, useRef, useMemo } from 'react';
-import { Dimensions, ViewToken, View, FlatList } from 'react-native';
+import { Dimensions, ViewToken, FlatList } from 'react-native';
 import MediaPlayer from './MediaPlayer';
 import { Meme, User } from '../../types/types';
 
 const { height } = Dimensions.get('window');
+
+const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
 
 type MemeListProps = {
   memes: Meme[];
@@ -15,9 +17,11 @@ type MemeListProps = {
   currentMediaIndex: number;
   setCurrentMediaIndex: (index: number) => void;
   currentUserId: string | undefined;
+  isCommentFeedVisible: boolean;
+  isProfilePanelVisible: boolean;
 };
 
-const MemeList: React.FC<MemeListProps> = ({
+const MemeList: React.FC<MemeListProps> = React.memo(({
   memes,
   user,
   isDarkMode,
@@ -27,18 +31,23 @@ const MemeList: React.FC<MemeListProps> = ({
   currentMediaIndex,
   setCurrentMediaIndex,
   currentUserId,
+  isCommentFeedVisible,
+  isProfilePanelVisible,
 }) => {
   const flatListRef = useRef<FlatList>(null);
+  const memesRef = useRef(memes);
 
-  const memoizedMemes = useMemo(() => memes, [memes]);
+  const setCurrentMediaIndexCallback = useCallback((index: number) => {
+    setCurrentMediaIndex(index);
+  }, [setCurrentMediaIndex]);
 
   const goToNextMedia = useCallback(() => {
-    setCurrentMediaIndex(Math.min(currentMediaIndex + 1, memes.length - 1));
-  }, [memes.length, setCurrentMediaIndex, currentMediaIndex]);
+    setCurrentMediaIndexCallback(Math.min(currentMediaIndex + 1, memesRef.current.length - 1));
+  }, [currentMediaIndex, setCurrentMediaIndexCallback]);
 
   const goToPrevMedia = useCallback(() => {
-    setCurrentMediaIndex(Math.max(currentMediaIndex - 1, 0));
-  }, [setCurrentMediaIndex, currentMediaIndex]);
+    setCurrentMediaIndexCallback(Math.max(currentMediaIndex - 1, 0));
+  }, [currentMediaIndex, setCurrentMediaIndexCallback]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: Meme; index: number }) => (
@@ -55,8 +64,8 @@ const MemeList: React.FC<MemeListProps> = ({
         goToPrevMedia={goToPrevMedia}
         goToNextMedia={goToNextMedia}
         onLikeStatusChange={updateLikeStatus}
-        prevMedia={index > 0 ? memes[index - 1].url : null}
-        nextMedia={index < memes.length - 1 ? memes[index + 1].url : null}
+        prevMedia={index > 0 ? memesRef.current[index - 1].url : null}
+        nextMedia={index < memesRef.current.length - 1 ? memesRef.current[index + 1].url : null}
         handleLike={() => {}}
         handleDownload={() => {}}
         likedIndices={new Set()}
@@ -68,26 +77,26 @@ const MemeList: React.FC<MemeListProps> = ({
         onLongPressStart={() => {}}
         onLongPressEnd={() => {}}
         currentUserId={currentUserId}
+        isCommentFeedVisible={isCommentFeedVisible}
+        isProfilePanelVisible={isProfilePanelVisible}
       />
     ),
-    [user, isDarkMode, toggleCommentFeed, updateLikeStatus, goToPrevMedia, goToNextMedia, currentUserId, memes]
+    [user, isDarkMode, toggleCommentFeed, updateLikeStatus, goToPrevMedia, goToNextMedia, currentUserId, isCommentFeedVisible, isProfilePanelVisible]
   );
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0 && typeof viewableItems[0].index === 'number') {
-        setCurrentMediaIndex(viewableItems[0].index);
+        setCurrentMediaIndexCallback(viewableItems[0].index);
       }
     },
-    [setCurrentMediaIndex]
+    [setCurrentMediaIndexCallback]
   );
-
-  const viewabilityConfig = useMemo(() => ({ itemVisiblePercentThreshold: 50 }), []);
 
   return (
     <FlatList
       ref={flatListRef}
-      data={memoizedMemes}
+      data={memes}
       renderItem={renderItem}
       keyExtractor={(item) => item.memeID}
       onEndReached={onEndReached}
@@ -100,13 +109,13 @@ const MemeList: React.FC<MemeListProps> = ({
       initialScrollIndex={Math.max(0, currentMediaIndex)}
       onViewableItemsChanged={onViewableItemsChanged}
       viewabilityConfig={viewabilityConfig}
-      getItemLayout={(_, index) => ({
+      getItemLayout={useCallback((_: any, index: number) => ({
         length: height,
         offset: height * index,
         index,
-      })}
+      }), [])}
     />
   );
-};
+});
 
-export default React.memo(MemeList);
+export default MemeList;

@@ -126,30 +126,6 @@ export const useMediaPlayerLogic = ({
     }, 300),
     [handleLikePress]
   );
-
-  const handleDoubleTap = useCallback((event: GestureResponderEvent) => {
-    const { pageX, pageY }: { pageX: number; pageY: number } = event.nativeEvent;
-    
-    // Adjust these values as needed
-    const updateLikePosition = (x: number, y: number) => {
-      const xOffset = Platform.OS === 'ios' ? -100 : -100;
-      const yOffset = Platform.OS === 'ios' ? -250 : -200;
-    
-      setLikePosition({
-        x: x + xOffset,
-        y: y + yOffset
-      });
-    };
-  
-    updateLikePosition(pageX, pageY);  // Ensure both pageX and pageY are passed
-    setShowLikeAnimation(true);
-    debouncedHandleLike();
-  
-    setTimeout(() => {
-      setShowLikeAnimation(false);
-    }, 1000); // Hide the animation after 1 second
-  }, [debouncedHandleLike]);
-  
   
 
   const handleDownloadPress = useCallback(async () => {
@@ -212,7 +188,6 @@ export const useMediaPlayerLogic = ({
     likePosition,
     counts,
     friends,
-    handleDoubleTap,
     debouncedHandleLike,
     handleDownloadPress,
     onShare,

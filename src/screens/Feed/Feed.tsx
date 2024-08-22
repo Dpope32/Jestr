@@ -110,6 +110,8 @@ const Feed: React.FC = React.memo(() => {
       currentMediaIndex={currentMediaIndex}
       setCurrentMediaIndex={setCurrentMediaIndex}
       currentUserId={user.email}
+      isCommentFeedVisible={isCommentFeedVisible}
+      isProfilePanelVisible={profilePanelVisible}
     />
   ), [memes, user, isDarkMode, handleEndReached, toggleCommentFeed, updateLikeStatus, currentMediaIndex]);
 
