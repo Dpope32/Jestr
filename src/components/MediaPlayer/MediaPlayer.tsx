@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, Image, TouchableOpacity, Dimensions, Animated, GestureResponderEvent , ActivityIndicator, TouchableWithoutFeedback, StyleSheet, Platform } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Dimensions, Animated, GestureResponderEvent, ActivityIndicator, TouchableWithoutFeedback, StyleSheet, Platform } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import SafeImage from '../shared/SafeImage';
@@ -30,7 +30,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   currentMedia,
   mediaType,
   prevMedia,
-  memes = [],
+  memes,
   nextMedia,
   caption,
   uploadTimestamp,
@@ -38,6 +38,8 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   toggleCommentFeed,
   goToPrevMedia,
   goToNextMedia,
+  index,
+  currentIndex,
   user,
   memeID,
   liked: initialLiked,
@@ -48,6 +50,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   shareCount: initialShareCount,
   commentCount: initialCommentCount,
   onLikeStatusChange,
+  setCurrentIndex,
 }) => {
   const video = useRef<Video>(null);
   const [status, setStatus] = useState<AVPlaybackStatus>({} as AVPlaybackStatus);
@@ -57,7 +60,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   const [retryCount, setRetryCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [canFollow, setCanFollow] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(memes.findIndex(meme => meme.memeID === memeID));
   const { isDarkMode } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const blurOpacity = useRef(new Animated.Value(0)).current;
@@ -68,6 +70,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   const isSwiping = useRef(false);
   const [likePosition, setLikePosition] = useState({ x: 0, y: 0 });
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
+  const isActive = index === currentIndex;
 
   const handleSingleTap = useCallback(() => {
     if (mediaType === 'video' && video.current) {
@@ -167,11 +170,31 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
     }).start();
   }, [currentMedia, mediaType, handleMediaError, fadeAnim]);
 
+  const handleSwipeUp = useCallback(() => {
+    console.log(`MediaPlayer ${index} - Swipe up`);
+    goToNextMedia();
+  }, [index, goToNextMedia]);
+
+  const handleSwipeDown = useCallback(() => {
+    console.log(`MediaPlayer ${index} - Swipe down`);
+    goToPrevMedia();
+  }, [index, goToPrevMedia]);
+
+  
   useEffect(() => {
+    console.log('MediaPlayer - Received memes:', memes.length);
+    console.log(`Current media changed to: ${currentMedia}`);
+    console.log(`Current index: ${currentIndex}`);
     loadMedia();
     
-    if (nextMedia) Image.prefetch(nextMedia);
-    if (prevMedia) Image.prefetch(prevMedia);
+    if (nextMedia) {
+      console.log(`Prefetching next media: ${nextMedia}`);
+      Image.prefetch(nextMedia);
+    }
+    if (prevMedia) {
+      console.log(`Prefetching previous media: ${prevMedia}`);
+      Image.prefetch(prevMedia);
+    }
 
     const checkFollowStatusAsync = async () => {
       if (currentUserId && memeUser.email) {
@@ -186,7 +209,8 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
     };
 
     checkFollowStatusAsync();
-  }, [currentMedia, mediaType, nextMedia, prevMedia, currentUserId, memeUser.email]);
+  }, [currentMedia, mediaType, nextMedia, prevMedia, currentUserId, memeUser.email, memes]);
+
 
   const handleFollow = useCallback(async () => {
     if (!currentUserId || !memeUser.email) return;
@@ -221,7 +245,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
     // Adjust these values as needed
     const updateLikePosition = (x: number, y: number) => {
       const xOffset = Platform.OS === 'ios' ? -100 : -100;
-      const yOffset = Platform.OS === 'ios' ? -250 : -200;
+      const yOffset = Platform.OS === 'ios' ? -250 : -220;
     
       setLikePosition({
         x: x + xOffset,
@@ -250,21 +274,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
     setLastTap(now);
   }, [lastTap, handleDoubleTap, handleSingleTap]);
 
-  
-
-  const handleSwipeUp = useCallback(() => {
-    if (currentIndex < memes.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      goToNextMedia();
-    }
-  }, [currentIndex, memes.length, goToNextMedia]);
-
-  const handleSwipeDown = useCallback(() => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      goToPrevMedia();
-    }
-  }, [currentIndex, goToPrevMedia]);
 
   const { panHandlers, translateY, animatedBlurIntensity } = usePanResponder({
     onSwipeUp: handleSwipeUp,
@@ -279,6 +288,11 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   });
 
   const renderMedia = useMemo(() => {
+    if (!currentMedia) {
+      return <Text style={styles.errorText}>Media not available</Text>;
+    }
+
+
     if (isLoading) {
       return <ActivityIndicator size="large" color="#1bd40b" />;
     }
@@ -380,6 +394,8 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
         formatDate={formatDate}
         animatedBlurIntensity={animatedBlurIntensity}
         iconAreaRef={iconAreaRef}
+        index={index}
+        currentIndex={currentIndex}
       />
       {showToast && (
         <View style={styles.toastContainer}>

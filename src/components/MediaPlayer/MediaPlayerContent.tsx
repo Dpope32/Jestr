@@ -28,6 +28,8 @@ interface IconsAndContentProps {
   memeUser: any;
   caption: string;
   uploadTimestamp: string;
+  index: number;
+  currentIndex: number;
   isFollowing: boolean;
   handleFollow: () => void;
   counts: {
@@ -62,9 +64,16 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   animatedBlurIntensity,
   iconAreaRef,
   isFollowing,
+  index,
+  currentIndex,
   handleFollow
 }) => {
+  const isActive = index === currentIndex;
   //console.log('IconsAndContent rendered');
+  if (!isActive) {
+    return null; // Don't render if not the active item
+  }
+
 
   const handleLikePress = () => {
     console.log('Like button pressed');

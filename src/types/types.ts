@@ -29,7 +29,8 @@ export interface User {
   }
   
   export type ProfileImage = {
-    uri: string;
+    url?: string;
+    uri?: string;
     width: number;
     height: number;
     type?: 'image' | 'video';
@@ -116,7 +117,7 @@ export type MediaPlayerProps = {
   toggleCommentFeed: () => void;
   goToPrevMedia: () => void;
   goToNextMedia: () => void;
-  memes?: Array<{ memeID: string }>; 
+  memes: Meme[];
   likedIndices: Set<number>;
   doubleLikedIndices: Set<number>;
   downloadedIndices: Set<number>;
@@ -131,6 +132,9 @@ export type MediaPlayerProps = {
   memeID: string;
   nextMedia: string | null;
   prevMedia: string | null;
+  index: number;
+  currentIndex: number;
+  setCurrentIndex: (index: number) => void;
   initialLikeStatus: {
     liked: boolean;
     doubleLiked: boolean;

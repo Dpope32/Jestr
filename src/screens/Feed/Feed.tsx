@@ -22,8 +22,16 @@ const Feed: React.FC = React.memo(() => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
-  const { memes, isLoading, isLoadingMore, error, fetchMoreMemes, fetchInitialMemes } = useMemes(user, accessToken);
+  const { memes, isLoading, error, fetchMoreMemes, fetchInitialMemes } = useMemes(user, accessToken);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+
+  useEffect(() => {
+    console.log('Feed - Memes updated:', memes.length);
+  }, [memes]);
+
+  useEffect(() => {
+    console.log('Feed - Current media index changed:', currentMediaIndex);
+  }, [currentMediaIndex]);
 
   // Fetch access token
   useEffect(() => {
@@ -63,10 +71,10 @@ const Feed: React.FC = React.memo(() => {
 
   // Handle End Reached
   const handleEndReached = useCallback(() => {
-    if (!isLoadingMore && memes.length > 0) {
+    if (!isLoading && memes.length > 0) {
       debouncedFetchMoreMemes();
     }
-  }, [isLoadingMore, memes.length, debouncedFetchMoreMemes]);
+  }, [isLoading, memes.length, debouncedFetchMoreMemes]);
 
   // Go to Next Media
   const goToNextMedia = useCallback(() => {
@@ -99,21 +107,25 @@ const Feed: React.FC = React.memo(() => {
   ), [user.profilePic, user.username, user.isAdmin, toggleProfilePanel, navigation]);
 
   // Memoized MemeList
-  const memoizedMemeList = useMemo(() => (
-    <MemeList
-      memes={memes}
-      user={user}
-      isDarkMode={isDarkMode}
-      onEndReached={handleEndReached}
-      toggleCommentFeed={toggleCommentFeed}
-      updateLikeStatus={updateLikeStatus}
-      currentMediaIndex={currentMediaIndex}
-      setCurrentMediaIndex={setCurrentMediaIndex}
-      currentUserId={user.email}
-      isCommentFeedVisible={isCommentFeedVisible}
-      isProfilePanelVisible={profilePanelVisible}
-    />
-  ), [memes, user, isDarkMode, handleEndReached, toggleCommentFeed, updateLikeStatus, currentMediaIndex]);
+  const memoizedMemeList = useMemo(() => {
+    console.log('Feed - Rendering MemeList with', memes.length, 'memes');
+    return (
+      <MemeList
+        memes={memes}
+        user={user}
+        isDarkMode={isDarkMode}
+        onEndReached={handleEndReached}
+        toggleCommentFeed={toggleCommentFeed}
+        updateLikeStatus={updateLikeStatus}
+        currentMediaIndex={currentMediaIndex}
+        setCurrentMediaIndex={setCurrentMediaIndex}
+        currentUserId={user.email}
+        isCommentFeedVisible={isCommentFeedVisible}
+        isProfilePanelVisible={profilePanelVisible}
+        isLoadingMore={isLoading}
+      />
+    );
+  }, [memes, user, isDarkMode, handleEndReached, toggleCommentFeed, updateLikeStatus, currentMediaIndex, isCommentFeedVisible, profilePanelVisible, isLoading]);
 
   // Memoized Bottom Panel
   const memoizedBottomPanel = useMemo(() => (
@@ -126,7 +138,7 @@ const Feed: React.FC = React.memo(() => {
   ), [handleHomeClick, currentMediaIndex, toggleCommentFeed, user]);
 
   // Rendering
-  if (isLoading) {
+  if (isLoading && memes.length === 0) {
     return <Text>Loading...</Text>;
   }
 
