@@ -150,6 +150,38 @@ const { width, height } = Dimensions.get('window');
           alignItems: 'center',
           elevation: 5,
         },
+        skeletonContainer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 15,
+          padding: 10,
+          backgroundColor: '#333',
+          borderRadius: 8,
+        },
+        skeletonProfilePic: {
+          width: 50,
+          height: 50,
+          borderRadius: 25,
+          backgroundColor: '#444',
+          marginRight: 15,
+        },
+        skeletonTextContainer: {
+          flex: 1,
+        },
+        skeletonText: {
+          height: 20,
+          backgroundColor: '#444',
+          marginBottom: 10,
+          borderRadius: 4,
+          width: '80%',
+        },
+        skeletonTextShort: {
+          height: 20,
+          backgroundColor: '#444',
+          borderRadius: 4,
+          width: '50%',
+        },
+        
       });
 
 export default styles;

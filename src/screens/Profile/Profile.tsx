@@ -33,6 +33,7 @@ type ProfileProps = {
 };
 
 
+
 export type TabName = 'posts' | 'liked' | 'history' | 'downloaded';
 
 const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
@@ -268,14 +269,15 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
           </TouchableOpacity>
           <Text style={styles.displayName}>{user?.displayName || 'Anon'}</Text>
           <Text style={styles.username}>@{user?.username || 'Username'}</Text>
-          <View style={styles.bioWrapper}>
-            <EditableBio
-              initialBio={user?.bio || user?.bio || 'No bio available'}
-              userEmail={user?.email || ''}
-              onBioUpdate={handleBioUpdate}
-              editable={false}
-            />
-          </View>
+          <View style={[styles.bioWrapper, { alignItems: 'flex-start', justifyContent: 'flex-start' }]}>
+  <EditableBio
+    initialBio={user?.bio || 'No bio available'}
+    userEmail={user?.email || ''}
+    onBioUpdate={handleBioUpdate}
+    editable={false}
+  />
+</View>
+
         </View>
         <View style={styles.statsContainer}>
           <View style={styles.followInfo}>
@@ -335,83 +337,92 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
         initialTab={followModalTab as 'followers' | 'following'}
       />
 
-      {selectedMeme && (
-        <Modal
-          visible={!!selectedMeme}
-          transparent={true}
-          onRequestClose={() => setSelectedMeme(null)}
+{selectedMeme && (
+  <Modal
+    visible={!!selectedMeme}
+    transparent={true}
+    onRequestClose={() => setSelectedMeme(null)}
+  >
+    <View style={styles.modalContainer}>
+      <MediaPlayer
+        memeUser={selectedMeme?.memeUser || {}}
+        mediaType={selectedMeme.mediaType}
+        currentMedia={selectedMeme.url}
+        prevMedia={currentMemeIndex > 0 ? tabMemes[currentMemeIndex - 1].url : null}
+        nextMedia={currentMemeIndex < tabMemes.length - 1 ? tabMemes[currentMemeIndex + 1].url : null}
+        username={selectedMeme.username}
+        caption={selectedMeme.caption}
+        uploadTimestamp={selectedMeme.uploadTimestamp}
+        handleLike={() => {}}
+        handleDownload={() => {}}
+        toggleCommentFeed={() => setIsCommentFeedVisible(!isCommentFeedVisible)}
+        goToPrevMedia={() => {
+          if (currentMemeIndex > 0) {
+            setCurrentMemeIndex(currentMemeIndex - 1);
+            setSelectedMeme(tabMemes[currentMemeIndex - 1]);
+          }
+        }}
+        goToNextMedia={() => {
+          if (currentMemeIndex < tabMemes.length - 1) {
+            setCurrentMemeIndex(currentMemeIndex + 1);
+            setSelectedMeme(tabMemes[currentMemeIndex + 1]);
+          }
+        }}
+        memes={tabMemes}  // Pass the memes array
+        likedIndices={new Set()}  // Replace with actual liked indices
+        doubleLikedIndices={new Set()}  // Replace with actual double liked indices
+        downloadedIndices={new Set()}  // Replace with actual downloaded indices
+        likeDislikeCounts={{}}  // Replace with actual like/dislike counts
+        currentMediaIndex={currentMemeIndex}  // Current index in the memes array
+        user={convertUserStateToUser(user)}
+        likeCount={selectedMeme.likeCount}
+        downloadCount={selectedMeme.downloadCount}
+        commentCount={selectedMeme.commentCount}
+        shareCount={selectedMeme.shareCount}
+        profilePicUrl={selectedMeme.profilePicUrl}
+        memeID={selectedMeme.memeID}
+        index={currentMemeIndex}  // Current index in the memes array
+        currentIndex={currentMemeIndex}  // Provide the current index as well
+        setCurrentIndex={setCurrentMemeIndex}  // A function to update the current index
+        initialLikeStatus={{ liked: false, doubleLiked: false }}  // Replace with actual like status
+        onLikeStatusChange={(memeID, status, newLikeCount) => {
+          // Implement the function to handle like status change
+        }}
+        liked={false}  // Replace with actual like status
+        doubleLiked={false}  // Replace with actual double like status
+        isDarkMode={isDarkMode}
+        onLongPressStart={() => {}}  // Implement this function as needed
+        onLongPressEnd={() => {}}  // Implement this function as needed
+        isCommentFeedVisible={isCommentFeedVisible}  // Add this prop
+        isProfilePanelVisible={false}  // Add this prop
+      />
+      <TouchableOpacity 
+        style={styles.closeButton} 
+        onPress={() => setSelectedMeme(null)}
+      >
+        <FontAwesomeIcon icon={faTimes} size={24} color="#FFF" />
+      </TouchableOpacity>
+      {selectedTab === 'posts' && (
+        <TouchableOpacity 
+          style={styles.deleteButton} 
+          onPress={() => handleDeleteMeme(selectedMeme.memeID)}
         >
-          <View style={styles.modalContainer}>
-            <MediaPlayer
-              memeUser={selectedMeme?.memeUser || {}}
-              mediaType={selectedMeme.mediaType}
-              currentMedia={selectedMeme.url}
-              prevMedia={currentMemeIndex > 0 ? tabMemes[currentMemeIndex - 1].url : null}
-              nextMedia={currentMemeIndex < tabMemes.length - 1 ? tabMemes[currentMemeIndex + 1].url : null}
-              username={selectedMeme.username}
-              caption={selectedMeme.caption}
-              uploadTimestamp={selectedMeme.uploadTimestamp}
-              handleLike={() => { } }
-              handleDownload={() => { } }
-              toggleCommentFeed={() => setIsCommentFeedVisible(!isCommentFeedVisible)}
-              goToPrevMedia={() => {
-                if (currentMemeIndex > 0) {
-                  setCurrentMemeIndex(currentMemeIndex - 1);
-                  setSelectedMeme(tabMemes[currentMemeIndex - 1]);
-                }
-              } }
-              goToNextMedia={() => {
-                if (currentMemeIndex < tabMemes.length - 1) {
-                  setCurrentMemeIndex(currentMemeIndex + 1);
-                  setSelectedMeme(tabMemes[currentMemeIndex + 1]);
-                }
-              } }
-              likedIndices={new Set()}
-              doubleLikedIndices={new Set()}
-              downloadedIndices={new Set()}
-              likeDislikeCounts={{}}
-              currentMediaIndex={currentMemeIndex}
-              user={convertUserStateToUser(user)}
-              likeCount={selectedMeme.likeCount}
-              downloadCount={selectedMeme.downloadCount}
-              commentCount={selectedMeme.commentCount}
-              shareCount={selectedMeme.shareCount}
-              profilePicUrl={selectedMeme.profilePicUrl}
-              memeID={selectedMeme.memeID}
-              initialLikeStatus={{ liked: false, doubleLiked: false }}
-              onLikeStatusChange={onLikeStatusChange}
-              liked={false}
-              doubleLiked={false}
-              isDarkMode={isDarkMode} onLongPressStart={function (): void {
-                throw new Error('Function not implemented.');
-              } } onLongPressEnd={function (): void {
-                throw new Error('Function not implemented.');
-              } }            />
-            <TouchableOpacity 
-              style={styles.closeButton} 
-              onPress={() => setSelectedMeme(null)}
-            >
-              <FontAwesomeIcon icon={faTimes} size={24} color="#FFF" />
-            </TouchableOpacity>
-            {selectedTab === 'posts' && (
-              <TouchableOpacity 
-                style={styles.deleteButton} 
-                onPress={() => handleDeleteMeme(selectedMeme.memeID)}
-              >
-                <Text style={styles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-            )}
-            {selectedTab === 'downloaded' && (
-              <TouchableOpacity 
-                style={styles.removeButton} 
-                onPress={() => handleRemoveDownloadedMeme(selectedMeme.memeID)}
-              >
-                <Text style={styles.removeButtonText}>Remove</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </Modal>
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
       )}
+      {selectedTab === 'downloaded' && (
+        <TouchableOpacity 
+          style={styles.removeButton} 
+          onPress={() => handleRemoveDownloadedMeme(selectedMeme.memeID)}
+        >
+          <Text style={styles.removeButtonText}>Remove</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  </Modal>
+)}
+
+
       {isEditProfileModalVisible && (
         <EditProfileModal
           isVisible={isEditProfileModalVisible}

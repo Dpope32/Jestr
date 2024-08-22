@@ -9,10 +9,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: height,
     width: width,
-    backgroundColor: '#000', // Ensure the background is black
   },
   blurInner: {
-    borderRadius: 10,
+    borderRadius: 12, // Slightly increased for a more modern look
   },
   videoWrapper: {
     flex: 1,
@@ -30,7 +29,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingBottom: Platform.OS === 'ios' ? 260 : 100, // Adjust for bottom navigation
-    backgroundColor: '#000', 
   },
   blurContainer: {
     position: 'absolute',
@@ -43,13 +41,12 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 220 : 150, // Adjust based on platform
+    bottom: Platform.OS === 'ios' ? 250 : 150, // Adjust based on platform
     left: 0,
-    right: 20,
+    right: 140,
     flexDirection: 'row',
     padding: 5,
     borderRadius: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0)', // Semi-transparent background
   },
   contentContainer: {
     flex: 1,
@@ -64,8 +61,8 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
     paddingHorizontal: 0,
-    gap: 1,
-    bottom: Platform.OS === 'ios' ? 240 : 150,
+    gap: 10,
+    bottom: Platform.OS === 'ios' ? 235 : 150,
     alignItems: 'center',
   },
   memeImage: {

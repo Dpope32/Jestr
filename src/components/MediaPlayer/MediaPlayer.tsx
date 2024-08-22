@@ -353,13 +353,20 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
         styles.container,
         {
           transform: [{ translateY }],
-          backgroundColor: isDarkMode ? '#000' : '#1C1C1C'
-        }
+          backgroundColor: isDarkMode ? '#000' : '#1C1C1C',
+        },
       ]}
       {...panHandlers}
     >
       <TouchableWithoutFeedback onPress={handleTap}>
-        <View style={styles.mediaContainer}>
+        <View
+          style={[
+            styles.mediaContainer,
+            {
+              backgroundColor: isDarkMode ? '#000' : '#1C1C1C',
+            },
+          ]}
+        >
           {renderMedia}
           {showLikeAnimation && (
             <LottieView
@@ -396,17 +403,24 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
         iconAreaRef={iconAreaRef}
         index={index}
         currentIndex={currentIndex}
+        onShare={() => setShowShareModal(true)}
+        user={user}
+        memeID={memeID}
       />
       {showToast && (
-        <View style={styles.toastContainer}>
+        <View
+          style={[
+            styles.toastContainer,
+            {
+              backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(28, 28, 28, 0.8)',
+            },
+          ]}
+        >
           <FontAwesomeIcon icon={faCheckCircle} size={24} color="#4CAF50" />
           <Text style={styles.toastMessage}>{toastMessage}</Text>
         </View>
       )}
-      <SaveSuccessModal
-        visible={showSaveModal}
-        onClose={() => setShowSaveModal(false)}
-      />
+      <SaveSuccessModal visible={showSaveModal} onClose={() => setShowSaveModal(false)} />
       <ShareModal
         visible={showShareModal}
         onClose={() => setShowShareModal(false)}
@@ -414,17 +428,17 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
         onShare={onShare}
         currentMedia={currentMedia}
       />
-      <Animated.View 
+      <Animated.View
         style={[
-          StyleSheet.absoluteFill, 
-          { 
+          StyleSheet.absoluteFill,
+          {
             opacity: blurOpacity,
-            backgroundColor: 'rgba(0,0,0,0.5)'
-          }
+            backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(28, 28, 28, 0.5)',
+          },
         ]}
       >
         <BlurView intensity={20} style={StyleSheet.absoluteFill} />
-      </Animated.View>    
+      </Animated.View>
       <LongPressModal
         isVisible={isLongPressModalVisible}
         onClose={closeLongPressModal}
@@ -435,7 +449,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
         }}
         onSaveToProfile={handleDownloadPress}
         onShare={() => setShowShareModal(true)}
-        onReport={() => {/* Implement report functionality */}}
+        onReport={() => {
+          /* Implement report functionality */
+        }}
         user={user}
         memeID={memeID}
         isSaved={isSaved}
@@ -444,6 +460,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
       />
     </Animated.View>
   );
+  
 });
 
 export default MediaPlayer;

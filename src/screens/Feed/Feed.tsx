@@ -151,7 +151,7 @@ const Feed: React.FC = React.memo(() => {
   }
 
   return (
-    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' }]}>
       {memoizedTopPanel}
       {memoizedMemeList}
       {memoizedBottomPanel}
@@ -181,6 +181,7 @@ const Feed: React.FC = React.memo(() => {
       )}
     </View>
   );
+  
 });
 
 export default Feed;

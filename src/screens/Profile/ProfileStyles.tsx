@@ -67,8 +67,11 @@ export default StyleSheet.create({
   },
   bioWrapper: {
     width: '100%',
-    marginLeft: 100,
+    paddingHorizontal: 10,
+    alignItems: 'flex-start',  // Align items to the start (left)
+    justifyContent: 'flex-start',  // Justify content to start
   },
+  
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
