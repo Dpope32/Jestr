@@ -1,7 +1,6 @@
-// userStore.ts
-import { create } from 'zustand';
-import { ImagePickerAsset } from 'expo-image-picker';
-import { Meme, ProfileImage } from '../types/types';  // Adjust the import path as needed
+import {create} from 'zustand';
+import {Meme, ProfileImage} from '../types/types';
+// import { ImagePickerAsset } from 'expo-image-picker';
 
 export interface UserState {
   resetUserState: () => void;
@@ -10,7 +9,7 @@ export interface UserState {
   displayName: string;
   bio: string;
   creationDate: string;
-  CreationDate ? : string;
+  CreationDate?: string;
   followersCount: number;
   language: 'en' | 'es' | 'fr'; // We'll just use 'en' for now
   notificationsEnabled: boolean;
@@ -23,7 +22,7 @@ export interface UserState {
   downloadedMemes: Meme[];
   viewedMemes: Meme[];
   profilePic: string | ProfileImage | null; // Allow string or ProfileImage
-  headerPic: string | ProfileImage | null;  // Allow string or ProfileImage
+  headerPic: string | ProfileImage | null; // Allow string or ProfileImage
   setDarkMode?: (darkMode: boolean) => void;
   setLanguage?: (language: 'en' | 'es' | 'fr') => void;
   setLikesPublic?: (likesPublic: boolean) => void;
@@ -45,19 +44,23 @@ export interface UserState {
   incrementFollowingCount: () => void;
   decrementFollowingCount: () => void;
 }
-export const useUserStore = create<UserState>((set) => ({
+export const useUserStore = create<UserState>(set => ({
   bio: '',
   username: '',
   displayName: '',
   email: '',
   followersCount: 0,
   followingCount: 0,
-  setFollowersCount: (count) => set({ followersCount: count }),
-  setFollowingCount: (count) => set({ followingCount: count }),
-  incrementFollowersCount: () => set((state) => ({ followersCount: state.followersCount + 1 })),
-  decrementFollowersCount: () => set((state) => ({ followersCount: Math.max(0, state.followersCount - 1) })),
-  incrementFollowingCount: () => set((state) => ({ followingCount: state.followingCount + 1 })),
-  decrementFollowingCount: () => set((state) => ({ followingCount: Math.max(0, state.followingCount - 1) })),
+  setFollowersCount: count => set({followersCount: count}),
+  setFollowingCount: count => set({followingCount: count}),
+  incrementFollowersCount: () =>
+    set(state => ({followersCount: state.followersCount + 1})),
+  decrementFollowersCount: () =>
+    set(state => ({followersCount: Math.max(0, state.followersCount - 1)})),
+  incrementFollowingCount: () =>
+    set(state => ({followingCount: state.followingCount + 1})),
+  decrementFollowingCount: () =>
+    set(state => ({followingCount: Math.max(0, state.followingCount - 1)})),
   creationDate: '',
   posts: [],
   likedMemes: [],
@@ -69,30 +72,31 @@ export const useUserStore = create<UserState>((set) => ({
   language: 'en',
   likesPublic: true,
   notificationsEnabled: true,
-  setDarkMode: (darkMode: boolean) => set({ darkMode }),
-  setLanguage: (language) => set({ language }),
-  setLikesPublic: (likesPublic: boolean) => set({ likesPublic }),
-  setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
-  setBio: (bio: string) => set({ bio }),
-  setHeaderPic: (headerPic: string | ProfileImage | null) => set({ headerPic }),
+  setDarkMode: (darkMode: boolean) => set({darkMode}),
+  setLanguage: language => set({language}),
+  setLikesPublic: (likesPublic: boolean) => set({likesPublic}),
+  setNotificationsEnabled: notificationsEnabled => set({notificationsEnabled}),
+  setBio: (bio: string) => set({bio}),
+  setHeaderPic: (headerPic: string | ProfileImage | null) => set({headerPic}),
   setProfilePic: (profilePic: string | ProfileImage | null) => {
     // Fallback to a default image if `profilePic` is empty
     if (typeof profilePic === 'string' && !profilePic.trim()) {
       profilePic = null;
     }
-    set({ profilePic });
+    set({profilePic});
   },
-  setPosts: (posts) => set({ posts }),
-  setLikedMemes: (memes) => set({ likedMemes: memes }),
-  setDownloadedMemes: (memes) => set({ downloadedMemes: memes }),
-  setViewedMemes: (memes) => set({ viewedMemes: memes }),
-  setUserDetails: (details) => set((state) => ({
-    ...state,
-    ...details,
-    followingCount: details.followingCount, // Make sure this line exists
-    profilePic: details.profilePic || state.profilePic,
-    headerPic: details.headerPic || state.headerPic,
-  })),
+  setPosts: posts => set({posts}),
+  setLikedMemes: memes => set({likedMemes: memes}),
+  setDownloadedMemes: memes => set({downloadedMemes: memes}),
+  setViewedMemes: memes => set({viewedMemes: memes}),
+  setUserDetails: details =>
+    set(state => ({
+      ...state,
+      ...details,
+      followingCount: details.followingCount, // Make sure this line exists
+      profilePic: details.profilePic || state.profilePic,
+      headerPic: details.headerPic || state.headerPic,
+    })),
 
   resetUserState: () =>
     set({

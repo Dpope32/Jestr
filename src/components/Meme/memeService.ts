@@ -1,73 +1,81 @@
-import { S3Client } from "@aws-sdk/client-s3";
-import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity";
-import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity";
-import { API_URL, AWS_REGION, COGNITO_IDENTITY_POOL_ID } from './config';
-import {  User } from '../../types/types';
-import { CommentType } from '../Modals/CommentFeed';
-import { Meme, FetchMemesResult } from '../../types/types'
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 import * as FileSystem from 'expo-file-system';
+import {API_URL, AWS_REGION, COGNITO_IDENTITY_POOL_ID} from './config';
 
-const s3Client = new S3Client({
-  region: AWS_REGION,
-  credentials: fromCognitoIdentityPool({
-    client: new CognitoIdentityClient({ region: AWS_REGION }),
-    identityPoolId: COGNITO_IDENTITY_POOL_ID
-  }),
-});
+import {User} from '../../types/types';
+import {CommentType} from '../Modals/CommentFeed';
+import {FetchMemesResult} from '../../types/types';
+// import {S3Client} from '@aws-sdk/client-s3';
+// import {CognitoIdentityClient} from '@aws-sdk/client-cognito-identity';
+// import {fromCognitoIdentityPool} from '@aws-sdk/credential-provider-cognito-identity';
+
+// const s3Client = new S3Client({
+//   region: AWS_REGION,
+//   credentials: fromCognitoIdentityPool({
+//     client: new CognitoIdentityClient({region: AWS_REGION}),
+//     identityPoolId: COGNITO_IDENTITY_POOL_ID,
+//   }),
+// });
 
 export const fetchMemes = async (
   lastEvaluatedKey: string | null = null,
   userEmail: string,
   limit: number = 5,
-  accessToken: string
+  accessToken: string,
 ): Promise<FetchMemesResult> => {
   const maxRetries = 3;
   let retries = 0;
 
   while (retries < maxRetries) {
     try {
-   //console.log('fetchMemes called with:', { lastEvaluatedKey, userEmail, limit, accessToken: accessToken.substring(0, 10) + '...' });
-    
-    const response = await fetch(`${API_URL}/fetchMemes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      },
-      body: JSON.stringify({ operation: 'fetchMemes', lastEvaluatedKey, userEmail, limit })
-    });
-    
-   // console.log('fetchMemes response status:', response.status);
-    
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('Error response body:', errorBody);
-      throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
+      //console.log('fetchMemes called with:', { lastEvaluatedKey, userEmail, limit, accessToken: accessToken.substring(0, 10) + '...' });
+
+      const response = await fetch(`${API_URL}/fetchMemes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          operation: 'fetchMemes',
+          lastEvaluatedKey,
+          userEmail,
+          limit,
+        }),
+      });
+
+      // console.log('fetchMemes response status:', response.status);
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('Error response body:', errorBody);
+        throw new Error(
+          `HTTP error! status: ${response.status}, body: ${errorBody}`,
+        );
+      }
+
+      const data = await response.json();
+      //console.log('fetchMemes response data:', JSON.stringify(data, null, 2));
+
+      if (!data.data || !Array.isArray(data.data.memes)) {
+        throw new Error('Invalid response format');
+      }
+
+      return {
+        memes: data.data.memes,
+        lastEvaluatedKey: data.data.lastEvaluatedKey,
+      };
+    } catch (error) {
+      console.error(`Attempt ${retries + 1} failed:`, error);
+      retries++;
+      if (retries === maxRetries) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000 * retries));
     }
-    
-    const data = await response.json();
-   //console.log('fetchMemes response data:', JSON.stringify(data, null, 2));
-    
-    if (!data.data || !Array.isArray(data.data.memes)) {
-      throw new Error('Invalid response format');
-    }
-    
-    return {
-      memes: data.data.memes,
-      lastEvaluatedKey: data.data.lastEvaluatedKey
-    };
-  } catch (error) {
-    console.error(`Attempt ${retries + 1} failed:`, error);
-    retries++;
-    if (retries === maxRetries) {
-      throw error;
-    }
-    await new Promise(resolve => setTimeout(resolve, 1000 * retries));
   }
-}
-throw new Error('Max retries reached');
+  throw new Error('Max retries reached');
 };
 
 export const uploadMeme = async (
@@ -76,47 +84,51 @@ export const uploadMeme = async (
   username: string,
   caption: string = '',
   tags: string[] = [],
-  mediaType: 'image' | 'video'
+  mediaType: 'image' | 'video',
 ) => {
   try {
-    const fileName = `${userEmail}-meme-${Date.now()}.${mediaType === 'video' ? 'mp4' : 'jpg'}`;
+    const fileName = `${userEmail}-meme-${Date.now()}.${
+      mediaType === 'video' ? 'mp4' : 'jpg'
+    }`;
     const contentType = mediaType === 'video' ? 'video/mp4' : 'image/jpeg';
 
-   // console.log('Requesting presigned URL for:', fileName);
+    // console.log('Requesting presigned URL for:', fileName);
 
     const presignedUrlResponse = await fetch(`${API_URL}/getPresignedUrl`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         operation: 'getPresignedUrl',
         fileName,
-        fileType: contentType
+        fileType: contentType,
       }),
     });
-    
+
     if (!presignedUrlResponse.ok) {
       const errorText = await presignedUrlResponse.text();
       console.error('Presigned URL error response:', errorText);
-      throw new Error(`Failed to get presigned URL: ${presignedUrlResponse.status} ${presignedUrlResponse.statusText}`);
+      throw new Error(
+        `Failed to get presigned URL: ${presignedUrlResponse.status} ${presignedUrlResponse.statusText}`,
+      );
     }
-    
-    const presignedData = await presignedUrlResponse.json();
-   // console.log('Presigned URL data:', presignedData);
 
-    const { uploadURL, fileKey } = presignedData.data;
+    const presignedData = await presignedUrlResponse.json();
+    // console.log('Presigned URL data:', presignedData);
+
+    const {uploadURL, fileKey} = presignedData.data;
 
     if (!uploadURL) {
       throw new Error('Received null or undefined uploadURL');
     }
 
-   // console.log('Uploading file to:', uploadURL);
+    // console.log('Uploading file to:', uploadURL);
 
     const uploadResult = await FileSystem.uploadAsync(uploadURL, mediaUri, {
       httpMethod: 'PUT',
-      headers: { 'Content-Type': contentType },
+      headers: {'Content-Type': contentType},
     });
 
-   // console.log('Upload result:', uploadResult);
+    // console.log('Upload result:', uploadResult);
 
     if (uploadResult.status !== 200) {
       throw new Error(`Failed to upload file to S3: ${uploadResult.status}`);
@@ -124,7 +136,7 @@ export const uploadMeme = async (
 
     const metadataResponse = await fetch(`${API_URL}/uploadMeme`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         operation: 'uploadMeme',
         email: userEmail,
@@ -139,45 +151,54 @@ export const uploadMeme = async (
     if (!metadataResponse.ok) {
       const errorText = await metadataResponse.text();
       console.error('Metadata response:', errorText);
-      throw new Error(`Failed to process metadata: ${metadataResponse.status} ${metadataResponse.statusText}`);
+      throw new Error(
+        `Failed to process metadata: ${metadataResponse.status} ${metadataResponse.statusText}`,
+      );
     }
 
     const data = await metadataResponse.json();
-    return { url: data.data.url };
+    return {url: data.data.url};
   } catch (error) {
     console.error('Error uploading meme:', error);
     throw error;
   }
 };
 
-
 export const getLikeStatus = async (memeID: string, userEmail: string) => {
   try {
     if (!memeID || !userEmail) {
-      console.error('getLikeStatus called with invalid parameters:', { memeID, userEmail });
+      console.error('getLikeStatus called with invalid parameters:', {
+        memeID,
+        userEmail,
+      });
       return null;
     }
 
-   // console.log(`Fetching like status for memeID: ${memeID}, userEmail: ${userEmail}`);
-    
-    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getLikeStatus', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        operation: 'getLikeStatus',
-        memeID,
-        userEmail,
-      }),
-    });
+    // console.log(`Fetching like status for memeID: ${memeID}, userEmail: ${userEmail}`);
 
-   // console.log(`Response status: ${response.status}`);
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getLikeStatus',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation: 'getLikeStatus',
+          memeID,
+          userEmail,
+        }),
+      },
+    );
+
+    // console.log(`Response status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Error response: ${errorText}`);
-      throw new Error(`Failed to get like status: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to get like status: ${response.status} ${response.statusText}`,
+      );
     }
 
     const data = await response.json();
@@ -197,8 +218,8 @@ export const getLikeStatus = async (memeID: string, userEmail: string) => {
         ShareCount: data.data.ShareCount,
         CommentCount: data.data.CommentCount,
         DownloadsCount: data.data.DownloadsCount,
-        UploadTimestamp: data.data.UploadTimestamp
-      }
+        UploadTimestamp: data.data.UploadTimestamp,
+      },
     };
   } catch (error) {
     console.error('Error getting meme info and like status:', error);
@@ -211,9 +232,9 @@ export const fetchDownloadedMemes = async (email: string) => {
     const response = await fetch(`${API_URL}/memes/downloaded`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ operation: 'fetchDownloadedMemes', email })
+      body: JSON.stringify({operation: 'fetchDownloadedMemes', email}),
     });
     if (!response.ok) {
       throw new Error('Failed to fetch downloaded memes');
@@ -228,18 +249,21 @@ export const fetchDownloadedMemes = async (email: string) => {
 
 export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
   try {
-//    console.log(`Fetching comments for memeID: ${memeID}`);
+    //    console.log(`Fetching comments for memeID: ${memeID}`);
     const response = await fetch(`${API_URL}/getComments`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ operation: 'getComments', memeID })
+      body: JSON.stringify({operation: 'getComments', memeID}),
     });
 
     const data = await response.json();
- //   console.log(`Raw response data:`, JSON.stringify(data, null, 2));
+    //   console.log(`Raw response data:`, JSON.stringify(data, null, 2));
 
     if (!response.ok) {
-      console.error(`Failed to fetch comments for memeID ${memeID}:`, data.message);
+      console.error(
+        `Failed to fetch comments for memeID ${memeID}:`,
+        data.message,
+      );
       return [];
     }
 
@@ -260,11 +284,11 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
       replies: [],
     }));
 
-  //  console.log(`Flat comments:`, JSON.stringify(flatComments, null, 2));
+    //  console.log(`Flat comments:`, JSON.stringify(flatComments, null, 2));
 
     const organizedComments = organizeCommentsIntoThreads(flatComments);
-    
- //   console.log(`Organized comments:`, JSON.stringify(organizedComments, null, 2));
+
+    //   console.log(`Organized comments:`, JSON.stringify(organizedComments, null, 2));
 
     return organizedComments;
   } catch (error) {
@@ -273,7 +297,9 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
   }
 };
 
-const organizeCommentsIntoThreads = (flatComments: CommentType[]): CommentType[] => {
+const organizeCommentsIntoThreads = (
+  flatComments: CommentType[],
+): CommentType[] => {
   const commentMap = new Map<string, CommentType>();
   const topLevelComments: CommentType[] = [];
 
@@ -297,9 +323,14 @@ const organizeCommentsIntoThreads = (flatComments: CommentType[]): CommentType[]
   return topLevelComments;
 };
 
-export const postComment = async (memeID: string, text: string, user: User, parentCommentID?: string): Promise<void> => {
+export const postComment = async (
+  memeID: string,
+  text: string,
+  user: User,
+  parentCommentID?: string,
+): Promise<void> => {
   const commentData = {
-    operation: "postComment",
+    operation: 'postComment',
     memeID,
     text,
     email: user.email,
@@ -308,10 +339,10 @@ export const postComment = async (memeID: string, text: string, user: User, pare
     ParentCommentID: parentCommentID,
   };
 
- // console.log(`Posting comment for memeID: ${memeID} by user: ${user.username}`);
+  // console.log(`Posting comment for memeID: ${memeID} by user: ${user.username}`);
   const response = await fetch(`${API_URL}/postComment`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(commentData),
   });
 
@@ -328,7 +359,7 @@ export const updateCommentReaction = async (
   commentID: string,
   memeID: string,
   incrementLikes: boolean,
-  incrementDislikes: boolean
+  incrementDislikes: boolean,
 ): Promise<void> => {
   const requestBody = {
     operation: 'updateCommentReaction',
@@ -338,11 +369,11 @@ export const updateCommentReaction = async (
     incrementDislikes,
   };
 
- // console.log('Updating comment reaction for commentID:', commentID);
+  // console.log('Updating comment reaction for commentID:', commentID);
 
   const response = await fetch(`${API_URL}/updateCommentReaction`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(requestBody),
   });
 
@@ -352,10 +383,16 @@ export const updateCommentReaction = async (
     throw new Error(data.message);
   }
 
- // console.log('Comment reaction updated successfully:', data);
+  // console.log('Comment reaction updated successfully:', data);
 };
 
-export const updateMemeReaction = async (memeID: string, incrementLikes: boolean, doubleLike: boolean, incrementDownloads: boolean, email: string): Promise<void> => {
+export const updateMemeReaction = async (
+  memeID: string,
+  incrementLikes: boolean,
+  doubleLike: boolean,
+  incrementDownloads: boolean,
+  email: string,
+): Promise<void> => {
   const requestBody = {
     operation: 'updateMemeReaction',
     memeID,
@@ -365,7 +402,7 @@ export const updateMemeReaction = async (memeID: string, incrementLikes: boolean
     email,
   };
 
- // console.log('Updating meme reaction with requestBody:', requestBody);
+  // console.log('Updating meme reaction with requestBody:', requestBody);
 
   const response = await fetch(`${API_URL}/updateMemeReaction`, {
     method: 'POST',
@@ -381,5 +418,5 @@ export const updateMemeReaction = async (memeID: string, incrementLikes: boolean
     throw new Error(data.message);
   }
 
- // console.log('Meme reaction updated successfully:', data);
+  // console.log('Meme reaction updated successfully:', data);
 };

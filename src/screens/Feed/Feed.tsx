@@ -1,37 +1,60 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { debounce } from 'lodash';
-import { useTheme } from '../../theme/ThemeContext';
-import { useUserStore } from '../../utils/userStore';
-import { useMemes } from './useMemes';
+import React, {useState, useCallback, useMemo, useEffect} from 'react';
+import {View, Text} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {debounce, set} from 'lodash';
+
+import {useTheme} from '../../theme/ThemeContext';
+import {useMemes} from './useMemes';
+import {useUserStore} from '../../utils/userStore';
+import {getToken} from '../../utils/secureStore';
+import {fetchComments} from '../../components/Meme/memeService';
+
+import styles from './Feed.styles';
+import {RootStackParamList, User} from '../../types/types';
 import TopPanel from '../../components/Panels/TopPanel';
 import BottomPanel from '../../components/Panels/BottomPanel';
 import ProfilePanel from '../../components/Panels/ProfilePanel';
 import CommentFeed from '../../components/Modals/CommentFeed';
 import MemeList from '../../components/MediaPlayer/MemeList';
-import styles from './Feed.styles';
-import { RootStackParamList, User } from '../../types/types';
-import { getToken } from '../../utils/secureStore';
 
 const Feed: React.FC = React.memo(() => {
+  const {isDarkMode} = useTheme();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { isDarkMode } = useTheme();
   const user = useUserStore(state => state as User);
+
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
-  const { memes, isLoading, error, fetchMoreMemes, fetchInitialMemes } = useMemes(user, accessToken);
+  const {memes, isLoading, error, fetchMoreMemes, fetchInitialMemes} = useMemes(
+    user,
+    accessToken,
+  );
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
-  useEffect(() => {
-    console.log('Feed - Memes updated:', memes.length);
-  }, [memes]);
+  const [currCommentsLength, setCurrCommentsLength] = useState(0);
+
+  // NOT NECESSARY, memes[currentMediaIndex].commentCount is appropiate and already available
+  // to pass through props to child components
+  // and would be the latest value from BackEnd
+  const updateCommentCount = async (memeID: string) => {
+    const updatedComments = await fetchComments(memeID);
+    // console.log('Updated comments:', updatedComments.length);
+    setCurrCommentsLength(updatedComments.length);
+  };
+
+  // useEffect(() => {
+  //   console.log('Feed - Memes updated:', memes.length);
+  // }, [memes]);
 
   useEffect(() => {
     console.log('Feed - Current media index changed:', currentMediaIndex);
-  }, [currentMediaIndex]);
+    // console.log('memes[currentMediaIndex].memeID', memes[currentMediaIndex]);
+    // if (memes[currentMediaIndex]) {
+    //   console.log('111111');
+    //   updateCommentCount(memes[currentMediaIndex].memeID);
+    // }
+  }, [currentMediaIndex, memes]);
 
   // Fetch access token
   useEffect(() => {
@@ -54,8 +77,8 @@ const Feed: React.FC = React.memo(() => {
 
   // Debounced Fetch More Memes
   const debouncedFetchMoreMemes = useMemo(
-    () => debounce(fetchMoreMemes, 500, { leading: true, trailing: false }),
-    [fetchMoreMemes]
+    () => debounce(fetchMoreMemes, 500, {leading: true, trailing: false}),
+    [fetchMoreMemes],
   );
 
   // Handle Home Click
@@ -65,9 +88,12 @@ const Feed: React.FC = React.memo(() => {
   }, [fetchInitialMemes]);
 
   // Update Like Status
-  const updateLikeStatus = useCallback((memeID: string, status: any, newLikeCount: number) => {
-    console.log('Like status updated:', { memeID, status, newLikeCount });
-  }, []);
+  const updateLikeStatus = useCallback(
+    (memeID: string, status: any, newLikeCount: number) => {
+      console.log('Like status updated:', {memeID, status, newLikeCount});
+    },
+    [],
+  );
 
   // Handle End Reached
   const handleEndReached = useCallback(() => {
@@ -76,35 +102,28 @@ const Feed: React.FC = React.memo(() => {
     }
   }, [isLoading, memes.length, debouncedFetchMoreMemes]);
 
-  // Go to Next Media
-  const goToNextMedia = useCallback(() => {
-    setCurrentMediaIndex((prevIndex) => {
-      const nextIndex = Math.min(memes.length - 1, prevIndex + 1);
-      if (nextIndex === memes.length - 1) {
-        handleEndReached();
-      }
-      return nextIndex;
-    });
-  }, [memes.length, handleEndReached]);
-
-  // Go to Previous Media
-  const goToPrevMedia = useCallback(() => {
-    setCurrentMediaIndex((prevIndex) => Math.max(0, prevIndex - 1));
-  }, []);
-
   // Memoized Top Panel
-  const memoizedTopPanel = useMemo(() => (
-    <TopPanel
-      onProfileClick={toggleProfilePanel}
-      profilePicUrl={user.profilePic || ''}
-      username={user.username || ''}
-      enableDropdown={true}
-      showLogo={true}
-      isAdmin={user.isAdmin || false}
-      isUploading={false}
-      onAdminClick={() => navigation.navigate('AdminPage')}
-    />
-  ), [user.profilePic, user.username, user.isAdmin, toggleProfilePanel, navigation]);
+  const memoizedTopPanel = useMemo(
+    () => (
+      <TopPanel
+        onProfileClick={toggleProfilePanel}
+        profilePicUrl={user.profilePic || ''}
+        username={user.username || ''}
+        enableDropdown={true}
+        showLogo={true}
+        isAdmin={user.isAdmin || false}
+        isUploading={false}
+        onAdminClick={() => navigation.navigate('AdminPage')}
+      />
+    ),
+    [
+      user.profilePic,
+      user.username,
+      user.isAdmin,
+      toggleProfilePanel,
+      navigation,
+    ],
+  );
 
   // Memoized MemeList
   const memoizedMemeList = useMemo(() => {
@@ -123,19 +142,35 @@ const Feed: React.FC = React.memo(() => {
         isCommentFeedVisible={isCommentFeedVisible}
         isProfilePanelVisible={profilePanelVisible}
         isLoadingMore={isLoading}
+        numOfComments={currCommentsLength}
       />
     );
-  }, [memes, user, isDarkMode, handleEndReached, toggleCommentFeed, updateLikeStatus, currentMediaIndex, isCommentFeedVisible, profilePanelVisible, isLoading]);
+  }, [
+    memes,
+    user,
+    isDarkMode,
+    handleEndReached,
+    toggleCommentFeed,
+    updateLikeStatus,
+    currentMediaIndex,
+    isCommentFeedVisible,
+    profilePanelVisible,
+    isLoading,
+    currCommentsLength,
+  ]);
 
   // Memoized Bottom Panel
-  const memoizedBottomPanel = useMemo(() => (
-    <BottomPanel
-      onHomeClick={handleHomeClick}
-      currentMediaIndex={currentMediaIndex}
-      toggleCommentFeed={toggleCommentFeed}
-      user={user}
-    />
-  ), [handleHomeClick, currentMediaIndex, toggleCommentFeed, user]);
+  const memoizedBottomPanel = useMemo(
+    () => (
+      <BottomPanel
+        onHomeClick={handleHomeClick}
+        currentMediaIndex={currentMediaIndex}
+        toggleCommentFeed={toggleCommentFeed}
+        user={user}
+      />
+    ),
+    [handleHomeClick, currentMediaIndex, toggleCommentFeed, user],
+  );
 
   // Rendering
   if (isLoading && memes.length === 0) {
@@ -151,7 +186,11 @@ const Feed: React.FC = React.memo(() => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' }]}>
+    <View
+      style={[
+        styles.container,
+        {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
+      ]}>
       {memoizedTopPanel}
       {memoizedMemeList}
       {memoizedBottomPanel}
@@ -176,12 +215,11 @@ const Feed: React.FC = React.memo(() => {
           user={user}
           isCommentFeedVisible={isCommentFeedVisible}
           toggleCommentFeed={toggleCommentFeed}
-          updateCommentCount={() => {}}
+          updateCommentCount={updateCommentCount}
         />
       )}
     </View>
   );
-  
 });
 
 export default Feed;

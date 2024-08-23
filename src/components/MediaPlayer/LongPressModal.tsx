@@ -1,49 +1,91 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Image, Dimensions, Platform, TouchableWithoutFeedback } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faLink, faSave, faShare, faFlag, faUser, faDownload } from '@fortawesome/free-solid-svg-icons';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+  Image,
+  Dimensions,
+  Platform,
+  TouchableWithoutFeedback,
+  Alert,
+  Linking,
+} from 'react-native';
+import {BlurView} from 'expo-blur';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faLink,
+  faSave,
+  faShare,
+  faFlag,
+  faUser,
+} from '@fortawesome/free-solid-svg-icons';
+import Toast from 'react-native-toast-message';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
 import * as Haptics from 'expo-haptics';
-import Toast, {BaseToast, BaseToastProps, ErrorToast , ToastConfig, ToastConfigParams } from 'react-native-toast-message';
+import * as FileSystem from 'expo-file-system';
 
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 
 interface LongPressModalProps {
-    isVisible: boolean;
-    onClose: () => void;
-    meme: {
-      id: string;
-      url: string;
-      caption: string;
-    };
-    onSaveToProfile: () => Promise<void>;
-    onShare: () => void;
-    onReport: () => void;
-    user: any; // Replace 'any' with your User type
-    memeID: string;
-    isSaved: boolean;
-    setIsSaved: React.Dispatch<React.SetStateAction<boolean>>;
-    setCounts: React.Dispatch<React.SetStateAction<{
+  isVisible: boolean;
+  onClose: () => void;
+  meme: {
+    id: string;
+    url: string;
+    caption: string;
+  };
+  onSaveToProfile: () => Promise<void>;
+  onShare: () => void;
+  onReport: () => void;
+  user: any;
+  memeID: string;
+  isSaved: boolean;
+  setIsSaved: React.Dispatch<React.SetStateAction<boolean>>;
+  setCounts: React.Dispatch<
+    React.SetStateAction<{
       likes: number;
       downloads: number;
       shares: number;
       comments: number;
-    }>>;
-  }
+    }>
+  >;
+}
 
-export const LongPressModal: React.FC<LongPressModalProps> = ({ 
-  isVisible, 
-  onClose, 
-  meme, 
+export const LongPressModal: React.FC<LongPressModalProps> = ({
+  isVisible,
+  onClose,
+  meme,
   onSaveToProfile,
   onShare,
-  onReport
+  onReport,
 }) => {
   const scale = React.useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
+  const [mediaLibraryPermission, requestMediaLibraryPermission] =
+    MediaLibrary.usePermissions();
+
+  const ensurePermission = async () => {
+    if (mediaLibraryPermission?.status !== 'granted') {
+      const newPermission = await requestMediaLibraryPermission();
+      if (newPermission.status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'This app needs access to your media library to save images. Please grant permission in your device settings.',
+          [
+            {text: 'Cancel', style: 'cancel'},
+            {text: 'Open Settings', onPress: () => Linking.openSettings()},
+          ],
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
+  useEffect(() => {
     if (isVisible) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       Animated.spring(scale, {
@@ -76,26 +118,53 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
     onClose();
   };
 
+  const downloadImage = async (url: string): Promise<string | null> => {
+    try {
+      const directoryUri = `${FileSystem.cacheDirectory}`;
+      const fileUri = `${directoryUri}${meme.id}.jpg`;
+      await FileSystem.makeDirectoryAsync(directoryUri, {intermediates: true});
+      const {uri} = await FileSystem.downloadAsync(url, fileUri);
+      return uri;
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Download Failed',
+        text2: 'Failed to download image.',
+      });
+      return null;
+    }
+  };
+
   const saveToGallery = async () => {
     try {
-      if (Platform.OS === 'android' && Platform.isTV) {
-        console.log('Saving to gallery not supported on Android TV or emulators');
-        Toast.show({
-          type: 'info',
-          text1: 'Gallery Save',
-          text2: 'Saving to gallery is not supported on this device.',
-        });
-      } else {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status === 'granted') {
-          const asset = await MediaLibrary.createAssetAsync(meme.url);
-          await MediaLibrary.createAlbumAsync('Jestr', asset, false);
-          Toast.show({
-            type: 'success',
-            text1: 'Image Saved',
-            text2: 'Successfully saved image to gallery!',
-          });
+      const hasPermission = await ensurePermission();
+      // console.log('Permission:', hasPermission);
+      if (!hasPermission) {
+        return;
+      }
+
+      const localUri = await downloadImage(meme.url);
+      if (localUri) {
+        const asset = await MediaLibrary.createAssetAsync(localUri);
+        // console.log('Asset created:', asset);
+
+        // createAlbumAsync might not work in Expo Go. If it fails, the image is still saved to the gallery.
+        // a warning is logged to the console.
+        try {
+          await MediaLibrary.createAlbumAsync('Jestr', asset);
+        } catch (albumError) {
+          console.warn(
+            'Could not create album, but image was saved:',
+            albumError,
+          );
         }
+
+        Toast.show({
+          type: 'success',
+          text1: 'Image Saved',
+          text2: 'Successfully saved image to gallery!',
+        });
       }
     } catch (error) {
       console.error('Error saving to gallery:', error);
@@ -104,8 +173,9 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
         text1: 'Save Failed',
         text2: 'Failed to save image to gallery.',
       });
+    } finally {
+      onClose();
     }
-    onClose();
   };
 
   const handleSaveToProfile = () => {
@@ -128,8 +198,51 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
     onClose();
   };
 
-  
-  
+  const options = [
+    {
+      icon: faLink,
+      text: 'Copy Link',
+      onPress: copyLink,
+      color: '#4A90E2',
+    },
+    {
+      icon: faUser,
+      text: 'Save to Profile',
+      onPress: handleSaveToProfile,
+      color: '#9370DB',
+    },
+    {
+      icon: faSave,
+      text: 'Save to Gallery',
+      onPress: saveToGallery,
+      color: '#50C878',
+    },
+    {
+      icon: faShare,
+      text: 'Share',
+      onPress: onShare,
+      color: '#FF69B4',
+    },
+    {
+      icon: faFlag,
+      text: 'Report',
+      onPress: onReport,
+      color: '#FF6347',
+    },
+  ];
+
+  const renderOptions = () =>
+    options.map((option, index) => (
+      <TouchableOpacity
+        key={index}
+        style={styles.option}
+        onPress={option.onPress}>
+        <View style={[styles.iconContainer, {backgroundColor: option.color}]}>
+          <FontAwesomeIcon icon={option.icon} size={24} color="#fff" />
+        </View>
+        <Text style={styles.optionText}>{option.text}</Text>
+      </TouchableOpacity>
+    ));
 
   if (!isVisible) return null;
 
@@ -138,29 +251,23 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
       <BlurView intensity={100} style={StyleSheet.absoluteFill} tint="dark">
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={styles.container}>
-            <Animated.View style={[styles.modalContainer, { transform: [{ scale }] }]}>
-            <TouchableWithoutFeedback onPress={onClose}>
-              <View style={styles.memePreview}>
-                <Image source={{ uri: meme.url }} style={styles.memeImage} resizeMode="contain" />
-                {meme.caption && <Text style={styles.caption}>{meme.caption}</Text>}
-              </View>
-            </TouchableWithoutFeedback>
-            <View style={styles.optionsContainer}>
-              {[
-                { icon: faLink, text: 'Copy Link', onPress: copyLink, color: '#4A90E2' },
-                { icon: faUser, text: 'Save to Profile', onPress: handleSaveToProfile, color: '#9370DB' },
-                { icon: faSave, text: 'Save to Gallery', onPress: saveToGallery, color: '#50C878' },
-                { icon: faShare, text: 'Share', onPress: onShare, color: '#FF69B4' },
-                { icon: faFlag, text: 'Report', onPress: onReport, color: '#FF6347' },
-              ].map((option, index) => (
-                <TouchableOpacity key={index} style={styles.option} onPress={option.onPress}>
-                  <View style={[styles.iconContainer, { backgroundColor: option.color }]}>
-                    <FontAwesomeIcon icon={option.icon} size={24} color="#fff" />
-                  </View>
-                  <Text style={styles.optionText}>{option.text}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <Animated.View
+              style={[styles.modalContainer, {transform: [{scale}]}]}>
+              <TouchableWithoutFeedback onPress={onClose}>
+                <View style={styles.memePreview}>
+                  <Image
+                    source={{uri: meme.url}}
+                    style={styles.memeImage}
+                    resizeMode="contain"
+                  />
+                  {meme.caption && (
+                    <Text style={styles.caption}>{meme.caption}</Text>
+                  )}
+                </View>
+              </TouchableWithoutFeedback>
+
+              {/* ICONS WITH OPTIONS */}
+              <View style={styles.optionsContainer}>{renderOptions()}</View>
             </Animated.View>
           </View>
         </TouchableWithoutFeedback>
@@ -179,7 +286,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1000, 
+    zIndex: 1000,
     elevation: 999, // For Android
   },
   modalContainer: {
@@ -191,7 +298,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 10000,
     elevation: 1000,
-    
   },
   memePreview: {
     width: '100%',

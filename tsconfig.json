@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
+    // "resolveJsonModule": true,
     "strict": true,
     "noEmit": true,
     "baseUrl": ".",

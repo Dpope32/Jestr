@@ -3,14 +3,17 @@
     "name": "JestrMobile",
     "slug": "JestrMobile",
     "version": "1.0.0",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "android": {
-      "package": "com.jestrmobile.app"
+      "package": "com.jestrmobile.app",
+      "permissions": ["MEDIA_LIBRARY", "MEDIA_LIBRARY_WRITE_ONLY"]
     },
     "ios": {
-      "bundleIdentifier": "com.jestrmobile.app"
+      "bundleIdentifier": "com.jestrmobile.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "The app accesses your photos to let you share them with your friends.",
+        "NSPhotoLibraryAddUsageDescription": "Allow app to save photos."
+      }
     },
     "splash": {
       "image": "./assets/splash.png",
@@ -28,7 +31,16 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "The app accesses your photos to let you share them with your friends."
+          "photosPermission": "The app accesses your photos to let you share them with your friends.",
+          "cameraPermission": "The app uses the camera to let you take photos to share with your friends."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends.",
+          "savePhotosPermission": "Allow app to save photos.",
+          "isAccessMediaLocationEnabled": true
         }
       ],
       "expo-secure-store"
