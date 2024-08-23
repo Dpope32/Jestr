@@ -1,61 +1,71 @@
 // src/types/types.ts
-import { SignInOutput } from '@aws-amplify/auth';
-import { ViewToken  } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { Animated } from 'react-native';
+import {SignInOutput} from '@aws-amplify/auth';
+import {ViewToken} from 'react-native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {Animated} from 'react-native';
 
-export type LandingPageNavigationProp = StackNavigationProp<RootStackParamList, 'Feed'>;
+export type LandingPageNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'Feed'
+>;
 
 export interface User {
-    email: string;
-    username: string;
-    profilePic: string | ProfileImage | null; 
-    headerPic: string | ProfileImage | null; 
-    displayName: string;
-    CreationDate?: string | undefined;
-    followersCount: number;
-    followingCount: number;
-    Bio?: string;
-    bio?: string;
-    isFollowing?: boolean; // Make it optional if not all users have this property
-    userId?: string; 
-    isAdmin?: boolean;
-    location?: string;
-    website?: string;
-    birthDate?: string;
-    darkMode?: boolean;
-    likesPublic?: boolean;
-    notificationsEnabled?: boolean;
-  }
-  
-  export type ProfileImage = {
-    url?: string;
-    uri?: string;
-    width: number;
-    height: number;
-    type?: 'image' | 'video';
-    fileName?: string | null;
-    fileSize?: number;
-  };
+  email: string;
+  username: string;
+  profilePic: string | ProfileImage | null;
+  headerPic: string | ProfileImage | null;
+  displayName: string;
+  CreationDate?: string | undefined;
+  followersCount: number;
+  followingCount: number;
+  Bio?: string;
+  bio?: string;
+  isFollowing?: boolean; // Make it optional if not all users have this property
+  userId?: string;
+  isAdmin?: boolean;
+  location?: string;
+  website?: string;
+  birthDate?: string;
+  darkMode?: boolean;
+  likesPublic?: boolean;
+  notificationsEnabled?: boolean;
+}
 
-  
+export type ProfileImage = {
+  url?: string;
+  uri?: string;
+  width: number;
+  height: number;
+  type?: 'image' | 'video';
+  fileName?: string | null;
+  fileSize?: number;
+};
+
 export type FetchMemesResult = {
   memes: Meme[];
   lastEvaluatedKey: string | null;
 };
 
-export type ShareType = 'copy' | 'message' | 'snapchat' | 'facebook' | 'twitter' | 'email' | 'friend' | 'instagram';
+export type ShareType =
+  | 'copy'
+  | 'message'
+  | 'snapchat'
+  | 'facebook'
+  | 'twitter'
+  | 'email'
+  | 'friend'
+  | 'instagram';
 
 export type RootStackParamList = {
   Loading: undefined;
   LandingPage: undefined;
   Onboarding: undefined;
-  Feed: { user: User };
-  Settings: { email: string };
-  MemeUploadScreen: { user: any };
-  CompleteProfileScreen: { email: string };
-  Inbox: { user: any };
-  ConfirmSignUp: { email: string };
+  Feed: {user: User};
+  Settings: {email: string};
+  MemeUploadScreen: {user: any};
+  CompleteProfileScreen: {email: string};
+  Inbox: {user: any};
+  ConfirmSignUp: {email: string};
   AdminPage: undefined;
   Conversations: {
     localUser: any;
@@ -139,17 +149,21 @@ export type MediaPlayerProps = {
     liked: boolean;
     doubleLiked: boolean;
   };
-  onLikeStatusChange: (memeID: string, status: { liked: boolean; doubleLiked: boolean }, newLikeCount: number) => void;
+  onLikeStatusChange: (
+    memeID: string,
+    status: {liked: boolean; doubleLiked: boolean},
+    newLikeCount: number,
+  ) => void;
   liked: boolean;
   doubleLiked: boolean;
   isDarkMode: boolean;
   setIsDarkMode?: React.Dispatch<React.SetStateAction<boolean>>;
   onLongPressStart: () => void;
   onLongPressEnd: () => void;
-  isCommentFeedVisible: boolean;  // Add this line
-  isProfilePanelVisible: boolean; // Add this line
+  isCommentFeedVisible: boolean;
+  isProfilePanelVisible: boolean;
+  numOfComments?: number;
 };
-
 
 export type ProfilePanelProps = {
   isVisible: boolean;

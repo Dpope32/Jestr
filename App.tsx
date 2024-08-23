@@ -28,6 +28,7 @@ import {ErrorBoundary, FallbackProps} from 'react-error-boundary';
 import OnboardingScreen from './src/screens/LandingPage/OnboardingScreen';
 import {activateKeepAwakeAsync, deactivateKeepAwake} from 'expo-keep-awake';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import * as MediaLibrary from 'expo-media-library';
 
 const DEVELOPMENT_MODE = __DEV__;
 
@@ -196,6 +197,15 @@ function App(): React.JSX.Element | null {
       deactivateKeepAwake();
     };
   }, []);
+
+  // useEffect(() => {
+  //   (async () => {
+  //     const {status} = await MediaLibrary.requestPermissionsAsync();
+  //     if (status !== 'granted') {
+  //       alert('Sorry, we need media library permissions to make this work!');
+  //     }
+  //   })();
+  // }, []);
 
   async function checkAuthStatus(): Promise<boolean> {
     try {

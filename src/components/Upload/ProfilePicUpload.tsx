@@ -1,22 +1,27 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, View, Image } from 'react-native';
-import { useUserStore } from '../../utils/userStore';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import { ProfileImage } from '../../utils/userStore';
+import {TouchableOpacity, StyleSheet, View, Image} from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faPlus} from '@fortawesome/free-solid-svg-icons';
+
+import {useUserStore} from '../../utils/userStore';
+// import { ProfileImage } from '../../types/types';
 
 interface ProfilePicUploadProps {
   onProfilePicChange: () => void;
 }
 
-const ProfilePicUpload: React.FC<ProfilePicUploadProps> = ({ onProfilePicChange }) => {
-  const { profilePic } = useUserStore();
+const ProfilePicUpload: React.FC<ProfilePicUploadProps> = ({
+  onProfilePicChange,
+}) => {
+  const {profilePic} = useUserStore();
 
   return (
     <TouchableOpacity style={styles.container} onPress={onProfilePicChange}>
       {profilePic ? (
         <Image
-          source={{ uri: typeof profilePic === 'string' ? profilePic : profilePic.uri }}
+          source={{
+            uri: typeof profilePic === 'string' ? profilePic : profilePic.uri,
+          }}
           style={styles.profileImage}
         />
       ) : (

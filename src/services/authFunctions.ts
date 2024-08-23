@@ -1310,10 +1310,10 @@ export const getUser = async (userEmail: string): Promise<User | null> => {
 export const recordMemeViews = async (
   memeViews: {email: string; memeID: string}[],
 ): Promise<void> => {
-  console.log(
-    'Attempting to record meme views:',
-    JSON.stringify(memeViews, null, 2),
-  );
+  // console.log(
+  //   'Attempting to record meme views:',
+  //   JSON.stringify(memeViews, null, 2),
+  // );
 
   // De-duplicate meme views
   const uniqueViews = Array.from(
@@ -1323,10 +1323,10 @@ export const recordMemeViews = async (
     return {email, memeID};
   });
 
-  console.log(
-    'De-duplicated meme views:',
-    JSON.stringify(uniqueViews, null, 2),
-  );
+  // console.log(
+  //   'De-duplicated meme views:',
+  //   JSON.stringify(uniqueViews, null, 2),
+  // );
 
   try {
     const response = await fetch(

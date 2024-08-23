@@ -1,12 +1,31 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { GestureResponderEvent, Keyboard, PanResponder, PanResponderGestureState, TouchableWithoutFeedback } from 'react-native';
-import { View, Text, TextInput, Animated, TouchableOpacity, Image, Dimensions, StyleSheet, Platform, KeyboardAvoidingView } from 'react-native';
+import React, {useState, useRef, useEffect} from 'react';
+import {
+  GestureResponderEvent,
+  Keyboard,
+  PanResponder,
+  PanResponderGestureState,
+  TouchableWithoutFeedback,
+} from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Animated,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  Platform,
+  KeyboardAvoidingView,
+} from 'react-native';
 import Comment from './Comment';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowUp, faReply, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { User, ProfileImage } from '../../types/types';
-import { fetchComments, postComment, updateCommentReaction } from '../Meme/memeService';
-import DefaultPfp from '../assets/images/db/JestrLogo.jpg';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faArrowUp, faReply, faTimes} from '@fortawesome/free-solid-svg-icons';
+import {User, ProfileImage} from '../../types/types';
+import {
+  fetchComments,
+  postComment,
+  updateCommentReaction,
+} from '../Meme/memeService';
 import styles from './CommentFeed.styles';
 
 const screenHeight = Dimensions.get('window').height;
@@ -27,7 +46,7 @@ type CommentFeedProps = {
   mediaIndex: number;
   memeID: string;
   profilePicUrl: string | ProfileImage | null;
-  user: User | null;  // Ensure this is present
+  user: User | null; // Ensure this is present
   isCommentFeedVisible: boolean;
   toggleCommentFeed: () => void;
   updateCommentCount: (memeID: string, newCount: number) => void;
@@ -46,16 +65,18 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const modalY = useRef(new Animated.Value(screenHeight)).current;
-  const [replyingToUsername, setReplyingToUsername] = useState<string | null>(null);
+  const [replyingToUsername, setReplyingToUsername] = useState<string | null>(
+    null,
+  );
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const loadComments = async () => {
       if (user && memeID) {
         try {
-       //   console.log(`Fetching comments for memeID: ${memeID}`);
+          //   console.log(`Fetching comments for memeID: ${memeID}`);
           const fetchedComments = await fetchComments(memeID);
-        //  console.log(`Fetched comments for memeID ${memeID}:`, fetchedComments);
+          //  console.log(`Fetched comments for memeID ${memeID}:`, fetchedComments);
           setComments(organizeCommentsIntoThreads(fetchedComments));
           updateCommentCount(memeID, fetchedComments.length); // Pass memeID and new count
         } catch (error) {
@@ -76,14 +97,16 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
     }
   }, [memeID, isCommentFeedVisible]);
 
-  const organizeCommentsIntoThreads = (flatComments: CommentType[]): CommentType[] => {
+  const organizeCommentsIntoThreads = (
+    flatComments: CommentType[],
+  ): CommentType[] => {
     const commentMap = new Map<string, CommentType>();
     const topLevelComments: CommentType[] = [];
-  
+
     flatComments.forEach(comment => {
-      commentMap.set(comment.commentID, { ...comment, replies: [] });
+      commentMap.set(comment.commentID, {...comment, replies: []});
     });
-  
+
     flatComments.forEach(comment => {
       if (comment.parentCommentID) {
         const parentComment = commentMap.get(comment.parentCommentID);
@@ -94,7 +117,7 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
         topLevelComments.push(commentMap.get(comment.commentID)!);
       }
     });
-  
+
     return topLevelComments;
   };
 
@@ -108,13 +131,19 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
     });
   };
 
-  const handlePanResponderMove = (event: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+  const handlePanResponderMove = (
+    event: GestureResponderEvent,
+    gestureState: PanResponderGestureState,
+  ) => {
     if (gestureState.dy > 0) {
       modalY.setValue(gestureState.dy);
     }
   };
 
-  const handlePanResponderRelease = (event: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+  const handlePanResponderRelease = (
+    event: GestureResponderEvent,
+    gestureState: PanResponderGestureState,
+  ) => {
     if (gestureState.dy > 100) {
       closeModal();
     } else {
@@ -130,7 +159,7 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
       onStartShouldSetPanResponder: () => true,
       onPanResponderMove: handlePanResponderMove,
       onPanResponderRelease: handlePanResponderRelease,
-    })
+    }),
   ).current;
 
   const handleAddComment = async () => {
@@ -200,9 +229,9 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
 
   const getImageSource = (profilePic: string | ProfileImage | null) => {
     if (typeof profilePic === 'string') {
-      return { uri: profilePic };
+      return {uri: profilePic};
     } else if (profilePic && 'uri' in profilePic) {
-      return { uri: profilePic.uri };
+      return {uri: profilePic.uri};
     } else {
       // Return a default image source or null
       return require('../../assets/images/apple.jpg'); // Adjust the path as needed
@@ -211,44 +240,59 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
 
   return (
     <Animated.View
-      style={[styles.modalContainer, { transform: [{ translateY: modalY }] }]}
-      {...panResponder.panHandlers}
-    >
+      style={[styles.modalContainer, {transform: [{translateY: modalY}]}]}
+      {...panResponder.panHandlers}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalContent}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 150 : 0}
-        >
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 150 : 0}>
           <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
             <FontAwesomeIcon icon={faTimes} size={24} color="#FFF" />
           </TouchableOpacity>
+
           <Text style={styles.commentCount}>Comments ({comments.length})</Text>
+
           <View style={styles.commentsContainer}>
             {comments.map(renderComment)}
           </View>
-          <View style={styles.inputContainer}>          
+
+          <View style={styles.inputContainer}>
             {replyingTo && (
               <View style={styles.replyingToContainer}>
                 <FontAwesomeIcon icon={faReply} color="#007AFF" size={16} />
-                <Text style={styles.replyingToText}>Replying to @{replyingToUsername}</Text>
-                <TouchableOpacity onPress={cancelReply} style={styles.cancelReplyButton}>
+                <Text style={styles.replyingToText}>
+                  Replying to @{replyingToUsername}
+                </Text>
+                <TouchableOpacity
+                  onPress={cancelReply}
+                  style={styles.cancelReplyButton}>
                   <Text style={styles.cancelReplyText}>Cancel</Text>
                 </TouchableOpacity>
               </View>
             )}
+
             <View style={styles.inputWrapper}>
-              <Image source={getImageSource(profilePicUrl)} style={styles.profilePic} />
+              <Image
+                source={getImageSource(profilePicUrl)}
+                style={styles.profilePic}
+              />
+
               <TextInput
                 ref={inputRef}
                 style={styles.newCommentInput}
-                placeholder={replyingTo ? "Write a reply..." : "Add a comment..."}
+                placeholder={
+                  replyingTo ? 'Write a reply...' : 'Add a comment...'
+                }
                 placeholderTextColor="#ccc"
                 value={newComment}
                 onChangeText={text => setNewComment(text)}
                 onSubmitEditing={handleAddComment}
               />
-              <TouchableOpacity onPress={handleAddComment} style={styles.sendButton}>
+
+              <TouchableOpacity
+                onPress={handleAddComment}
+                style={styles.sendButton}>
                 <FontAwesomeIcon icon={faArrowUp} color="green" size={24} />
               </TouchableOpacity>
             </View>

@@ -1,11 +1,18 @@
 /* eslint-disable react/no-deprecated */
-import React, { useMemo } from 'react';
-import { View, TouchableOpacity, StyleSheet, Dimensions, Platform } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faHome, faPlus, faEnvelope } from '@fortawesome/free-solid-svg-icons';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { RootStackParamList, User } from '../../types/types';
-import { useUserStore } from '../../utils/userStore';
+import React, {useMemo} from 'react';
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  Platform,
+} from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faHome, faPlus, faEnvelope} from '@fortawesome/free-solid-svg-icons';
+import {useNavigation, NavigationProp} from '@react-navigation/native';
+
+import {RootStackParamList, User} from '../../types/types';
+import {useUserStore} from '../../utils/userStore';
 import * as Haptics from 'expo-haptics';
 
 type BottomPanelProps = {
@@ -20,7 +27,7 @@ type BottomPanelProps = {
   user?: User | null;
   backgroundColor?: string;
   visible?: boolean;
-  customIcons?: { home?: any; upload?: any; inbox?: any };
+  customIcons?: {home?: any; upload?: any; inbox?: any};
   additionalButtons?: Array<{
     icon: any;
     onPress: () => void;
@@ -32,55 +39,76 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
   onHomeClick = () => {},
   backgroundColor = 'transparent',
   visible = true,
-  customIcons = { home: faHome, upload: faPlus, inbox: faEnvelope },
+  customIcons = {home: faHome, upload: faPlus, inbox: faEnvelope},
   additionalButtons = [],
 }) => {
   const user = useUserStore(state => state);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  const iconSize = useMemo(() => Math.floor(Dimensions.get('window').width * 0.07), []);
+  const iconSize = useMemo(
+    () => Math.floor(Dimensions.get('window').width * 0.07),
+    [],
+  );
 
-  const handleHomeClick = useMemo(() => () => {
-    Haptics.selectionAsync(); // Trigger haptic feedback
-    onHomeClick();
-    navigation.navigate('Feed', { user });
-  }, [onHomeClick, navigation, user]);
+  const handleHomeClick = useMemo(
+    () => () => {
+      Haptics.selectionAsync(); // Trigger haptic feedback
+      onHomeClick();
+      navigation.navigate('Feed', {user});
+    },
+    [onHomeClick, navigation, user],
+  );
 
-  const handleUploadClick = useMemo(() => () => {
-    navigation.navigate('MemeUploadScreen', { user });
-  }, [navigation, user]);
+  const handleUploadClick = useMemo(
+    () => () => {
+      navigation.navigate('MemeUploadScreen', {user});
+    },
+    [navigation, user],
+  );
 
-  const handleInboxClick = useMemo(() => () => {
-    navigation.navigate('Inbox', { user });
-  }, [navigation, user]);
+  const handleInboxClick = useMemo(
+    () => () => {
+      navigation.navigate('Inbox', {user});
+    },
+    [navigation, user],
+  );
 
   if (!visible) return null;
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, {backgroundColor}]}>
       <TouchableOpacity
         style={styles.iconContainer}
         onPress={handleHomeClick}
         accessibilityLabel="Home"
-        activeOpacity={0.7}
-      >
-        <FontAwesomeIcon icon={customIcons.home} size={iconSize} style={styles.icon} />
+        activeOpacity={0.7}>
+        <FontAwesomeIcon
+          icon={customIcons.home}
+          size={iconSize}
+          style={styles.icon}
+        />
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.iconContainer}
         onPress={handleUploadClick}
         accessibilityLabel="Upload"
-        activeOpacity={0.7}
-      >
-        <FontAwesomeIcon icon={customIcons.upload} size={iconSize} style={styles.icon} />
+        activeOpacity={0.7}>
+        <FontAwesomeIcon
+          icon={customIcons.upload}
+          size={iconSize}
+          style={styles.icon}
+        />
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.iconContainer}
         onPress={handleInboxClick}
         accessibilityLabel="Inbox"
-        activeOpacity={0.7}
-      >
-        <FontAwesomeIcon icon={customIcons.inbox} size={iconSize} style={styles.icon} />
+        activeOpacity={0.7}>
+        <FontAwesomeIcon
+          icon={customIcons.inbox}
+          size={iconSize}
+          style={styles.icon}
+        />
       </TouchableOpacity>
       {additionalButtons.map((button, index) => (
         <TouchableOpacity
@@ -88,9 +116,12 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
           style={styles.iconContainer}
           onPress={button.onPress}
           accessibilityLabel={button.accessibilityLabel}
-          activeOpacity={0.7}
-        >
-          <FontAwesomeIcon icon={button.icon} size={iconSize} style={styles.icon} />
+          activeOpacity={0.7}>
+          <FontAwesomeIcon
+            icon={button.icon}
+            size={iconSize}
+            style={styles.icon}
+          />
         </TouchableOpacity>
       ))}
     </View>

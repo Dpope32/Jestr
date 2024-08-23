@@ -1,21 +1,22 @@
-import {S3Client} from '@aws-sdk/client-s3';
-import {CognitoIdentityClient} from '@aws-sdk/client-cognito-identity';
-import {fromCognitoIdentityPool} from '@aws-sdk/credential-provider-cognito-identity';
-import {API_URL, AWS_REGION, COGNITO_IDENTITY_POOL_ID} from './config';
-import {User} from '../../types/types';
-import {CommentType} from '../Modals/CommentFeed';
-import {Meme, FetchMemesResult} from '../../types/types';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 import * as FileSystem from 'expo-file-system';
+import {API_URL, AWS_REGION, COGNITO_IDENTITY_POOL_ID} from './config';
 
-const s3Client = new S3Client({
-  region: AWS_REGION,
-  credentials: fromCognitoIdentityPool({
-    client: new CognitoIdentityClient({region: AWS_REGION}),
-    identityPoolId: COGNITO_IDENTITY_POOL_ID,
-  }),
-});
+import {User} from '../../types/types';
+import {CommentType} from '../Modals/CommentFeed';
+import {FetchMemesResult} from '../../types/types';
+// import {S3Client} from '@aws-sdk/client-s3';
+// import {CognitoIdentityClient} from '@aws-sdk/client-cognito-identity';
+// import {fromCognitoIdentityPool} from '@aws-sdk/credential-provider-cognito-identity';
+
+// const s3Client = new S3Client({
+//   region: AWS_REGION,
+//   credentials: fromCognitoIdentityPool({
+//     client: new CognitoIdentityClient({region: AWS_REGION}),
+//     identityPoolId: COGNITO_IDENTITY_POOL_ID,
+//   }),
+// });
 
 export const fetchMemes = async (
   lastEvaluatedKey: string | null = null,

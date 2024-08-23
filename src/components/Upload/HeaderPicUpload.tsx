@@ -1,37 +1,47 @@
 import React from 'react';
-import { TouchableOpacity, Image, StyleSheet, View, Text } from 'react-native';
-import { useUserStore, ProfileImage } from '../../utils/userStore';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faImage } from '@fortawesome/free-solid-svg-icons';
+import {TouchableOpacity, Image, StyleSheet, View, Text} from 'react-native';
+import {useUserStore} from '../../utils/userStore';
+import {ProfileImage} from '../../types/types';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faImage} from '@fortawesome/free-solid-svg-icons';
 
 interface HeaderPicUploadProps {
   onHeaderPicChange: () => void;
 }
 
-const HeaderPicUpload: React.FC<HeaderPicUploadProps> = ({ onHeaderPicChange }) => {
-  const { headerPic } = useUserStore();
+const HeaderPicUpload: React.FC<HeaderPicUploadProps> = ({
+  onHeaderPicChange,
+}) => {
+  const {headerPic} = useUserStore();
 
   const getImageSource = () => {
     if (!headerPic) {
       return require('../../assets/images/Jestr5.jpg');
     }
     if (typeof headerPic === 'string') {
-      return { uri: headerPic };
+      return {uri: headerPic};
     }
-    return { uri: (headerPic as ProfileImage).uri };
+    return {uri: (headerPic as ProfileImage).uri};
   };
 
   return (
     <TouchableOpacity style={styles.container} onPress={onHeaderPicChange}>
       {headerPic ? (
         <Image
-          source={{ uri: typeof headerPic === 'string' ? headerPic : (headerPic as ProfileImage).uri }}
+          source={{
+            uri:
+              typeof headerPic === 'string'
+                ? headerPic
+                : (headerPic as ProfileImage).uri,
+          }}
           style={styles.headerImage}
         />
       ) : (
         <View style={styles.placeholder}>
           <FontAwesomeIcon icon={faImage} size={24} color="#666" />
-          <Text style={styles.placeholderText}>Click here to upload a header pic</Text>
+          <Text style={styles.placeholderText}>
+            Click here to upload a header pic
+          </Text>
         </View>
       )}
     </TouchableOpacity>

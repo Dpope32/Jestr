@@ -1,12 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, TextInput, Keyboard, TouchableWithoutFeedback } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { FONTS } from '../../theme/theme';
-import { ProfileImage } from 'types/types';
-import { useTheme } from '../../theme/ThemeContext';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  TextInput,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faSearch} from '@fortawesome/free-solid-svg-icons';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
+
+import {FONTS} from '../../theme/theme';
+import {ProfileImage} from 'types/types';
+import {useTheme} from '../../theme/ThemeContext';
 
 interface TopPanelProps {
   onProfileClick: () => void;
@@ -19,27 +32,27 @@ interface TopPanelProps {
   isUploading: boolean;
 }
 
-const TopPanel: React.FC<TopPanelProps> = ({ 
-  onProfileClick, 
-  profilePicUrl, 
-  username, 
-  enableDropdown, 
+const TopPanel: React.FC<TopPanelProps> = ({
+  onProfileClick,
+  profilePicUrl,
+  username,
+  enableDropdown,
   showLogo,
   isAdmin,
   onAdminClick,
-  isUploading 
+  isUploading,
 }) => {
-  const [selectedTab, setSelectedTab] = useState("Flow");
+  const [selectedTab, setSelectedTab] = useState('Flow');
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const { isDarkMode } = useTheme();
+  const {isDarkMode} = useTheme();
 
   const handleTabClick = (tab: string) => {
     setSelectedTab(tab);
   };
 
   const handleSearchClick = () => {
-    setIsSearchActive((prevState) => !prevState);
+    setIsSearchActive(prevState => !prevState);
   };
 
   const handleProfileClick = () => {
@@ -50,7 +63,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
     if (isSearchActive) {
       setIsSearchActive(false);
       setSearchText('');
-      Keyboard.dismiss();  // Dismiss keyboard when clicking outside
+      Keyboard.dismiss(); // Dismiss keyboard when clicking outside
     }
   };
 
@@ -59,51 +72,76 @@ const TopPanel: React.FC<TopPanelProps> = ({
       // Automatically focus the search input when activated
       // The keyboard will automatically show because of the autoFocus prop
     } else {
-      Keyboard.dismiss();  // Dismiss the keyboard when search is deactivated
+      Keyboard.dismiss(); // Dismiss the keyboard when search is deactivated
     }
   }, [isSearchActive]);
 
   return (
     <TouchableWithoutFeedback onPress={handleOutsideClick}>
-      <SafeAreaView style={[
-        styles.safeArea,
-        { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' }
-      ]}>
-        <View style={[
-          styles.container,
-          { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' }
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
         ]}>
-          <TouchableOpacity onPress={handleProfileClick} style={styles.profileContainer}>
-            <Image 
-              source={profilePicUrl ? { uri: profilePicUrl } : require('../../assets/images/Jestr.jpg')} 
-              style={styles.profilePic} 
+        <View
+          style={[
+            styles.container,
+            {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
+          ]}>
+          <TouchableOpacity
+            onPress={handleProfileClick}
+            style={styles.profileContainer}>
+            <Image
+              source={
+                profilePicUrl
+                  ? {uri: profilePicUrl}
+                  : require('../../assets/images/Jestr.jpg')
+              }
+              style={styles.profilePic}
             />
           </TouchableOpacity>
 
           {showLogo && (
-            <Image source={require('../../assets/images/Jestr.jpg')} style={styles.logo} />
+            <Image
+              source={require('../../assets/images/Jestr.jpg')}
+              style={styles.logo}
+            />
           )}
 
           <View style={styles.tabsContainer}>
             <TouchableOpacity
               style={[styles.tab, selectedTab === 'Flow' && styles.activeTab]}
-              onPress={() => handleTabClick('Flow')}
-            >
-              <Text style={[styles.tabText, selectedTab === 'Flow' && styles.activeTabText]}>Flow</Text>
+              onPress={() => handleTabClick('Flow')}>
+              <Text
+                style={[
+                  styles.tabText,
+                  selectedTab === 'Flow' && styles.activeTabText,
+                ]}>
+                Flow
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.tab, selectedTab === 'Following' && styles.activeTab]}
-              onPress={() => handleTabClick('Following')}
-            >
-              <Text style={[styles.tabText, selectedTab === 'Following' && styles.activeTabText]}>Following</Text>
+              style={[
+                styles.tab,
+                selectedTab === 'Following' && styles.activeTab,
+              ]}
+              onPress={() => handleTabClick('Following')}>
+              <Text
+                style={[
+                  styles.tabText,
+                  selectedTab === 'Following' && styles.activeTabText,
+                ]}>
+                Following
+              </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={[
-            styles.searchContainer,
-            isSearchActive && styles.searchContainerActive
-          ]}>
+          <View
+            style={[
+              styles.searchContainer,
+              isSearchActive && styles.searchContainerActive,
+            ]}>
             {isSearchActive && (
               <TextInput
                 style={styles.searchInput}
@@ -115,8 +153,14 @@ const TopPanel: React.FC<TopPanelProps> = ({
                 onBlur={() => setIsSearchActive(false)} // Closes the search on blur
               />
             )}
-            <TouchableOpacity style={styles.searchIconContainer} onPress={handleSearchClick}>
-              <FontAwesomeIcon icon={faSearch} size={wp('5%')} style={styles.searchIcon} />
+            <TouchableOpacity
+              style={styles.searchIconContainer}
+              onPress={handleSearchClick}>
+              <FontAwesomeIcon
+                icon={faSearch}
+                size={wp('5%')}
+                style={styles.searchIcon}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -155,7 +199,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: hp('7%'),
-    marginLeft: 15
+    marginLeft: 15,
   },
   tab: {
     marginHorizontal: wp('10%'),
@@ -202,7 +246,7 @@ const styles = StyleSheet.create({
     height: hp('6%'),
     resizeMode: 'contain',
     left: '54.5%',
-    transform: [{ translateX: -wp('10%') }],
+    transform: [{translateX: -wp('10%')}],
     zIndex: 999999,
   },
 });
