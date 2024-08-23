@@ -126,9 +126,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
     setMediaLoadError(false);
     setIsLoading(true);
     fadeAnim.setValue(0);
-
+  
     const isVideo = currentMedia.toLowerCase().endsWith('.mp4') || mediaType === 'video';
-
+  
     if (isVideo) {
       setImageSize({ width: screenWidth, height: screenHeight });
       setIsLoading(false);
@@ -138,20 +138,17 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
         (width, height) => {
           const aspectRatio = width / height;
           let calculatedWidth, calculatedHeight;
-
-          if (aspectRatio > 1) {
+  
+          if (aspectRatio > screenWidth / screenHeight) {
+            // Image is wider than the screen
             calculatedWidth = screenWidth;
             calculatedHeight = screenWidth / aspectRatio;
           } else {
+            // Image is taller than or equal to the screen
             calculatedHeight = screenHeight;
             calculatedWidth = screenHeight * aspectRatio;
           }
-
-          if (calculatedHeight > screenHeight) {
-            calculatedHeight = screenHeight;
-            calculatedWidth = screenHeight * aspectRatio;
-          }
-
+  
           setImageSize({ width: calculatedWidth, height: calculatedHeight });
           setIsLoading(false);
         },
@@ -162,7 +159,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
         }
       );
     }
-
+  
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 100,
@@ -171,28 +168,28 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(({
   }, [currentMedia, mediaType, handleMediaError, fadeAnim]);
 
   const handleSwipeUp = useCallback(() => {
-    console.log(`MediaPlayer ${index} - Swipe up`);
+   // console.log(`MediaPlayer ${index} - Swipe up`);
     goToNextMedia();
   }, [index, goToNextMedia]);
 
   const handleSwipeDown = useCallback(() => {
-    console.log(`MediaPlayer ${index} - Swipe down`);
+  //  console.log(`MediaPlayer ${index} - Swipe down`);
     goToPrevMedia();
   }, [index, goToPrevMedia]);
 
   
   useEffect(() => {
-    console.log('MediaPlayer - Received memes:', memes.length);
-    console.log(`Current media changed to: ${currentMedia}`);
-    console.log(`Current index: ${currentIndex}`);
+ //   console.log('MediaPlayer - Received memes:', memes.length);
+ //   console.log(`Current media changed to: ${currentMedia}`);
+  //  console.log(`Current index: ${currentIndex}`);
     loadMedia();
     
     if (nextMedia) {
-      console.log(`Prefetching next media: ${nextMedia}`);
+  //    console.log(`Prefetching next media: ${nextMedia}`);
       Image.prefetch(nextMedia);
     }
     if (prevMedia) {
-      console.log(`Prefetching previous media: ${prevMedia}`);
+  //    console.log(`Prefetching previous media: ${prevMedia}`);
       Image.prefetch(prevMedia);
     }
 

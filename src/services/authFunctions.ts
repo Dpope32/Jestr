@@ -263,11 +263,16 @@ export const handleSignup = async (
 };
 
 const compressImage = async (image: ProfileImage): Promise<ProfileImage> => {
+  if (!image.uri) {
+    throw new Error('Image URI is undefined');
+  }
+
   const manipulatedImage = await ImageManipulator.manipulateAsync(
-    image.uri,
+    image.uri as string, // Type assertion to ensure TypeScript knows this is a string
     [{ resize: { width: 800 } }], // Resize the image
     { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
   );
+
   return {
     uri: manipulatedImage.uri,
     width: manipulatedImage.width,
@@ -1144,7 +1149,19 @@ export const getUser = async (userEmail: string): Promise<User | null> => {
   }
 };
 
-export const recordMemeView = async (email: string, memeID: string): Promise<void> => {
+export const recordMemeViews = async (memeViews: { email: string; memeID: string }[]): Promise<void> => {
+  console.log('Attempting to record meme views:', JSON.stringify(memeViews, null, 2));
+
+  // De-duplicate meme views
+  const uniqueViews = Array.from(
+    new Set(memeViews.map(view => `${view.email}:${view.memeID}`))
+  ).map(key => {
+    const [email, memeID] = key.split(':');
+    return { email, memeID };
+  });
+
+  console.log('De-duplicated meme views:', JSON.stringify(uniqueViews, null, 2));
+
   try {
     const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/recordMemeView', {
       method: 'POST',
@@ -1153,19 +1170,29 @@ export const recordMemeView = async (email: string, memeID: string): Promise<voi
       },
       body: JSON.stringify({
         operation: 'recordMemeView',
-        email,
-        memeID,
+        memeViews: uniqueViews,
       }),
     });
+    
     const responseText = await response.text();
+    console.log('Raw response from server:', responseText);
 
-    if (!response.ok) {
-      throw new Error(`Failed to record meme view: ${responseText}`);
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse response as JSON:', responseText);
+      throw new Error('Invalid response format');
     }
 
-    const data = JSON.parse(responseText);
+    if (!response.ok) {
+      console.error('Error response:', responseData);
+      throw new Error(`Failed to record meme views: ${responseData.message || responseText}`);
+    }
+
+    console.log('Meme views recorded successfully:', responseData);
   } catch (error) {
-    console.error('Error recording meme view:', error);
+    console.error('Error recording meme views:', error);
     throw error;
   }
 };

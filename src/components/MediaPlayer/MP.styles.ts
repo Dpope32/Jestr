@@ -23,12 +23,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-   mediaContainer: {
+  mediaContainer: {
     flex: 1,
     width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: Platform.OS === 'ios' ? 260 : 100, // Adjust for bottom navigation
+    paddingBottom: Platform.OS === 'ios' ? 260 : 100,
   },
   blurContainer: {
     position: 'absolute',
@@ -41,9 +42,9 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 250 : 150, // Adjust based on platform
+    bottom: Platform.OS === 'ios' ? 220 : 150, // Adjust based on platform
     left: 0,
-    right: 140,
+    right: 20,
     flexDirection: 'row',
     padding: 5,
     borderRadius: 10,
@@ -62,14 +63,13 @@ const styles = StyleSheet.create({
     zIndex: 10,
     paddingHorizontal: 0,
     gap: 10,
-    bottom: Platform.OS === 'ios' ? 235 : 150,
+    bottom: Platform.OS === 'ios' ? 220 : 150,
     alignItems: 'center',
   },
   memeImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
-    maxHeight: height *0.50, // Limit to 70% of screen height
   },
   followButton: {
     position: 'absolute',

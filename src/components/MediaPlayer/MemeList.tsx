@@ -40,12 +40,12 @@ const MemeList: React.FC<MemeListProps> = React.memo(({
   const memesRef = useRef(memes);
 
   useEffect(() => {
-    console.log('MemeList - Received memes:', memes.length);
+   // console.log('MemeList - Received memes:', memes.length);
     memesRef.current = memes;
   }, [memes]);
 
   useEffect(() => {
-    console.log('MemeList - Current media index changed:', currentMediaIndex);
+ //   console.log('MemeList - Current media index changed:', currentMediaIndex);
     if (flatListRef.current && currentMediaIndex >= 0 && currentMediaIndex < memes.length) {
       flatListRef.current.scrollToIndex({ index: currentMediaIndex, animated: false });
     }
@@ -68,7 +68,7 @@ const MemeList: React.FC<MemeListProps> = React.memo(({
   const renderItem = useCallback(
     ({ item, index }: { item: Meme | undefined; index: number }) => {
       if (!item || !item.url) {
-        console.log(`Meme at index ${index} is undefined or missing url`);
+     //   console.log(`Meme at index ${index} is undefined or missing url`);
         return null;
       }
 
@@ -114,7 +114,7 @@ const MemeList: React.FC<MemeListProps> = React.memo(({
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0 && typeof viewableItems[0].index === 'number') {
-        console.log('MemeList - Viewable item changed:', viewableItems[0].index);
+      //  console.log('MemeList - Viewable item changed:', viewableItems[0].index);
         setCurrentMediaIndexCallback(viewableItems[0].index);
       }
     },

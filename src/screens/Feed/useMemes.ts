@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { fetchMemes, getLikeStatus } from '../../components/Meme/memeService';
+import { recordMemeViews } from '../../services/authFunctions';
 import { Meme, User } from '../../types/types';
 
 export const useMemes = (user: User | null, accessToken: string | null) => {
@@ -9,6 +10,25 @@ export const useMemes = (user: User | null, accessToken: string | null) => {
   const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
   const [allMemesViewed, setAllMemesViewed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const memeViewBatchRef = useRef<{ email: string; memeID: string }[]>([]);
+
+  const recordMemeViewBatch = useCallback(async () => {
+    if (memeViewBatchRef.current.length > 0) {
+      try {
+        await recordMemeViews(memeViewBatchRef.current);
+        memeViewBatchRef.current = []; // Clear the batch after successful recording
+      } catch (error) {
+        console.error('Failed to record meme view batch:', error);
+      }
+    }
+  }, []);
+
+  const addToMemeViewBatch = useCallback((email: string, memeID: string) => {
+    memeViewBatchRef.current.push({ email, memeID });
+    if (memeViewBatchRef.current.length >= 5) {
+      recordMemeViewBatch();
+    }
+  }, [recordMemeViewBatch]);
 
   const fetchInitialMemes = useCallback(async () => {
     if (!user?.email || !accessToken) return;
@@ -18,12 +38,13 @@ export const useMemes = (user: User | null, accessToken: string | null) => {
       setMemes(result.memes);
       setLastEvaluatedKey(result.lastEvaluatedKey);
       setAllMemesViewed(result.memes.length === 0);
+      result.memes.forEach(meme => addToMemeViewBatch(user.email, meme.memeID));
     } catch (error) {
       setError('Failed to fetch memes. Please try again later.');
     } finally {
       setIsLoading(false);
     }
-  }, [user, accessToken]);
+  }, [user, accessToken, addToMemeViewBatch]);
 
   const fetchMoreMemes = useCallback(async () => {
     if (isLoadingMore || allMemesViewed || !user?.email || !accessToken) return;
@@ -34,17 +55,24 @@ export const useMemes = (user: User | null, accessToken: string | null) => {
       setMemes(prevMemes => [...prevMemes, ...result.memes]);
       setLastEvaluatedKey(result.lastEvaluatedKey);
       setAllMemesViewed(result.memes.length === 0 || !result.lastEvaluatedKey);
+      result.memes.forEach(meme => addToMemeViewBatch(user.email, meme.memeID));
       console.log('Fetched more memes:', result.memes.length);
     } catch (error) {
       console.error('Error fetching more memes:', error);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, allMemesViewed, user, accessToken, lastEvaluatedKey]);
+  }, [isLoadingMore, allMemesViewed, user, accessToken, lastEvaluatedKey, addToMemeViewBatch]);
 
   useEffect(() => {
     fetchInitialMemes();
   }, [fetchInitialMemes]);
+
+  useEffect(() => {
+    return () => {
+      recordMemeViewBatch(); // Ensure any remaining views are recorded when component unmounts
+    };
+  }, [recordMemeViewBatch]);
 
   return { memes, isLoading, isLoadingMore, error, fetchMoreMemes, fetchInitialMemes };
 };

@@ -40,11 +40,11 @@ export const usePanResponder = ({
   const handleSwipe = useCallback(
     (isUpSwipe: boolean) => {
       if (isSwiping.current) {
-        console.log('Swipe ignored: Already swiping');
+     //   console.log('Swipe ignored: Already swiping');
         return;
       }
       isSwiping.current = true;
-      console.log(`Swiping ${isUpSwipe ? 'Up' : 'Down'}`);
+  //    console.log(`Swiping ${isUpSwipe ? 'Up' : 'Down'}`);
 
       const swipeDistance = isUpSwipe ? -height : height;
 
@@ -53,9 +53,9 @@ export const usePanResponder = ({
         duration: 300,
         useNativeDriver: true,
       }).start(({ finished }) => {
-        console.log(`Swipe animation finished: ${finished}`);
+      //  console.log(`Swipe animation finished: ${finished}`);
         if (finished) {
-          console.log(`Calling ${isUpSwipe ? 'onSwipeUp' : 'onSwipeDown'}`);
+       //   console.log(`Calling ${isUpSwipe ? 'onSwipeUp' : 'onSwipeDown'}`);
           if (isUpSwipe) {
             onSwipeUp();
           } else {
@@ -65,10 +65,10 @@ export const usePanResponder = ({
           setTimeout(() => {
             translateY.setValue(0);
             isSwiping.current = false;
-            console.log('Swipe state reset');
+        //    console.log('Swipe state reset');
           }, 100);
         } else {
-          console.log('Swipe animation did not finish');
+       //   console.log('Swipe animation did not finish');
           isSwiping.current = false;
         }
       });
@@ -79,20 +79,20 @@ export const usePanResponder = ({
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => {
-          console.log('PanResponder start should set');
+       //   console.log('PanResponder start should set');
           return !isCommentFeedVisible && !isProfilePanelVisible;
         },
         onMoveShouldSetPanResponder: (_, gestureState) => {
           const shouldSet = Math.abs(gestureState.dy) > 5 && !isCommentFeedVisible && !isProfilePanelVisible;
-          console.log('PanResponder move should set:', shouldSet);
+      //    console.log('PanResponder move should set:', shouldSet);
           return shouldSet;
         },
         onPanResponderGrant: (event) => {
-          console.log('PanResponder granted');
+      //    console.log('PanResponder granted');
           startY.current = event.nativeEvent.pageY;
           const now = Date.now();
           if (now - lastTapTimestamp.current < DOUBLE_TAP_DELAY) {
-            console.log('Double tap detected');
+       //     console.log('Double tap detected');
             handleDoubleTap(event);
             lastTapTimestamp.current = 0;
           } else {
@@ -100,62 +100,62 @@ export const usePanResponder = ({
             longPressTimeout.current = setTimeout(() => {
               setIsLongPressing(true);
               handleLongPress();
-              console.log('Long press triggered');
+      //        console.log('Long press triggered');
             }, LONG_PRESS_DELAY);
           }
         },
         onPanResponderMove: (_, gestureState) => {
-          console.log(`PanResponder move: dy=${gestureState.dy}, vy=${gestureState.vy}`);
+      //    console.log(`PanResponder move: dy=${gestureState.dy}, vy=${gestureState.vy}`);
           if (isSwiping.current) {
-            console.log('Already swiping, ignoring move');
+       //     console.log('Already swiping, ignoring move');
             return;
           }
 
           if (Math.abs(gestureState.dy) > 5 && longPressTimeout.current) {
             clearTimeout(longPressTimeout.current);
             longPressTimeout.current = null;
-            console.log('Long press timeout cleared due to movement');
+     //       console.log('Long press timeout cleared due to movement');
           }
           translateY.setValue(gestureState.dy);
           animatedBlurIntensity.setValue(Math.abs(gestureState.dy));
         },
         onPanResponderRelease: (event, gestureState) => {
-          console.log('PanResponder released');
-          console.log(`Release state: dy=${gestureState.dy}, vy=${gestureState.vy}`);
+     //     console.log('PanResponder released');
+     //     console.log(`Release state: dy=${gestureState.dy}, vy=${gestureState.vy}`);
 
           if (longPressTimeout.current) {
             clearTimeout(longPressTimeout.current);
-            console.log('Long press timeout cleared on release');
+     //       console.log('Long press timeout cleared on release');
           }
 
           if (isLongPressing) {
             setIsLongPressing(false);
-            console.log('Was long pressing, stopping further action');
+      //      console.log('Was long pressing, stopping further action');
             return;
           }
 
           const endY = event.nativeEvent.pageY;
           const verticalDistance = endY - startY.current;
 
-          console.log('Vertical distance:', verticalDistance);
-          console.log('Velocity Y:', gestureState.vy);
-          console.log('Swipe Threshold:', SWIPE_THRESHOLD);
-          console.log('Swipe Velocity Threshold:', SWIPE_VELOCITY_THRESHOLD);
+     //     console.log('Vertical distance:', verticalDistance);
+    //      console.log('Velocity Y:', gestureState.vy);
+    //      console.log('Swipe Threshold:', SWIPE_THRESHOLD);
+    //      console.log('Swipe Velocity Threshold:', SWIPE_VELOCITY_THRESHOLD);
 
           if (
             (gestureState.dy < -SWIPE_THRESHOLD && Math.abs(gestureState.vy) > SWIPE_VELOCITY_THRESHOLD) ||
             (gestureState.dy < 0 && Math.abs(gestureState.vy) > SWIPE_VELOCITY_THRESHOLD)
           ) {
-            console.log('Triggering swipe up');
+      //      console.log('Triggering swipe up');
             handleSwipe(true);
           } else if (
             (gestureState.dy > SWIPE_THRESHOLD && Math.abs(gestureState.vy) > SWIPE_VELOCITY_THRESHOLD) ||
             (gestureState.dy > 0 && Math.abs(gestureState.vy) > SWIPE_VELOCITY_THRESHOLD)
           ) {
-            console.log('Triggering swipe down');
+    //        console.log('Triggering swipe down');
             handleSwipe(false);
           } else {
-            console.log('Swipe did not meet threshold, bouncing back');
+    //        console.log('Swipe did not meet threshold, bouncing back');
             Animated.spring(translateY, {
               toValue: 0,
               useNativeDriver: true,
@@ -164,23 +164,23 @@ export const usePanResponder = ({
               friction: 7,
             }).start(() => {
               isSwiping.current = false;
-              console.log('Bounce back completed');
+     //         console.log('Bounce back completed');
             });
           }
         },
         onPanResponderTerminate: (_, gestureState) => {
-          console.log('PanResponder terminated');
+    //      console.log('PanResponder terminated');
           
           if (longPressTimeout.current) {
             clearTimeout(longPressTimeout.current);
-            console.log('Long press timeout cleared on terminate');
+      //      console.log('Long press timeout cleared on terminate');
           }
           
           setIsLongPressing(false);
           
           if (!isSwiping.current && Math.abs(gestureState.dy) > SWIPE_THRESHOLD) {
             const isUpSwipe = gestureState.dy < 0;
-            console.log('Force completing swipe due to termination');
+     //       console.log('Force completing swipe due to termination');
             handleSwipe(isUpSwipe);
           } else {
             Animated.spring(translateY, {
