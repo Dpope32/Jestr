@@ -15,17 +15,26 @@ Jestr-Mobile
 		>assets
 			>animations
 				loading-animation.json
+				create.json
+				join.json
+				search.json
+				discover.json
+				swipe-up.json
+				think.json
+				welcome.json
+				welcome1.json
 			>fonts
 			>images
 			>memes
 			>videos
 		>components
 			>MediaPlayer
+				LongPressModal.tsx
 				lottie-liked.json
 				MediaPlayer.tsx
 				MediaPlayerContent.tsx
+				MemeList.tsx
 				MP.styles.ts
-				SafeImage.tsx
 				useMediaPlayerLogic.tsx
 				usePanResponder.tsx
 			>Meme
@@ -36,6 +45,7 @@ Jestr-Mobile
 			>Modals
 				Comment.tsx
 				CommentFeed.tsx
+				CommentFeed.styles.ts
 				EditProfileModal.tsx
 				EditProfileModalStyles.ts
 				FollowModal.tsx
@@ -45,6 +55,12 @@ Jestr-Mobile
 				ShareModal.tsx
 				SignupSuccessModal.tsx
 				SuccessModal.tsx
+			>NewComponents (not yet implemented)
+				AccessibilityControls.tsx
+				ContentModeration.tsx
+				PerformanceMonitor.tsx
+				SearchBar.tsx
+				VideoPlayer.tsx
 			>Panels
 				BottomPanel.tsx
 				NotificationsPanel.tsx
@@ -71,41 +87,51 @@ Jestr-Mobile
 			>Feed
 				Feed.tsx
 				Feed.styles.ts
+				useMemes.ts
 			>Inbox
 				Conversations.tsx
+				convoStyles.ts
 				Inbox.styles.ts
 				Inbox.tsx
 				inboxStore.ts
+				SkeletonLoader.tsx
+				UnreadNotifications.tsx
+			>Loading
+				LoadingScreen.tsx
 			>LandingPage
-				>Loading
-					LoadingScreen.tsx
 				CompleteProfileScreen.tsx
 				ConfirmSignUpScreen.tsx
+				ContentModal.tsx
 				declarations.d.ts
 				GradientText.tsx
 				LandngPage.styles.ts
 				LandingPage.tsx
 				LP.tsx
 				LPHandlers.tsx
+				OnboardingScreen.tsx
 				ProfileCompletedSlideshow.tsx
 				RainEffect.tsx
 				WelcomeText.tsx
 			>MemeUploadScreen
-				MemeUploadScreen.tsx
+				index.tsx
 			>Profile
 				Profile.tsx
 				EditableBio.tsx
 				MemeGrid.tsx
 				ProfileHandlers.tsx
 				ProfileStyles.tsx
+			>NotificationsScreen
+				index.tsx
 		>services
 			authFunctions.ts
 			coginitoService.ts
 			UserContext.js
 		>theme
 			theme.ts
+			ThemeContext.tsx
 		>types
 			types.ts
+			react-native-particles.d.ts
 		>utils
 			dateUtils.ts
 			secureStore.ts
@@ -114,6 +140,8 @@ Jestr-Mobile
 	.gitignore
 	.prettierc.js
 	.watchmanconfig
+	amplifyconfiguration.json
+	aws-exports.js
 	app.json
 	App.tsx
 	babel.config.js
