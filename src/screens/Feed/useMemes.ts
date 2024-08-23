@@ -1,7 +1,8 @@
-import {useState, useCallback, useEffect, useRef} from 'react';
-import {fetchMemes, getLikeStatus} from '../../components/Meme/memeService';
-import {recordMemeViews} from '../../services/authFunctions';
-import {Meme, User} from '../../types/types';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { fetchMemes, getLikeStatus } from '../../components/Meme/memeService';
+import { recordMemeViews } from '../../services/authFunctions';
+import { Meme, User } from '../../types/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const useMemes = (user: User | null, accessToken: string | null) => {
   const [memes, setMemes] = useState<Meme[]>([]);
@@ -37,11 +38,22 @@ export const useMemes = (user: User | null, accessToken: string | null) => {
     if (!user?.email || !accessToken) return;
     setIsLoading(true);
     try {
+      // First, try to load cached memes
+      const cachedMemesString = await AsyncStorage.getItem('cachedMemes');
+      if (cachedMemesString) {
+        const cachedMemes = JSON.parse(cachedMemesString);
+        setMemes(cachedMemes);
+      }
+
+      // Then fetch fresh memes
       const result = await fetchMemes(null, user.email, 5, accessToken);
       setMemes(result.memes);
       setLastEvaluatedKey(result.lastEvaluatedKey);
       setAllMemesViewed(result.memes.length === 0);
       result.memes.forEach(meme => addToMemeViewBatch(user.email, meme.memeID));
+
+      // Update cache with new memes
+      await AsyncStorage.setItem('cachedMemes', JSON.stringify(result.memes));
     } catch (error) {
       setError('Failed to fetch memes. Please try again later.');
     } finally {

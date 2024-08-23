@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {View, Text, TouchableOpacity, Image} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
@@ -12,6 +12,7 @@ import {Animated} from 'react-native';
 
 import styles from './MP.styles';
 import {ShareType, User} from '../../types/types';
+import { COLORS } from '../../theme/theme';
 
 import {fetchComments} from '../Meme/memeService';
 
@@ -52,11 +53,11 @@ interface IconsAndContentProps {
   numOfComments: number;
 }
 
-const IconButton: React.FC<IconButtonProps> = ({
+const IconButton: React.FC<IconButtonProps> = React.memo(({
   icon,
   count,
   onPress,
-  color = '#1bd40b',
+  color = COLORS.primary,
   memeID,
 }) => {
   // UNECESSARY !!!
@@ -79,14 +80,11 @@ const IconButton: React.FC<IconButtonProps> = ({
       hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
       <FontAwesomeIcon icon={icon} size={28} color={color} />
       <Text style={[styles.iconText, {color: '#FFFFFF'}]}>{count}</Text>
-      {/* <Text style={[styles.iconText, {color: '#FFFFFF'}]}>
-        {commentsLength}
-      </Text> */}
     </TouchableOpacity>
   );
-};
+});
 
-export const IconsAndContent: React.FC<IconsAndContentProps> = ({
+export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   memeUser,
   caption,
   uploadTimestamp,
@@ -118,25 +116,21 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
     return null; // Don't render if not the active item
   }
 
-  const handleLikePress = () => {
+  const handleLikePress = useCallback(() => {
     console.log('Like button pressed');
     debouncedHandleLike();
-  };
+  }, [debouncedHandleLike]);
 
-  const handleCommentPress = () => {
+  const handleCommentPress = useCallback(() => {
     toggleCommentFeed();
-  };
+  }, [toggleCommentFeed]);
+  
 
-  const handleSharePress = () => {
+  const handleSharePress = useCallback(() => {
     if (user && memeUser?.username) {
       onShare('friend', memeUser.username, 'Check out this meme!');
     }
-  };
-
-  const handleSavePress = () => {
-    console.log('Save button pressed');
-    handleDownloadPress();
-  };
+  }, [user, memeUser, onShare]);
 
   return (
     <Animated.View
@@ -151,6 +145,21 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
       ]}>
       <BlurView intensity={100} tint="dark" style={styles.blurInner}>
         <View style={styles.textContainer}>
+          <View style={styles.textContent}>
+            <Text style={styles.username}>
+              {memeUser?.username || 'Anonymous'}
+            </Text>
+            {caption && <Text style={styles.caption}>{caption}</Text>}
+            <Text style={styles.date}>{formatDate(uploadTimestamp)}</Text>
+          </View>
+        </View>
+
+        <View
+          ref={iconAreaRef}
+          style={styles.iconColumn}
+          onLayout={event => {
+            const {x, y, width, height} = event.nativeEvent.layout;
+          }}>
           <View style={styles.profilePicContainer}>
             <Image
               source={
@@ -168,27 +177,12 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
               </TouchableOpacity>
             )}
           </View>
-          <View style={styles.textContent}>
-            <Text style={styles.username}>
-              {memeUser?.username || 'Anonymous'}
-            </Text>
-            {caption && <Text style={styles.caption}>{caption}</Text>}
-            <Text style={styles.date}>{formatDate(uploadTimestamp)}</Text>
-          </View>
-        </View>
-
-        <View
-          ref={iconAreaRef}
-          style={styles.iconColumn}
-          onLayout={event => {
-            const {x, y, width, height} = event.nativeEvent.layout;
-          }}>
           <IconButton
             icon={faThumbsUp}
             count={counts.likes}
             memeID={memeID}
             onPress={handleLikePress}
-            color={liked || doubleLiked ? '#006400' : '#1bd40b'}
+            color={liked || doubleLiked ? '#023020' :  COLORS.primary}
           />
           <IconButton
             icon={faComment}
@@ -207,6 +201,6 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
       </BlurView>
     </Animated.View>
   );
-};
+});
 
 export default IconsAndContent;

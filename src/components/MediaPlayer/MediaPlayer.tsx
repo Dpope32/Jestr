@@ -487,7 +487,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
                 : 'rgba(28, 28, 28, 0.5)',
             },
           ]}>
-          <BlurView intensity={20} style={StyleSheet.absoluteFill} />
+          <BlurView intensity={10} style={StyleSheet.absoluteFill} />
         </Animated.View>
 
         <LongPressModal

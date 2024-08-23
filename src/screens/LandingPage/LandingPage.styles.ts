@@ -293,7 +293,8 @@ export const styles = StyleSheet.create({
   socialButtonIcon: {
     width: 60,
     height: 60,
-  },
+    marginBottom: -10
+    },
   separator: {
     width: '100%',
     height: 1,
@@ -303,17 +304,14 @@ export const styles = StyleSheet.create({
   twitterButton: {
     tintColor: '#1DA1F2',
   },
-  socialContainer: {
-    width: '110%',
-    alignItems: 'center',
-    marginTop: 50,
-    alignSelf: 'center',
-  },
   socialButtonsRow: {
     flexDirection: 'row',
+    alignSelf: 'center',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    width: '80%',
-    marginBottom: 20,
+    width: '90%',
+    marginBottom: -150,
+    
   },
   socialButton: {
     width: 40,
@@ -326,24 +324,41 @@ export const styles = StyleSheet.create({
   continueButtonsContainer: {
     width: '100%',
     alignSelf: 'center',
-    marginBottom: -100
+    marginBottom: 30,
+    marginTop: 50
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
     borderRadius: 4,
     paddingVertical: 10,
-    paddingHorizontal: 36,
-    marginBottom: 22,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#DADCE0',
+  },
+  googleButtonText: {
+    color: '#757575',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 10,
   },
   appleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#000000',
     borderRadius: 4,
     paddingVertical: 10,
-    paddingHorizontal: 36,
+    paddingHorizontal: 12,
+  },
+  appleButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 10,
   },
   buttonIcon: {
     marginRight: 10,
@@ -359,11 +374,6 @@ export const styles = StyleSheet.create({
   },
   buttonText2: {
     color: 'black',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  appleButtonText: {
-    color: '#000000',
     fontSize: 16,
     fontWeight: 'bold',
   },

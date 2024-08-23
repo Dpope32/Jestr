@@ -1,34 +1,12 @@
 import React, {useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  Modal,
-  Dimensions,
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  ScrollView,
-  Animated,
-} from 'react-native';
+import {View,Text,Image,TouchableOpacity,Modal,Dimensions,ActivityIndicator,Alert,StyleSheet,ScrollView,Animated,} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faBox,
-  faHistory,
-  faHeart,
-  faUser,
-  faEdit,
-  faTimes,
-  IconDefinition,
-  faSadTear,
-  faCog,
-} from '@fortawesome/free-solid-svg-icons';
+import {faBox,faHistory,faHeart,faUser,faEdit,faTimes,IconDefinition,faSadTear,faCog,} from '@fortawesome/free-solid-svg-icons';
 import {RouteProp} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import * as VideoThumbnails from 'expo-video-thumbnails';
+import * as Haptics from 'expo-haptics';
 import {BlurView} from 'expo-blur';
-
 import {useUserStore, UserState} from '../../utils/userStore';
 import {RootStackParamList} from '../../types/types';
 import styles from './ProfileStyles';
@@ -39,25 +17,17 @@ import {COLORS} from '../../theme/theme';
 import {getDaysSinceCreation} from 'utils/dateUtils';
 import {User, Meme} from '../../types/types';
 import {useProfileHandlers} from './ProfileHandlers';
-
 import BottomPanel from '../../components/Panels/BottomPanel';
 import FollowModal from '../../components/Modals/FollowModal';
 import MediaPlayer from '../../components/MediaPlayer/MediaPlayer';
 import EditProfileModal from '../../components/Modals/EditProfileModal';
 
 const {width, height} = Dimensions.get('window');
-const itemSize = width / 3 - 4; // 3 items per row with 2px margin on each side
+const itemSize = width / 3 - 4; 
 
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'Profile'>;
-type ProfileScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'Profile'
->;
-
-type ProfileProps = {
-  route: ProfileScreenRouteProp;
-  navigation: ProfileScreenNavigationProp;
-};
+type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList,'Profile'>;
+type ProfileProps = {route: ProfileScreenRouteProp; navigation: ProfileScreenNavigationProp;};
 
 export type TabName = 'posts' | 'liked' | 'history' | 'downloaded';
 
@@ -66,33 +36,24 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
   const user = useUserStore(state => state);
   const {absoluteFill} = StyleSheet;
   const scrollY = new Animated.Value(0);
-
-  // const [gridHeight, setGridHeight] = useState(300);
   const followersCount = useUserStore(state => state.followersCount);
   const followingCount = useUserStore(state => state.followingCount);
-
-  const [daysSinceCreation, setDaysSinceCreation] = useState(
-    getDaysSinceCreation(user.creationDate || ''),
-  );
+  const [daysSinceCreation, setDaysSinceCreation] = useState(getDaysSinceCreation(user.creationDate || ''));
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState<TabName>('posts');
   const [thumbnails, setThumbnails] = useState<{[key: string]: string}>({});
   const [tabMemes, setTabMemes] = useState<Meme[]>([]);
   const [isFollowModalVisible, setIsFollowModalVisible] = useState(false);
-  const [followModalTab, setFollowModalTab] = useState<
-    'followers' | 'following'
-  >('followers');
+  const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
   const [selectedMeme, setSelectedMeme] = useState<Meme | null>(null);
   const [currentMemeIndex, setCurrentMemeIndex] = useState(0);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
-  const [isEditProfileModalVisible, setIsEditProfileModalVisible] =
-    useState(false);
+  const [isEditProfileModalVisible, setIsEditProfileModalVisible] = useState(false);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [isBlurVisible, setIsBlurVisible] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreMemes, setHasMoreMemes] = useState(true);
-  // const [contentHeight, setContentHeight] = useState(height);
 
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 200],
@@ -101,12 +62,9 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
   });
 
   const {
-    // handleUpdateImage,
     handleEditImagePress,
-    // onLikeStatusChange,
     handleBioUpdate,
     handleHeightChange,
-    // handleCloseMediaPlayer,
     loadMoreMemes,
     fetchTabMemes,
     handleMemePress,
@@ -176,7 +134,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
 
   useEffect(() => {
     if (user.email) {
-      setTabMemes([]); // Clear previous memes
+      setTabMemes([]); 
       setLastEvaluatedKey(null);
       setCurrentPage(1);
       fetchTabMemes(selectedTab);
@@ -220,6 +178,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
     setTabMemes([]); // Clear previous tab memes
     setLastEvaluatedKey(null); // Reset lastEvaluatedKey
     fetchTabMemes(tabName); // Fetch new tab memes
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   const convertUserStateToUser = (userState: UserState): User => ({

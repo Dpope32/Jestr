@@ -22,6 +22,7 @@ export const COLORS = {
   accent: '#FF4081',
   buttonStart: '#0B6623', // Dark green start
   buttonEnd: '#1bd40b',   // Light green end
+  textThirdary: '#eeeeee',
 };
 
 export const SPACING = {

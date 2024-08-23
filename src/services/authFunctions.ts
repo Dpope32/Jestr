@@ -1,6 +1,9 @@
 import {Alert} from 'react-native';
 import React from 'react';
 import Toast from 'react-native-toast-message';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {resetPassword} from '@aws-amplify/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {User, Meme, FetchMemesResult} from '../types/types';
 import {API_URL} from '../components/Meme/config';
 import {
@@ -12,7 +15,6 @@ import {
   signIn,
   SignInOutput,
 } from '@aws-amplify/auth';
-import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList, ProfileImage} from '../types/types';
 import * as FileSystem from 'expo-file-system';
 import {v4 as uuidv4} from 'uuid';
@@ -24,9 +26,8 @@ import {
   storeUserIdentifier,
 } from '../utils/secureStore';
 import * as SecureStore from 'expo-secure-store';
-import {resetPassword} from '@aws-amplify/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImageManipulator from 'expo-image-manipulator';
+//import * as Google from 'expo-auth-session/providers/google';
 
 type ProfileImageOrString = ProfileImage | string;
 
@@ -42,6 +43,30 @@ type LandingPageNavigationProp = StackNavigationProp<
 >;
 const API_ENDPOINT =
   'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser';
+
+ // const [request, response, promptAsync] = Google.useAuthRequest({
+   // expoClientId: 'YOUR_EXPO_CLIENT_ID',
+  //  iosClientId: 'YOUR_IOS_CLIENT_ID',
+ //   androidClientId: '667171669430-9hqir57viejk59ud9b02g7cijc2v56tc.apps.googleusercontent.com',
+//    webClientId: 'YOUR_WEB_CLIENT_ID',
+//  });
+
+ // const handleGoogleSignIn = async () => {
+ //   try {
+  //    const result = await promptAsync();
+  //    if (result.type === 'success') {
+        // Handle successful sign-in
+  //      const { authentication } = result;
+        // Use the access token to fetch user info or sign in to your backend
+ ////     }
+  //  } catch (error) {
+   //   console.error('Google Sign-In Error:', error);
+  // }
+//  };
+
+export const handleGoogleSignIn = async () => {
+  // Implementation based on '@react-native-google-signin/google-signin'
+};
 
 export const checkAuthStatus = async () => {
   try {
@@ -62,8 +87,14 @@ export const handleLogin = async (
 ) => {
   setIsLoading(true);
   try {
+    // Clear existing auth data
+    await signOut({ global: true });
+    await SecureStore.deleteItemAsync('accessToken');
+    await AsyncStorage.removeItem('userIdentifier');
+    useUserStore.getState().resetUserState(); // Use the resetUserState function
+
     const lowercaseUsername = username.toLowerCase();
-    const {isSignedIn, nextStep} = await signIn({
+    const { isSignedIn, nextStep } = await signIn({
       username: lowercaseUsername,
       password,
       options: {
@@ -72,7 +103,7 @@ export const handleLogin = async (
     });
 
     if (isSignedIn) {
-      const {tokens} = await fetchAuthSession();
+      const { tokens } = await fetchAuthSession();
       const accessToken = tokens?.accessToken?.toString();
       if (accessToken) {
         await SecureStore.setItemAsync('accessToken', accessToken);
@@ -630,10 +661,6 @@ export const removeDownloadedMeme = async (
     console.error('Error removing downloaded meme:', error);
     throw error;
   }
-};
-
-export const handleGoogleSignIn = async () => {
-  // Implementation based on '@react-native-google-signin/google-signin'
 };
 
 export const handleAppleSignIn = async () => {

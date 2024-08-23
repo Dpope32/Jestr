@@ -3,6 +3,7 @@ import {View, Text} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {debounce, set} from 'lodash';
+import * as Haptics from 'expo-haptics';
 
 import {useTheme} from '../../theme/ThemeContext';
 import {useMemes} from './useMemes';
@@ -85,6 +86,7 @@ const Feed: React.FC = React.memo(() => {
   const handleHomeClick = useCallback(() => {
     fetchInitialMemes();
     setCurrentMediaIndex(0);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [fetchInitialMemes]);
 
   // Update Like Status

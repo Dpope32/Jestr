@@ -118,19 +118,43 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
     onClose();
   };
 
+  // const downloadImage = async (url: string): Promise<string | null> => {
+  //   try {
+  //     const directoryUri = `${FileSystem.cacheDirectory}`;
+  //     const fileUri = `${directoryUri}${meme.id}.jpg`;
+  //     await FileSystem.makeDirectoryAsync(directoryUri, {intermediates: true});
+  //     const {uri} = await FileSystem.downloadAsync(url, fileUri);
+  //     return uri;
+  //   } catch (error) {
+  //     console.error('Error downloading image:', error);
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Download Failed',
+  //       text2: 'Failed to download image.',
+  //     });
+  //     return null;
+  //   }
+  // };
+
   const downloadImage = async (url: string): Promise<string | null> => {
     try {
+      const fileType = url.substring(url.lastIndexOf('.') + 1);
+      console.log('File type:', fileType);
       const directoryUri = `${FileSystem.cacheDirectory}`;
-      const fileUri = `${directoryUri}${meme.id}.jpg`;
+      console.log('Directory URI:', directoryUri);
+      // const fileUri = `${directoryUri}${meme.id}.${fileType}`;
+      const fileUri = `${directoryUri}${meme.id}`;
+      console.log('File URI:', fileUri);
+
       await FileSystem.makeDirectoryAsync(directoryUri, {intermediates: true});
       const {uri} = await FileSystem.downloadAsync(url, fileUri);
       return uri;
     } catch (error) {
-      console.error('Error downloading image:', error);
+      console.error('Error downloading file:', error);
       Toast.show({
         type: 'error',
         text1: 'Download Failed',
-        text2: 'Failed to download image.',
+        text2: 'Failed to download file.',
       });
       return null;
     }
@@ -139,12 +163,13 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
   const saveToGallery = async () => {
     try {
       const hasPermission = await ensurePermission();
-      // console.log('Permission:', hasPermission);
+      console.log('Permission:', hasPermission);
       if (!hasPermission) {
         return;
       }
 
       const localUri = await downloadImage(meme.url);
+      console.log('Local URI:', localUri);
       if (localUri) {
         const asset = await MediaLibrary.createAssetAsync(localUri);
         // console.log('Asset created:', asset);
@@ -165,6 +190,8 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
           text1: 'Image Saved',
           text2: 'Successfully saved image to gallery!',
         });
+      } else {
+        console.log('Local URI is not OK:');
       }
     } catch (error) {
       console.error('Error saving to gallery:', error);

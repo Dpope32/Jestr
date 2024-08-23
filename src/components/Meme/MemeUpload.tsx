@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import  styles  from './MemeUpload.styles';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import * as Haptics from 'expo-haptics';
 
 global.Buffer = global.Buffer || Buffer;
 
@@ -118,11 +119,16 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
         bottomOffset: 40,
         props: { backgroundColor: '#333', textColor: '#00ff00' },
       });
-  
       navigation.navigate('Feed' as never);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error: unknown) {
       console.error('Upload failed:', error);
-      Alert.alert("Error", `Failed to upload meme: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(
+        "Upload Failed",
+        "We couldn't upload your meme at this time. Please try again later.",
+        [{ text: "OK", onPress: () => console.log("OK Pressed") }]
+      );
     } finally {
       setIsUploading(false);
     }

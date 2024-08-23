@@ -206,10 +206,17 @@ const LP: React.FC<LPProps> = ({
                       <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                     </TouchableOpacity>
                   )}
-  
+                   <View style={styles.continueButtonsContainer}>
+                   <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
+                      <FontAwesome name="google" size={20} color="#000000" style={styles.buttonIcon} />
+                      <Text style={styles.googleButtonText}>Continue with Google</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.appleButton} onPress={handleAppleSignIn}>
+                      <FontAwesome name="apple" size={20} color="#FFFFFF" style={styles.buttonIcon} />
+                      <Text style={styles.appleButtonText}>Sign in with Apple</Text>
+                    </TouchableOpacity>
+                    </View>
                     {currentScreen === 'login' && (
-                      <View style={styles.socialContainer}>
-                        <Text style={styles.socialHeaderText}>Login with Social Media</Text>
                         <View style={styles.socialButtonsRow}>
                           <TouchableOpacity onPress={handleTwitterSignIn} style={styles.socialButton}>
                             <FontAwesome name="twitter" size={24} color="#1DA1F2" />
@@ -224,19 +231,7 @@ const LP: React.FC<LPProps> = ({
                             <FontAwesome name="instagram" size={24} color="#E1306C" />
                           </TouchableOpacity>
                         </View>
-                      </View>
                     )}
-  
-                    <View style={styles.continueButtonsContainer}>
-                      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
-                        <FontAwesome name="google" size={20} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText1}>Continue with Google</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.appleButton} onPress={handleAppleSignIn}>
-                        <FontAwesome name="apple" size={20} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText1}>Sign in with Apple</Text>
-                      </TouchableOpacity>
-                    </View>
                   </View>
                 )}
               </Animated.View>

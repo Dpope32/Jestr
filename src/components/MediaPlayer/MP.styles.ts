@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 220 : 150, // Adjust based on platform
+    bottom: Platform.OS === 'ios' ? 240 : 150, // Adjust based on platform
     left: 0,
     right: 20,
     flexDirection: 'row',
@@ -62,8 +62,8 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
     paddingHorizontal: 0,
-    gap: 10,
-    bottom: Platform.OS === 'ios' ? 220 : 150,
+    gap: 0,
+    bottom: Platform.OS === 'ios' ? 230 : 150,
     alignItems: 'center',
   },
   memeImage: {
@@ -103,6 +103,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  longPressModal: {
+    position: 'absolute', 
+    zIndex: 100, // Ensure it is on top of other elements
+    elevation: 100, // Required for Android to support zIndex
+    left: 0,
+    right: 0,
+    bottom: 0,
+    top: 0,  // Adjust as necessary for your design
   },
   profilePic: {
     width: 40,
