@@ -5,6 +5,7 @@ import { faThumbsUp, faComment, faShare, faSave, faPlus } from '@fortawesome/fre
 import { BlurView } from 'expo-blur';
 import { Animated } from 'react-native';
 import styles from './MP.styles';
+import { ShareType, User } from '../../types/types';
 
 interface IconButtonProps {
   icon: any;
@@ -28,6 +29,8 @@ interface IconsAndContentProps {
   memeUser: any;
   caption: string;
   uploadTimestamp: string;
+  index: number;
+  currentIndex: number;
   isFollowing: boolean;
   handleFollow: () => void;
   counts: {
@@ -45,7 +48,11 @@ interface IconsAndContentProps {
   formatDate: (date: string) => string;
   animatedBlurIntensity: Animated.Value;
   iconAreaRef: React.RefObject<View>;
+  onShare: (type: ShareType, username: string, message: string) => void;  // New prop
+  user: User | null;  // Pass user data
+  memeID: string;  // Pass meme ID
 }
+
 
 export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   memeUser,
@@ -62,9 +69,19 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   animatedBlurIntensity,
   iconAreaRef,
   isFollowing,
-  handleFollow
+  index,
+  currentIndex,
+  handleFollow,
+  onShare,  // New prop
+  user,  // New prop
+  memeID  // New prop
 }) => {
+  const isActive = index === currentIndex;
   //console.log('IconsAndContent rendered');
+  if (!isActive) {
+    return null; // Don't render if not the active item
+  }
+
 
   const handleLikePress = () => {
     console.log('Like button pressed');
@@ -77,8 +94,9 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   };
 
   const handleSharePress = () => {
-  //  console.log('Share button pressed');
-    // Implement share functionality
+    if (user && memeUser?.username) {
+      onShare('friend', memeUser.username, 'Check out this meme!');
+    }
   };
 
   const handleSavePress = () => {
@@ -114,30 +132,29 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
           </View>
         </View>
         <View
-  ref={iconAreaRef}
-  style={styles.iconColumn}
-  onLayout={(event) => {
-    const {x, y, width, height} = event.nativeEvent.layout;
-  //  console.log('Icon area layout:', {x, y, width, height});
-  }}
->
-  <IconButton
-    icon={faThumbsUp}
-    count={counts.likes}
-    onPress={handleLikePress}
-    color={liked || doubleLiked ? '#006400' : "#1bd40b"}
-  />
-  <IconButton
-    icon={faComment}
-    count={counts.comments}
-    onPress={handleCommentPress}
-  />
-  <IconButton
-    icon={faShare}
-    count={counts.shares}
-    onPress={handleSharePress}
-  />
-</View>
+          ref={iconAreaRef}
+          style={styles.iconColumn}
+          onLayout={(event) => {
+            const {x, y, width, height} = event.nativeEvent.layout;
+          }}
+        >
+          <IconButton
+            icon={faThumbsUp}
+            count={counts.likes}
+            onPress={handleLikePress}
+            color={liked || doubleLiked ? '#006400' : "#1bd40b"}
+          />
+          <IconButton
+            icon={faComment}
+            count={counts.comments}
+            onPress={handleCommentPress}
+          />
+          <IconButton
+            icon={faShare}
+            count={counts.shares}
+            onPress={handleSharePress}
+          />
+        </View>
       </BlurView>
     </Animated.View>
   );

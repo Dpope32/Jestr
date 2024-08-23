@@ -16,6 +16,14 @@ const WelcomeText = () => {
   const rotateY = useRef(new Animated.Value(0)).current;
   const [particles, setParticles] = useState<Particle[]>([]);
 
+  // Calculate the dynamic font size
+  const calculateFontSize = () => {
+    const baseWidth = 375; // base width for scaling (iPhone 11 Pro)
+    return Math.min(72, (width / baseWidth) * 72); // scale but cap at 72
+  };
+
+  const fontSize = calculateFontSize();
+
   useEffect(() => {
     const newParticles: Particle[] = Array(20).fill(0).map(() => ({
       left: Math.random() * width,
@@ -75,7 +83,7 @@ const WelcomeText = () => {
   });
 
   const textStyle: Animated.WithAnimatedObject<TextStyle> = {
-    fontSize: 72,
+    fontSize, // Use dynamic font size
     fontWeight: 'bold',
     color: textColor,
     textShadowColor: 'rgba(0, 255, 0, 0.7)',
@@ -127,7 +135,6 @@ const WelcomeText = () => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {

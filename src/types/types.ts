@@ -29,7 +29,8 @@ export interface User {
   }
   
   export type ProfileImage = {
-    uri: string;
+    url?: string;
+    uri?: string;
     width: number;
     height: number;
     type?: 'image' | 'video';
@@ -116,6 +117,7 @@ export type MediaPlayerProps = {
   toggleCommentFeed: () => void;
   goToPrevMedia: () => void;
   goToNextMedia: () => void;
+  memes: Meme[];
   likedIndices: Set<number>;
   doubleLikedIndices: Set<number>;
   downloadedIndices: Set<number>;
@@ -130,18 +132,24 @@ export type MediaPlayerProps = {
   memeID: string;
   nextMedia: string | null;
   prevMedia: string | null;
+  index: number;
+  currentIndex: number;
+  setCurrentIndex: (index: number) => void;
   initialLikeStatus: {
     liked: boolean;
     doubleLiked: boolean;
   };
   onLikeStatusChange: (memeID: string, status: { liked: boolean; doubleLiked: boolean }, newLikeCount: number) => void;
-  liked: boolean; // Add this line
-  doubleLiked: boolean; // Add this line
+  liked: boolean;
+  doubleLiked: boolean;
   isDarkMode: boolean;
   setIsDarkMode?: React.Dispatch<React.SetStateAction<boolean>>;
   onLongPressStart: () => void;
   onLongPressEnd: () => void;
+  isCommentFeedVisible: boolean;  // Add this line
+  isProfilePanelVisible: boolean; // Add this line
 };
+
 
 export type ProfilePanelProps = {
   isVisible: boolean;

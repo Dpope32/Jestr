@@ -249,12 +249,12 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
       paddingHorizontal: 30, // Slightly reduce padding for better fit on smaller screens
     },
     lottieAnimation: {
-      width: 350,
+      width: 200,
       height: 250,
       marginTop: -100, // Adjusted for a better layout
     },
     title: {
-      fontSize: 40, // Slightly larger for emphasis
+      fontSize: 30, // Slightly larger for emphasis
       fontWeight: 'bold',
       marginVertical: 10,
       color: '#FFF',
@@ -264,7 +264,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
       textShadowRadius: 8,
     },
     description: {
-      fontSize: 18,
+      fontSize: 16,
       textAlign: 'center',
       color: '#EAEAEA', // Use a lighter color for better readability
       lineHeight: 36,

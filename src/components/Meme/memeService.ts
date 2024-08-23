@@ -23,53 +23,60 @@ export const fetchMemes = async (
   limit: number = 5,
   accessToken: string,
 ): Promise<FetchMemesResult> => {
-  try {
-    //console.log('fetchMemes called with:', { lastEvaluatedKey, userEmail, limit, accessToken: accessToken.substring(0, 10) + '...' });
+  const maxRetries = 3;
+  let retries = 0;
 
-    const response = await fetch(`${API_URL}/fetchMemes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        operation: 'fetchMemes',
-        lastEvaluatedKey,
-        userEmail,
-        limit,
-      }),
-    });
+  while (retries < maxRetries) {
+    try {
+      //console.log('fetchMemes called with:', { lastEvaluatedKey, userEmail, limit, accessToken: accessToken.substring(0, 10) + '...' });
 
-    // console.log('fetchMemes response status:', response.status);
+      const response = await fetch(`${API_URL}/fetchMemes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          operation: 'fetchMemes',
+          lastEvaluatedKey,
+          userEmail,
+          limit,
+        }),
+      });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('Error response body:', errorBody);
-      throw new Error(
-        `HTTP error! status: ${response.status}, body: ${errorBody}`,
-      );
+      // console.log('fetchMemes response status:', response.status);
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('Error response body:', errorBody);
+        throw new Error(
+          `HTTP error! status: ${response.status}, body: ${errorBody}`,
+        );
+      }
+
+      const data = await response.json();
+      //console.log('fetchMemes response data:', JSON.stringify(data, null, 2));
+
+      if (!data.data || !Array.isArray(data.data.memes)) {
+        throw new Error('Invalid response format');
+      }
+
+      return {
+        memes: data.data.memes,
+        lastEvaluatedKey: data.data.lastEvaluatedKey,
+      };
+    } catch (error) {
+      console.error(`Attempt ${retries + 1} failed:`, error);
+      retries++;
+      if (retries === maxRetries) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000 * retries));
     }
-
-    const data = await response.json();
-    //console.log('fetchMemes response data:', JSON.stringify(data, null, 2));
-
-    if (!data.data || !Array.isArray(data.data.memes)) {
-      throw new Error('Invalid response format');
-    }
-
-    return {
-      memes: data.data.memes,
-      lastEvaluatedKey: data.data.lastEvaluatedKey,
-    };
-  } catch (error) {
-    console.error('Error in fetchMemes:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-    return {memes: [], lastEvaluatedKey: null};
   }
+  throw new Error('Max retries reached');
 };
+
 export const uploadMeme = async (
   mediaUri: string,
   userEmail: string,
