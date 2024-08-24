@@ -21,7 +21,7 @@ import LottieView from 'lottie-react-native';
 import SafeImage from '../shared/SafeImage';
 import styles from './MP.styles';
 import {MediaPlayerProps} from '../../types/types';
-import {addFollow , fetchBatchStatus, recordMemeViews} from '../../services/authFunctions';
+import {addFollow , fetchBatchStatus} from '../../services/authFunctions';
 import {usePanResponder} from './usePanResponder';
 import {IconsAndContent} from './MediaPlayerContent';
 import {useMediaPlayerLogic} from './useMediaPlayerLogic';
@@ -150,55 +150,38 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         useNativeDriver: true,
       }).start();
     }, [currentMedia, mediaType, handleMediaError, fadeAnim]);
-
-    const recordViews = useCallback(async () => {
-      const now = Date.now();
-      if (now - lastRecordTimeRef.current > 30000 && viewedMemes.size > 0 && user?.email) {
-        const memeViews = Array.from(viewedMemes).map(memeID => ({
-          email: user.email,
-          memeID,
-        }));
-        try {
-          await recordMemeViews(memeViews);
-          setViewedMemes(new Set());
-          lastRecordTimeRef.current = now;
-        } catch (error) {
-          console.error('Failed to record meme views:', error);
-        }
-      }
-    }, [viewedMemes, user?.email]);
     
-    const checkBatchStatus = useCallback(async () => {
-      if (currentUserId && memes.length > 0 && user?.email) {
-        const memeIDs = memes.map(meme => meme.memeID);
-        const uniqueUserEmails = Array.from(new Set(
-          memes.map(meme => meme.memeUser?.email).filter((email): email is string => Boolean(email))
-        ));
+  //  const checkBatchStatus = useCallback(async () => {
+  //    if (currentUserId && memes.length > 0 && user?.email) {
+  //      const memeIDs = memes.map(meme => meme.memeID);
+  //      const uniqueUserEmails = Array.from(new Set(
+  //        memes.map(meme => meme.memeUser?.email).filter((email): email is string => Boolean(email))
+  //      ));
         
-        try {
-          const batchStatus = await fetchBatchStatus(memeIDs, user.email, uniqueUserEmails);
+  //      try {
+  //        const batchStatus = await fetchBatchStatus(memeIDs, user.email, uniqueUserEmails);
           
-          if (batchStatus && batchStatus.followStatuses) {
-            uniqueUserEmails.forEach(email => {
-              if (batchStatus.followStatuses[email] !== undefined) {
-                updateFollowStatus(email, batchStatus.followStatuses[email]);
-              }
-            });
-          }
-        } catch (error) {
-          console.error('Error checking batch status:', error);
-        }
-      }
-    }, [currentUserId, memes, user, updateFollowStatus]);
+  //        if (batchStatus && batchStatus.followStatuses) {
+  //          uniqueUserEmails.forEach(email => {
+  //            if (batchStatus.followStatuses[email] !== undefined) {
+  //              updateFollowStatus(email, batchStatus.followStatuses[email]);
+  //            }
+  //          });
+  //        }
+  //      } catch (error) {
+  //        console.error('Error checking batch status:', error);
+   //     }
+   //   }
+  //  }, [currentUserId, memes, user, updateFollowStatus]);
     
     // Debouncing the function to avoid frequent calls during rapid state updates
     
     
 
-    const debouncedCheckBatchStatus = useMemo(
-      () => debounce(checkBatchStatus, 1000),
-      [checkBatchStatus]
-    );
+ //   const debouncedCheckBatchStatus = useMemo(
+ //     () => debounce(checkBatchStatus, 1000),
+ //     [checkBatchStatus]
+ //   );
 
     useEffect(() => {
       loadMedia();
@@ -213,16 +196,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       if (memeID && index === currentIndex && !viewedMemes.has(memeID)) {
         setViewedMemes(prev => new Set(prev).add(memeID));
       }
-
-      debouncedCheckBatchStatus();
-
-      const intervalId = setInterval(recordViews, 30000);
-
-      return () => {
-        clearInterval(intervalId);
-        recordViews(); // Ensure any remaining views are recorded when component unmounts
-        debouncedCheckBatchStatus.cancel();
-      };
     }, [
       loadMedia,
       nextMedia,
@@ -230,8 +203,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       memeID,
       index,
       currentIndex,
-      debouncedCheckBatchStatus,
-      recordViews
+//      debouncedCheckBatchStatus,
     ]);
     
     const handleSingleTap = useCallback(() => {
