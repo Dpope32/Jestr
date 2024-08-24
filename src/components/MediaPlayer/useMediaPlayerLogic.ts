@@ -28,8 +28,6 @@ interface UseMediaPlayerLogicProps {
 }
 
 export const useMediaPlayerLogic = ({
-  initialLiked,
-  initialDoubleLiked,
   initialLikeCount,
   initialDownloadCount,
   initialShareCount,
@@ -43,8 +41,8 @@ export const useMediaPlayerLogic = ({
   status,
   handleSingleTap,
 }: UseMediaPlayerLogicProps) => {
-  const [liked, setLiked] = useState(initialLiked);
-  const [doubleLiked, setDoubleLiked] = useState(initialDoubleLiked);
+  const [liked, setLiked] = useState(false);
+  const [doubleLiked, setDoubleLiked] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -67,22 +65,22 @@ export const useMediaPlayerLogic = ({
     setModalVisible(true);
   };
 
-  useEffect(() => {
-    const checkLikeStatus = async () => {
-      if (user && user.email) {
-        try {
-          const result = await getLikeStatus(memeID, user.email);
-          if (result) {
-            setLiked(result.liked);
-            setDoubleLiked(result.doubleLiked);
-          }
-        } catch (error) {
-          console.error('Error checking like status:', error);
-        }
-      }
-    };
-    checkLikeStatus();
-  }, [memeID, user]);
+//  useEffect(() => {
+//    const checkLikeStatus = async () => {
+//      if (user && user.email) {
+//        try {
+//          const result = await getLikeStatus(memeID, user.email);
+//          if (result) {
+//            setLiked(result.liked);
+//            setDoubleLiked(result.doubleLiked);
+//          }
+//        } catch (error) {
+//          console.error('Error checking like status:', error);
+//        }
+//      }
+//    };
+//    checkLikeStatus();
+//  }, [memeID, user]);
 
   const handleLikePress = useCallback(async () => {
     if (user) {
@@ -101,12 +99,9 @@ export const useMediaPlayerLogic = ({
         newLikeCount -= 1;
       }
 
-      // Update only if there's a change to reduce unnecessary renders
-      if (newLikedState !== liked || newDoubleLikedState !== doubleLiked) {
-        setLiked(newLikedState);
-        setDoubleLiked(newDoubleLikedState);
-        setCounts(prevCounts => ({...prevCounts, likes: newLikeCount}));
-      }
+      setLiked(newLikedState);
+      setDoubleLiked(newDoubleLikedState);
+      setCounts(prevCounts => ({...prevCounts, likes: newLikeCount}));
 
       try {
         await updateMemeReaction(
@@ -124,22 +119,12 @@ export const useMediaPlayerLogic = ({
       } catch (error) {
         console.error('Error updating meme reaction:', error);
         // Revert changes if the request fails
-        setLiked(initialLiked);
-        setDoubleLiked(initialDoubleLiked);
+        setLiked(!newLikedState);
+        setDoubleLiked(!newDoubleLikedState);
         setCounts(prevCounts => ({...prevCounts, likes: initialLikeCount}));
       }
     }
-  }, [
-    user,
-    liked,
-    doubleLiked,
-    counts.likes,
-    memeID,
-    onLikeStatusChange,
-    initialLiked,
-    initialDoubleLiked,
-    initialLikeCount,
-  ]);
+  }, [user, liked, doubleLiked, counts.likes, memeID, onLikeStatusChange, initialLikeCount]);
 
   const debouncedHandleLike = useCallback(
     debounce(() => {

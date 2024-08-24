@@ -21,7 +21,7 @@ import LottieView from 'lottie-react-native';
 import SafeImage from '../shared/SafeImage';
 import styles from './MP.styles';
 import {MediaPlayerProps} from '../../types/types';
-import {addFollow} from '../../services/authFunctions';
+import {addFollow , fetchBatchStatus, recordMemeViews} from '../../services/authFunctions';
 import {usePanResponder} from './usePanResponder';
 import {IconsAndContent} from './MediaPlayerContent';
 import {useMediaPlayerLogic} from './useMediaPlayerLogic';
@@ -29,6 +29,7 @@ import {useUserStore} from '../../utils/userStore';
 import {LongPressModal} from './LongPressModal';
 import {checkFollowStatus} from '../../services/authFunctions';
 import {useTheme} from '../../theme/ThemeContext';
+import { debounce } from 'lodash';
 
 const SaveSuccessModal = React.lazy(() => import('../Modals/SaveSuccessModal'));
 const ShareModal = React.lazy(() => import('../Modals/ShareModal'));
@@ -85,99 +86,20 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     const [isFollowing, setIsFollowing] = useState(false);
     const [canFollow, setCanFollow] = useState(true);
     const [lastTap, setLastTap] = useState(0);
-    const [isLongPressModalVisible, setIsLongPressModalVisible] =
-      useState(false);
+    const [isLongPressModalVisible, setIsLongPressModalVisible] = useState(false);
+    const [followStatuses, setFollowStatuses] = useState({});
     const [likePosition, setLikePosition] = useState({x: 0, y: 0});
     const [showLikeAnimation, setShowLikeAnimation] = useState(false);
-
     // const isActive = index === currentIndex;
+    const [viewedMemes, setViewedMemes] = useState<Set<string>>(new Set());
+    const lastBatchCheckTimeRef = useRef(0);
+    const lastRecordTimeRef = useRef(0);
 
-    useEffect(() => {
-      //   console.log('MediaPlayer - Received memes:', memes.length);
-      //   console.log(`Current media changed to: ${currentMedia}`);
-      //  console.log(`Current index: ${currentIndex}`);
-      loadMedia();
+    const updateFollowStatus = useCallback((email: string, status: boolean) => {
+      setFollowStatuses(prev => ({...prev, [email]: status}));
+    }, []);
 
-      if (nextMedia) {
-        //    console.log(`Prefetching next media: ${nextMedia}`);
-        Image.prefetch(nextMedia);
-      }
-      if (prevMedia) {
-        //    console.log(`Prefetching previous media: ${prevMedia}`);
-        Image.prefetch(prevMedia);
-      }
-
-      const checkFollowStatusAsync = async () => {
-        if (currentUserId && memeUser.email) {
-          try {
-            const status = await checkFollowStatus(
-              currentUserId,
-              memeUser.email,
-            );
-            setIsFollowing(status.isFollowing);
-            setCanFollow(status.canFollow);
-          } catch (error) {
-            console.error('Error checking follow status:', error);
-          }
-        }
-      };
-
-      checkFollowStatusAsync();
-    }, [
-      currentMedia,
-      mediaType,
-      nextMedia,
-      prevMedia,
-      currentUserId,
-      memeUser.email,
-      memes,
-    ]);
-
-    const handleSingleTap = useCallback(() => {
-      if (mediaType === 'video' && video.current) {
-        if (status.isLoaded && status.isPlaying) {
-          video.current.pauseAsync();
-        } else if (status.isLoaded) {
-          video.current.playAsync();
-        }
-      }
-    }, [mediaType, status]);
-
-    const {
-      liked,
-      doubleLiked,
-      isSaved,
-      showSaveModal,
-      showShareModal,
-      showToast,
-      toastMessage,
-      counts,
-      friends,
-      debouncedHandleLike,
-      handleDownloadPress,
-      onShare,
-      formatDate,
-      setShowSaveModal,
-      setShowShareModal,
-      setIsSaved,
-      setCounts,
-    } = useMediaPlayerLogic({
-      initialLiked,
-      initialDoubleLiked,
-      initialLikeCount,
-      initialDownloadCount,
-      initialShareCount,
-      initialCommentCount,
-      user,
-      memeID,
-      handleDownload,
-      onLikeStatusChange,
-      mediaType,
-      video,
-      status,
-      handleSingleTap,
-    });
-
+    
     const handleMediaError = useCallback(() => {
       setMediaLoadError(true);
       goToNextMedia();
@@ -228,6 +150,134 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         useNativeDriver: true,
       }).start();
     }, [currentMedia, mediaType, handleMediaError, fadeAnim]);
+
+    const recordViews = useCallback(async () => {
+      const now = Date.now();
+      if (now - lastRecordTimeRef.current > 30000 && viewedMemes.size > 0 && user?.email) {
+        const memeViews = Array.from(viewedMemes).map(memeID => ({
+          email: user.email,
+          memeID,
+        }));
+        try {
+          await recordMemeViews(memeViews);
+          setViewedMemes(new Set());
+          lastRecordTimeRef.current = now;
+        } catch (error) {
+          console.error('Failed to record meme views:', error);
+        }
+      }
+    }, [viewedMemes, user?.email]);
+    
+    const checkBatchStatus = useCallback(async () => {
+      if (currentUserId && memes.length > 0 && user?.email) {
+        const memeIDs = memes.map(meme => meme.memeID);
+        const uniqueUserEmails = Array.from(new Set(
+          memes.map(meme => meme.memeUser?.email).filter((email): email is string => Boolean(email))
+        ));
+        
+        try {
+          const batchStatus = await fetchBatchStatus(memeIDs, user.email, uniqueUserEmails);
+          
+          if (batchStatus && batchStatus.followStatuses) {
+            uniqueUserEmails.forEach(email => {
+              if (batchStatus.followStatuses[email] !== undefined) {
+                updateFollowStatus(email, batchStatus.followStatuses[email]);
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error checking batch status:', error);
+        }
+      }
+    }, [currentUserId, memes, user, updateFollowStatus]);
+    
+    // Debouncing the function to avoid frequent calls during rapid state updates
+    
+    
+
+    const debouncedCheckBatchStatus = useMemo(
+      () => debounce(checkBatchStatus, 1000),
+      [checkBatchStatus]
+    );
+
+    useEffect(() => {
+      loadMedia();
+    
+      if (nextMedia) {
+        Image.prefetch(nextMedia);
+      }
+      if (prevMedia) {
+        Image.prefetch(prevMedia);
+      }
+
+      if (memeID && index === currentIndex && !viewedMemes.has(memeID)) {
+        setViewedMemes(prev => new Set(prev).add(memeID));
+      }
+
+      debouncedCheckBatchStatus();
+
+      const intervalId = setInterval(recordViews, 30000);
+
+      return () => {
+        clearInterval(intervalId);
+        recordViews(); // Ensure any remaining views are recorded when component unmounts
+        debouncedCheckBatchStatus.cancel();
+      };
+    }, [
+      loadMedia,
+      nextMedia,
+      prevMedia,
+      memeID,
+      index,
+      currentIndex,
+      debouncedCheckBatchStatus,
+      recordViews
+    ]);
+    
+    const handleSingleTap = useCallback(() => {
+      if (mediaType === 'video' && video.current) {
+        if (status.isLoaded && status.isPlaying) {
+          video.current.pauseAsync();
+        } else if (status.isLoaded) {
+          video.current.playAsync();
+        }
+      }
+    }, [mediaType, status]);
+
+    const {
+      liked,
+      doubleLiked,
+      isSaved,
+      showSaveModal,
+      showShareModal,
+      showToast,
+      toastMessage,
+      counts,
+      friends,
+      debouncedHandleLike,
+      handleDownloadPress,
+      onShare,
+      formatDate,
+      setShowSaveModal,
+      setShowShareModal,
+      setIsSaved,
+      setCounts,
+    } = useMediaPlayerLogic({
+      initialLiked,
+      initialDoubleLiked,
+      initialLikeCount,
+      initialDownloadCount,
+      initialShareCount,
+      initialCommentCount,
+      user,
+      memeID,
+      handleDownload,
+      onLikeStatusChange,
+      mediaType,
+      video,
+      status,
+      handleSingleTap,
+    });
 
     const handleSwipeUp = useCallback(() => {
       // console.log(`MediaPlayer ${index} - Swipe up`);
