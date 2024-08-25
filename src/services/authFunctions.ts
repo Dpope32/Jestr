@@ -37,6 +37,18 @@ type Asset = {
   name: string;
 };
 
+type MemeView = {
+  email: string;
+  memeID: string;
+};
+
+type TransformedMemeView = {
+  email: string;
+  memeIDs: string[];
+  ttl: number;
+};
+
+
 type LandingPageNavigationProp = StackNavigationProp<
   RootStackParamList,
   'Feed'
@@ -1334,26 +1346,67 @@ export const getUser = async (userEmail: string): Promise<User | null> => {
   }
 };
 
-export const recordMemeViews = async (
-  memeViews: {email: string; memeID: string}[],
-): Promise<void> => {
-  // console.log(
-  //   'Attempting to record meme views:',
-  //   JSON.stringify(memeViews, null, 2),
-  // );
+export const fetchBatchStatus = async (memeIDs: string[], userEmail: string, followeeIDs: string[]): Promise<{followStatuses: {[key: string]: boolean}}> => {
+  try {
+    // Log the input parameters to check what is being sent
+    console.log('Fetching batch status with parameters:', { memeIDs, userEmail, followeeIDs });
 
-  // De-duplicate meme views
-  const uniqueViews = Array.from(
-    new Set(memeViews.map(view => `${view.email}:${view.memeID}`)),
-  ).map(key => {
-    const [email, memeID] = key.split(':');
-    return {email, memeID};
-  });
+    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/batchCheckStatus', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        memeIDs,
+        userEmail,
+        followeeIDs,
+      }),
+    });
 
-  // console.log(
-  //   'De-duplicated meme views:',
-  //   JSON.stringify(uniqueViews, null, 2),
-  // );
+    if (!response.ok) {
+      throw new Error('Failed to fetch batch status');
+    }
+
+    const data = await response.json();
+
+    // Log the data received from the API to verify the response
+    console.log('Batch status fetched successfully:', data);
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching batch status:', error);
+    return { followStatuses: {} }; // Return an empty object if there's an error
+  }
+};
+
+
+export const recordMemeViews = async (memeViews: {email: string; memeID: string}[]): Promise<void> => {
+  // Log the incoming data to ensure it's correct
+  console.log('Received meme views:', JSON.stringify(memeViews));
+
+  if (!Array.isArray(memeViews) || memeViews.length === 0) {
+    console.error('memeViews must be a non-empty array.');
+    return;
+  }
+
+  // Transform single meme views to the expected format if necessary
+// Transform single meme views to the expected format if necessary
+const transformedViews = memeViews.reduce<TransformedMemeView[]>((acc, view) => {
+  const existing = acc.find(v => v.email === view.email);
+  if (existing) {
+      existing.memeIDs.push(view.memeID);
+  } else {
+      acc.push({
+          email: view.email,
+          memeIDs: [view.memeID],
+          ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60)  // Add TTL if needed
+      });
+  }
+  return acc;
+}, []);
+
+  // Log transformed data
+  console.log('Transformed meme views for batch processing:', JSON.stringify(transformedViews));
 
   try {
     const response = await fetch(
@@ -1362,33 +1415,21 @@ export const recordMemeViews = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken('accessToken')}`,
         },
         body: JSON.stringify({
           operation: 'recordMemeView',
-          memeViews: uniqueViews,
+          memeViews: transformedViews,
         }),
-      },
+      }
     );
 
-    const responseText = await response.text();
-    console.log('Raw response from server:', responseText);
-
-    let responseData;
-    try {
-      responseData = JSON.parse(responseText);
-    } catch (e) {
-      console.error('Failed to parse response as JSON:', responseText);
-      throw new Error('Invalid response format');
-    }
-
     if (!response.ok) {
-      console.error('Error response:', responseData);
-      throw new Error(
-        `Failed to record meme views: ${responseData.message || responseText}`,
-      );
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to record meme views');
     }
 
-    console.log('Meme views recorded successfully:', responseData);
+    console.log('Meme views recorded successfully');
   } catch (error) {
     console.error('Error recording meme views:', error);
     throw error;
