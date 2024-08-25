@@ -11,7 +11,7 @@ const {
   ScanCommand,
   QueryCommand
 } = require('@aws-sdk/lib-dynamodb');
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, BatchGetItemCommand } = require('@aws-sdk/client-dynamodb');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { CognitoJwtVerifier } = require('aws-jwt-verify');
@@ -1657,6 +1657,26 @@ case 'getUserGrowthRate':
       }
     }
 
+    case 'batchCheckStatus': {
+      const { memeIDs, userEmail, followeeIDs } = requestBody;
+      if (!memeIDs || memeIDs.length === 0 || !userEmail || !followeeIDs || followeeIDs.length === 0) {
+        console.log('Missing or empty required fields:', { memeIDs, userEmail, followeeIDs });
+        return createResponse(400, 'memeIDs, userEmail, and followeeIDs are required and must not be empty.');
+      }
+      try {
+        console.log('Processing batch status check:', { userEmail, followeeIDs });
+        const followStatuses = await batchCheckFollowStatus(userEmail, followeeIDs);
+        console.log('Batch status check successful:', { followStatuses });
+        return createResponse(200, 'Batch status check successful.', {
+          followStatuses
+        });
+      } catch (error) {
+        console.error(`Error in batch status check: ${error}`, { userEmail, followeeIDs });
+        return createResponse(500, 'Failed to perform batch status check.', { error: error.message });
+      }
+    }
+    
+
     case 'completeProfile': {
      // console.log('Received completeProfile request:', JSON.stringify(requestBody));
     
@@ -1855,25 +1875,33 @@ case 'recordMemeView':
       return createResponse(400, 'memeViews array is required and must not be empty.');
     }
 
-  //  console.log('Received meme views:', JSON.stringify(memeViews, null, 2));
+    console.log('Received meme views:', JSON.stringify(memeViews, null, 2));
 
-    // Ensure unique timestamps for each item
+    // Deduplicate meme views
+    const uniqueMemeViews = memeViews.reduce((acc, view) => {
+      const key = `${view.email}-${view.memeID}`;
+      if (!acc[key]) {
+        acc[key] = view;
+      }
+      return acc;
+    }, {});
+
     const batchWriteParams = {
       RequestItems: {
-        'UserViewHistory': memeViews.map((view, index) => ({
+        'UserViewHistory': Object.values(uniqueMemeViews).map((view, index) => ({
           PutRequest: {
             Item: {
-              email: view.email,
-              MemeID: view.memeID,
-              Timestamp: new Date(Date.now() + index).toISOString(), // Ensure unique timestamp
-              ViewTimestamp: new Date().toISOString()
+              email: { S: view.email },
+              MemeID: { S: view.memeID },
+              Timestamp: { S: new Date(Date.now() + index).toISOString() },
+              ViewTimestamp: { S: new Date().toISOString() }
             }
           }
         }))
       }
     };
 
-   // console.log('BatchWrite params:', JSON.stringify(batchWriteParams, null, 2));
+    console.log('BatchWrite params:', JSON.stringify(batchWriteParams, null, 2));
 
     await docClient.send(new BatchWriteCommand(batchWriteParams));
     return createResponse(200, 'Meme views recorded successfully.');
