@@ -127,6 +127,50 @@ const updateUserProfile = async (email, username, profilePicUrl, displayName, bi
   }
 };
 
+const batchCheckFollowStatus = async (followerId, followeeIDs) => {
+  const batchGetParams = {
+    RequestItems: {
+      'UserRelationships': {
+        Keys: followeeIDs.map(followeeId => ({
+          UserID: { S: followerId },
+          RelationUserID: { S: followeeId }
+        })),
+        ProjectionExpression: 'RelationUserID'
+      }
+    }
+  };
+
+  try {
+    const { Responses } = await docClient.send(new BatchGetItemCommand(batchGetParams));
+    const followStatuses = {};
+
+    if (Responses && Responses.UserRelationships) {
+      // Initialize all followees as not followed
+      followeeIDs.forEach(followeeId => {
+        followStatuses[followeeId] = false;
+      });
+
+      // Update status for found relationships
+      Responses.UserRelationships.forEach(item => {
+        if (item.RelationUserID && item.RelationUserID.S) {
+          followStatuses[item.RelationUserID.S] = true;
+        }
+      });
+    } else {
+      console.warn('No UserRelationships found in batchGet response');
+      // Initialize all as not followed if no relationships found
+      followeeIDs.forEach(followeeId => {
+        followStatuses[followeeId] = false;
+      });
+    }
+
+    return followStatuses;
+  } catch (error) {
+    console.error('Error checking batch follow status:', error);
+    throw error;
+  }
+};
+
 const addFollow = async (followerId, followeeId) => {
   if (followerId === followeeId) {
   //  console.log('User attempted to follow themselves');
@@ -1658,12 +1702,18 @@ case 'getUserGrowthRate':
     }
 
     case 'batchCheckStatus': {
-      const { memeIDs, userEmail, followeeIDs } = requestBody;
-      if (!memeIDs || memeIDs.length === 0 || !userEmail || !followeeIDs || followeeIDs.length === 0) {
-        console.log('Missing or empty required fields:', { memeIDs, userEmail, followeeIDs });
-        return createResponse(400, 'memeIDs, userEmail, and followeeIDs are required and must not be empty.');
-      }
       try {
+        const { memeIDs, userEmail, followeeIDs } = JSON.parse(event.body);
+        if (!memeIDs || !Array.isArray(memeIDs) || memeIDs.length === 0) {
+          return createResponse(400, 'memeIDs is required and must be a non-empty array.');
+        }
+        if (!userEmail) {
+          return createResponse(400, 'userEmail is required.');
+        }
+        if (!followeeIDs || !Array.isArray(followeeIDs) || followeeIDs.length === 0) {
+          return createResponse(400, 'followeeIDs is required and must be a non-empty array.');
+        }
+    
         console.log('Processing batch status check:', { userEmail, followeeIDs });
         const followStatuses = await batchCheckFollowStatus(userEmail, followeeIDs);
         console.log('Batch status check successful:', { followStatuses });
@@ -1671,7 +1721,7 @@ case 'getUserGrowthRate':
           followStatuses
         });
       } catch (error) {
-        console.error(`Error in batch status check: ${error}`, { userEmail, followeeIDs });
+        console.error(`Error in batch status check: ${error}`);
         return createResponse(500, 'Failed to perform batch status check.', { error: error.message });
       }
     }
