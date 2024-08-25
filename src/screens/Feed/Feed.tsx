@@ -2,14 +2,14 @@ import React, {useState, useCallback, useMemo, useEffect} from 'react';
 import {View, Text} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {debounce, set} from 'lodash';
+import {debounce} from 'lodash';
 import * as Haptics from 'expo-haptics';
 
 import {useTheme} from '../../theme/ThemeContext';
 import {useMemes} from './useMemes';
 import {useUserStore} from '../../utils/userStore';
 import {getToken} from '../../utils/secureStore';
-import {fetchComments} from '../../components/Meme/memeService';
+// import {fetchComments} from '../../components/Meme/memeService';
 
 import styles from './Feed.styles';
 import {RootStackParamList, User} from '../../types/types';
@@ -26,40 +26,18 @@ const Feed: React.FC = React.memo(() => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const user = useUserStore(state => state as User);
 
+  const bgdColor = isDarkMode ? '#000' : '#1C1C1C';
+
   const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [currCommentsLength, setCurrCommentsLength] = useState(0);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  const {memes, isLoading, error, fetchMoreMemes, fetchInitialMemes} = useMemes(
-    user,
-    accessToken,
-  );
+  // == CUSTOM HOOK for DATA in LISTING ==
+  const {memes, isLoading, error, fetchMoreMemes, fetchInitialMemes} =
+    useMemes();
 
-  // NOT NECESSARY, memes[currentMediaIndex].commentCount is appropiate and already available
-  // to pass through props to child components
-  // and would be the latest value from BackEnd
-  const updateCommentCount = async (memeID: string) => {
-    const updatedComments = await fetchComments(memeID);
-    // console.log('Updated comments:', updatedComments.length);
-    setCurrCommentsLength(updatedComments.length);
-  };
-
-  // useEffect(() => {
-  //   console.log('Feed - Memes updated:', memes.length);
-  // }, [memes]);
-
-  useEffect(() => {
-    console.log('Feed - Current media index changed:', currentMediaIndex);
-    // console.log('memes[currentMediaIndex].memeID', memes[currentMediaIndex]);
-    // if (memes[currentMediaIndex]) {
-    //   console.log('111111');
-    //   updateCommentCount(memes[currentMediaIndex].memeID);
-    // }
-  }, [currentMediaIndex, memes]);
-
-  // Fetch access token
+  // NOT NECESSARY to Fetch access token I think
   useEffect(() => {
     const fetchToken = async () => {
       const token = await getToken('accessToken');
@@ -146,7 +124,7 @@ const Feed: React.FC = React.memo(() => {
         isCommentFeedVisible={isCommentFeedVisible}
         isProfilePanelVisible={profilePanelVisible}
         isLoadingMore={isLoading}
-        numOfComments={currCommentsLength}
+        numOfComments={0}
       />
     );
   }, [
@@ -160,7 +138,6 @@ const Feed: React.FC = React.memo(() => {
     isCommentFeedVisible,
     profilePanelVisible,
     isLoading,
-    currCommentsLength,
   ]);
 
   // Memoized Bottom Panel
@@ -190,11 +167,7 @@ const Feed: React.FC = React.memo(() => {
   // }
 
   return (
-    <View
-      style={[
-        styles.container,
-        {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
-      ]}>
+    <View style={[styles.container, {backgroundColor: bgdColor}]}>
       {/* == TOP PANEL == */}
       {memoizedTopPanel}
 
@@ -228,7 +201,9 @@ const Feed: React.FC = React.memo(() => {
           user={user}
           isCommentFeedVisible={isCommentFeedVisible}
           toggleCommentFeed={toggleCommentFeed}
-          updateCommentCount={updateCommentCount}
+          updateCommentCount={() => {
+            // should get commentCount from BackEnd
+          }}
         />
       )}
     </View>

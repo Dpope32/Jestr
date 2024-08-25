@@ -13,7 +13,6 @@ import {
   getCurrentUser,
   fetchAuthSession,
   signIn,
-  SignInOutput,
 } from '@aws-amplify/auth';
 import {RootStackParamList, ProfileImage} from '../types/types';
 import * as FileSystem from 'expo-file-system';
@@ -27,7 +26,6 @@ import {
 } from '../utils/secureStore';
 import * as SecureStore from 'expo-secure-store';
 import * as ImageManipulator from 'expo-image-manipulator';
-//import * as Google from 'expo-auth-session/providers/google';
 
 type ProfileImageOrString = ProfileImage | string;
 
@@ -48,7 +46,6 @@ type TransformedMemeView = {
   ttl: number;
 };
 
-
 type LandingPageNavigationProp = StackNavigationProp<
   RootStackParamList,
   'Feed'
@@ -56,24 +53,24 @@ type LandingPageNavigationProp = StackNavigationProp<
 const API_ENDPOINT =
   'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser';
 
- // const [request, response, promptAsync] = Google.useAuthRequest({
-   // expoClientId: 'YOUR_EXPO_CLIENT_ID',
-  //  iosClientId: 'YOUR_IOS_CLIENT_ID',
- //   androidClientId: '667171669430-9hqir57viejk59ud9b02g7cijc2v56tc.apps.googleusercontent.com',
+// const [request, response, promptAsync] = Google.useAuthRequest({
+// expoClientId: 'YOUR_EXPO_CLIENT_ID',
+//  iosClientId: 'YOUR_IOS_CLIENT_ID',
+//   androidClientId: '667171669430-9hqir57viejk59ud9b02g7cijc2v56tc.apps.googleusercontent.com',
 //    webClientId: 'YOUR_WEB_CLIENT_ID',
 //  });
 
- // const handleGoogleSignIn = async () => {
- //   try {
-  //    const result = await promptAsync();
-  //    if (result.type === 'success') {
-        // Handle successful sign-in
-  //      const { authentication } = result;
-        // Use the access token to fetch user info or sign in to your backend
- ////     }
-  //  } catch (error) {
-   //   console.error('Google Sign-In Error:', error);
-  // }
+// const handleGoogleSignIn = async () => {
+//   try {
+//    const result = await promptAsync();
+//    if (result.type === 'success') {
+// Handle successful sign-in
+//      const { authentication } = result;
+// Use the access token to fetch user info or sign in to your backend
+////     }
+//  } catch (error) {
+//   console.error('Google Sign-In Error:', error);
+// }
 //  };
 
 export const handleGoogleSignIn = async () => {
@@ -100,13 +97,13 @@ export const handleLogin = async (
   setIsLoading(true);
   try {
     // Clear existing auth data
-    await signOut({ global: true });
+    await signOut({global: true});
     await SecureStore.deleteItemAsync('accessToken');
     await AsyncStorage.removeItem('userIdentifier');
     useUserStore.getState().resetUserState(); // Use the resetUserState function
 
     const lowercaseUsername = username.toLowerCase();
-    const { isSignedIn, nextStep } = await signIn({
+    const {isSignedIn, nextStep} = await signIn({
       username: lowercaseUsername,
       password,
       options: {
@@ -115,7 +112,7 @@ export const handleLogin = async (
     });
 
     if (isSignedIn) {
-      const { tokens } = await fetchAuthSession();
+      const {tokens} = await fetchAuthSession();
       const accessToken = tokens?.accessToken?.toString();
       if (accessToken) {
         await SecureStore.setItemAsync('accessToken', accessToken);
@@ -1346,22 +1343,33 @@ export const getUser = async (userEmail: string): Promise<User | null> => {
   }
 };
 
-export const fetchBatchStatus = async (memeIDs: string[], userEmail: string, followeeIDs: string[]): Promise<{followStatuses: {[key: string]: boolean}}> => {
+export const fetchBatchStatus = async (
+  memeIDs: string[],
+  userEmail: string,
+  followeeIDs: string[],
+): Promise<{followStatuses: {[key: string]: boolean}}> => {
   try {
     // Log the input parameters to check what is being sent
-    console.log('Fetching batch status with parameters:', { memeIDs, userEmail, followeeIDs });
-
-    const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/batchCheckStatus', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        memeIDs,
-        userEmail,
-        followeeIDs,
-      }),
+    console.log('Fetching batch status with parameters:', {
+      memeIDs,
+      userEmail,
+      followeeIDs,
     });
+
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/batchCheckStatus',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          memeIDs,
+          userEmail,
+          followeeIDs,
+        }),
+      },
+    );
 
     if (!response.ok) {
       throw new Error('Failed to fetch batch status');
@@ -1375,12 +1383,13 @@ export const fetchBatchStatus = async (memeIDs: string[], userEmail: string, fol
     return data;
   } catch (error) {
     console.error('Error fetching batch status:', error);
-    return { followStatuses: {} }; // Return an empty object if there's an error
+    return {followStatuses: {}}; // Return an empty object if there's an error
   }
 };
 
-
-export const recordMemeViews = async (memeViews: {email: string; memeID: string}[]): Promise<void> => {
+export const recordMemeViews = async (
+  memeViews: {email: string; memeID: string}[],
+): Promise<void> => {
   // Log the incoming data to ensure it's correct
   console.log('Received meme views:', JSON.stringify(memeViews));
 
@@ -1390,23 +1399,29 @@ export const recordMemeViews = async (memeViews: {email: string; memeID: string}
   }
 
   // Transform single meme views to the expected format if necessary
-// Transform single meme views to the expected format if necessary
-const transformedViews = memeViews.reduce<TransformedMemeView[]>((acc, view) => {
-  const existing = acc.find(v => v.email === view.email);
-  if (existing) {
-      existing.memeIDs.push(view.memeID);
-  } else {
-      acc.push({
+  // Transform single meme views to the expected format if necessary
+  const transformedViews = memeViews.reduce<TransformedMemeView[]>(
+    (acc, view) => {
+      const existing = acc.find(v => v.email === view.email);
+      if (existing) {
+        existing.memeIDs.push(view.memeID);
+      } else {
+        acc.push({
           email: view.email,
           memeIDs: [view.memeID],
-          ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60)  // Add TTL if needed
-      });
-  }
-  return acc;
-}, []);
+          ttl: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // Add TTL if needed
+        });
+      }
+      return acc;
+    },
+    [],
+  );
 
   // Log transformed data
-  console.log('Transformed meme views for batch processing:', JSON.stringify(transformedViews));
+  console.log(
+    'Transformed meme views for batch processing:',
+    JSON.stringify(transformedViews),
+  );
 
   try {
     const response = await fetch(
@@ -1415,13 +1430,13 @@ const transformedViews = memeViews.reduce<TransformedMemeView[]>((acc, view) => 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await getToken('accessToken')}`,
+          Authorization: `Bearer ${await getToken('accessToken')}`,
         },
         body: JSON.stringify({
           operation: 'recordMemeView',
           memeViews: transformedViews,
         }),
-      }
+      },
     );
 
     if (!response.ok) {

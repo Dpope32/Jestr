@@ -1,115 +1,98 @@
-import {useState, useCallback, useEffect, useRef} from 'react';
-import {fetchMemes, getLikeStatus} from '../../components/Meme/memeService';
-import {recordMemeViews} from '../../services/authFunctions';
-import {Meme, User} from '../../types/types';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useState, useCallback, useEffect} from 'react';
 
-export const useMemes = (user: User | null, accessToken: string | null) => {
-  const memeViewBatchRef = useRef<{email: string; memeID: string}[]>([]);
-  const lastRecordTimeRef = useRef(0);
+import {Meme} from '../../types/types';
+// import {fetchMemes} from '../../components/Meme/memeService';
+// import {recordMemeViews} from '../../services/authFunctions';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import localMemes from '../../utils/dummyData.json';
+
+export const useMemes = () => {
   const [memes, setMemes] = useState<Meme[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
+  const [lastEvaluatedKey, setLastEvaluatedKey] = useState<number | null>(null);
   const [allMemesViewed, setAllMemesViewed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const recordMemeViewBatch = useCallback(async () => {
-    const now = Date.now();
-    // Send the batch if there are at least 5 views
-    if (memeViewBatchRef.current.length >= 5) {
-      try {
-        await recordMemeViews(memeViewBatchRef.current);
-        console.log('Batched meme views sent:', memeViewBatchRef.current);
-        memeViewBatchRef.current = []; // Clear the batch after successful recording
-        lastRecordTimeRef.current = now;
-      } catch (error) {
-        console.error('Failed to record meme view batch:', error);
-      }
-    }
-  }, []);
+  const PAGE_SIZE = 10;
 
-  const addToMemeViewBatch = useCallback(
-    (email: string, memeID: string) => {
-      // Prevent duplicates in the current batch
-      if (
-        !memeViewBatchRef.current.some(
-          item => item.email === email && item.memeID === memeID,
-        )
-      ) {
-        memeViewBatchRef.current.push({email, memeID});
-        console.log('Added to meme view batch:', {email, memeID});
-      }
-      // Attempt to record the batch if conditions are met within this function
-      recordMemeViewBatch();
-    },
-    [recordMemeViewBatch],
-  );
+  // Simulating the "fetch" by loading data from the local JSON file
+  const fetchMemes = async (
+    startKey: number | null,
+    limit: number,
+  ): Promise<{memes: Meme[]; lastEvaluatedKey: number | null}> => {
+    try {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Get the start index
+      const startIndex = startKey !== null ? startKey : 0;
+
+      // Slice the data to simulate pagination
+      const slicedMemes = localMemes.data.slice(startIndex, startIndex + limit);
+
+      // Map the slicedMemes to match the Meme type
+      const mappedMemes: Meme[] = slicedMemes.map(meme => ({
+        memeID: meme.memeID.toString(),
+        mediaType: meme.mediaType,
+        url: meme.url,
+        caption: meme.caption,
+        uploadTimestamp: new Date(meme.uploadTimestamp).toISOString(),
+        likeCount: meme.likeCount,
+        downloadCount: meme.downloadCount,
+        commentCount: meme.commentCount,
+        shareCount: Number(meme.shareCount),
+        username: meme.username.toString(),
+        profilePicUrl: meme.profilePicUrl,
+        email: meme.email,
+      }));
+
+      // Determine the last evaluated key (for pagination)
+      const newLastEvaluatedKey =
+        startIndex + limit < localMemes.data.length ? startIndex + limit : null;
+
+      return {
+        memes: mappedMemes,
+        lastEvaluatedKey: newLastEvaluatedKey,
+      };
+    } catch (err) {
+      throw new Error('Failed to load memes');
+    }
+  };
 
   const fetchInitialMemes = useCallback(async () => {
-    if (!user?.email || !accessToken) return;
     setIsLoading(true);
     try {
-      // First, try to load cached memes
-      const cachedMemesString = await AsyncStorage.getItem('cachedMemes');
-      if (cachedMemesString) {
-        const cachedMemes = JSON.parse(cachedMemesString);
-        setMemes(cachedMemes);
-      }
-
-      // Then fetch fresh memes
-      const result = await fetchMemes(null, user.email, 20, accessToken);
+      const result = await fetchMemes(null, PAGE_SIZE);
       setMemes(result.memes);
       setLastEvaluatedKey(result.lastEvaluatedKey);
       setAllMemesViewed(result.memes.length === 0);
-      // Remove this line:
-      // result.memes.forEach(meme => addToMemeViewBatch(user.email, meme.memeID));
-
-      // Update cache with new memes
-      await AsyncStorage.setItem('cachedMemes', JSON.stringify(result.memes));
     } catch (error) {
       setError('Failed to fetch memes. Please try again later.');
     } finally {
       setIsLoading(false);
     }
-  }, [user, accessToken]);
+  }, []);
 
   const fetchMoreMemes = useCallback(async () => {
-    if (isLoadingMore || allMemesViewed || !user?.email || !accessToken) return;
+    if (isLoadingMore || allMemesViewed) return;
     setIsLoadingMore(true);
     try {
-      console.log(
-        'Fetching more memes with lastEvaluatedKey:',
-        lastEvaluatedKey,
-      );
-      const result = await fetchMemes(
-        lastEvaluatedKey,
-        user.email,
-        20,
-        accessToken,
-      );
+      const result = await fetchMemes(lastEvaluatedKey, PAGE_SIZE);
       setMemes(prevMemes => [...prevMemes, ...result.memes]);
       setLastEvaluatedKey(result.lastEvaluatedKey);
       setAllMemesViewed(result.memes.length === 0 || !result.lastEvaluatedKey);
-      // Remove this line:
-      // result.memes.forEach(meme => addToMemeViewBatch(user.email, meme.memeID));
-      console.log('Fetched more memes:', result.memes.length);
     } catch (error) {
       console.error('Error fetching more memes:', error);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, allMemesViewed, user, accessToken, lastEvaluatedKey]);
+  }, [isLoadingMore, allMemesViewed, lastEvaluatedKey]);
 
   useEffect(() => {
     fetchInitialMemes();
-    const intervalId = setInterval(recordMemeViewBatch, 30000);
-    return () => {
-      clearInterval(intervalId);
-      recordMemeViewBatch(); // Ensure any remaining views are recorded when component unmounts
-    };
-  }, [fetchInitialMemes, recordMemeViewBatch]);
+  }, [fetchInitialMemes]);
 
   return {
     memes,
@@ -118,6 +101,5 @@ export const useMemes = (user: User | null, accessToken: string | null) => {
     error,
     fetchMoreMemes,
     fetchInitialMemes,
-    addToMemeViewBatch,
   };
 };

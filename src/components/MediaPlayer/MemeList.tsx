@@ -1,11 +1,5 @@
 import React, {useCallback, useRef, useEffect} from 'react';
-import {
-  Dimensions,
-  ViewToken,
-  FlatList,
-  ActivityIndicator,
-  View,
-} from 'react-native';
+import {Dimensions, ViewToken, FlatList, ActivityIndicator} from 'react-native';
 
 import MediaPlayer from './MediaPlayer';
 import {Meme, User} from '../../types/types';
@@ -49,24 +43,26 @@ const MemeList: React.FC<MemeListProps> = React.memo(
     const flatListRef = useRef<FlatList>(null);
     const memesRef = useRef(memes);
 
+    // console.log('MemeList - Rendering MemeList with', memes);
+
     useEffect(() => {
       // console.log('MemeList - Received memes:', memes.length);
       memesRef.current = memes;
     }, [memes]);
 
-    useEffect(() => {
-      //   console.log('MemeList - Current media index changed:', currentMediaIndex);
-      if (
-        flatListRef.current &&
-        currentMediaIndex >= 0 &&
-        currentMediaIndex < memes.length
-      ) {
-        flatListRef.current.scrollToIndex({
-          index: currentMediaIndex,
-          animated: false,
-        });
-      }
-    }, [currentMediaIndex, memes.length]);
+    // useEffect(() => {
+    //   //   console.log('MemeList - Current media index changed:', currentMediaIndex);
+    //   if (
+    //     flatListRef.current &&
+    //     currentMediaIndex >= 0 &&
+    //     currentMediaIndex < memes.length
+    //   ) {
+    //     flatListRef.current.scrollToIndex({
+    //       index: currentMediaIndex,
+    //       animated: false,
+    //     });
+    //   }
+    // }, [currentMediaIndex, memes.length]);
 
     const setCurrentMediaIndexCallback = useCallback(
       (index: number) => {
@@ -87,16 +83,45 @@ const MemeList: React.FC<MemeListProps> = React.memo(
       setCurrentMediaIndexCallback(Math.max(currentMediaIndex - 1, 0));
     }, [currentMediaIndex, setCurrentMediaIndexCallback]);
 
-    const handleDownloadMedia = () => {
-      console.log('Of course it does nothing');
-    };
+    const onViewableItemsChanged = useCallback(
+      ({viewableItems}: {viewableItems: ViewToken[]}) => {
+        if (
+          viewableItems.length > 0 &&
+          typeof viewableItems[0].index === 'number'
+        ) {
+          setCurrentMediaIndexCallback(viewableItems[0].index);
+        }
+      },
+      [setCurrentMediaIndexCallback],
+    );
 
+    const getItemLayout = useCallback(
+      (_: any, index: number) => ({
+        length: height,
+        offset: height * index,
+        index,
+      }),
+      [],
+    );
+
+    const keyExtractor = (item: Meme | undefined, index: number) =>
+      item?.memeID || `meme-${index}`;
+
+    const ListFooterComponent = useCallback(() => {
+      return isLoadingMore ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : null;
+    }, [isLoadingMore]);
+
+    // == ITEM IN THE LIST ==
     const renderItem = useCallback(
       ({item, index}: {item: Meme | undefined; index: number}) => {
         if (!item || !item.url) {
-          //   console.log(`Meme at index ${index} is undefined or missing url`);
           return null;
         }
+
+        // console.log('MemeList - memesRef.current[index]', memesRef?.current);
+        console.log('MemeList - Rendering item:', item);
 
         return (
           <MediaPlayer
@@ -112,15 +137,14 @@ const MemeList: React.FC<MemeListProps> = React.memo(
             goToPrevMedia={goToPrevMedia}
             goToNextMedia={goToNextMedia}
             onLikeStatusChange={updateLikeStatus}
-            prevMedia={index > 0 ? memesRef.current[index - 1].url : null}
+            prevMedia={index > 0 ? memesRef?.current[index - 1]?.url : null}
             nextMedia={
-              index < memesRef.current.length - 1
-                ? memesRef.current[index + 1].url
+              index < memesRef?.current?.length - 1
+                ? memesRef?.current[index + 1]?.url
                 : null
             }
             handleLike={() => {}}
             handleDownload={() => {}}
-            // handleDownload={handleDownloadMedia}
             likedIndices={new Set()}
             doubleLikedIndices={new Set()}
             downloadedIndices={new Set()}
@@ -132,10 +156,8 @@ const MemeList: React.FC<MemeListProps> = React.memo(
             currentUserId={currentUserId}
             isCommentFeedVisible={isCommentFeedVisible}
             isProfilePanelVisible={isProfilePanelVisible}
-            memes={memesRef.current}
             index={index}
             currentIndex={currentMediaIndex}
-            setCurrentIndex={setCurrentMediaIndex}
             numOfComments={numOfComments}
           />
         );
@@ -155,34 +177,6 @@ const MemeList: React.FC<MemeListProps> = React.memo(
       ],
     );
 
-    const onViewableItemsChanged = useCallback(
-      ({viewableItems}: {viewableItems: ViewToken[]}) => {
-        if (
-          viewableItems.length > 0 &&
-          typeof viewableItems[0].index === 'number'
-        ) {
-          //  console.log('MemeList - Viewable item changed:', viewableItems[0].index);
-          setCurrentMediaIndexCallback(viewableItems[0].index);
-        }
-      },
-      [setCurrentMediaIndexCallback],
-    );
-
-    const getItemLayout = useCallback(
-      (_: any, index: number) => ({
-        length: height,
-        offset: height * index,
-        index,
-      }),
-      [],
-    );
-
-    const keyExtractor = useCallback(
-      (item: Meme | undefined, index: number) =>
-        item?.memeID || `meme-${index}`,
-      [],
-    );
-
     return (
       <FlatList
         ref={flatListRef}
@@ -200,11 +194,7 @@ const MemeList: React.FC<MemeListProps> = React.memo(
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         getItemLayout={getItemLayout}
-        ListFooterComponent={
-          isLoadingMore ? (
-            <ActivityIndicator size="large" color="#0000ff" />
-          ) : null
-        }
+        ListFooterComponent={ListFooterComponent}
         removeClippedSubviews={true}
         maxToRenderPerBatch={3}
         windowSize={5}

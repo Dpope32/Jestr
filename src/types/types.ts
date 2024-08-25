@@ -1,5 +1,3 @@
-// src/types/types.ts
-import {SignInOutput} from '@aws-amplify/auth';
 import {ViewToken} from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Animated} from 'react-native';
@@ -92,7 +90,7 @@ export type LetterScale = {
 
 export type Meme = {
   memeID: string;
-  mediaType: 'image' | 'video';
+  mediaType: string;
   url: string;
   caption: string;
   uploadTimestamp: string;
@@ -103,8 +101,8 @@ export type Meme = {
   username: string;
   profilePicUrl: string;
   email: string;
-  liked?: boolean; // Add this line
-  doubleLiked?: boolean; // Add this line
+  liked?: boolean;
+  doubleLiked?: boolean;
   memeUser?: Partial<User>;
 };
 
@@ -116,7 +114,7 @@ export type OnViewableItemsChanged = {
 export type MediaPlayerProps = {
   memeUser: Partial<User>;
   currentMedia: string;
-  mediaType: 'image' | 'video';
+  mediaType: string;
   username: string;
   caption: string;
   currentUserId?: string;
@@ -127,7 +125,6 @@ export type MediaPlayerProps = {
   toggleCommentFeed: () => void;
   goToPrevMedia: () => void;
   goToNextMedia: () => void;
-  memes: Meme[];
   likedIndices: Set<number>;
   doubleLikedIndices: Set<number>;
   downloadedIndices: Set<number>;
@@ -144,7 +141,6 @@ export type MediaPlayerProps = {
   prevMedia: string | null;
   index: number;
   currentIndex: number;
-  setCurrentIndex: (index: number) => void;
   initialLikeStatus: {
     liked: boolean;
     doubleLiked: boolean;

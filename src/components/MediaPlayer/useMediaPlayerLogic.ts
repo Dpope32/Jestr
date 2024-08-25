@@ -1,19 +1,16 @@
-import {useState, useCallback, useEffect} from 'react';
+import {useState, useCallback} from 'react';
 import {debounce} from 'lodash';
 import {Video, AVPlaybackStatus} from 'expo-av';
 
-import {updateMemeReaction, getLikeStatus} from '../Meme/memeService';
+import {updateMemeReaction} from '../Meme/memeService';
 import {handleShareMeme} from '../../services/authFunctions';
 import {ShareType, User} from '../../types/types';
 
 interface UseMediaPlayerLogicProps {
   initialLiked: boolean;
   initialDoubleLiked: boolean;
-  mediaType: 'image' | 'video';
   initialLikeCount: number;
   initialDownloadCount: number;
-  video: React.RefObject<Video>;
-  status: AVPlaybackStatus;
   initialShareCount: number;
   initialCommentCount: number;
   user: User | null;
@@ -36,9 +33,6 @@ export const useMediaPlayerLogic = ({
   memeID,
   handleDownload,
   onLikeStatusChange,
-  mediaType,
-  video,
-  status,
   handleSingleTap,
 }: UseMediaPlayerLogicProps) => {
   const [liked, setLiked] = useState(false);
@@ -47,6 +41,7 @@ export const useMediaPlayerLogic = ({
   const [showShareModal, setShowShareModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
   const [likePosition, setLikePosition] = useState({x: 0, y: 0});
   const [isModalVisible, setModalVisible] = useState(false);
@@ -64,23 +59,6 @@ export const useMediaPlayerLogic = ({
     console.log('longpress pressed');
     setModalVisible(true);
   };
-
-//  useEffect(() => {
-//    const checkLikeStatus = async () => {
-//      if (user && user.email) {
-//        try {
-//          const result = await getLikeStatus(memeID, user.email);
-//          if (result) {
-//            setLiked(result.liked);
-//            setDoubleLiked(result.doubleLiked);
-//          }
-//        } catch (error) {
-//          console.error('Error checking like status:', error);
-//        }
-//      }
-//    };
-//    checkLikeStatus();
-//  }, [memeID, user]);
 
   const handleLikePress = useCallback(async () => {
     if (user) {
@@ -124,7 +102,15 @@ export const useMediaPlayerLogic = ({
         setCounts(prevCounts => ({...prevCounts, likes: initialLikeCount}));
       }
     }
-  }, [user, liked, doubleLiked, counts.likes, memeID, onLikeStatusChange, initialLikeCount]);
+  }, [
+    user,
+    liked,
+    doubleLiked,
+    counts.likes,
+    memeID,
+    onLikeStatusChange,
+    initialLikeCount,
+  ]);
 
   const debouncedHandleLike = useCallback(
     debounce(() => {
@@ -186,29 +172,9 @@ export const useMediaPlayerLogic = ({
     [user, memeID],
   );
 
-  const formatDate = useCallback((dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = Math.abs(now.getTime() - date.getTime());
-    const diffMinutes = Math.floor(diff / (1000 * 60));
-    const diffHours = Math.floor(diff / (1000 * 60 * 60));
-    const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (diffMinutes < 60) {
-      return `${diffMinutes} minutes ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours} hours ago`;
-    } else if (diffDays === 1) {
-      return `Yesterday`;
-    } else {
-      return `${diffDays} days ago`;
-    }
-  }, []);
-
   return {
     liked,
     doubleLiked,
-    isSaved,
     showSaveModal,
     showShareModal,
     showToast,
@@ -220,12 +186,9 @@ export const useMediaPlayerLogic = ({
     debouncedHandleLike,
     handleDownloadPress,
     onShare,
-    formatDate,
     setShowSaveModal,
     setShowShareModal,
     handleSingleTap,
-    setIsSaved,
-    setCounts,
     handleLongPress,
   };
 };
