@@ -19,21 +19,23 @@ import ProfilePanel from '../../components/Panels/ProfilePanel';
 import CommentFeed from '../../components/Modals/CommentFeed';
 import MemeList from '../../components/MediaPlayer/MemeList';
 
+// import {LoadingText} from '../../components/ErrorFallback/ErrorFallback';
+
 const Feed: React.FC = React.memo(() => {
   const {isDarkMode} = useTheme();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const user = useUserStore(state => state as User);
 
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [currCommentsLength, setCurrCommentsLength] = useState(0);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
   const {memes, isLoading, error, fetchMoreMemes, fetchInitialMemes} = useMemes(
     user,
     accessToken,
   );
-  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-
-  const [currCommentsLength, setCurrCommentsLength] = useState(0);
 
   // NOT NECESSARY, memes[currentMediaIndex].commentCount is appropiate and already available
   // to pass through props to child components
@@ -175,17 +177,17 @@ const Feed: React.FC = React.memo(() => {
   );
 
   // Rendering
-  if (isLoading && memes.length === 0) {
-    return <Text>Loading...</Text>;
-  }
+  // if (isLoading && memes.length === 0) {
+  //   return <LoadingText />;
+  // }
 
   if (error) {
     return <Text>{error}</Text>;
   }
 
-  if (!user || !accessToken) {
-    return <Text>User or access token not available</Text>;
-  }
+  // if (!user || !accessToken) {
+  //   return <Text>User or access token not available</Text>;
+  // }
 
   return (
     <View
@@ -193,9 +195,16 @@ const Feed: React.FC = React.memo(() => {
         styles.container,
         {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
       ]}>
+      {/* == TOP PANEL == */}
       {memoizedTopPanel}
+
+      {/* == MEME LIST == */}
       {memoizedMemeList}
+
+      {/* == BOTTOM PANEL == */}
       {memoizedBottomPanel}
+
+      {/* == PROFILE PANEL == */}
       {profilePanelVisible && (
         <ProfilePanel
           isVisible={profilePanelVisible}
@@ -209,6 +218,8 @@ const Feed: React.FC = React.memo(() => {
           navigation={navigation}
         />
       )}
+
+      {/* == COMMENT FEED == */}
       {isCommentFeedVisible && memes[currentMediaIndex] && (
         <CommentFeed
           memeID={memes[currentMediaIndex].memeID}
