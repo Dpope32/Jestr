@@ -106,6 +106,10 @@ export type Meme = {
   liked?: boolean; // Add this line
   doubleLiked?: boolean; // Add this line
   memeUser?: Partial<User>;
+  followStatus?: {
+    isFollowing: boolean;
+    canFollow: boolean;
+  };
 };
 
 export type OnViewableItemsChanged = {

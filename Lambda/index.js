@@ -12,9 +12,12 @@ const {
   QueryCommand
 } = require('@aws-sdk/lib-dynamodb');
 const { DynamoDBClient, BatchGetItemCommand } = require('@aws-sdk/client-dynamodb');
+const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { CognitoJwtVerifier } = require('aws-jwt-verify');
+const { format } = require('date-fns');
+const { utcToZonedTime } = require('date-fns-tz');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
@@ -100,7 +103,60 @@ const getUser = async (identifier) => {
   }
 };
 
+const batchCheckLikeStatus = async (memeIDs, userEmail) => {
+  const batchGetParams = {
+    RequestItems: {
+      'UserLikes': {
+        Keys: memeIDs.map(memeID => ({
+          UserID: userEmail,
+          MemeID: memeID
+        }))
+      }
+    }
+  };
 
+  try {
+    const { Responses } = await docClient.send(new BatchGetItemCommand(batchGetParams));
+    const likeStatuses = {};
+    
+    memeIDs.forEach(memeID => {
+      const likeItem = Responses.UserLikes.find(item => item.MemeID === memeID);
+      likeStatuses[memeID] = likeItem ? { liked: true, doubleLiked: likeItem.DoubleLiked } : { liked: false, doubleLiked: false };
+    });
+
+    return likeStatuses;
+  } catch (error) {
+    console.error('Error checking batch like status:', error);
+    throw error;
+  }
+};
+
+const batchCheckFollowStatus = async (followerId, followeeIDs) => {
+  const batchGetParams = {
+    RequestItems: {
+      'UserRelationships': {
+        Keys: followeeIDs.map(followeeId => ({
+          UserID: followerId,
+          RelationUserID: followeeId
+        }))
+      }
+    }
+  };
+
+  try {
+    const { Responses } = await docClient.send(new BatchGetItemCommand(batchGetParams));
+    const followStatuses = {};
+    
+    followeeIDs.forEach(followeeId => {
+      followStatuses[followeeId] = Responses.UserRelationships.some(item => item.RelationUserID === followeeId);
+    });
+
+    return followStatuses;
+  } catch (error) {
+    console.error('Error checking batch follow status:', error);
+    throw error;
+  }
+};
 
 const updateUserProfile = async (email, username, profilePicUrl, displayName, bio, lastLogin, headerPicUrl, accessToken) => {
   const updateParams = {
@@ -123,50 +179,6 @@ const updateUserProfile = async (email, username, profilePicUrl, displayName, bi
     //console.log('Profile updated successfully');
   } catch (error) {
     console.error('Error updating user profile:', error);
-    throw error;
-  }
-};
-
-const batchCheckFollowStatus = async (followerId, followeeIDs) => {
-  const batchGetParams = {
-    RequestItems: {
-      'UserRelationships': {
-        Keys: followeeIDs.map(followeeId => ({
-          UserID: { S: followerId },
-          RelationUserID: { S: followeeId }
-        })),
-        ProjectionExpression: 'RelationUserID'
-      }
-    }
-  };
-
-  try {
-    const { Responses } = await docClient.send(new BatchGetItemCommand(batchGetParams));
-    const followStatuses = {};
-
-    if (Responses && Responses.UserRelationships) {
-      // Initialize all followees as not followed
-      followeeIDs.forEach(followeeId => {
-        followStatuses[followeeId] = false;
-      });
-
-      // Update status for found relationships
-      Responses.UserRelationships.forEach(item => {
-        if (item.RelationUserID && item.RelationUserID.S) {
-          followStatuses[item.RelationUserID.S] = true;
-        }
-      });
-    } else {
-      console.warn('No UserRelationships found in batchGet response');
-      // Initialize all as not followed if no relationships found
-      followeeIDs.forEach(followeeId => {
-        followStatuses[followeeId] = false;
-      });
-    }
-
-    return followStatuses;
-  } catch (error) {
-    console.error('Error checking batch follow status:', error);
     throw error;
   }
 };
@@ -307,9 +319,7 @@ const getFollowers = async (userId) => {
 
 // Function to check if one user follows another
 const checkFollowStatus = async (followerId, followeeId) => {
-  // First, check if the user is trying to follow themselves
   if (followerId === followeeId) {
-  //  console.log('User attempted to follow themselves');
     return { isFollowing: false, canFollow: false };
   }
 
@@ -501,10 +511,35 @@ const getMessages = async (userID, conversationID) => {
   }
 };
 
+
+async function recordMemeViews(userEmail, memeIDs) {
+  const now = new Date();
+  
+  // Convert to Central Time (CT is UTC-5 or UTC-6 depending on daylight saving time)
+  const offset = now.getTimezoneOffset() + (6 * 60); // 6 hours for Central Time
+  now.setMinutes(now.getMinutes() + offset);
+  
+  const dateString = now.toISOString().split('T')[0];
+  const expirationTime = Math.floor(now.getTime() / 1000) + (30 * 24 * 60 * 60); // 30 days from now
+
+  const putCommand = new PutCommand({
+    TableName: 'UserMemeViews',
+    Item: {
+      email: userEmail,
+      date: dateString,
+      viewedMemes: memeIDs,
+      expirationTime: expirationTime
+    }
+  });
+
+  await docClient.send(putCommand);
+}
+
 exports.handler = async (event) => {
  //   console.log('Received event:', JSON.stringify(event, null, 2));
  // console.log('Headers:', JSON.stringify(event.headers, null, 2));
- // console.log('Body:', event.body);
+ console.log('Processing operation:', event.operation);
+console.log('Request body:', JSON.stringify(event.body));
     try {
       // Parse the event body and extract the operation
       let requestBody;
@@ -559,6 +594,7 @@ exports.handler = async (event) => {
     'recordMemeView',
     'getPresignedUrl',
     'removeDownloadedMeme',
+    'batchCheckStatus',
     'deleteMeme',
   ];
 
@@ -584,7 +620,109 @@ exports.handler = async (event) => {
 
   switch (operation) {
 
+    case 'fetchMemes': {
+      console.log('Processing operation: fetchMemes');
+      const { lastEvaluatedKey, userEmail, limit = 10 } = requestBody;
+    
+      try {
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        // Convert to Central Time (CT is UTC-5 or UTC-6 depending on daylight saving time)
+        const offset = now.getTimezoneOffset() + (6 * 60); // 6 hours for Central Time
+        now.setMinutes(now.getMinutes() + offset);
+        thirtyDaysAgo.setMinutes(thirtyDaysAgo.getMinutes() + offset);
+    
+        const todayString = now.toISOString().split('T')[0];
+        const thirtyDaysAgoString = thirtyDaysAgo.toISOString().split('T')[0];
+     // Fetch user's view history for the last 30 days
+        const viewHistoryCommand = new QueryCommand({
+          TableName: 'UserMemeViews',
+          KeyConditionExpression: 'email = :email AND #date BETWEEN :thirtyDaysAgo AND :today',
+          ExpressionAttributeNames: { '#date': 'date' },
+          ExpressionAttributeValues: { 
+            ':email': userEmail, 
+            ':thirtyDaysAgo': thirtyDaysAgoString, 
+            ':today': todayString 
+          }
+        });
+
+        const viewHistoryResponse = await docClient.send(viewHistoryCommand);
+        
+        // Extract the meme IDs from the DynamoDB format
+        const viewedMemeIDs = new Set(
+          viewHistoryResponse.Items.flatMap(item => 
+            (item.viewedMemes || []).map(meme => meme.S || meme)
+          )
+        );
+
+        console.log('Viewed Meme IDs:', Array.from(viewedMemeIDs));
+
+        // Fetch memes, excluding viewed ones
+        let unseenMemes = [];
+        let lastEvaluatedKeyForMemes = lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined;
+
+        do {
+          const scanCommand = new ScanCommand({
+            TableName: 'Memes',
+            Limit: 100,
+            ExclusiveStartKey: lastEvaluatedKeyForMemes
+          });
+
+          const result = await docClient.send(scanCommand);
+          
+          const newUnseenMemes = result.Items.filter(meme => !viewedMemeIDs.has(meme.MemeID));
+          console.log(`Fetched ${result.Items.length} memes, ${newUnseenMemes.length} are unseen`);
+          
+          unseenMemes = [...unseenMemes, ...newUnseenMemes];
+          lastEvaluatedKeyForMemes = result.LastEvaluatedKey;
+    } while (unseenMemes.length < limit && lastEvaluatedKeyForMemes);
+    
+        // Process memes and check follow status
+        const memes = await Promise.all(unseenMemes.slice(0, limit).map(async (item) => {
+          const followStatus = await checkFollowStatus(userEmail, item.Email);
+          return {
+            memeID: item.MemeID,
+            email: item.Email,
+            url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
+            uploadTimestamp: item.UploadTimestamp,
+            username: item.Username,
+            caption: item.Caption,
+            likeCount: item.LikeCount || 0,
+            downloadCount: item.DownloadsCount || 0,
+            commentCount: item.CommentCount || 0,
+            shareCount: item.ShareCount || 0,
+            profilePicUrl: item.ProfilePicUrl || '',
+            mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
+            memeUser: {
+              email: item.Email,
+              username: item.Username,
+              profilePic: item.ProfilePicUrl || '',
+              displayName: item.Username,
+              headerPic: '',
+              creationDate: item.UploadTimestamp
+            },
+            followStatus: followStatus
+          };
+        }));
+    
+        // Record meme views
+        await recordMemeViews(userEmail, memes.map(meme => meme.memeID));
+    
+        return createResponse(200, 'Memes retrieved successfully.', {
+          memes: memes,
+          lastEvaluatedKey: lastEvaluatedKeyForMemes ? JSON.stringify(lastEvaluatedKeyForMemes) : null
+        });
+      } catch (error) {
+        console.error('Error fetching memes:', error);
+        return createResponse(500, 'Internal Server Error', { error: error.message, stack: error.stack });
+      }
+    }
+
+
+
     case 'uploadMeme': {
+      console.log('Processing operation:', event.operation);
       const { email, username, caption, tags, mediaType, memeKey } = requestBody;
       if (!email || !username || !mediaType || !memeKey) {
         return createResponse(400, 'Email, username, media type, and meme key are required.');
@@ -617,6 +755,7 @@ exports.handler = async (event) => {
     }
     
     case 'getPresignedUrl': {
+      console.log('Processing operation:', event.operation);
   //    console.log('Entering getPresignedUrl case');
       const { fileName, fileType } = requestBody;
   //    console.log('Received request for:', { fileName, fileType });
@@ -640,90 +779,6 @@ exports.handler = async (event) => {
       }
     }
     
-    case 'fetchMemes': {
-      const { lastEvaluatedKey, limit = 5, userEmail } = requestBody;
-      
-      try {
-        // First, get the memes the user has already seen
-        const userViewsParams = {
-          TableName: 'UserViewHistory',
-          IndexName: 'email-Timestamp-index',
-          KeyConditionExpression: 'email = :email AND #ts > :timestamp',
-          ExpressionAttributeNames: {
-            '#ts': 'Timestamp'
-          },
-          ExpressionAttributeValues: {
-            ':email': userEmail,
-            ':timestamp': new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days ago
-          },
-          ProjectionExpression: 'MemeID'
-        };
-        
-        const userViewsResult = await docClient.send(new QueryCommand(userViewsParams));
-        const seenMemeIDs = new Set(userViewsResult.Items.map(item => item.MemeID));
-    
-        let unseenMemes = [];
-        let lastEvaluatedKeyForMemes = lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined;
-        let attempts = 0;
-        const maxAttempts = 10;
-    
-        while (unseenMemes.length < limit && attempts < maxAttempts) {
-          attempts++;
-    
-          const memesParams = {
-            TableName: 'Memes',
-            Limit: 100,
-            ExclusiveStartKey: lastEvaluatedKeyForMemes
-          };
-          
-          const result = await docClient.send(new ScanCommand(memesParams));
-    
-          const newUnseenMemes = result.Items.filter(meme => !seenMemeIDs.has(meme.MemeID));
-          unseenMemes = [...unseenMemes, ...newUnseenMemes];
-     
-          lastEvaluatedKeyForMemes = result.LastEvaluatedKey;
-          
-          if (!lastEvaluatedKeyForMemes) {
-            console.log('No more memes to fetch');
-            break;
-          }
-        }
-    
-        // Map the memes to the desired format
-        const memes = unseenMemes.slice(0, limit).map(item => ({
-          memeID: item.MemeID,
-          email: item.Email,
-          url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
-          uploadTimestamp: item.UploadTimestamp,
-          username: item.Username,
-          caption: item.Caption,
-          likeCount: item.LikeCount || 0,
-          downloadCount: item.DownloadsCount || 0,
-          commentCount: item.CommentCount || 0,
-          shareCount: item.ShareCount || 0,
-          profilePicUrl: item.ProfilePicUrl || '',
-          mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
-          memeUser: {
-            email: item.Email,
-            username: item.Username,
-            profilePic: item.ProfilePicUrl || '',
-            displayName: item.Username,
-            headerPic: '',
-            creationDate: item.UploadTimestamp
-          }
-        }));
-    
-      //  console.log('Number of memes being returned:', memes.length);
-    
-        return createResponse(200, 'Memes retrieved successfully.', {
-          memes: memes,
-          lastEvaluatedKey: lastEvaluatedKeyForMemes ? JSON.stringify(lastEvaluatedKeyForMemes) : null
-        });
-      } catch (error) {
-        console.error('Error fetching memes:', error);
-        return createResponse(500, 'Internal Server Error', { error: error.message, stack: error.stack });
-      }
-    }
 
     case 'getUser': {
    //   console.log('getUser operation triggered');
@@ -963,6 +1018,25 @@ case 'getConversations': {
   } catch (error) {
     console.error('Error fetching users:', error);
     return createResponse(500, 'Failed to fetch users.');
+  }
+}
+
+case 'batchCheckStatus': {
+  const { memeIDs, userEmail, followeeIDs } = requestBody;
+  
+  if (!memeIDs || !userEmail || !followeeIDs) {
+    return createResponse(400, 'memeIDs, userEmail, and followeeIDs are required.');
+  }
+
+  try {
+    const followStatuses = await batchCheckFollowStatus(userEmail, followeeIDs);
+
+    return createResponse(200, 'Batch status check successful.', {
+      followStatuses
+    });
+  } catch (error) {
+    console.error(`Error in batch status check: ${error}`);
+    return createResponse(500, 'Failed to perform batch status check.', { error: error.message });
   }
 }
     
@@ -1701,32 +1775,6 @@ case 'getUserGrowthRate':
       }
     }
 
-    case 'batchCheckStatus': {
-      try {
-        const { memeIDs, userEmail, followeeIDs } = JSON.parse(event.body);
-        if (!memeIDs || !Array.isArray(memeIDs) || memeIDs.length === 0) {
-          return createResponse(400, 'memeIDs is required and must be a non-empty array.');
-        }
-        if (!userEmail) {
-          return createResponse(400, 'userEmail is required.');
-        }
-        if (!followeeIDs || !Array.isArray(followeeIDs) || followeeIDs.length === 0) {
-          return createResponse(400, 'followeeIDs is required and must be a non-empty array.');
-        }
-    
-        console.log('Processing batch status check:', { userEmail, followeeIDs });
-        const followStatuses = await batchCheckFollowStatus(userEmail, followeeIDs);
-        console.log('Batch status check successful:', { followStatuses });
-        return createResponse(200, 'Batch status check successful.', {
-          followStatuses
-        });
-      } catch (error) {
-        console.error(`Error in batch status check: ${error}`);
-        return createResponse(500, 'Failed to perform batch status check.', { error: error.message });
-      }
-    }
-    
-
     case 'completeProfile': {
      // console.log('Received completeProfile request:', JSON.stringify(requestBody));
     
@@ -1925,33 +1973,26 @@ case 'recordMemeView':
       return createResponse(400, 'memeViews array is required and must not be empty.');
     }
 
-    console.log('Received meme views:', JSON.stringify(memeViews, null, 2));
-
-    // Deduplicate meme views
-    const uniqueMemeViews = memeViews.reduce((acc, view) => {
-      const key = `${view.email}-${view.memeID}`;
-      if (!acc[key]) {
-        acc[key] = view;
-      }
-      return acc;
-    }, {});
-
+    const now = new Date();
     const batchWriteParams = {
       RequestItems: {
-        'UserViewHistory': Object.values(uniqueMemeViews).map((view, index) => ({
-          PutRequest: {
-            Item: {
-              email: { S: view.email },
-              MemeID: { S: view.memeID },
-              Timestamp: { S: new Date(Date.now() + index).toISOString() },
-              ViewTimestamp: { S: new Date().toISOString() }
+        'UserViewHistory': memeViews.map(view => {
+          const uniqueMemeIDs = Array.from(new Set(view.memeIDs)); // Deduplicate Meme IDs
+          return {
+            PutRequest: {
+              Item: {
+                email: view.email,
+                Timestamp: now.toISOString(),
+                MemeIDs: uniqueMemeIDs, // Ensure this is a unique array
+                ViewTimestamp: now.toISOString(),
+                expirationTime: Math.floor(now.getTime() / 1000) + (30 * 24 * 60 * 60) // 30 days from now
+              }
             }
-          }
-        }))
+          };
+        })
       }
     };
-
-    console.log('BatchWrite params:', JSON.stringify(batchWriteParams, null, 2));
+    
 
     await docClient.send(new BatchWriteCommand(batchWriteParams));
     return createResponse(200, 'Meme views recorded successfully.');
