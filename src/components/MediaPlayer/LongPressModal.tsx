@@ -7,7 +7,6 @@ import {
   Animated,
   Image,
   Dimensions,
-  Platform,
   TouchableWithoutFeedback,
   Alert,
   Linking,
