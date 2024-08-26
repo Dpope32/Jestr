@@ -1,31 +1,77 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, Dimensions, Image, TextInput, } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faTimes, faCopy, faEnvelope, faCommentDots, faCamera, faMobile, IconDefinition, faMessage, faCommentSms, faArrowUp } from '@fortawesome/free-solid-svg-icons';
-import { faFacebookF, faXTwitter, faSnapchatGhost, faLinkedinIn, faInstagram} from '@fortawesome/free-brands-svg-icons';
-import { useNavigation } from '@react-navigation/native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  Dimensions,
+  Image,
+  TextInput,
+} from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faTimes,
+  faCopy,
+  faEnvelope,
+  faCommentDots,
+  faCamera,
+  faMobile,
+  IconDefinition,
+  faMessage,
+  faCommentSms,
+  faArrowUp,
+} from '@fortawesome/free-solid-svg-icons';
+import {
+  faFacebookF,
+  faXTwitter,
+  faSnapchatGhost,
+  faLinkedinIn,
+  faInstagram,
+} from '@fortawesome/free-brands-svg-icons';
+import {useNavigation} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 
 interface Friend {
   username: string;
   profilePic: string;
 }
 
-type ShareType = 'copy' | 'message' | 'snapchat' | 'facebook' | 'twitter' | 'email' | 'friend' | 'instagram';
+type ShareType =
+  | 'copy'
+  | 'message'
+  | 'snapchat'
+  | 'facebook'
+  | 'twitter'
+  | 'email'
+  | 'friend'
+  | 'instagram';
 
 interface ShareModalProps {
   visible: boolean;
   onClose: () => void;
-  friends: Friend[];
-  onShare: (type: ShareType, username: string, message: string) => Promise<void>;
+
+  onShare: (
+    type: ShareType,
+    username: string,
+    message: string,
+  ) => Promise<void>;
   currentMedia: string;
 }
 
-const ShareModal: React.FC<ShareModalProps> = ({ visible, onClose, friends, onShare, currentMedia }) => {
+const ShareModal: React.FC<ShareModalProps> = ({
+  visible,
+  onClose,
+  onShare,
+  currentMedia,
+}) => {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [message, setMessage] = useState('');
+
+  const friends: any = [];
 
   const handleFriendSelect = (friend: Friend) => {
     setSelectedFriend(friend);
@@ -68,23 +114,45 @@ const ShareModal: React.FC<ShareModalProps> = ({ visible, onClose, friends, onSh
   };
 
   return (
-    <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={handleClose}>
-      <TouchableOpacity style={styles.modalBackground} onPress={handleClose} activeOpacity={1}>
-        <View style={[styles.modalContainer, selectedFriend && styles.expandedModal]}>
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={handleClose}>
+      <TouchableOpacity
+        style={styles.modalBackground}
+        onPress={handleClose}
+        activeOpacity={1}>
+        <View
+          style={[
+            styles.modalContainer,
+            selectedFriend && styles.expandedModal,
+          ]}>
           <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <FontAwesomeIcon icon={faTimes} size={24} color="#1bd40b" />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Share Meme</Text>
           {selectedFriend ? (
             <View style={styles.selectedFriendContainer}>
-              <Image source={{ uri: selectedFriend.profilePic }} style={styles.friendImage} />
+              <Image
+                source={{uri: selectedFriend.profilePic}}
+                style={styles.friendImage}
+              />
               <Text style={styles.friendName}>{selectedFriend.username}</Text>
             </View>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.friendsContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.friendsContainer}>
               {friends.map((friend, index) => (
-                <TouchableOpacity key={index} onPress={() => handleFriendSelect(friend)}>
-                  <Image source={{ uri: friend.profilePic }} style={styles.friendImage} />
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleFriendSelect(friend)}>
+                  <Image
+                    source={{uri: friend.profilePic}}
+                    style={styles.friendImage}
+                  />
                   <Text style={styles.friendName}>{friend.username}</Text>
                 </TouchableOpacity>
               ))}
@@ -92,7 +160,11 @@ const ShareModal: React.FC<ShareModalProps> = ({ visible, onClose, friends, onSh
           )}
           {selectedFriend && (
             <>
-              <Image source={{ uri: currentMedia }} style={styles.previewImage} resizeMode="contain" />
+              <Image
+                source={{uri: currentMedia}}
+                style={styles.previewImage}
+                resizeMode="contain"
+              />
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
@@ -100,7 +172,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ visible, onClose, friends, onSh
                   value={message}
                   onChangeText={setMessage}
                 />
-                <TouchableOpacity style={styles.sendButton} onPress={handleShare}>
+                <TouchableOpacity
+                  style={styles.sendButton}
+                  onPress={handleShare}>
                   <FontAwesomeIcon icon={faArrowUp} size={24} color="white" />
                 </TouchableOpacity>
               </View>
@@ -109,11 +183,17 @@ const ShareModal: React.FC<ShareModalProps> = ({ visible, onClose, friends, onSh
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.iconsContainer}
-          >
+            contentContainerStyle={styles.iconsContainer}>
             {icons.map(icon => (
-              <TouchableOpacity key={icon.type} onPress={() => handleIconClick(icon.type)}>
-                <FontAwesomeIcon icon={icon.icon} size={42} color={icon.color} style={styles.icon} />
+              <TouchableOpacity
+                key={icon.type}
+                onPress={() => handleIconClick(icon.type)}>
+                <FontAwesomeIcon
+                  icon={icon.icon}
+                  size={42}
+                  color={icon.color}
+                  style={styles.icon}
+                />
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -222,14 +302,14 @@ const styles = StyleSheet.create({
   },
 });
 
-const icons: { type: ShareType; icon: IconDefinition; color: string }[] = [
-  { type: 'copy', icon: faCopy, color: '#666666' },
-  { type: 'message', icon: faCommentSms, color: '#4CAF50' },
-  { type: 'snapchat', icon: faSnapchatGhost, color: '#FFFC00' },
-  { type: 'facebook', icon: faFacebookF, color: '#1877F2' },
-  { type: 'twitter', icon: faXTwitter, color: '#1DA1F2' },
-  { type: 'email', icon: faMessage, color: '#D14836' },
-  { type: 'instagram', icon: faInstagram, color: '#C13584' },
+const icons: {type: ShareType; icon: IconDefinition; color: string}[] = [
+  {type: 'copy', icon: faCopy, color: '#666666'},
+  {type: 'message', icon: faCommentSms, color: '#4CAF50'},
+  {type: 'snapchat', icon: faSnapchatGhost, color: '#FFFC00'},
+  {type: 'facebook', icon: faFacebookF, color: '#1877F2'},
+  {type: 'twitter', icon: faXTwitter, color: '#1DA1F2'},
+  {type: 'email', icon: faMessage, color: '#D14836'},
+  {type: 'instagram', icon: faInstagram, color: '#C13584'},
 ];
 
 export default ShareModal;

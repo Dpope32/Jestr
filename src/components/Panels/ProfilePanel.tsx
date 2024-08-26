@@ -39,8 +39,6 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   profilePicUrl,
   username,
   displayName,
-  followersCount: initialFollowersCount,
-  followingCount: initialFollowingCount,
   user,
   navigation,
 }) => {

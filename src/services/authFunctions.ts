@@ -230,7 +230,9 @@ export const handleSignOut = async (
     throw error;
   }
 };
-console.log('Current user:', JSON.stringify(useUserStore.getState(), null, 2));
+
+// console.log('Current user:', JSON.stringify(useUserStore.getState(), null, 2));
+
 const clearSecureStore = async () => {
   const keys = [
     'accessToken',
@@ -1022,8 +1024,6 @@ export const handleShareMeme = async (
   username: string,
   catchUser: string,
   message: string,
-  setResponseModalVisible: (visible: boolean) => void,
-  setResponseMessage: (message: string) => void,
 ) => {
   const shareData = {
     operation: 'shareMeme',

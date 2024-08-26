@@ -1,14 +1,8 @@
 import React, {useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  TextInput,
-  Keyboard,
-  TouchableWithoutFeedback,
-} from 'react-native';
+import {View, Text, TouchableOpacity} from 'react-native';
+import {TouchableWithoutFeedback} from 'react-native';
+import {TextInput, Keyboard} from 'react-native';
+import {Image, StyleSheet} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faSearch} from '@fortawesome/free-solid-svg-icons';
@@ -24,28 +18,25 @@ import {useTheme} from '../../theme/ThemeContext';
 interface TopPanelProps {
   onProfileClick: () => void;
   profilePicUrl: string | ProfileImage | null;
-  username: string;
-  enableDropdown: boolean;
   showLogo: boolean;
-  isAdmin: boolean;
-  onAdminClick: () => void;
-  isUploading: boolean;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
   onProfileClick,
   profilePicUrl,
-  username,
-  enableDropdown,
   showLogo,
-  isAdmin,
-  onAdminClick,
-  isUploading,
 }) => {
+  const {isDarkMode} = useTheme();
+
   const [selectedTab, setSelectedTab] = useState('Flow');
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const {isDarkMode} = useTheme();
+
+  const bgdColDark = isDarkMode ? '#000' : '#1C1C1C';
+
+  const imgSrc = profilePicUrl
+    ? {uri: profilePicUrl}
+    : require('../../assets/images/Jestr.jpg');
 
   const handleTabClick = (tab: string) => {
     setSelectedTab(tab);
@@ -63,7 +54,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
     if (isSearchActive) {
       setIsSearchActive(false);
       setSearchText('');
-      Keyboard.dismiss(); // Dismiss keyboard when clicking outside
+      Keyboard.dismiss();
     }
   };
 
@@ -78,29 +69,16 @@ const TopPanel: React.FC<TopPanelProps> = ({
 
   return (
     <TouchableWithoutFeedback onPress={handleOutsideClick}>
-      <SafeAreaView
-        style={[
-          styles.safeArea,
-          {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
-        ]}>
-        <View
-          style={[
-            styles.container,
-            {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
-          ]}>
+      <SafeAreaView style={[styles.safeArea, {backgroundColor: bgdColDark}]}>
+        <View style={[styles.container, {backgroundColor: bgdColDark}]}>
+          {/*  PROFILE PICTURE */}
           <TouchableOpacity
             onPress={handleProfileClick}
             style={styles.profileContainer}>
-            <Image
-              source={
-                profilePicUrl
-                  ? {uri: profilePicUrl}
-                  : require('../../assets/images/Jestr.jpg')
-              }
-              style={styles.profilePic}
-            />
+            <Image source={imgSrc} style={styles.profilePic} />
           </TouchableOpacity>
 
+          {/* LOGO  */}
           {showLogo && (
             <Image
               source={require('../../assets/images/Jestr.jpg')}
@@ -108,6 +86,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
             />
           )}
 
+          {/* TABS: Flow & Following */}
           <View style={styles.tabsContainer}>
             <TouchableOpacity
               style={[styles.tab, selectedTab === 'Flow' && styles.activeTab]}
@@ -137,6 +116,8 @@ const TopPanel: React.FC<TopPanelProps> = ({
             </TouchableOpacity>
           </View>
 
+          {/* == TODO: NEEDS REFACTORING to mitigate when search input appears */}
+          {/* SEARCH  */}
           <View
             style={[
               styles.searchContainer,
@@ -174,15 +155,21 @@ const styles = StyleSheet.create({
     marginTop: -20,
     zIndex: 10,
     backgroundColor: 'rgba(0, 0, 0, 0)',
+
+    // borderWidth: 1,
+    // borderColor: 'red',
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     paddingHorizontal: wp('5%'),
     paddingVertical: 5,
     width: '100%',
     zIndex: 555,
+
+    // borderWidth: 1,
+    // borderColor: 'blue',
   },
   profileContainer: {
     flexDirection: 'column',
@@ -219,10 +206,13 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: wp('10%'), // Default width when search is not active
+    width: wp('10%'),
+
+    // borderWidth: 1,
+    // borderColor: 'green',
   },
   searchContainerActive: {
-    width: wp('60%'), // Expand width when search is active
+    width: wp('60%'),
   },
   searchInput: {
     height: hp('4%'),
@@ -233,12 +223,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('2%'),
     fontFamily: FONTS.regular,
     fontSize: wp('4%'),
+
+    // borderWidth: 1,
+    // borderColor: 'yellow',
   },
   searchIconContainer: {
     padding: wp('2%'),
+
+    // borderWidth: 1,
+    // borderColor: 'yellow',
   },
   searchIcon: {
     color: '#fff',
+
+    // borderWidth: 1,
+    // borderColor: 'yellow',
   },
   logo: {
     position: 'absolute',

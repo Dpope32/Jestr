@@ -145,11 +145,6 @@ export type MediaPlayerProps = {
     liked: boolean;
     doubleLiked: boolean;
   };
-  onLikeStatusChange: (
-    memeID: string,
-    status: {liked: boolean; doubleLiked: boolean},
-    newLikeCount: number,
-  ) => void;
   liked: boolean;
   doubleLiked: boolean;
   isDarkMode: boolean;
@@ -167,9 +162,6 @@ export type ProfilePanelProps = {
   profilePicUrl: string | ProfileImage | null;
   username: string;
   displayName: string;
-  followersCount: number;
-  followingCount: number;
-  FollowingCount?: number;
   user: User | null;
   navigation: any;
 };

@@ -1,9 +1,9 @@
-import { StyleSheet, Platform } from 'react-native';
-import { Dimensions } from 'react-native';
-import { COLORS, SPACING, FONT_SIZES, wp } from '../../theme/theme';
+import {StyleSheet, Platform} from 'react-native';
+import {Dimensions} from 'react-native';
+import {COLORS, SPACING, FONT_SIZES} from '../../theme/theme';
 
-const { width, height } = Dimensions.get('window');
-const SWIPE_THRESHOLD = height * 0.1;
+const {width, height} = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -11,7 +11,9 @@ const styles = StyleSheet.create({
     width: width,
   },
   blurInner: {
-    borderRadius: 12, // Slightly increased for a more modern look
+    // borderRadius: 12,
+    // borderWidth: 1,
+    // borderColor: 'blue',
   },
   videoWrapper: {
     flex: 1,
@@ -38,11 +40,14 @@ const styles = StyleSheet.create({
     bottom: 0,
     padding: 10,
     zIndex: 10,
-    elevation: 10, // for Android
+    elevation: 10,
+
+    // borderWidth: 1,
+    // borderColor: 'blue',
   },
   textContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 240 : 150, // Adjust based on platform
+    bottom: Platform.OS === 'ios' ? 240 : 150,
     left: 0,
     right: 20,
     flexDirection: 'row',
@@ -54,7 +59,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-    paddingBottom: Platform.OS === 'ios' ? 260 : 150, // Adjust for bottom navigation
+    paddingBottom: Platform.OS === 'ios' ? 260 : 150,
   },
   iconColumn: {
     position: 'absolute',
@@ -65,6 +70,9 @@ const styles = StyleSheet.create({
     gap: 0,
     bottom: Platform.OS === 'ios' ? 230 : 150,
     alignItems: 'center',
+
+    // borderWidth: 1,
+    // borderColor: 'blue',
   },
   memeImage: {
     width: '100%',
@@ -92,10 +100,13 @@ const styles = StyleSheet.create({
   },
   videoContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    // justifyContent: 'center',
+    // alignItems: 'center',
     width: '100%',
     height: '100%',
+
+    // borderWidth: 1,
+    // borderColor: 'red',
   },
   absoluteFill: {
     position: 'absolute',
@@ -105,13 +116,13 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   longPressModal: {
-    position: 'absolute', 
+    position: 'absolute',
     zIndex: 100, // Ensure it is on top of other elements
     elevation: 100, // Required for Android to support zIndex
     left: 0,
     right: 0,
     bottom: 0,
-    top: 0,  // Adjust as necessary for your design
+    top: 0, // Adjust as necessary for your design
   },
   profilePic: {
     width: 40,
@@ -133,9 +144,12 @@ const styles = StyleSheet.create({
   video: {
     width: '100%',
     height: '100%',
-    position: 'absolute',
-    top: 0,
-    left: 0,
+    // position: 'absolute',
+    // top: 0,
+    // left: 0,
+
+    // borderWidth: 3,
+    // borderColor: 'blue',
   },
   videoControls: {
     flexDirection: 'row',
@@ -206,7 +220,7 @@ const styles = StyleSheet.create({
     color: '#1E90FF',
     fontSize: 16,
     textDecorationLine: 'underline',
-  }
+  },
 });
 
 export default styles;

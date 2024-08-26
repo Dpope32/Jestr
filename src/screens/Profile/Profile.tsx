@@ -1,7 +1,28 @@
 import React, {useState, useEffect} from 'react';
-import {View,Text,Image,TouchableOpacity,Modal,Dimensions,ActivityIndicator,Alert,StyleSheet,ScrollView,Animated,} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  Modal,
+  Dimensions,
+  ActivityIndicator,
+  StyleSheet,
+  ScrollView,
+  Animated,
+} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faBox,faHistory,faHeart,faUser,faEdit,faTimes,IconDefinition,faSadTear,faCog,} from '@fortawesome/free-solid-svg-icons';
+import {
+  faBox,
+  faHistory,
+  faHeart,
+  faUser,
+  faEdit,
+  faTimes,
+  IconDefinition,
+  faSadTear,
+  faCog,
+} from '@fortawesome/free-solid-svg-icons';
 import {RouteProp} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import * as VideoThumbnails from 'expo-video-thumbnails';
@@ -23,11 +44,17 @@ import MediaPlayer from '../../components/MediaPlayer/MediaPlayer';
 import EditProfileModal from '../../components/Modals/EditProfileModal';
 
 const {width, height} = Dimensions.get('window');
-const itemSize = width / 3 - 4; 
+const itemSize = width / 3 - 4;
 
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'Profile'>;
-type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList,'Profile'>;
-type ProfileProps = {route: ProfileScreenRouteProp; navigation: ProfileScreenNavigationProp;};
+type ProfileScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'Profile'
+>;
+type ProfileProps = {
+  route: ProfileScreenRouteProp;
+  navigation: ProfileScreenNavigationProp;
+};
 
 export type TabName = 'posts' | 'liked' | 'history' | 'downloaded';
 
@@ -38,18 +65,23 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
   const scrollY = new Animated.Value(0);
   const followersCount = useUserStore(state => state.followersCount);
   const followingCount = useUserStore(state => state.followingCount);
-  const [daysSinceCreation, setDaysSinceCreation] = useState(getDaysSinceCreation(user.creationDate || ''));
+  const [daysSinceCreation, setDaysSinceCreation] = useState(
+    getDaysSinceCreation(user.creationDate || ''),
+  );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState<TabName>('posts');
   const [thumbnails, setThumbnails] = useState<{[key: string]: string}>({});
   const [tabMemes, setTabMemes] = useState<Meme[]>([]);
   const [isFollowModalVisible, setIsFollowModalVisible] = useState(false);
-  const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
+  const [followModalTab, setFollowModalTab] = useState<
+    'followers' | 'following'
+  >('followers');
   const [selectedMeme, setSelectedMeme] = useState<Meme | null>(null);
   const [currentMemeIndex, setCurrentMemeIndex] = useState(0);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
-  const [isEditProfileModalVisible, setIsEditProfileModalVisible] = useState(false);
+  const [isEditProfileModalVisible, setIsEditProfileModalVisible] =
+    useState(false);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [isBlurVisible, setIsBlurVisible] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -134,7 +166,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
 
   useEffect(() => {
     if (user.email) {
-      setTabMemes([]); 
+      setTabMemes([]);
       setLastEvaluatedKey(null);
       setCurrentPage(1);
       fetchTabMemes(selectedTab);
@@ -364,17 +396,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
         </View>
         <View style={styles.memeGridContainer}>{renderTabContent()}</View>
       </ScrollView>
-      <BottomPanel
-        onHomeClick={() => navigation.navigate('Feed' as never)}
-        handleLike={() => {}}
-        handleDislike={() => {}}
-        likedIndices={new Set()}
-        dislikedIndices={new Set()}
-        likeDislikeCounts={{}}
-        currentMediaIndex={0}
-        toggleCommentFeed={() => {}}
-        user={user}
-      />
+      <BottomPanel onHomeClick={() => navigation.navigate('Feed' as never)} />
       <FollowModal
         visible={isFollowModalVisible}
         onClose={() => setIsFollowModalVisible(false)}
@@ -420,7 +442,6 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
                   setSelectedMeme(tabMemes[currentMemeIndex + 1]);
                 }
               }}
-              memes={tabMemes} // Pass the memes array
               likedIndices={new Set()} // Replace with actual liked indices
               doubleLikedIndices={new Set()} // Replace with actual double liked indices
               downloadedIndices={new Set()} // Replace with actual downloaded indices
@@ -435,7 +456,6 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
               memeID={selectedMeme.memeID}
               index={currentMemeIndex} // Current index in the memes array
               currentIndex={currentMemeIndex} // Provide the current index as well
-              setCurrentIndex={setCurrentMemeIndex} // A function to update the current index
               initialLikeStatus={{liked: false, doubleLiked: false}} // Replace with actual like status
               onLikeStatusChange={(memeID, status, newLikeCount) => {
                 // Implement the function to handle like status change

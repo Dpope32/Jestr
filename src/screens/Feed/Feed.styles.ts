@@ -1,15 +1,25 @@
-import { StyleSheet } from 'react-native';
-import { COLORS, SPACING, FONT_SIZES, wp, elevationShadowStyle, FONTS } from '../../theme/theme';
+import {StyleSheet} from 'react-native';
+import {
+  COLORS,
+  SPACING,
+  FONT_SIZES,
+  wp,
+  elevationShadowStyle,
+  FONTS,
+} from '../../theme/theme';
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#000'
+    backgroundColor: '#000',
   },
   container: {
     flex: 1,
-        backgroundColor: '#000',
-    zIndex: 5
+    backgroundColor: '#000',
+    zIndex: 5,
+
+    // borderWidth: 1,
+    // borderColor: 'yellow',
   },
   flash: {
     flex: 1,
@@ -35,15 +45,15 @@ const styles = StyleSheet.create({
   },
   mediaPlayerContainer: {
     flex: 1,
-    marginTop: 0, // Adjust based on your top panel height
-    marginBottom: 0, // Adjust based on your bottom panel height
+    marginTop: 0,
+    marginBottom: 0,
   },
   bottomPanelContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    zIndex: 1, // Ensure this is lower than profilePanelContainer
+    zIndex: 1,
     elevation: 10,
   },
   overlay: {
@@ -70,7 +80,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1C1C1C', // Dark background
     padding: SPACING.lg,
     fontFamily: FONTS.regular,
-    marginBottom: 160
+    marginBottom: 160,
   },
   noMemesText: {
     fontSize: FONT_SIZES.xl,
@@ -221,6 +231,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
   },
 });
-
 
 export default styles;

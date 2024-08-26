@@ -8,7 +8,6 @@ import * as Haptics from 'expo-haptics';
 import {useTheme} from '../../theme/ThemeContext';
 import {useMemes} from './useMemes';
 import {useUserStore} from '../../utils/userStore';
-import {getToken} from '../../utils/secureStore';
 // import {fetchComments} from '../../components/Meme/memeService';
 
 import styles from './Feed.styles';
@@ -21,7 +20,7 @@ import MemeList from '../../components/MediaPlayer/MemeList';
 
 // import {LoadingText} from '../../components/ErrorFallback/ErrorFallback';
 
-const Feed: React.FC = React.memo(() => {
+const Feed: React.FC = () => {
   const {isDarkMode} = useTheme();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const user = useUserStore(state => state as User);
@@ -31,20 +30,10 @@ const Feed: React.FC = React.memo(() => {
   const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   // == CUSTOM HOOK for DATA in LISTING ==
   const {memes, isLoading, error, fetchMoreMemes, fetchInitialMemes} =
     useMemes();
-
-  // NOT NECESSARY to Fetch access token I think
-  useEffect(() => {
-    const fetchToken = async () => {
-      const token = await getToken('accessToken');
-      setAccessToken(token);
-    };
-    fetchToken();
-  }, []);
 
   // Toggle Profile Panel
   const toggleProfilePanel = useCallback(() => {
@@ -69,14 +58,6 @@ const Feed: React.FC = React.memo(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [fetchInitialMemes]);
 
-  // Update Like Status
-  const updateLikeStatus = useCallback(
-    (memeID: string, status: any, newLikeCount: number) => {
-      console.log('Like status updated:', {memeID, status, newLikeCount});
-    },
-    [],
-  );
-
   // Handle End Reached
   const handleEndReached = useCallback(() => {
     if (!isLoading && memes.length > 0) {
@@ -84,32 +65,17 @@ const Feed: React.FC = React.memo(() => {
     }
   }, [isLoading, memes.length, debouncedFetchMoreMemes]);
 
-  // Memoized Top Panel
-  const memoizedTopPanel = useMemo(
-    () => (
-      <TopPanel
-        onProfileClick={toggleProfilePanel}
-        profilePicUrl={user.profilePic || ''}
-        username={user.username || ''}
-        enableDropdown={true}
-        showLogo={true}
-        isAdmin={user.isAdmin || false}
-        isUploading={false}
-        onAdminClick={() => navigation.navigate('AdminPage')}
-      />
-    ),
-    [
-      user.profilePic,
-      user.username,
-      user.isAdmin,
-      toggleProfilePanel,
-      navigation,
-    ],
+  // Top Panel
+  const renderTopPanel = () => (
+    <TopPanel
+      onProfileClick={toggleProfilePanel}
+      profilePicUrl={user.profilePic || ''}
+      showLogo={true}
+    />
   );
 
-  // Memoized MemeList
-  const memoizedMemeList = useMemo(() => {
-    console.log('Feed - Rendering MemeList with', memes.length, 'memes');
+  // MemeList
+  const renderMemeList = () => {
     return (
       <MemeList
         memes={memes}
@@ -117,7 +83,6 @@ const Feed: React.FC = React.memo(() => {
         isDarkMode={isDarkMode}
         onEndReached={handleEndReached}
         toggleCommentFeed={toggleCommentFeed}
-        updateLikeStatus={updateLikeStatus}
         currentMediaIndex={currentMediaIndex}
         setCurrentMediaIndex={setCurrentMediaIndex}
         currentUserId={user.email}
@@ -127,55 +92,26 @@ const Feed: React.FC = React.memo(() => {
         numOfComments={0}
       />
     );
-  }, [
-    memes,
-    user,
-    isDarkMode,
-    handleEndReached,
-    toggleCommentFeed,
-    updateLikeStatus,
-    currentMediaIndex,
-    isCommentFeedVisible,
-    profilePanelVisible,
-    isLoading,
-  ]);
+  };
 
-  // Memoized Bottom Panel
-  const memoizedBottomPanel = useMemo(
-    () => (
-      <BottomPanel
-        onHomeClick={handleHomeClick}
-        currentMediaIndex={currentMediaIndex}
-        toggleCommentFeed={toggleCommentFeed}
-        user={user}
-      />
-    ),
-    [handleHomeClick, currentMediaIndex, toggleCommentFeed, user],
-  );
-
-  // Rendering
-  // if (isLoading && memes.length === 0) {
-  //   return <LoadingText />;
-  // }
+  // Bottom Panel
+  const renderBottomPanel = () => <BottomPanel onHomeClick={handleHomeClick} />;
 
   if (error) {
     return <Text>{error}</Text>;
   }
 
-  // if (!user || !accessToken) {
-  //   return <Text>User or access token not available</Text>;
-  // }
-
   return (
     <View style={[styles.container, {backgroundColor: bgdColor}]}>
       {/* == TOP PANEL == */}
-      {memoizedTopPanel}
+      {renderTopPanel()}
 
       {/* == MEME LIST == */}
-      {memoizedMemeList}
+      {renderMemeList()}
 
       {/* == BOTTOM PANEL == */}
-      {memoizedBottomPanel}
+      {/* should apply a linear gradient overlay for bottom half of screen */}
+      {renderBottomPanel()}
 
       {/* == PROFILE PANEL == */}
       {profilePanelVisible && (
@@ -185,8 +121,6 @@ const Feed: React.FC = React.memo(() => {
           profilePicUrl={user.profilePic || null}
           username={user.username || ''}
           displayName={user.displayName || 'N/A'}
-          followersCount={user.followersCount || 0}
-          followingCount={user.followingCount || 0}
           user={user}
           navigation={navigation}
         />
@@ -208,6 +142,6 @@ const Feed: React.FC = React.memo(() => {
       )}
     </View>
   );
-});
+};
 
 export default Feed;
