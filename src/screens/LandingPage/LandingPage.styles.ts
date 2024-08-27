@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 40, // Add this line
+    borderRadius: 60, // Add this line
     overflow: 'hidden',  // Add this line to ensure content doesn't overflow the rounded corners
     zIndex: 1000,
   },

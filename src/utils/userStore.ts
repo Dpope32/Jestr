@@ -11,6 +11,7 @@ export interface UserState {
   creationDate: string;
   CreationDate?: string;
   followersCount: number;
+  FollowersCount?: number;
   language: 'en' | 'es' | 'fr'; // We'll just use 'en' for now
   notificationsEnabled: boolean;
   likesPublic: boolean;
@@ -89,13 +90,28 @@ export const useUserStore = create<UserState>(set => ({
   setLikedMemes: memes => set({likedMemes: memes}),
   setDownloadedMemes: memes => set({downloadedMemes: memes}),
   setViewedMemes: memes => set({viewedMemes: memes}),
-  setUserDetails: details =>
-    set(state => ({
+  setUserDetails: (details) =>
+    set((state) => ({
       ...state,
-      ...details,
-      followingCount: details.followingCount, // Make sure this line exists
+      email: details.email ?? state.email,
+      username: details.username ?? state.username,
+      displayName: details.displayName ?? state.displayName,
+      bio: details.bio ?? state.bio,
+      creationDate: details.creationDate ?? details.CreationDate ?? state.creationDate,
+      followersCount: details.followersCount ?? details.FollowersCount ?? state.followersCount,
+      followingCount: details.followingCount ?? details.FollowingCount ?? state.followingCount,
+      posts: details.posts ?? state.posts,
+      likedMemes: details.likedMemes ?? state.likedMemes,
+      downloadedMemes: details.downloadedMemes ?? state.downloadedMemes,
+      viewedMemes: details.viewedMemes ?? state.viewedMemes,
       profilePic: details.profilePic || state.profilePic,
       headerPic: details.headerPic || state.headerPic,
+      darkMode: details.darkMode ?? state.darkMode,
+      language: details.language ?? state.language,
+      likesPublic: details.likesPublic ?? state.likesPublic,
+      notificationsEnabled: details.notificationsEnabled ?? state.notificationsEnabled,
+      isAdmin: details.isAdmin ?? state.isAdmin,
+      userId: details.userId ?? state.userId,
     })),
 
   resetUserState: () =>

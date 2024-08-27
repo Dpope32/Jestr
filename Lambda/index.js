@@ -650,7 +650,7 @@ console.log('Request body:', JSON.stringify(event.body));
 
     case 'fetchMemes': {
       console.log('Processing operation: fetchMemes');
-      const { lastViewedMemeId, userEmail, limit = 10 } = requestBody;
+      const { lastViewedMemeId, userEmail, limit = 5 } = requestBody;
     
       try {
         // Fetch user's entire view history
@@ -675,7 +675,7 @@ console.log('Request body:', JSON.stringify(event.body));
         let unseenMemes = [];
         let scanParams = {
           TableName: 'Memes',
-          Limit: 50,
+          Limit: 25,
         };
     
         if (lastViewedMemeId) {
@@ -1543,29 +1543,47 @@ case 'getTotalMemes':
     return createResponse(500, 'Failed to get total memes');
   }
 
-case 'getDAU':
-  try {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayTimestamp = yesterday.toISOString();
-
-    const params = {
-      TableName: 'UserViewHistory',
-      FilterExpression: '#ts > :yesterday',
-      ExpressionAttributeNames: {
-        '#ts': 'ViewTimestamp'
-      },
-      ExpressionAttributeValues: {
-        ':yesterday': yesterdayTimestamp
-      },
-      Select: 'COUNT'
-    };
-    const result = await docClient.send(new ScanCommand(params));
-    return createResponse(200, 'Daily active users retrieved successfully.', { dailyActiveUsers: result.Count });
-  } catch (error) {
-    console.error('Error getting DAU:', error);
-    return createResponse(500, 'Failed to get DAU');
-  }
+  case 'getDAU':
+    try {
+      // Get the date for 3 days ago in UTC
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      const threeDaysAgoString = threeDaysAgo.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  
+      const params = {
+        TableName: 'UserMemeViews',
+        FilterExpression: '#date >= :threeDaysAgo',
+        ExpressionAttributeNames: {
+          '#date': 'date'
+        },
+        ExpressionAttributeValues: {
+          ':threeDaysAgo': threeDaysAgoString
+        }
+      };
+      
+      console.log('DAU Params:', JSON.stringify(params));
+      const result = await docClient.send(new ScanCommand(params));
+      console.log('DAU Result:', JSON.stringify(result));
+      
+      // Count unique emails
+      const uniqueEmails = new Set(result.Items.map(item => item.email));
+      const activeUsers = uniqueEmails.size;
+  
+      return createResponse(200, 'Active users in the last 3 days retrieved successfully.', { 
+        activeUsers,
+        debugInfo: {
+          fromDate: threeDaysAgoString,
+          toDate: new Date().toISOString().split('T')[0],
+          scannedCount: result.ScannedCount,
+          matchedCount: result.Count,
+          uniqueEmailCount: activeUsers,
+          sampleItems: result.Items.slice(0, 5) // Include up to 5 sample items for debugging
+        }
+      });
+    } catch (error) {
+      console.error('Error getting active users:', error);
+      return createResponse(500, 'Failed to get active users', { error: error.message });
+    }
   
 case 'getPopularMemes':
   try {

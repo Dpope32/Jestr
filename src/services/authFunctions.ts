@@ -103,6 +103,7 @@ export const handleLogin = async (
     await signOut({ global: true });
     await SecureStore.deleteItemAsync('accessToken');
     await AsyncStorage.removeItem('userIdentifier');
+    await AsyncStorage.removeItem('isAdmin');
     useUserStore.getState().resetUserState(); // Use the resetUserState function
 
     const lowercaseUsername = username.toLowerCase();
@@ -122,6 +123,17 @@ export const handleLogin = async (
       }
       const userDetails = await fetchUserDetails(username, accessToken || '');
 
+      const isAdmin = ['pope.dawson@gmail.com', 
+        'bogdan.georgian370@gmail.com', 
+        'kamariewallace1999@gmail.com', 
+        'jestrdev@gmail.com', 
+        'bogdan.georgian001@gmail.com', 
+        'popebardy@gmail.com', 
+        'tpope918@aol.com'].includes(userDetails.email);
+
+      // Store isAdmin in AsyncStorage
+      await AsyncStorage.setItem('isAdmin', JSON.stringify(isAdmin));
+
       // Update Zustand store
       useUserStore.getState().setUserDetails({
         email: userDetails.email,
@@ -133,7 +145,7 @@ export const handleLogin = async (
         creationDate: userDetails.CreationDate,
         followersCount: userDetails.FollowersCount,
         followingCount: userDetails.FollowingCount,
-        isAdmin: userDetails.email === 'pope.dawson@gmail.com',
+        isAdmin: isAdmin,
       });
 
       // Store user identifier

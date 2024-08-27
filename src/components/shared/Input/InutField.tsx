@@ -110,7 +110,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     borderWidth: 1,
     borderRadius: 8,
-    paddingVertical: 8,
     backgroundColor: '#1c1c1c',
   },
   input: {
@@ -118,7 +117,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     fontSize: 16,
     color: 'white',
-    marginVertical: 8,
+    paddingVertical: 8,
   },
   eyeIcon: {
     padding: 10,

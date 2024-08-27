@@ -20,6 +20,7 @@ import {
 import {FONTS} from '../../theme/theme';
 import {ProfileImage} from 'types/types';
 import {useTheme} from '../../theme/ThemeContext';
+import { useUserStore } from 'utils/userStore';
 
 interface TopPanelProps {
   onProfileClick: () => void;
@@ -38,16 +39,15 @@ const TopPanel: React.FC<TopPanelProps> = ({
   username,
   enableDropdown,
   showLogo,
-  isAdmin,
   onAdminClick,
   isUploading,
 }) => {
-  console.log('TopPanel - isAdmin:', isAdmin);
   const [selectedTab, setSelectedTab] = useState('Flow');
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchText, setSearchText] = useState('');
   const {isDarkMode} = useTheme();
-
+  const isAdmin = useUserStore(state => state.isAdmin);
+  //console.log('TopPanel - isAdmin:', isAdmin);
   const handleTabClick = (tab: string) => {
     setSelectedTab(tab);
   };

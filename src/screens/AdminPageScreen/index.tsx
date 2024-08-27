@@ -33,50 +33,43 @@ useEffect(() => {
 }, []);
 
 const fetchAdminData = async () => {
-    try {
-      const baseUrl = 'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/';
-      const operations = [
-        'getTotalUsers',
-        'getTotalMemes',
-        'getDAU',
-        'getPopularMemes',
-        'getUserGrowthRate'
-      ];
-  
-      const fetchPromises = operations.map(operation => {
-        const url = `${baseUrl}${operation}`; // Append operation to the URL
-        const requestBody = JSON.stringify({ operation });
-   //     console.log('Sending request to:', url, 'with operation:', operation);
-        return fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: requestBody
-        }).then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        }).then(data => {
-          if (!data || !data.data) {
-            throw new Error(`Data fetch failed for ${operation}`);
-          }
-          return data;
-        });
+  try {
+    const baseUrl = 'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/';
+    const operations = [
+      'getTotalUsers',
+      'getTotalMemes',
+      'getDAU',
+      'getPopularMemes',
+      'getUserGrowthRate'
+    ];
+
+    const results = await Promise.all(operations.map(operation => {
+      const url = `${baseUrl}${operation}`;
+      const requestBody = JSON.stringify({ operation });
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody
+      })
+      .then(response => response.json())
+      .catch(error => {
+        console.error(`Error fetching ${operation}:`, error);
+        return null; // Return null for failed requests
       });
-      const results = await Promise.all(fetchPromises);
-      const [userData, memeData, dauData, popularData, growthData] = results;
-  
-      // Ensure data integrity before setting state
-      setUserCount(userData?.data?.totalUsers || 0);
-      setMemeCount(memeData?.data?.totalMemes || 0);
-      setDailyActiveUsers(dauData?.data?.dailyActiveUsers || 0);
-      setPopularMemes(Array.isArray(popularData?.data?.popularMemes) ? popularData.data.popularMemes : []);
-      setUserGrowthRate(parseFloat(growthData?.data?.userGrowthRate) || 0);
-    } catch (error) {
-      console.error('Error fetching admin data:', error);
-      setError('Failed to fetch admin data: ' + (error instanceof Error ? error.message : String(error)));
-    }
-  };
+    }));
+
+    const [userData, memeData, dauData, popularData, growthData] = results;
+
+    setUserCount(userData?.data?.totalUsers || 0);
+    setMemeCount(memeData?.data?.totalMemes || 0);
+    setDailyActiveUsers(dauData?.data?.dailyActiveUsers || 0);
+    setPopularMemes(Array.isArray(popularData?.data?.popularMemes) ? popularData.data.popularMemes : []);
+    setUserGrowthRate(parseFloat(growthData?.data?.userGrowthRate) || 0);
+  } catch (error) {
+    console.error('Error fetching admin data:', error);
+    setError('Failed to fetch admin data: ' + (error instanceof Error ? error.message : String(error)));
+  }
+};
 
   
   
