@@ -522,17 +522,45 @@ async function recordMemeViews(userEmail, memeIDs) {
   const dateString = now.toISOString().split('T')[0];
   const expirationTime = Math.floor(now.getTime() / 1000) + (30 * 24 * 60 * 60); // 30 days from now
 
+  // First, get the existing viewed memes for today
+  const getCommand = new GetCommand({
+    TableName: 'UserMemeViews',
+    Key: {
+      email: userEmail,
+      date: dateString
+    }
+  });
+
+  let existingItem;
+  try {
+    const response = await docClient.send(getCommand);
+    existingItem = response.Item;
+  } catch (error) {
+    console.error('Error fetching existing meme views:', error);
+  }
+
+  // Combine existing and new meme IDs
+  const allMemeIDs = new Set([
+    ...(existingItem?.viewedMemes || []),
+    ...memeIDs
+  ]);
+
   const putCommand = new PutCommand({
     TableName: 'UserMemeViews',
     Item: {
       email: userEmail,
       date: dateString,
-      viewedMemes: memeIDs,
+      viewedMemes: Array.from(allMemeIDs),
       expirationTime: expirationTime
     }
   });
 
-  await docClient.send(putCommand);
+  try {
+    await docClient.send(putCommand);
+    console.log(`Successfully recorded ${memeIDs.length} new meme views for ${userEmail}`);
+  } catch (error) {
+    console.error('Error recording meme views:', error);
+  }
 }
 
 exports.handler = async (event) => {
@@ -622,61 +650,50 @@ console.log('Request body:', JSON.stringify(event.body));
 
     case 'fetchMemes': {
       console.log('Processing operation: fetchMemes');
-      const { lastEvaluatedKey, userEmail, limit = 10 } = requestBody;
+      const { lastViewedMemeId, userEmail, limit = 10 } = requestBody;
     
       try {
-        const now = new Date();
-        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        
-        // Convert to Central Time (CT is UTC-5 or UTC-6 depending on daylight saving time)
-        const offset = now.getTimezoneOffset() + (6 * 60); // 6 hours for Central Time
-        now.setMinutes(now.getMinutes() + offset);
-        thirtyDaysAgo.setMinutes(thirtyDaysAgo.getMinutes() + offset);
-    
-        const todayString = now.toISOString().split('T')[0];
-        const thirtyDaysAgoString = thirtyDaysAgo.toISOString().split('T')[0];
-     // Fetch user's view history for the last 30 days
+        // Fetch user's entire view history
         const viewHistoryCommand = new QueryCommand({
           TableName: 'UserMemeViews',
-          KeyConditionExpression: 'email = :email AND #date BETWEEN :thirtyDaysAgo AND :today',
-          ExpressionAttributeNames: { '#date': 'date' },
-          ExpressionAttributeValues: { 
-            ':email': userEmail, 
-            ':thirtyDaysAgo': thirtyDaysAgoString, 
-            ':today': todayString 
-          }
+          KeyConditionExpression: 'email = :email',
+          ExpressionAttributeValues: { ':email': userEmail }
         });
-
+    
         const viewHistoryResponse = await docClient.send(viewHistoryCommand);
-        
-        // Extract the meme IDs from the DynamoDB format
+    
+        // Extract all viewed meme IDs
         const viewedMemeIDs = new Set(
-          viewHistoryResponse.Items.flatMap(item => 
-            (item.viewedMemes || []).map(meme => meme.S || meme)
+          viewHistoryResponse.Items.flatMap(item =>
+            (item.viewedMemes || []).map(meme => typeof meme === 'string' ? meme : meme.S)
           )
         );
-
-        console.log('Viewed Meme IDs:', Array.from(viewedMemeIDs));
-
+    
+        console.log('Total Viewed Meme IDs:', viewedMemeIDs.size);
+    
         // Fetch memes, excluding viewed ones
         let unseenMemes = [];
-        let lastEvaluatedKeyForMemes = lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined;
-
-        do {
-          const scanCommand = new ScanCommand({
-            TableName: 'Memes',
-            Limit: 100,
-            ExclusiveStartKey: lastEvaluatedKeyForMemes
-          });
-
+        let scanParams = {
+          TableName: 'Memes',
+          Limit: 100,
+        };
+    
+        if (lastViewedMemeId) {
+          scanParams.ExclusiveStartKey = { MemeID: lastViewedMemeId };
+        }
+    
+        while (unseenMemes.length < limit) {
+          const scanCommand = new ScanCommand(scanParams);
           const result = await docClient.send(scanCommand);
-          
+    
           const newUnseenMemes = result.Items.filter(meme => !viewedMemeIDs.has(meme.MemeID));
           console.log(`Fetched ${result.Items.length} memes, ${newUnseenMemes.length} are unseen`);
-          
+    
           unseenMemes = [...unseenMemes, ...newUnseenMemes];
-          lastEvaluatedKeyForMemes = result.LastEvaluatedKey;
-    } while (unseenMemes.length < limit && lastEvaluatedKeyForMemes);
+          
+          if (!result.LastEvaluatedKey) break;
+          scanParams.ExclusiveStartKey = result.LastEvaluatedKey;
+        }
     
         // Process memes and check follow status
         const memes = await Promise.all(unseenMemes.slice(0, limit).map(async (item) => {
@@ -711,7 +728,7 @@ console.log('Request body:', JSON.stringify(event.body));
     
         return createResponse(200, 'Memes retrieved successfully.', {
           memes: memes,
-          lastEvaluatedKey: lastEvaluatedKeyForMemes ? JSON.stringify(lastEvaluatedKeyForMemes) : null
+          lastEvaluatedKey: scanParams.ExclusiveStartKey ? JSON.stringify(scanParams.ExclusiveStartKey) : null
         });
       } catch (error) {
         console.error('Error fetching memes:', error);

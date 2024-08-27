@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   blurContainer: {
     position: 'absolute',
     left: 0,
-    right: 0,
+    right: -12, //icons closer to edge of screen
     bottom: 0,
     padding: 10,
     zIndex: 10,

@@ -21,7 +21,7 @@ import {FetchMemesResult} from '../../types/types';
 export const fetchMemes = async (
   lastEvaluatedKey: string | null = null,
   userEmail: string,
-  limit: number = 5,
+  limit: number = 10,
   accessToken: string,
 ): Promise<FetchMemesResult> => {
   const maxRetries = 3;
@@ -45,7 +45,7 @@ export const fetchMemes = async (
         }),
       });
 
-      // console.log('fetchMemes response status:', response.status);
+      //console.log('fetchMemes response status:', response.status);
 
       if (!response.ok) {
         const errorBody = await response.text();
@@ -56,7 +56,7 @@ export const fetchMemes = async (
       }
 
       const data = await response.json();
-      //console.log('fetchMemes response data:', JSON.stringify(data, null, 2));
+ //   console.log('fetchMemes response data:', JSON.stringify(data, null, 2));
 
       if (!data.data || !Array.isArray(data.data.memes)) {
         throw new Error('Invalid response format');

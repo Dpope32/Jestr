@@ -292,10 +292,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         const {pageX, pageY}: {pageX: number; pageY: number} =
           event.nativeEvent;
 
-        // Adjust these values as needed
+        // Adjusted these values to allign double tap and animation
         const updateLikePosition = (x: number, y: number) => {
-          const xOffset = Platform.OS === 'ios' ? -100 : -100;
-          const yOffset = Platform.OS === 'ios' ? -250 : -220;
+          const xOffset = Platform.OS === 'ios' ? -150 : -100; 
+          const yOffset = Platform.OS === 'ios' ? -300 : -220;
 
           setLikePosition({
             x: x + xOffset,
@@ -437,8 +437,8 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
                   position: 'absolute',
                   left: likePosition.x,
                   top: likePosition.y,
-                  width: 200,
-                  height: 200,
+                  width: 300,
+                  height: 300,
                 }}
                 autoPlay
                 loop={false}

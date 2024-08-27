@@ -90,6 +90,8 @@ build/
 dist/
 node_modules/
 aws-exports.js
+/Lambda/check_invalid_media.js
+/Lambda/update_meme_captions.py
 awsconfiguration.json
 amplifyconfiguration.json
 amplifyconfiguration.dart
