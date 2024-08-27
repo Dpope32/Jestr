@@ -120,45 +120,24 @@ const MemeList: React.FC<MemeListProps> = ({
       // console.log('MemeList - memesRef.current[index]', memesRef?.current);
       // console.log('MemeList - Rendering item:', item);
 
-      const prevMedia = index > 0 ? memesRef?.current[index - 1]?.url : null;
-
-      const nextMedia =
-        index < memesRef?.current?.length - 1
-          ? memesRef?.current[index + 1]?.url
-          : null;
-
       return (
         <MediaPlayer
           {...item}
           key={item.memeID}
           index={index}
+          currentIndex={currentMediaIndex}
+          //
           user={user}
+          currentUserId={currentUserId}
           memeUser={item.memeUser || {}}
+          //
           currentMedia={item.url}
           liked={item.liked ?? false}
-          doubleLiked={item.doubleLiked ?? false}
-          isDarkMode={isDarkMode}
-          toggleCommentFeed={toggleCommentFeed}
-          currentMediaIndex={index}
-          prevMedia={prevMedia}
-          nextMedia={nextMedia}
-          goToPrevMedia={goToPrevMedia}
-          goToNextMedia={goToNextMedia}
-          initialLikeStatus={{liked: false, doubleLiked: false}}
-          currentUserId={currentUserId}
-          isCommentFeedVisible={isCommentFeedVisible}
-          isProfilePanelVisible={isProfilePanelVisible}
-          currentIndex={currentMediaIndex}
           numOfComments={numOfComments}
           //
-          onLongPressStart={() => {}}
-          onLongPressEnd={() => {}}
-          handleLike={() => {}}
-          handleDownload={() => {}}
-          likedIndices={new Set()}
-          doubleLikedIndices={new Set()}
-          downloadedIndices={new Set()}
-          likeDislikeCounts={{}}
+          goToPrevMedia={goToPrevMedia}
+          goToNextMedia={goToNextMedia}
+          toggleCommentFeed={toggleCommentFeed}
         />
       );
     },

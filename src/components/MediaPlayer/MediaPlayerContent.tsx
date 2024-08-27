@@ -34,7 +34,6 @@ interface IconsAndContentProps {
   };
   debouncedHandleLike: () => void;
   liked: boolean;
-  doubleLiked: boolean;
   toggleCommentFeed: () => void;
   iconAreaRef: React.RefObject<View>;
   onShare: (type: ShareType, username: string, message: string) => void;
@@ -63,7 +62,6 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
   counts,
   debouncedHandleLike,
   liked,
-  doubleLiked,
   toggleCommentFeed,
   iconAreaRef,
   isFollowing,
@@ -135,7 +133,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
             icon={faThumbsUp}
             count={counts.likes}
             onPress={handleLikePress}
-            color={liked || doubleLiked ? '#023020' : COLORS.primary}
+            color={liked ? '#023020' : COLORS.primary}
           />
           <IconButton
             icon={faComment}

@@ -1,35 +1,24 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  Animated,
-  PanResponder,
-  Dimensions,
-} from 'react-native';
+import {View, Text, Image, TouchableOpacity, Animated} from 'react-native';
+import {PanResponder, Dimensions} from 'react-native';
+import {Switch} from 'react-native';
+import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
+
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faUser, faRibbon, faBell} from '@fortawesome/free-solid-svg-icons';
+import {faHistory, faCog} from '@fortawesome/free-solid-svg-icons';
+import {faMoon, faSignOutAlt, faTimes} from '@fortawesome/free-solid-svg-icons';
+import {CommonActions} from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
+
+import {handleSignOut} from '../../services/authFunctions';
 import styles from './ProfilePanel.styles';
-import {
-  faUser,
-  faRibbon,
-  faBell,
-  faHistory,
-  faCog,
-  faMoon,
-  faSignOutAlt,
-  faTimes,
-} from '@fortawesome/free-solid-svg-icons';
 import Anon1Image from '../../assets/images/Jestr5.jpg';
-import {useTheme} from '../../theme/ThemeContext'; // Import useTheme
+import {useTheme} from '../../theme/ThemeContext';
 import LogoutModal from '../Modals/LogoutModal';
 import {User, ProfilePanelProps} from '../../types/types';
 import NotificationsPanel from './NotificationsPanel';
-import {Switch} from 'react-native';
-import {handleSignOut} from '../../services/authFunctions';
-import {CommonActions} from '@react-navigation/native';
-import {useUserStore} from '../../utils/userStore';
-import * as SecureStore from 'expo-secure-store';
+import {useUserStore} from '../../store/userStore';
 
 const {width} = Dimensions.get('window');
 
@@ -42,23 +31,22 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   user,
   navigation,
 }) => {
-  const [showBadgeModal, setShowBadgeModal] = useState(false);
-  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const tabBarHeight = useBottomTabBarHeight();
+  console.log('tabBarHeight: ', tabBarHeight);
+  const {isDarkMode, toggleDarkMode} = useTheme();
+  const panelTranslateX = useRef(new Animated.Value(-width)).current;
+
   const followersCount = useUserStore(state => state.followingCount);
   const followingCount = useUserStore(
     state => state.FollowingCount || state.followingCount,
   );
+
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [localUser, setLocalUser] = useState<User | null>(user || null);
   const [showNotifications, setShowNotifications] = useState(false);
-  const bio = localUser?.Bio || localUser?.bio || 'Default bio';
-  const panelTranslateX = useRef(new Animated.Value(-width)).current;
-  const {isDarkMode, toggleDarkMode} = useTheme();
 
-  // console.log('ProfilePanel: localUser', localUser);
-
-  // useEffect(() => {
-  //   console.log('ProfilePanel: followingCount changed to', followingCount);
-  // }, [followingCount]);
+  // const bio = localUser?.Bio || localUser?.bio || 'Default bio';
 
   const panResponder = useRef(
     PanResponder.create({
@@ -120,8 +108,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   };
 
   const handleProfileClick = () => {
-    navigation.navigate('Profile', {user: localUser});
-    //console.log(localUser)
+    navigation.navigate('Profile');
     closePanel();
   };
 
@@ -140,7 +127,8 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
 
   const handleNotificationsClick = () => {
     console.log('Notifications clicked');
-    setShowNotifications(true);
+    navigation.navigate('Notifications');
+    // setShowNotifications(true);
     closePanel();
   };
 
@@ -181,8 +169,10 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
           {
             transform: [{translateX: panelTranslateX}],
             backgroundColor: isDarkMode ? '#1e1e1e' : '#494949',
+            // paddingBottom: tabBarHeight,
           },
         ]}>
+        {/* == CLOSE BTN == */}
         <TouchableOpacity style={styles.closeButton} onPress={closePanel}>
           <FontAwesomeIcon
             icon={faTimes}
@@ -190,6 +180,8 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
             size={24}
           />
         </TouchableOpacity>
+
+        {/* == PROFILE INFO == */}
         <View style={styles.profileInfo}>
           <TouchableOpacity onPress={handleProfileClick}>
             <Image source={getProfilePic()} style={styles.profilePic} />
@@ -209,6 +201,8 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
             </View>
           </View>
         </View>
+
+        {/* == SECTIONS PANEL BTNS == */}
         <View style={styles.iconSection}>
           {[
             {icon: faUser, label: 'Profile', onPress: handleProfileClick},
@@ -217,8 +211,9 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
               label: 'Notifications',
               onPress: handleNotificationsClick,
             },
-            {icon: faRibbon, label: 'Badges', onPress: handleBadgeClick},
-            {icon: faHistory, label: 'History', onPress: handleFavoritesClick},
+            // DON'T DELETE THIS COMMENTED CODE
+            // {icon: faRibbon, label: 'Badges', onPress: handleBadgeClick},
+            // {icon: faHistory, label: 'History', onPress: handleFavoritesClick},
             {icon: faCog, label: 'Settings', onPress: handleSettingsClick},
           ].map((item, index) => (
             <TouchableOpacity
@@ -230,7 +225,19 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
             </TouchableOpacity>
           ))}
         </View>
-        <View style={styles.bottomContainer}>
+
+        {/* == BOTTOM CONTENT == */}
+        <View
+          style={[
+            styles.bottomContainer,
+            {
+              // position: 'absolute',
+              // left: 0,
+              // right: 0,
+              // bottom: tabBarHeight,
+              // paddingBottom: tabBarHeight,
+            },
+          ]}>
           <TouchableOpacity
             style={styles.signoutButton}
             onPress={handleSignOutClick}>
@@ -257,6 +264,8 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
           </View>
         </View>
       </Animated.View>
+
+      {/* == CLOSE ON OUTSIDE PRESS == */}
       {isVisible && (
         <TouchableOpacity
           style={styles.backdrop}
@@ -264,6 +273,8 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
           activeOpacity={1}
         />
       )}
+
+      {/* == LOGOUT == */}
       <LogoutModal
         visible={logoutModalVisible}
         onCancel={cancelSignOut}

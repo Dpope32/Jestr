@@ -1,16 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Clipboard, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowUp, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { User } from '../../types/types';
-import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../../types/types';
-import { useNavigation } from '@react-navigation/native';
-import { FlashList, ListRenderItem } from '@shopify/flash-list';
-import { sendMessage, fetchMessages } from '../../services/authFunctions';
-import { format, formatDistanceToNow, isToday } from 'date-fns';
-import { useTheme } from '../../theme/ThemeContext';
-import styles from './convoStyles'
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Clipboard,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faArrowUp, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
+import {User} from '../../types/types';
+import {StackScreenProps} from '@react-navigation/stack';
+import {RootStackParamList} from '../../types/types';
+import {useNavigation} from '@react-navigation/native';
+import {FlashList, ListRenderItem} from '@shopify/flash-list';
+import {sendMessage, fetchMessages} from '../../services/authFunctions';
+import {format, formatDistanceToNow, isToday} from 'date-fns';
+import {useTheme} from '../../theme/ThemeContext';
+import styles from './convoStyles';
 
 export type Message = {
   MessageID: string;
@@ -35,21 +46,15 @@ export type Conversation = {
   messages: Message[];
 };
 
-type ConversationsParams = {
-  localUser: User;
-  partnerUser: User;
-  conversation: Conversation;
-};
-
 type ConversationsProps = StackScreenProps<RootStackParamList, 'Conversations'>;
 
-const Conversations: React.FC<ConversationsProps> = ({ route }) => {
-  const { localUser, partnerUser, conversation } = route.params;
+const Conversations = ({route}) => {
+  const {localUser, partnerUser, conversation} = route.params;
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [profilePanelVisible, setProfilePanelVisible] = useState(false);
+  // const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const navigation = useNavigation();
-  const { isDarkMode } = useTheme();
+  const {isDarkMode} = useTheme();
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === '') return;
@@ -65,7 +70,7 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
       sentByMe: true,
     };
 
-    setMessages((prevMessages) => [newMsg, ...prevMessages]);
+    setMessages(prevMessages => [newMsg, ...prevMessages]);
     setNewMessage('');
 
     try {
@@ -81,15 +86,15 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
     if (isToday(date)) {
       return format(date, 'h:mm a');
     } else {
-      return formatDistanceToNow(date, { addSuffix: true });
+      return formatDistanceToNow(date, {addSuffix: true});
     }
   };
 
-  const renderMessage: ListRenderItem<Message> = ({ item }) => {
+  const renderMessage: ListRenderItem<Message> = ({item}) => {
     let content = item.Content;
     let isMemeShare = false;
     let memeUrl = '';
-  
+
     if (typeof content === 'string' && content.trim().startsWith('{')) {
       try {
         const parsedContent = JSON.parse(content);
@@ -102,15 +107,20 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
         console.log('Failed to parse message content:', e);
       }
     }
-  
+
     return (
-      <View style={[
-        styles.messageBubble,
-        item.SenderID === localUser.email ? styles.sentMessage : styles.receivedMessage
-      ]}>
+      <View
+        style={[
+          styles.messageBubble,
+          item.SenderID === localUser.email
+            ? styles.sentMessage
+            : styles.receivedMessage,
+        ]}>
         {isMemeShare && (
-          <Image 
-            source={{uri: `https://jestr-bucket.s3.amazonaws.com/Memes/${memeUrl}`}}
+          <Image
+            source={{
+              uri: `https://jestr-bucket.s3.amazonaws.com/Memes/${memeUrl}`,
+            }}
             style={styles.sharedMemeImage}
             resizeMode="contain"
           />
@@ -125,26 +135,32 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
     <KeyboardAvoidingView
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-      style={{ flex: 1 }}
-    >
-      <View style={[
-        styles.container,
-        { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' }
-      ]}>
+      style={{flex: 1}}>
+      <View
+        style={[
+          styles.container,
+          {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
+        ]}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}>
             <FontAwesomeIcon icon={faArrowLeft} size={24} color="#1bd40b" />
           </TouchableOpacity>
-          <Image 
-            source={{uri: partnerUser.profilePic || 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg'}} 
-            style={styles.profilePic} 
+          <Image
+            source={{
+              uri:
+                partnerUser.profilePic ||
+                'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg',
+            }}
+            style={styles.profilePic}
           />
           <Text style={styles.username}>{partnerUser.username}</Text>
         </View>
         <FlashList
           data={messages}
           renderItem={renderMessage}
-          keyExtractor={(item) => item.MessageID}
+          keyExtractor={item => item.MessageID}
           inverted
           contentContainerStyle={styles.messagesContainer}
           estimatedItemSize={79}
@@ -157,7 +173,9 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
             onChangeText={setNewMessage}
             placeholderTextColor="#999"
           />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+          <TouchableOpacity
+            style={styles.sendButton}
+            onPress={handleSendMessage}>
             <FontAwesomeIcon icon={faArrowUp} size={24} color="white" />
           </TouchableOpacity>
         </View>

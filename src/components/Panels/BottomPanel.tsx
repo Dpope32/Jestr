@@ -11,7 +11,7 @@ import {faHome, faPlus, faEnvelope} from '@fortawesome/free-solid-svg-icons';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 
 import {RootStackParamList} from '../../types/types';
-import {useUserStore} from '../../utils/userStore';
+import {useUserStore} from '../../store/userStore';
 import * as Haptics from 'expo-haptics';
 
 type BottomPanelProps = {

@@ -119,17 +119,10 @@ export type MediaPlayerProps = {
   caption: string;
   currentUserId?: string;
   uploadTimestamp: string;
-  handleLike: () => void;
-  handleDownload: () => void;
   handleSingleTap?: () => void;
   toggleCommentFeed: () => void;
   goToPrevMedia: () => void;
   goToNextMedia: () => void;
-  likedIndices: Set<number>;
-  doubleLikedIndices: Set<number>;
-  downloadedIndices: Set<number>;
-  likeDislikeCounts: Record<number, number>;
-  currentMediaIndex: number;
   user: User | null;
   likeCount: number;
   downloadCount: number;
@@ -137,22 +130,9 @@ export type MediaPlayerProps = {
   shareCount: number;
   profilePicUrl: string;
   memeID: string;
-  nextMedia: string | null;
-  prevMedia: string | null;
   index: number;
   currentIndex: number;
-  initialLikeStatus: {
-    liked: boolean;
-    doubleLiked: boolean;
-  };
   liked: boolean;
-  doubleLiked: boolean;
-  isDarkMode: boolean;
-  setIsDarkMode?: React.Dispatch<React.SetStateAction<boolean>>;
-  onLongPressStart: () => void;
-  onLongPressEnd: () => void;
-  isCommentFeedVisible: boolean;
-  isProfilePanelVisible: boolean;
   numOfComments?: number;
 };
 

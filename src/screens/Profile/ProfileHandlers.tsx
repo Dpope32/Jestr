@@ -1,13 +1,19 @@
-import { useState } from 'react';
-import { Alert } from 'react-native';
+import {useState} from 'react';
+import {Alert} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import Toast from 'react-native-toast-message';
-import { UserState } from '../../utils/userStore';
-import { updateProfileImage, fetchMemes, getUserMemes, deleteMeme, removeDownloadedMeme } from '../../services/authFunctions';
-import { Meme, FetchMemesResult } from '../../types/types';
-import { TabName } from './Profile';
-import {useUserStore} from '../../utils/userStore';
+import {UserState} from '../../store/userStore';
+import {
+  updateProfileImage,
+  fetchMemes,
+  getUserMemes,
+  deleteMeme,
+  removeDownloadedMeme,
+} from '../../services/authFunctions';
+import {Meme, FetchMemesResult} from '../../types/types';
+import {TabName} from './Profile';
+import {useUserStore} from '../../store/userStore';
 
 export const useProfileHandlers = (
   user: UserState,
@@ -18,19 +24,22 @@ export const useProfileHandlers = (
   setHasMoreMemes: React.Dispatch<React.SetStateAction<boolean>>,
   setSelectedMeme: React.Dispatch<React.SetStateAction<Meme | null>>,
   setCurrentMemeIndex: React.Dispatch<React.SetStateAction<number>>,
-  setIsCommentFeedVisible: React.Dispatch<React.SetStateAction<boolean>>
+  setIsCommentFeedVisible: React.Dispatch<React.SetStateAction<boolean>>,
 ) => {
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [isBlurVisible, setIsBlurVisible] = useState<boolean>(false);
 
-  const handleUpdateImage = async (imagePath: string, type: 'profile' | 'header') => {
+  const handleUpdateImage = async (
+    imagePath: string,
+    type: 'profile' | 'header',
+  ) => {
     setIsLoading(true);
     try {
       await updateProfileImage(user.email, type, imagePath);
-      
+
       // Update Zustand store
       useUserStore.getState().setUserDetails({
-        [type]: { uri: imagePath, width: 300, height: 300 }
+        [type]: {uri: imagePath, width: 300, height: 300},
       });
       Toast.show({
         type: 'success',
@@ -39,7 +48,7 @@ export const useProfileHandlers = (
         autoHide: true,
         topOffset: 30,
         bottomOffset: 40,
-        props: { backgroundColor: '#333', textColor: '#00ff00' },
+        props: {backgroundColor: '#333', textColor: '#00ff00'},
       });
     } catch (error) {
       console.error('Failed to update image:', error);
@@ -50,7 +59,7 @@ export const useProfileHandlers = (
         autoHide: true,
         topOffset: 30,
         bottomOffset: 40,
-        props: { backgroundColor: '#333', textColor: '#00ff00' },
+        props: {backgroundColor: '#333', textColor: '#00ff00'},
       });
     } finally {
       setIsLoading(false);
@@ -58,7 +67,7 @@ export const useProfileHandlers = (
   };
 
   const handleEditImagePress = async (type: 'profile' | 'header') => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Sorry, we need camera roll permissions to make this work!');
       return;
@@ -84,7 +93,7 @@ export const useProfileHandlers = (
               },
             },
           ],
-          { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+          {compress: 1, format: ImageManipulator.SaveFormat.JPEG},
         );
 
         handleUpdateImage(manipResult.uri, type);
@@ -94,19 +103,22 @@ export const useProfileHandlers = (
     }
   };
 
-
-  const onLikeStatusChange = (memeID: string, status: { liked: boolean; doubleLiked: boolean }, newLikeCount?: number) => {
+  const onLikeStatusChange = (
+    memeID: string,
+    status: {liked: boolean; doubleLiked: boolean},
+    newLikeCount?: number,
+  ) => {
     setTabMemes(prevMemes =>
       prevMemes.map(meme =>
         meme.memeID === memeID
-          ? { ...meme, likeCount: newLikeCount || meme.likeCount }
-          : meme
-      )
+          ? {...meme, likeCount: newLikeCount || meme.likeCount}
+          : meme,
+      ),
     );
   };
 
   const handleBioUpdate = (newBio: string) => {
-    useUserStore.getState().setUserDetails({ bio: newBio });
+    useUserStore.getState().setUserDetails({bio: newBio});
   };
 
   const handleHeightChange = (height: number) => {
@@ -122,7 +134,11 @@ export const useProfileHandlers = (
     // Implement if needed
   };
 
-  const fetchTabMemes = async (tab: TabName, page: number = 1, pageSize: number = 30) => {
+  const fetchTabMemes = async (
+    tab: TabName,
+    page: number = 1,
+    pageSize: number = 30,
+  ) => {
     if (user && user.email) {
       try {
         setIsLoading(true);
@@ -141,7 +157,7 @@ export const useProfileHandlers = (
             result = await fetchMemes(user.email, 'downloaded', null, pageSize);
             break;
           default:
-            result = { memes: [], lastEvaluatedKey: null };
+            result = {memes: [], lastEvaluatedKey: null};
         }
         console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
         setTabMemes(result.memes);
@@ -164,50 +180,50 @@ export const useProfileHandlers = (
   };
 
   const handleDeleteMeme = async (memeID: string) => {
-    Alert.alert(
-      "Delete Meme",
-      "Are you sure you want to delete this meme?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Yes",
-          onPress: async () => {
-            try {
-              await deleteMeme(memeID, user.email);
-              setTabMemes(prevMemes => prevMemes.filter(meme => meme.memeID !== memeID));
-              setSelectedMeme(null);
-              Toast.show({
-                type: 'success',
-                text1: 'Meme deleted successfully!',
-                visibilityTime: 2000,
-                autoHide: true,
-                topOffset: 30,
-                bottomOffset: 40,
-              });
-            } catch (error) {
-              console.error('Failed to delete meme:', error);
-              Toast.show({
-                type: 'error',
-                text1: 'Failed to delete meme',
-                visibilityTime: 2000,
-                autoHide: true,
-                topOffset: 30,
-                bottomOffset: 40,
-              });
-            }
+    Alert.alert('Delete Meme', 'Are you sure you want to delete this meme?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Yes',
+        onPress: async () => {
+          try {
+            await deleteMeme(memeID, user.email);
+            setTabMemes(prevMemes =>
+              prevMemes.filter(meme => meme.memeID !== memeID),
+            );
+            setSelectedMeme(null);
+            Toast.show({
+              type: 'success',
+              text1: 'Meme deleted successfully!',
+              visibilityTime: 2000,
+              autoHide: true,
+              topOffset: 30,
+              bottomOffset: 40,
+            });
+          } catch (error) {
+            console.error('Failed to delete meme:', error);
+            Toast.show({
+              type: 'error',
+              text1: 'Failed to delete meme',
+              visibilityTime: 2000,
+              autoHide: true,
+              topOffset: 30,
+              bottomOffset: 40,
+            });
           }
-        }
-      ]
-    );
+        },
+      },
+    ]);
   };
 
   const handleRemoveDownloadedMeme = async (memeID: string) => {
     try {
       await removeDownloadedMeme(user.email, memeID);
-      setTabMemes(prevMemes => prevMemes.filter(meme => meme.memeID !== memeID));
+      setTabMemes(prevMemes =>
+        prevMemes.filter(meme => meme.memeID !== memeID),
+      );
       Toast.show({
         type: 'success',
         text1: 'Meme removed from gallery!',

@@ -3,12 +3,12 @@ import {View, Text, TouchableWithoutFeedback} from 'react-native';
 import {Dimensions, Animated} from 'react-native';
 import {StyleSheet, Platform, ViewStyle} from 'react-native';
 import {GestureResponderEvent, ActivityIndicator} from 'react-native';
-// import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-// import {faCheckCircle} from '@fortawesome/free-solid-svg-icons';
 import {Video, AVPlaybackStatus, ResizeMode} from 'expo-av';
-// import {BlurView} from 'expo-blur';
 import Toast from 'react-native-toast-message';
 import LottieView from 'lottie-react-native';
+// import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+// import {faCheckCircle} from '@fortawesome/free-solid-svg-icons';
+// import {BlurView} from 'expo-blur';
 
 import SafeImage from '../shared/SafeImage';
 import styles from './MP.styles';
@@ -17,7 +17,7 @@ import {addFollow} from '../../services/authFunctions';
 import {usePanResponder} from './usePanResponder';
 import {IconsAndContent} from './MediaPlayerContent';
 import {useMediaPlayerLogic} from './useMediaPlayerLogic';
-import {useUserStore} from '../../utils/userStore';
+import {useUserStore} from '../../store/userStore';
 import {LongPressModal} from './LongPressModal';
 import {useTheme} from '../../theme/ThemeContext';
 
@@ -30,30 +30,26 @@ const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 const AnimatedSafeImage = Animated.createAnimatedComponent(SafeImage);
 
 const MediaPlayer: React.FC<MediaPlayerProps> = ({
-  memeUser = {email: ''},
-  currentMedia,
-  mediaType,
-  prevMedia,
-  nextMedia,
-  caption,
-  uploadTimestamp,
-  handleDownload,
-  toggleCommentFeed,
-  goToPrevMedia,
-  goToNextMedia,
   index,
   currentIndex,
   user,
-  memeID,
-  liked: initialLiked,
-  doubleLiked: initialDoubleLiked,
-  likeCount: initialLikeCount,
   currentUserId,
+  memeUser = {email: ''},
+  currentMedia,
+  liked: initialLiked,
+  numOfComments,
+  goToPrevMedia,
+  goToNextMedia,
+  toggleCommentFeed,
+  // {...user} props
+  mediaType,
+  caption,
+  uploadTimestamp,
+  memeID,
+  likeCount: initialLikeCount,
   downloadCount: initialDownloadCount,
   shareCount: initialShareCount,
-  // not used, why?
   commentCount: initialCommentCount,
-  numOfComments,
 }) => {
   const {isDarkMode} = useTheme();
 
@@ -63,9 +59,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const lottieRef = useRef(null);
   const iconAreaRef = useRef(null);
 
-  const [status, setStatus] = useState<AVPlaybackStatus>(
-    {} as AVPlaybackStatus,
-  );
+  const [status, setStatus] = useState<AVPlaybackStatus>();
   const [mediaLoadError, setMediaLoadError] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [lastTap, setLastTap] = useState(0);
@@ -120,14 +114,14 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
 
   useEffect(() => {
     loadMedia();
-  }, [loadMedia, nextMedia, prevMedia, memeID, index, currentIndex]);
+  }, [loadMedia, memeID, index, currentIndex]);
 
   // === H A N D L E  S I N G L E  T A P ===
   const handleSingleTap = useCallback(() => {
     if (mediaType === 'video' && video.current) {
-      if (status.isLoaded && status.isPlaying) {
+      if (status?.isLoaded && status.isPlaying) {
         video.current.pauseAsync();
-      } else if (status.isLoaded) {
+      } else if (status?.isLoaded) {
         video.current.playAsync();
       }
     } else {
@@ -136,7 +130,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
 
   const {
     liked,
-    doubleLiked,
     showSaveModal,
     showShareModal,
     counts,
@@ -147,14 +140,12 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     setShowShareModal,
   } = useMediaPlayerLogic({
     initialLiked,
-    initialDoubleLiked,
     initialLikeCount,
     initialDownloadCount,
     initialShareCount,
     initialCommentCount,
     user,
     memeID,
-    handleDownload,
   });
 
   const handleSwipeUp = useCallback(() => {
@@ -360,7 +351,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           {showLikeAnimation && (
             <LottieView
               ref={lottieRef}
-              source={require('./lottie-liked.json')}
+              source={require('../../assets/animations/lottie-liked.json')}
               style={lottieStyle as ViewStyle}
               autoPlay
               loop={false}
@@ -379,7 +370,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
         counts={counts}
         debouncedHandleLike={debouncedHandleLike}
         liked={liked}
-        doubleLiked={doubleLiked}
         toggleCommentFeed={toggleCommentFeed}
         // animatedBlurIntensity={animatedBlurIntensity}
         iconAreaRef={iconAreaRef}

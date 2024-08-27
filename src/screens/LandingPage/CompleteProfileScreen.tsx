@@ -1,32 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, Switch, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/core';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/core';
-import { RootStackParamList, ProfileImage } from '../../types/types';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Switch,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
+import {useNavigation, useRoute} from '@react-navigation/core';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RouteProp} from '@react-navigation/core';
+import {RootStackParamList, ProfileImage} from '../../types/types';
 import HeaderPicUpload from '../../components/Upload/HeaderPicUpload';
 import ProfilePicUpload from '../../components/Upload/ProfilePicUpload';
 import InputField from '../../components/shared/Input/InutField';
-import { LinearGradient } from 'expo-linear-gradient';
-import { handleCompleteProfile } from '../../services/authFunctions';
-import { useUserStore } from '../../utils/userStore';
+import {LinearGradient} from 'expo-linear-gradient';
+import {handleCompleteProfile} from '../../services/authFunctions';
+import {useUserStore} from '../../store/userStore';
 import * as ImagePicker from 'expo-image-picker';
-import { BlurView } from 'expo-blur';
+import {BlurView} from 'expo-blur';
 import LottieView from 'lottie-react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faMoon, faHeart, faBell } from '@fortawesome/free-solid-svg-icons';
-import { useTheme } from '../../theme/ThemeContext';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faMoon, faHeart, faBell} from '@fortawesome/free-solid-svg-icons';
+import {useTheme} from '../../theme/ThemeContext';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 const CompleteProfileScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, 'CompleteProfileScreen'>>();
-  const { headerPic, profilePic, bio, setBio, setLikesPublic, setNotificationsEnabled } = useUserStore();
-  const { email } = route.params;
-  const { isDarkMode, toggleDarkMode } = useTheme();
-  const { setDarkMode } = useUserStore();
+  const route =
+    useRoute<RouteProp<RootStackParamList, 'CompleteProfileScreen'>>();
+  const {
+    headerPic,
+    profilePic,
+    bio,
+    setBio,
+    setLikesPublic,
+    setNotificationsEnabled,
+  } = useUserStore();
+  const {email} = route.params;
+  const {isDarkMode, toggleDarkMode} = useTheme();
+  const {setDarkMode} = useUserStore();
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -37,9 +56,12 @@ const CompleteProfileScreen: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant permission to access your photos.');
+        Alert.alert(
+          'Permission needed',
+          'Please grant permission to access your photos.',
+        );
       }
     })();
   }, []);
@@ -53,22 +75,26 @@ const CompleteProfileScreen: React.FC = () => {
 
   const handleImagePick = async (type: 'header' | 'profile') => {
     try {
-      const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
+      const {status} = await ImagePicker.getMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        const { status: newStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        const {status: newStatus} =
+          await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (newStatus !== 'granted') {
-          Alert.alert('Permission needed', 'Please grant permission to access your photos.');
+          Alert.alert(
+            'Permission needed',
+            'Please grant permission to access your photos.',
+          );
           return;
         }
       }
-  
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: type === 'header' ? [16, 9] : [1, 1],
         quality: 1,
       });
-  
+
       if (!result.canceled && result.assets && result.assets[0]) {
         const imageAsset = result.assets[0];
         const profileImage: ProfileImage = {
@@ -79,7 +105,7 @@ const CompleteProfileScreen: React.FC = () => {
           fileName: imageAsset.fileName,
           fileSize: imageAsset.fileSize,
         };
-  
+
         if (type === 'header') {
           useUserStore.getState().setHeaderPic(profileImage);
         } else {
@@ -95,9 +121,11 @@ const CompleteProfileScreen: React.FC = () => {
   const handleCompleteProfileButton = async () => {
     setIsLoading(true);
     try {
-      const validProfilePic = profilePic && typeof profilePic !== 'string' ? profilePic : null;
-      const validHeaderPic = headerPic && typeof headerPic !== 'string' ? headerPic : null;
-  
+      const validProfilePic =
+        profilePic && typeof profilePic !== 'string' ? profilePic : null;
+      const validHeaderPic =
+        headerPic && typeof headerPic !== 'string' ? headerPic : null;
+
       setDarkMode?.(darkMode);
       setLikesPublic?.(likesPublic);
       setNotificationsEnabled?.(notificationsEnabled);
@@ -109,16 +137,18 @@ const CompleteProfileScreen: React.FC = () => {
         validProfilePic,
         validHeaderPic,
         bio,
-        () => {}, 
+        () => {},
         navigation,
-        { darkMode, likesPublic, notificationsEnabled }
+        {darkMode, likesPublic, notificationsEnabled},
       );
-  
+
       setError(null);
     } catch (error: unknown) {
       console.error('Error completing profile:', error);
       if (error instanceof Error) {
-        setError(error.message || 'Failed to complete profile. Please try again.');
+        setError(
+          error.message || 'Failed to complete profile. Please try again.',
+        );
       } else {
         setError('An unknown error occurred. Please try again.');
       }
@@ -126,7 +156,6 @@ const CompleteProfileScreen: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
 
   if (isLoading) {
     return (
@@ -147,15 +176,18 @@ const CompleteProfileScreen: React.FC = () => {
   return (
     <KeyboardAwareScrollView
       style={styles.container}
-      contentContainerStyle={{ flexGrow: 1 }}
+      contentContainerStyle={{flexGrow: 1}}
       enableOnAndroid={true}
       enableAutomaticScroll={true}
-      keyboardShouldPersistTaps="handled"
-    >
+      keyboardShouldPersistTaps="handled">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View>
-          <HeaderPicUpload onHeaderPicChange={() => handleImagePick('header')} />
-          <ProfilePicUpload onProfilePicChange={() => handleImagePick('profile')} />
+          <HeaderPicUpload
+            onHeaderPicChange={() => handleImagePick('header')}
+          />
+          <ProfilePicUpload
+            onProfilePicChange={() => handleImagePick('profile')}
+          />
           <View style={styles.inputsContainer}>
             <InputField
               label="Display Name"
@@ -176,7 +208,7 @@ const CompleteProfileScreen: React.FC = () => {
               placeholder="Enter your bio"
               labelStyle={styles.whiteText}
               value={bio}
-              onChangeText={(text) => setBio?.(text)}
+              onChangeText={text => setBio?.(text)}
               multiline
               numberOfLines={4}
             />
@@ -189,8 +221,8 @@ const CompleteProfileScreen: React.FC = () => {
               <Switch
                 value={darkMode}
                 onValueChange={handleDarkModeToggle}
-                trackColor={{ false: "#767577", true: "#1bd40b" }}
-                thumbColor={darkMode ? "#f4f3f4" : "#f4f3f4"}
+                trackColor={{false: '#767577', true: '#1bd40b'}}
+                thumbColor={darkMode ? '#f4f3f4' : '#f4f3f4'}
               />
             </View>
 
@@ -200,8 +232,8 @@ const CompleteProfileScreen: React.FC = () => {
               <Switch
                 value={likesPublic}
                 onValueChange={setLikesPublicLocal}
-                trackColor={{ false: "#767577", true: "#1bd40b" }}
-                thumbColor={likesPublic ? "#f4f3f4" : "#f4f3f4"}
+                trackColor={{false: '#767577', true: '#1bd40b'}}
+                thumbColor={likesPublic ? '#f4f3f4' : '#f4f3f4'}
               />
             </View>
 
@@ -211,18 +243,19 @@ const CompleteProfileScreen: React.FC = () => {
               <Switch
                 value={notificationsEnabled}
                 onValueChange={setNotificationsEnabledLocal}
-                trackColor={{ false: "#767577", true: "#1bd40b" }}
-                thumbColor={notificationsEnabled ? "#f4f3f4" : "#f4f3f4"}
+                trackColor={{false: '#767577', true: '#1bd40b'}}
+                thumbColor={notificationsEnabled ? '#f4f3f4' : '#f4f3f4'}
               />
             </View>
 
-            <TouchableOpacity onPress={handleCompleteProfileButton} style={styles.button}>
+            <TouchableOpacity
+              onPress={handleCompleteProfileButton}
+              style={styles.button}>
               <LinearGradient
                 colors={['#002400', '#00e100']}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={styles.gradient}
-              >
+                start={{x: 0, y: 0.5}}
+                end={{x: 1, y: 0.5}}
+                style={styles.gradient}>
                 <Text style={styles.buttonText}>Complete Profile</Text>
               </LinearGradient>
             </TouchableOpacity>

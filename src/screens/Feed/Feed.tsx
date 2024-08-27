@@ -1,29 +1,33 @@
 import React, {useState, useCallback, useMemo, useEffect} from 'react';
 import {View, Text} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
 import {debounce} from 'lodash';
 import * as Haptics from 'expo-haptics';
 
 import {useTheme} from '../../theme/ThemeContext';
 import {useMemes} from './useMemes';
-import {useUserStore} from '../../utils/userStore';
+import {useUserStore} from '../../store/userStore';
 // import {fetchComments} from '../../components/Meme/memeService';
 
 import styles from './Feed.styles';
-import {RootStackParamList, User} from '../../types/types';
+import {User} from '../../types/types';
+import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
 import TopPanel from '../../components/Panels/TopPanel';
 import BottomPanel from '../../components/Panels/BottomPanel';
 import ProfilePanel from '../../components/Panels/ProfilePanel';
 import CommentFeed from '../../components/Modals/CommentFeed';
 import MemeList from '../../components/MediaPlayer/MemeList';
+import {useTabBarStore} from '../../store/tabBarStore';
 
 // import {LoadingText} from '../../components/ErrorFallback/ErrorFallback';
 
 const Feed: React.FC = () => {
   const {isDarkMode} = useTheme();
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<FeedNavProp>();
   const user = useUserStore(state => state as User);
+  const setTabBarVisibility = useTabBarStore(
+    state => state.setTabBarVisibility,
+  );
 
   const bgdColor = isDarkMode ? '#000' : '#1C1C1C';
 
@@ -37,7 +41,8 @@ const Feed: React.FC = () => {
 
   // Toggle Profile Panel
   const toggleProfilePanel = useCallback(() => {
-    setProfilePanelVisible(prev => !prev);
+    setProfilePanelVisible(true);
+    setTabBarVisibility(false);
   }, []);
 
   // Toggle Comment Feed
@@ -69,8 +74,9 @@ const Feed: React.FC = () => {
   const renderTopPanel = () => (
     <TopPanel
       onProfileClick={toggleProfilePanel}
-      profilePicUrl={user.profilePic || ''}
       showLogo={true}
+      // TODO: move these to the TopPanel component
+      profilePicUrl={user.profilePic || ''}
     />
   );
 
@@ -78,16 +84,17 @@ const Feed: React.FC = () => {
   const renderMemeList = () => {
     return (
       <MemeList
+        toggleCommentFeed={toggleCommentFeed}
+        isCommentFeedVisible={isCommentFeedVisible}
+        isProfilePanelVisible={profilePanelVisible}
+        // TODO: move these to the MemeList component
         memes={memes}
         user={user}
         isDarkMode={isDarkMode}
         onEndReached={handleEndReached}
-        toggleCommentFeed={toggleCommentFeed}
         currentMediaIndex={currentMediaIndex}
         setCurrentMediaIndex={setCurrentMediaIndex}
         currentUserId={user.email}
-        isCommentFeedVisible={isCommentFeedVisible}
-        isProfilePanelVisible={profilePanelVisible}
         isLoadingMore={isLoading}
         numOfComments={0}
       />
@@ -111,13 +118,17 @@ const Feed: React.FC = () => {
 
       {/* == BOTTOM PANEL == */}
       {/* should apply a linear gradient overlay for bottom half of screen */}
-      {renderBottomPanel()}
+      {/* {renderBottomPanel()} */}
 
       {/* == PROFILE PANEL == */}
       {profilePanelVisible && (
         <ProfilePanel
           isVisible={profilePanelVisible}
-          onClose={() => setProfilePanelVisible(false)}
+          onClose={() => {
+            setProfilePanelVisible(false);
+            setTabBarVisibility(true);
+          }}
+          // TODO: move these to the ProfilePanel component
           profilePicUrl={user.profilePic || null}
           username={user.username || ''}
           displayName={user.displayName || 'N/A'}
@@ -129,12 +140,13 @@ const Feed: React.FC = () => {
       {/* == COMMENT FEED == */}
       {isCommentFeedVisible && memes[currentMediaIndex] && (
         <CommentFeed
+          isCommentFeedVisible={isCommentFeedVisible}
+          toggleCommentFeed={toggleCommentFeed}
+          // TODO: move these to the CommentFeed component
           memeID={memes[currentMediaIndex].memeID}
           mediaIndex={currentMediaIndex}
           profilePicUrl={user.profilePic || ''}
           user={user}
-          isCommentFeedVisible={isCommentFeedVisible}
-          toggleCommentFeed={toggleCommentFeed}
           updateCommentCount={() => {
             // should get commentCount from BackEnd
           }}

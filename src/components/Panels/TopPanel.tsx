@@ -87,6 +87,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
           )}
 
           {/* TABS: Flow & Following */}
+          {/* TODO: these should be moved to Feed screen */}
           <View style={styles.tabsContainer}>
             <TouchableOpacity
               style={[styles.tab, selectedTab === 'Flow' && styles.activeTab]}

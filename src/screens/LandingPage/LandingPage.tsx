@@ -1,16 +1,25 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Animated, View, ActivityIndicator, Text } from 'react-native';
-import { NavigationProp, useNavigation, CommonActions } from '@react-navigation/native';
+import React, {useState, useRef, useEffect} from 'react';
+import {Animated, View, ActivityIndicator, Text} from 'react-native';
+import {
+  NavigationProp,
+  useNavigation,
+  CommonActions,
+} from '@react-navigation/native';
 import LP from './LP';
-import { User, RootStackParamList, LetterScale } from '../../types/types';
-import { getToken, getUserIdentifier, removeToken, removeUserIdentifier }  from 'utils/secureStore';
-import { getCurrentUser } from '@aws-amplify/auth';
-import { fetchUserDetails } from 'services/authFunctions';
-import { storeUserIdentifier } from 'utils/secureStore';
+import {User, RootStackParamList, LetterScale} from '../../types/types';
+import {
+  getToken,
+  getUserIdentifier,
+  removeToken,
+  removeUserIdentifier,
+} from 'store/secureStore';
+import {getCurrentUser} from '@aws-amplify/auth';
+import {fetchUserDetails} from 'services/authFunctions';
+import {storeUserIdentifier} from 'store/secureStore';
 type LandingPageNavigationProp = NavigationProp<RootStackParamList>;
 
 const LandingPage: React.FC = () => {
-//  console.log('LandingPage rendering start');
+  //  console.log('LandingPage rendering start');
   const navigation = useNavigation<LandingPageNavigationProp>();
   const [isLoading, setIsLoading] = useState(false);
   const logoOpacity = useRef(new Animated.Value(1)).current;
@@ -19,7 +28,7 @@ const LandingPage: React.FC = () => {
   const titleTranslateY = useRef(new Animated.Value(30)).current;
   const [titlePosition, setTitlePosition] = useState({
     top: new Animated.Value(10),
-    left: new Animated.Value(0)
+    left: new Animated.Value(0),
   });
   const titleAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
   const letterAnimations = useRef<Animated.Value[]>([]);
@@ -30,20 +39,19 @@ const LandingPage: React.FC = () => {
   const formOpacity = useRef(new Animated.Value(0)).current;
   const [titleMarginTop, setTitleMarginTop] = useState(-300);
 
-  
   useEffect(() => {
-  //  console.log('LandingPage useEffect: Animation start');
+    //  console.log('LandingPage useEffect: Animation start');
     startAnimation();
   }, []);
 
   useEffect(() => {
-  //  console.log('LandingPage useEffect: Auth check start');
+    //  console.log('LandingPage useEffect: Auth check start');
     const checkAuth = async () => {
       const token = await getToken('accessToken');
       let identifier = await getUserIdentifier();
-  //    console.log('Token in LandingPage:', token ? 'exists' : 'does not exist');
-  //    console.log('Identifier in LandingPage:', identifier ? 'exists' : 'does not exist');
-  
+      //    console.log('Token in LandingPage:', token ? 'exists' : 'does not exist');
+      //    console.log('Identifier in LandingPage:', identifier ? 'exists' : 'does not exist');
+
       if (token) {
         try {
           if (!identifier) {
@@ -56,26 +64,26 @@ const LandingPage: React.FC = () => {
               throw new Error('Unable to retrieve user email');
             }
           }
-  
+
           const userDetails = await fetchUserDetails(identifier, token);
           if (userDetails) {
             navigation.dispatch(
               CommonActions.reset({
                 index: 0,
-                routes: [{ name: 'Feed' }],
-              })
+                routes: [{name: 'Feed'}],
+              }),
             );
           } else {
             navigation.dispatch(
               CommonActions.reset({
                 index: 0,
                 routes: [
-                  { 
-                    name: 'CompleteProfileScreen', 
-                    params: { email: identifier }
-                  }
+                  {
+                    name: 'CompleteProfileScreen',
+                    params: {email: identifier},
+                  },
                 ],
-              })
+              }),
             );
           }
         } catch (error) {
@@ -95,7 +103,7 @@ const LandingPage: React.FC = () => {
   }, [navigation]);
 
   const navigateToConfirmSignUp = (email: string) => {
-    navigation.navigate('ConfirmSignUp', { email });
+    navigation.navigate('ConfirmSignUp', {email});
   };
 
   useEffect(() => {
@@ -111,30 +119,32 @@ const LandingPage: React.FC = () => {
     Animated.timing(formOpacity, {
       toValue: 1,
       duration: 500,
-      useNativeDriver: true
+      useNativeDriver: true,
     }).start();
   }, [showInitialScreen, showSignUpForm]);
 
   const startAnimation = () => {
     setAnimationComplete(false);
-    letterAnimations.current = ['J', 'e', 's', 't', 'r'].map(() => new Animated.Value(0));
+    letterAnimations.current = ['J', 'e', 's', 't', 'r'].map(
+      () => new Animated.Value(0),
+    );
 
     const letterAnimationConfigs = letterAnimations.current.map((anim, index) =>
       Animated.timing(anim, {
         toValue: 1,
         duration: 1000,
         delay: index * 200, // Stagger the animations
-        useNativeDriver: true
-      })
+        useNativeDriver: true,
+      }),
     );
 
     Animated.parallel([
       Animated.timing(titleOpacity, {
         toValue: 1,
         duration: 1000,
-        useNativeDriver: true
+        useNativeDriver: true,
       }),
-      ...letterAnimationConfigs
+      ...letterAnimationConfigs,
     ]).start(() => {
       setAnimationComplete(true);
       handleTitleAnimationComplete();
@@ -143,13 +153,13 @@ const LandingPage: React.FC = () => {
     const scale: LetterScale = letterAnimations.current.map(animation => ({
       scale: animation.interpolate({
         inputRange: [0, 1],
-        outputRange: [0.5, 1] // Start from half size
+        outputRange: [0.5, 1], // Start from half size
       }),
       opacity: animation,
       translateY: animation.interpolate({
         inputRange: [0, 1],
-        outputRange: [50, 0] // Start 50 pixels below and move up
-      })
+        outputRange: [50, 0], // Start 50 pixels below and move up
+      }),
     }));
     setLetterScale(scale);
   };
@@ -160,24 +170,25 @@ const LandingPage: React.FC = () => {
     titleAnimationRef.current = Animated.timing(titleTranslateY, {
       toValue: -50,
       duration: 500,
-      useNativeDriver: true
+      useNativeDriver: true,
     });
     if (titleAnimationRef.current) {
       titleAnimationRef.current.start(() => {
-        setTitlePosition({ top: new Animated.Value(30), left: new Animated.Value(0) });
+        setTitlePosition({
+          top: new Animated.Value(30),
+          left: new Animated.Value(0),
+        });
       });
-     // console.log('Animation Complete');
+      // console.log('Animation Complete');
     }
   };
 
-  
-
   //console.log('LandingPage rendering end, isLoading:', isLoading);
 
-   return (
-    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+  return (
+    <View style={{flex: 1, backgroundColor: '#FFFFFF'}}>
       {isLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
           <ActivityIndicator size="large" color="#00ff00" />
           <Text>Loading...</Text>
         </View>

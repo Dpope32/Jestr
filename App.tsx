@@ -1,4 +1,6 @@
 import React, {useState, useEffect} from 'react';
+import {Platform} from 'react-native';
+import {enableScreens} from 'react-native-screens';
 import {NavigationContainer} from '@react-navigation/native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {ErrorBoundary} from 'react-error-boundary';
@@ -52,6 +54,14 @@ const App = () => {
     return () => {
       deactivateKeepAwake();
     };
+  }, []);
+
+  // this is for the weird issue with bottom tabs height remaining
+  // on iOS on RecipeDetailsScreen (where it should be hidden)
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      enableScreens(false);
+    }
   }, []);
 
   if (!isReady) {

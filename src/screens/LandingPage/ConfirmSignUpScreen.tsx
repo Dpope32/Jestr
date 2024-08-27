@@ -1,17 +1,24 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../../types/types';
+import React, {useState} from 'react';
+import {View, Text, TouchableOpacity, Alert, StyleSheet} from 'react-native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../../types/types';
 import {
   CodeField,
   Cursor,
   useBlurOnFulfill,
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
-import { RouteProp } from '@react-navigation/core';
-import { confirmSignUp } from 'aws-amplify/auth';
-import { COLORS, SPACING, FONT_SIZES, FONTS, wp, elevationShadowStyle } from '../../theme/theme';
-import { storeUserIdentifier } from '../../utils/secureStore';
+import {RouteProp} from '@react-navigation/core';
+import {confirmSignUp} from 'aws-amplify/auth';
+import {
+  COLORS,
+  SPACING,
+  FONT_SIZES,
+  FONTS,
+  wp,
+  elevationShadowStyle,
+} from '../../theme/theme';
+import {storeUserIdentifier} from '../../store/secureStore';
 type ConfirmSignUpScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, 'ConfirmSignUp'>;
   route: RouteProp<RootStackParamList, 'ConfirmSignUp'>;
@@ -19,8 +26,8 @@ type ConfirmSignUpScreenProps = {
 
 const CELL_COUNT = 6;
 
-const ConfirmSignUpScreen: React.FC<ConfirmSignUpScreenProps> = ({ navigation, route }) => {
-  const { email } = route.params;
+const ConfirmSignUpScreen = ({navigation, route}) => {
+  const {email} = route.params;
   const [value, setValue] = useState('');
   const ref = useBlurOnFulfill({value, cellCount: CELL_COUNT});
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
@@ -30,10 +37,10 @@ const ConfirmSignUpScreen: React.FC<ConfirmSignUpScreenProps> = ({ navigation, r
 
   const handleConfirmSignUp = async () => {
     try {
-      await confirmSignUp({ username: email, confirmationCode: value });
+      await confirmSignUp({username: email, confirmationCode: value});
       await storeUserIdentifier(email);
       Alert.alert('Success', 'Your email has been confirmed.');
-      navigation.navigate('CompleteProfileScreen', { email });
+      navigation.navigate('CompleteProfileScreen', {email});
     } catch (error: any) {
       Alert.alert('Error', error.message || 'An unknown error occurred');
     }
@@ -42,7 +49,9 @@ const ConfirmSignUpScreen: React.FC<ConfirmSignUpScreenProps> = ({ navigation, r
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Enter Confirmation Code</Text>
-      <Text style={styles.subtitle}>Please enter the code sent to your email</Text>
+      <Text style={styles.subtitle}>
+        Please enter the code sent to your email
+      </Text>
       <CodeField
         ref={ref}
         {...props}
@@ -56,8 +65,7 @@ const ConfirmSignUpScreen: React.FC<ConfirmSignUpScreenProps> = ({ navigation, r
           <View
             key={index}
             onLayout={getCellOnLayoutHandler(index)}
-            style={[styles.cellRoot, isFocused && styles.focusCell]}
-          >
+            style={[styles.cellRoot, isFocused && styles.focusCell]}>
             <Text style={styles.cellText}>
               {symbol || (isFocused ? <Cursor /> : null)}
             </Text>
