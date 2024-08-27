@@ -179,6 +179,10 @@ const Feed: React.FC = React.memo(() => {
     return <Text>Loading...</Text>;
   }
 
+  if (memes.length ==0) {
+    return <Text> Out of memes </Text>;
+  }
+
   if (error) {
     return <Text>{error}</Text>;
   }

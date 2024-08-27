@@ -115,7 +115,12 @@ const LP: React.FC<LPProps> = ({
           style={styles.formContainer1}
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
-          <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+         <ScrollView 
+            contentContainerStyle={[
+              styles.scrollViewContainer,
+              currentScreen === 'signup' ? styles.signupScrollViewContainer : null
+            ]}
+          >
             <View style={[styles.titleContainer, { marginTop: titleMarginTop }]}>
             </View>
   
@@ -238,13 +243,20 @@ const LP: React.FC<LPProps> = ({
             )}
           </ScrollView>
           {isLoading && (
-            <BlurView intensity={100} style={[StyleSheet.absoluteFill, styles.blurView]}>
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#00ff00" />
-                <Text style={styles.loadingText}>Logging in...</Text>
-              </View>
-            </BlurView>
-          )}
+  <BlurView 
+    intensity={100} 
+    style={[
+      StyleSheet.absoluteFill, 
+      styles.blurView,
+      { borderRadius: 20 }  // Add this line
+    ]}
+  >
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color="#00ff00" />
+      <Text style={styles.loadingText}>Logging in...</Text>
+    </View>
+  </BlurView>
+)}
           <View style={styles.footer}>
           <TouchableOpacity onPress={() => openModal('privacy')}>
           <Text style={styles.footerLink}>Privacy Policy</Text>

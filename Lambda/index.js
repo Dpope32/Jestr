@@ -675,7 +675,7 @@ console.log('Request body:', JSON.stringify(event.body));
         let unseenMemes = [];
         let scanParams = {
           TableName: 'Memes',
-          Limit: 100,
+          Limit: 50,
         };
     
         if (lastViewedMemeId) {

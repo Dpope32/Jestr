@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, ToastAndroid, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
-import Toast from 'react-native-toast-message';
 import { UserState } from '../../utils/userStore';
 import { updateProfileImage, fetchMemes, getUserMemes, deleteMeme, removeDownloadedMeme } from '../../services/authFunctions';
 import { Meme, FetchMemesResult } from '../../types/types';
 import { TabName } from './Profile';
 import {useUserStore} from '../../utils/userStore';
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
 
 export const useProfileHandlers = (
   user: UserState,
@@ -120,6 +122,17 @@ export const useProfileHandlers = (
 
   const loadMoreMemes = () => {
     // Implement if needed
+  };
+
+  const handleShareProfile = async () => {
+    const profileLink = `exp://YOUR_EXPO_PROJECT_SLUG.exp.direct/--/profile/${user.username}`;
+    await Clipboard.setStringAsync(profileLink);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Toast.show({
+      type: 'success',
+      text1: 'Profile link copied',
+      text2: 'Profile link copied to clipboard',
+    });
   };
 
   const fetchTabMemes = async (tab: TabName, page: number = 1, pageSize: number = 30) => {
@@ -250,5 +263,6 @@ export const useProfileHandlers = (
     setFullScreenImage,
     isBlurVisible,
     setIsBlurVisible,
+    handleShareProfile,
   };
 };

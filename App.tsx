@@ -3,11 +3,6 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {View, Text, UIManager} from 'react-native';
 import {enableScreens} from 'react-native-screens';
-import Toast, {
-  BaseToast,
-  BaseToastProps,
-  ErrorToast,
-} from 'react-native-toast-message';
 import {ThemeProvider} from './src/theme/ThemeContext';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {Amplify} from 'aws-amplify';
@@ -21,6 +16,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import {useUserStore} from './src/utils/userStore';
 import {fetchUserDetails} from './src/services/authFunctions';
 import Feed from './src/screens/Feed/Feed';
+import { toastConfig } from './src/config/toastConfig';
 import LandingPage from './src/screens/LandingPage/LandingPage';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -28,7 +24,9 @@ import {ErrorBoundary, FallbackProps} from 'react-error-boundary';
 import OnboardingScreen from './src/screens/LandingPage/OnboardingScreen';
 import {activateKeepAwakeAsync, deactivateKeepAwake} from 'expo-keep-awake';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import * as Linking from 'expo-linking';
 import * as MediaLibrary from 'expo-media-library';
+import Toast from 'react-native-toast-message';
 
 const DEVELOPMENT_MODE = __DEV__;
 
@@ -41,68 +39,24 @@ if (UIManager.setLayoutAnimationEnabledExperimental) {
 Amplify.configure(awsconfig);
 
 const LoadingScreen = lazy(() => import('./src/screens/Loading/LoadingScreen'));
-const MemeUploadScreen = lazy(
-  () => import('./src/screens/MemeUploadScreen/index'),
-);
+const MemeUploadScreen = lazy(() => import('./src/screens/MemeUploadScreen/index'));
 const AdminPage = lazy(() => import('./src/screens/AdminPageScreen'));
 const Inbox = lazy(() => import('./src/screens/Inbox/Inbox'));
 const Conversations = lazy(() => import('./src/screens/Inbox/Conversations'));
 const ChangePassword = lazy(() => import('./src/screens/ChangePasswordScreen'));
-const ConfirmSignUpScreen = lazy(
-  () => import('./src/screens/LandingPage/ConfirmSignUpScreen'),
-);
-const CompleteProfileScreen = lazy(
-  () => import('./src/screens/LandingPage/CompleteProfileScreen'),
-);
+const ConfirmSignUpScreen = lazy(() => import('./src/screens/LandingPage/ConfirmSignUpScreen'),);
+const CompleteProfileScreen = lazy(() => import('./src/screens/LandingPage/CompleteProfileScreen'),);
 const Settings = lazy(() => import('./src/components/Settings/Settings'));
 
 enableScreens();
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const toastConfig = {
-  success: (props: BaseToastProps) => (
-    <BaseToast
-      {...props}
-      style={{
-        borderWidth: 1,
-        borderColor: 'green',
-        backgroundColor: '#2E2E2E',
-        borderRadius: 5,
-        marginTop: 80,
-      }}
-      contentContainerStyle={{paddingHorizontal: 15}}
-      text1Style={{
-        fontSize: 15,
-        fontWeight: '400',
-        color: '#FFFFFF',
-      }}
-      text2Style={{
-        fontSize: 12,
-        color: '#CCCCCC',
-      }}
-    />
-  ),
-  error: (props: BaseToastProps) => (
-    <ErrorToast
-      {...props}
-      style={{
-        borderWidth: 1,
-        borderColor: 'red',
-        backgroundColor: '#2E2E2E',
-        borderRadius: 5,
-        marginTop: 40,
-      }}
-      text1Style={{
-        fontSize: 15,
-        color: '#FFFFFF',
-      }}
-      text2Style={{
-        fontSize: 12,
-        color: '#CCCCCC',
-      }}
-    />
-  ),
+// Dummy deep linking handler
+const handleDeepLink = (event: Linking.EventType) => {
+  let data = Linking.parse(event.url);
+  console.log('Received deep link:', data);
+  // For now, we're not doing anything with the deep link. Will set up once navigation stuff is complete 
 };
 
 function ErrorFallback({error}: FallbackProps) {
@@ -174,7 +128,14 @@ function App(): React.JSX.Element | null {
     };
 
     lockOrientation();
-
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+    // Check for initial URL
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        console.log('App opened with URL:', url);
+        // Again, this is not implemented yet.
+      }
+    });
     const initializeApp = async () => {
       try {
         const [fontsLoaded, authStatus, firstLaunch] = await Promise.all([
@@ -195,6 +156,7 @@ function App(): React.JSX.Element | null {
     initializeApp();
     return () => {
       deactivateKeepAwake();
+      subscription.remove();
     };
   }, []);
 

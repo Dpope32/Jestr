@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faSearch} from '@fortawesome/free-solid-svg-icons';
+import {faSearch, faCog} from '@fortawesome/free-solid-svg-icons';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -42,6 +42,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   onAdminClick,
   isUploading,
 }) => {
+  console.log('TopPanel - isAdmin:', isAdmin);
   const [selectedTab, setSelectedTab] = useState('Flow');
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -153,6 +154,17 @@ const TopPanel: React.FC<TopPanelProps> = ({
                 onBlur={() => setIsSearchActive(false)} // Closes the search on blur
               />
             )}
+            {isAdmin && (
+              <TouchableOpacity
+                style={styles.adminIconContainer}
+                onPress={onAdminClick}>
+                <FontAwesomeIcon
+                  icon={faCog}
+                  size={wp('5%')}
+                  style={styles.adminIcon}
+                />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.searchIconContainer}
               onPress={handleSearchClick}>
@@ -183,6 +195,13 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     width: '100%',
     zIndex: 555,
+  },
+  adminIconContainer: {
+    marginLeft: wp('-5%'),
+    padding: wp('2%'),
+  },
+  adminIcon: {
+    color: '#fff',
   },
   profileContainer: {
     flexDirection: 'column',

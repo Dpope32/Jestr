@@ -24,7 +24,7 @@ export const fetchMemes = async (
   limit: number = 10,
   accessToken: string,
 ): Promise<FetchMemesResult> => {
-  const maxRetries = 3;
+  const maxRetries = 1;
   let retries = 0;
 
   while (retries < maxRetries) {

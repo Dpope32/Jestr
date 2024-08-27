@@ -1,8 +1,9 @@
 import React, {useState, useEffect} from 'react';
-import {View,Text,Image,TouchableOpacity,Modal,Dimensions,ActivityIndicator,Alert,StyleSheet,ScrollView,Animated,} from 'react-native';
+import {View,Text,Image,TouchableOpacity,Modal,Dimensions,ActivityIndicator,Alert,StyleSheet,ScrollView,Animated, ToastAndroid, Clipboard } from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faBox,faHistory,faHeart,faUser,faEdit,faTimes,IconDefinition,faSadTear,faCog,} from '@fortawesome/free-solid-svg-icons';
+import {faBox,faHistory,faHeart,faUser,faEdit,faTimes,IconDefinition,faSadTear,faCog,faShare } from '@fortawesome/free-solid-svg-icons';
 import {RouteProp} from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 import {StackNavigationProp} from '@react-navigation/stack';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import * as Haptics from 'expo-haptics';
@@ -69,6 +70,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
     fetchTabMemes,
     handleMemePress,
     handleDeleteMeme,
+    handleShareProfile,
     handleRemoveDownloadedMeme,
     handleSettingsClick,
   } = useProfileHandlers(
@@ -308,11 +310,12 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
             <FontAwesomeIcon icon={faEdit} size={24} color="#1bd40b" />
             <Text style={styles.edit}>Edit</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.settingsIcon}
-            onPress={handleSettingsClick}>
-            <FontAwesomeIcon icon={faCog} size={24} color="#1bd40b" />
-          </TouchableOpacity>
+          <TouchableOpacity style={styles.shareIcon} onPress={handleShareProfile}>
+          <FontAwesomeIcon icon={faShare} size={24} color="#1bd40b" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.settingsIcon} onPress={handleSettingsClick}>
+          <FontAwesomeIcon icon={faCog} size={24} color="#1bd40b" />
+        </TouchableOpacity>
           <Text style={styles.displayName}>{user?.displayName || 'Anon'}</Text>
           <Text style={styles.username}>@{user?.username || 'Username'}</Text>
           <View

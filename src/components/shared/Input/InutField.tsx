@@ -117,7 +117,8 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 15,
     fontSize: 16,
-    color: 'white'
+    color: 'white',
+    marginVertical: 8,
   },
   eyeIcon: {
     padding: 10,

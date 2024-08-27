@@ -19,8 +19,9 @@ export const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    borderRadius: 20,
     bottom: 0,
+    borderRadius: 40, // Add this line
+    overflow: 'hidden',  // Add this line to ensure content doesn't overflow the rounded corners
     zIndex: 1000,
   },
   termsText: {
@@ -138,7 +139,11 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     alignSelf: 'center',
-    paddingVertical: 20,
+    paddingVertical: 10,
+    marginTop: 20,
+  },
+  signupScrollViewContainer: {
+    marginTop: 100,
   },
   headerUploadContainer: {
     alignItems: 'center',
@@ -381,7 +386,6 @@ export const styles = StyleSheet.create({
     marginTop: 20,
   },
   inputField: {
-    height: 20,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
@@ -401,7 +405,6 @@ export const styles = StyleSheet.create({
     fontSize: 20,
   },
   inputStyle: {
-    height: 20,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,

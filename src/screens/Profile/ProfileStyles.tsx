@@ -118,7 +118,6 @@ export default StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 5,
-    paddingBottom: 5,
     marginTop: 10,
   },
   tabButton: {
@@ -182,7 +181,6 @@ export default StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 50,
   },
   noMemesText: {
     color: '#FFFFFF',
@@ -303,6 +301,15 @@ export default StyleSheet.create({
     height: 100,
     borderRadius: 10,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  shareIcon: {
+    position: 'absolute',
+    top: -50,
+    right: 50, // Adjust this value to position it to the left of the settings icon
+    zIndex: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    padding: 8,
   },
   memeGridContainer: {
     flex: 1,
