@@ -40,7 +40,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   numOfComments,
   goToPrevMedia,
   goToNextMedia,
-  toggleCommentFeed,
   // {...user} props
   mediaType,
   caption,
@@ -289,7 +288,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
             // source={{uri: currentMedia}}
             source={mediaSource}
             style={styles.video}
-            resizeMode={ResizeMode.COVER}
+            resizeMode={ResizeMode.CONTAIN}
             useNativeControls
             shouldPlay={!isLoading}
             isLooping
@@ -328,8 +327,8 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       style={[
         styles.container,
         {
-          transform: [{translateY}],
-          backgroundColor: bgdCol3,
+          // transform: [{translateY}],
+          // backgroundColor: bgdCol3,
           // borderWidth: 1,
           // borderColor: 'yellow',
         },
@@ -370,8 +369,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
         counts={counts}
         debouncedHandleLike={debouncedHandleLike}
         liked={liked}
-        toggleCommentFeed={toggleCommentFeed}
-        // animatedBlurIntensity={animatedBlurIntensity}
         iconAreaRef={iconAreaRef}
         index={index}
         currentIndex={currentIndex}
@@ -381,19 +378,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       />
 
       {/* == TODO: replace with CustomToast component == */}
-      {/* {showToast && (
-        <View
-          style={[
-            styles.toastContainer,
-            {
-              backgroundColor: bgdCol1,
-            },
-          ]}>
-          <FontAwesomeIcon icon={faCheckCircle} size={24} color="#4CAF50" />
-          <Text style={styles.toastMessage}>{toastMessage}</Text>
-        </View>
-      )} */}
-
       <SaveSuccessModal
         visible={showSaveModal}
         onClose={() => setShowSaveModal(false)}
@@ -406,18 +390,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
         onShare={onShare}
         currentMedia={currentMedia}
       />
-
-      {/* == BLUR VIEW: CURRENTLY NOT WORKING == */}
-      {/* <Animated.View
-        style={[
-          StyleSheet.absoluteFill,
-          {
-            opacity: blurOpacity,
-            backgroundColor: bgdCol2,
-          },
-        ]}>
-        <BlurView intensity={10} style={StyleSheet.absoluteFill} />
-      </Animated.View> */}
 
       {/* == MODAL TRIGGERED BY LONG PRESS == */}
       <LongPressModal

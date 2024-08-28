@@ -6,7 +6,6 @@ import BottomTabNav from './Stacks/BottomTabNav';
 
 const Stack = createStackNavigator<AppNavParamList>();
 
-// === APP NAVIGATOR ===
 const AppNavigator = () => {
   const screenOptions = {
     headerShown: false,

@@ -1,12 +1,5 @@
 import {StyleSheet, Dimensions, Platform} from 'react-native';
-import {
-  COLORS,
-  SPACING,
-  FONT_SIZES,
-  wp,
-  elevationShadowStyle,
-  FONTS,
-} from '../../theme/theme';
+import {COLORS, FONTS} from '../../theme/theme';
 
 const {width, height} = Dimensions.get('window');
 

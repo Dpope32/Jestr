@@ -1,67 +1,53 @@
-import React, {useState, useCallback, useMemo, useEffect} from 'react';
-import {View, Text} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import React, {useState, useCallback, useMemo} from 'react';
+import {View, FlatList, ViewToken} from 'react-native';
+import {ActivityIndicator, Dimensions} from 'react-native';
 import {debounce} from 'lodash';
-import * as Haptics from 'expo-haptics';
+// import {useNavigation} from '@react-navigation/native';
+// import * as Haptics from 'expo-haptics';
 
 import {useTheme} from '../../theme/ThemeContext';
 import {useMemes} from './useMemes';
 import {useUserStore} from '../../store/userStore';
 // import {fetchComments} from '../../components/Meme/memeService';
 
+import MediaPlayer from '../../components/MediaPlayer/MediaPlayer';
 import styles from './Feed.styles';
-import {User} from '../../types/types';
-import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
-import TopPanel from '../../components/Panels/TopPanel';
-import BottomPanel from '../../components/Panels/BottomPanel';
+import {Meme, User} from '../../types/types';
 import ProfilePanel from '../../components/Panels/ProfilePanel';
-import CommentFeed from '../../components/Modals/CommentFeed';
-import MemeList from '../../components/MediaPlayer/MemeList';
 import {useTabBarStore} from '../../store/tabBarStore';
+// import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
 
 // import {LoadingText} from '../../components/ErrorFallback/ErrorFallback';
 
-const Feed: React.FC = () => {
+const viewabilityConfig = {itemVisiblePercentThreshold: 50};
+// const {height} = Dimensions.get('window');
+
+const Feed = () => {
+  // const navigation = useNavigation<FeedNavProp>();
   const {isDarkMode} = useTheme();
-  const navigation = useNavigation<FeedNavProp>();
+
   const user = useUserStore(state => state as User);
   const setTabBarVisibility = useTabBarStore(
     state => state.setTabBarVisibility,
   );
+  const setSidePanelVisibility = useTabBarStore(
+    state => state.setSidePanelVisibility,
+  );
+  const isSidePanelVisible = useTabBarStore(state => state.isSidePanelVisible);
 
   const bgdColor = isDarkMode ? '#000' : '#1C1C1C';
 
-  const [profilePanelVisible, setProfilePanelVisible] = useState(false);
-  const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   // == CUSTOM HOOK for DATA in LISTING ==
   const {memes, isLoading, error, fetchMoreMemes, fetchInitialMemes} =
     useMemes();
 
-  // Toggle Profile Panel
-  const toggleProfilePanel = useCallback(() => {
-    setProfilePanelVisible(true);
-    setTabBarVisibility(false);
-  }, []);
-
-  // Toggle Comment Feed
-  const toggleCommentFeed = useCallback(() => {
-    setIsCommentFeedVisible(prev => !prev);
-  }, []);
-
   // Debounced Fetch More Memes
   const debouncedFetchMoreMemes = useMemo(
     () => debounce(fetchMoreMemes, 500, {leading: true, trailing: false}),
     [fetchMoreMemes],
   );
-
-  // Handle Home Click
-  const handleHomeClick = useCallback(() => {
-    fetchInitialMemes();
-    setCurrentMediaIndex(0);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [fetchInitialMemes]);
 
   // Handle End Reached
   const handleEndReached = useCallback(() => {
@@ -70,88 +56,119 @@ const Feed: React.FC = () => {
     }
   }, [isLoading, memes.length, debouncedFetchMoreMemes]);
 
-  // Top Panel
-  const renderTopPanel = () => (
-    <TopPanel
-      onProfileClick={toggleProfilePanel}
-      showLogo={true}
-      // TODO: move these to the TopPanel component
-      profilePicUrl={user.profilePic || ''}
-    />
+  const onCloseSidePanel = () => {
+    setTabBarVisibility(true);
+    setSidePanelVisibility(false);
+  };
+
+  const setCurrentMediaIndexCallback = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < memes.length) {
+        setCurrentMediaIndex(index);
+      }
+    },
+    [setCurrentMediaIndex],
   );
 
-  // MemeList
-  const renderMemeList = () => {
+  const onViewableItemsChanged = useCallback(
+    ({viewableItems}: {viewableItems: ViewToken[]}) => {
+      if (
+        viewableItems.length > 0 &&
+        typeof viewableItems[0].index === 'number'
+      ) {
+        setCurrentMediaIndexCallback(viewableItems[0].index);
+      }
+    },
+    [setCurrentMediaIndexCallback],
+  );
+
+  const keyExtractor = (item: Meme | undefined, index: number) =>
+    item?.memeID || `meme-${index}`;
+
+  const goToNextMedia = useCallback(() => {
+    setCurrentMediaIndexCallback(
+      Math.min(currentMediaIndex + 1, memes.length - 1),
+    );
+  }, [currentMediaIndex, setCurrentMediaIndexCallback]);
+
+  const goToPrevMedia = useCallback(() => {
+    setCurrentMediaIndexCallback(Math.max(currentMediaIndex - 1, 0));
+  }, [currentMediaIndex, setCurrentMediaIndexCallback]);
+
+  // == ITEM IN THE LIST ==
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: Meme | undefined;
+    index: number;
+  }) => {
+    if (!item || !item.url) {
+      return null;
+    }
+
+    // console.log('MemeList - Rendering item:', item);
+
     return (
-      <MemeList
-        toggleCommentFeed={toggleCommentFeed}
-        isCommentFeedVisible={isCommentFeedVisible}
-        isProfilePanelVisible={profilePanelVisible}
-        // TODO: move these to the MemeList component
-        memes={memes}
+      <MediaPlayer
+        {...item}
+        key={item.memeID}
+        index={index}
+        currentIndex={currentMediaIndex}
+        //
         user={user}
-        isDarkMode={isDarkMode}
-        onEndReached={handleEndReached}
-        currentMediaIndex={currentMediaIndex}
-        setCurrentMediaIndex={setCurrentMediaIndex}
         currentUserId={user.email}
-        isLoadingMore={isLoading}
+        memeUser={item.memeUser || {}}
+        //
+        currentMedia={item.url}
+        liked={item.liked ?? false}
         numOfComments={0}
+        //
+        goToPrevMedia={goToPrevMedia}
+        goToNextMedia={goToNextMedia}
       />
     );
   };
 
-  // Bottom Panel
-  const renderBottomPanel = () => <BottomPanel onHomeClick={handleHomeClick} />;
-
-  if (error) {
-    return <Text>{error}</Text>;
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
   }
 
+  // TODO: should apply a linear gradient overlay for bottom half of screen
   return (
     <View style={[styles.container, {backgroundColor: bgdColor}]}>
-      {/* == TOP PANEL == */}
-      {renderTopPanel()}
-
-      {/* == MEME LIST == */}
-      {renderMemeList()}
-
-      {/* == BOTTOM PANEL == */}
-      {/* should apply a linear gradient overlay for bottom half of screen */}
-      {/* {renderBottomPanel()} */}
-
-      {/* == PROFILE PANEL == */}
-      {profilePanelVisible && (
+      {/* == PROFILE SIDE PANEL == */}
+      {isSidePanelVisible && (
         <ProfilePanel
-          isVisible={profilePanelVisible}
-          onClose={() => {
-            setProfilePanelVisible(false);
-            setTabBarVisibility(true);
-          }}
-          // TODO: move these to the ProfilePanel component
-          profilePicUrl={user.profilePic || null}
-          username={user.username || ''}
-          displayName={user.displayName || 'N/A'}
-          user={user}
-          navigation={navigation}
+          isVisible={isSidePanelVisible}
+          onClose={onCloseSidePanel}
         />
       )}
 
-      {/* == COMMENT FEED == */}
-      {isCommentFeedVisible && memes[currentMediaIndex] && (
-        <CommentFeed
-          isCommentFeedVisible={isCommentFeedVisible}
-          toggleCommentFeed={toggleCommentFeed}
-          // TODO: move these to the CommentFeed component
-          memeID={memes[currentMediaIndex].memeID}
-          mediaIndex={currentMediaIndex}
-          profilePicUrl={user.profilePic || ''}
-          user={user}
-          updateCommentCount={() => {
-            // should get commentCount from BackEnd
-          }}
-        />
-      )}
+      {/* add here what is <IconsAndContent /> */}
+      {/* also <LongPressModal /> */}
+      {/* also <ShareModal /> */}
+      {/* also <SaveSuccessModal /> */}
+
+      {/* == M E M E S  L I S T == */}
+      <FlatList
+        keyExtractor={keyExtractor}
+        data={memes}
+        renderItem={renderItem}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={1}
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged}
+        style={{}}
+        contentContainerStyle={{}}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+      />
     </View>
   );
 };

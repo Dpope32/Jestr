@@ -6,6 +6,7 @@ export type FeedNavParamList = {
   Profile: undefined;
   Settings: undefined;
   Notifications: undefined;
+  CommentFeed: undefined;
 };
 
 export type FeedNavProp = NativeStackNavigationProp<FeedNavParamList>;

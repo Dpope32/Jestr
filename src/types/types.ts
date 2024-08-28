@@ -120,7 +120,6 @@ export type MediaPlayerProps = {
   currentUserId?: string;
   uploadTimestamp: string;
   handleSingleTap?: () => void;
-  toggleCommentFeed: () => void;
   goToPrevMedia: () => void;
   goToNextMedia: () => void;
   user: User | null;
@@ -139,9 +138,4 @@ export type MediaPlayerProps = {
 export type ProfilePanelProps = {
   isVisible: boolean;
   onClose: () => void;
-  profilePicUrl: string | ProfileImage | null;
-  username: string;
-  displayName: string;
-  user: User | null;
-  navigation: any;
 };

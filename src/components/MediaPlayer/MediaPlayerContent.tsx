@@ -3,8 +3,11 @@ import {View, Text, TouchableOpacity, Image} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faThumbsUp, faComment} from '@fortawesome/free-solid-svg-icons';
 import {faShare, faPlus} from '@fortawesome/free-solid-svg-icons';
-import {Animated} from 'react-native';
+// import {Animated} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 // import {BlurView} from 'expo-blur';
+
+import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
 
 import styles from './MP.styles';
 import {ShareType, User} from '../../types/types';
@@ -34,7 +37,6 @@ interface IconsAndContentProps {
   };
   debouncedHandleLike: () => void;
   liked: boolean;
-  toggleCommentFeed: () => void;
   iconAreaRef: React.RefObject<View>;
   onShare: (type: ShareType, username: string, message: string) => void;
   user: User | null;
@@ -62,7 +64,6 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
   counts,
   debouncedHandleLike,
   liked,
-  toggleCommentFeed,
   iconAreaRef,
   isFollowing,
   index,
@@ -72,9 +73,8 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
   user,
   numOfComments,
 }) => {
-  // console.log('memeID in IconsAndContent ===>', memeID);
   // console.log('numOfComments in IconsAndContent ===>', numOfComments);
-
+  const navigation = useNavigation<FeedNavProp>();
   const isActive = index === currentIndex;
 
   if (!isActive) {
@@ -86,9 +86,10 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
     debouncedHandleLike();
   }, [debouncedHandleLike]);
 
-  const handleCommentPress = useCallback(() => {
-    toggleCommentFeed();
-  }, [toggleCommentFeed]);
+  const handleCommentPress = () => {
+    // TODO: to send memeID to CommentFeed
+    navigation.navigate('CommentFeed');
+  };
 
   const handleSharePress = useCallback(() => {
     if (user && memeUser?.username) {
@@ -97,58 +98,56 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
   }, [user, memeUser, onShare]);
 
   return (
-    <Animated.View style={[styles.blurContainer]}>
-      <View style={styles.blurInner}>
-        {/* CONTENT ON LEFT */}
-        <View style={styles.textContainer}>
-          <View style={styles.textContent}>
-            <Text style={styles.username}>
-              {memeUser?.username || 'Anonymous'}
-            </Text>
-            {caption && <Text style={styles.caption}>{caption}</Text>}
-            <Text style={styles.date}>{formatDate(uploadTimestamp)}</Text>
-          </View>
-        </View>
-
-        {/* CONTENT ON RIGHT */}
-        <View ref={iconAreaRef} style={styles.iconColumn}>
-          <View style={styles.profilePicContainer}>
-            <Image
-              source={
-                memeUser?.profilePic
-                  ? {uri: memeUser.profilePic}
-                  : require('../../assets/images/Jestr.jpg')
-              }
-              style={styles.profilePic}
-            />
-            {!isFollowing && (
-              <TouchableOpacity
-                onPress={handleFollow}
-                style={styles.followButton}>
-                <FontAwesomeIcon icon={faPlus} size={12} color="#FFFFFF" />
-              </TouchableOpacity>
-            )}
-          </View>
-          <IconButton
-            icon={faThumbsUp}
-            count={counts.likes}
-            onPress={handleLikePress}
-            color={liked ? '#023020' : COLORS.primary}
-          />
-          <IconButton
-            icon={faComment}
-            // count={counts.comments}
-            count={numOfComments}
-            onPress={handleCommentPress}
-          />
-          <IconButton
-            icon={faShare}
-            count={counts.shares}
-            onPress={handleSharePress}
-          />
+    <View style={styles.blurInner}>
+      {/* CONTENT ON LEFT */}
+      <View style={styles.textContainer}>
+        <View style={styles.textContent}>
+          <Text style={styles.username}>
+            {memeUser?.username || 'Anonymous'}
+          </Text>
+          {caption && <Text style={styles.caption}>{caption}</Text>}
+          <Text style={styles.date}>{formatDate(uploadTimestamp)}</Text>
         </View>
       </View>
-    </Animated.View>
+
+      {/* CONTENT ON RIGHT */}
+      <View ref={iconAreaRef} style={styles.iconColumn}>
+        <View style={styles.profilePicContainer}>
+          <Image
+            source={
+              memeUser?.profilePic
+                ? {uri: memeUser.profilePic}
+                : require('../../assets/images/Jestr.jpg')
+            }
+            style={styles.profilePic}
+          />
+          {!isFollowing && (
+            <TouchableOpacity
+              onPress={handleFollow}
+              style={styles.followButton}>
+              <FontAwesomeIcon icon={faPlus} size={12} color="#FFFFFF" />
+            </TouchableOpacity>
+          )}
+        </View>
+        <IconButton
+          icon={faThumbsUp}
+          count={counts.likes}
+          onPress={handleLikePress}
+          color={liked ? '#023020' : COLORS.primary}
+        />
+        <IconButton
+          icon={faComment}
+          // count={counts.comments}
+          count={numOfComments}
+          onPress={handleCommentPress}
+        />
+        <IconButton
+          icon={faShare}
+          count={counts.shares}
+          onPress={handleSharePress}
+        />
+      </View>
+    </View>
   );
 };
 

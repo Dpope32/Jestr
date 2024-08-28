@@ -2,7 +2,8 @@ import React, {useState, useEffect, useRef} from 'react';
 import {View, Text, Image, TouchableOpacity, Animated} from 'react-native';
 import {PanResponder, Dimensions} from 'react-native';
 import {Switch} from 'react-native';
-import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
+import {useNavigation} from '@react-navigation/native';
+// import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
 
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faUser, faRibbon, faBell} from '@fortawesome/free-solid-svg-icons';
@@ -19,33 +20,27 @@ import LogoutModal from '../Modals/LogoutModal';
 import {User, ProfilePanelProps} from '../../types/types';
 import NotificationsPanel from './NotificationsPanel';
 import {useUserStore} from '../../store/userStore';
+import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
 
 const {width} = Dimensions.get('window');
 
-const ProfilePanel: React.FC<ProfilePanelProps> = ({
-  isVisible,
-  onClose,
-  profilePicUrl,
-  username,
-  displayName,
-  user,
-  navigation,
-}) => {
-  const tabBarHeight = useBottomTabBarHeight();
-  console.log('tabBarHeight: ', tabBarHeight);
+const ProfilePanel: React.FC<ProfilePanelProps> = ({isVisible, onClose}) => {
+  const navigation = useNavigation<FeedNavProp>();
+  const user = useUserStore(state => state as User);
   const {isDarkMode, toggleDarkMode} = useTheme();
   const panelTranslateX = useRef(new Animated.Value(-width)).current;
+  // const tabBarHeight = useBottomTabBarHeight();
+  // console.log('tabBarHeight: ', tabBarHeight);
 
   const followersCount = useUserStore(state => state.followingCount);
   const followingCount = useUserStore(
     state => state.FollowingCount || state.followingCount,
   );
 
-  const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-  const [localUser, setLocalUser] = useState<User | null>(user || null);
   const [showNotifications, setShowNotifications] = useState(false);
-
+  // const [showBadgeModal, setShowBadgeModal] = useState(false);
+  // const [localUser, setLocalUser] = useState<User | null>(user || null);
   // const bio = localUser?.Bio || localUser?.bio || 'Default bio';
 
   const panResponder = useRef(
@@ -99,8 +94,8 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   };
 
   const getProfilePic = () => {
-    if (profilePicUrl) {
-      return {uri: profilePicUrl};
+    if (user?.profilePic) {
+      return {uri: user.profilePic};
     } else {
       console.log('Profile picture URL not available');
       return Anon1Image; // Make sure you have a default image imported
@@ -116,14 +111,15 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
     navigation.navigate('Settings');
   };
 
-  const handleBadgeClick = () => {
-    setShowBadgeModal(true);
-  };
+  // DON'T DELETE THIS COMMENTED CODE
+  // const handleBadgeClick = () => {
+  //   setShowBadgeModal(true);
+  // };
 
-  const handleFavoritesClick = () => {
-    console.log('Favorites clicked');
-    closePanel();
-  };
+  // const handleFavoritesClick = () => {
+  //   console.log('Favorites clicked');
+  //   closePanel();
+  // };
 
   const handleNotificationsClick = () => {
     console.log('Notifications clicked');
@@ -138,7 +134,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
 
   const confirmSignOut = async () => {
     try {
-      await handleSignOut(navigation);
+      // await handleSignOut(navigation);
       // Clear SecureStore
       await SecureStore.deleteItemAsync('accessToken');
       // Clear Zustand store
@@ -169,7 +165,6 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
           {
             transform: [{translateX: panelTranslateX}],
             backgroundColor: isDarkMode ? '#1e1e1e' : '#494949',
-            // paddingBottom: tabBarHeight,
           },
         ]}>
         {/* == CLOSE BTN == */}
@@ -187,8 +182,10 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
             <Image source={getProfilePic()} style={styles.profilePic} />
           </TouchableOpacity>
           <View style={styles.userInfoContainer}>
-            <Text style={styles.displayName}>{displayName || 'Anon'}</Text>
-            <Text style={styles.username}>@{username || 'Username'}</Text>
+            <Text style={styles.displayName}>
+              {user?.displayName || 'Anon'}
+            </Text>
+            <Text style={styles.username}>@{user?.username || 'Username'}</Text>
           </View>
           <View style={styles.followContainer}>
             <View style={styles.followCount}>
@@ -227,17 +224,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
         </View>
 
         {/* == BOTTOM CONTENT == */}
-        <View
-          style={[
-            styles.bottomContainer,
-            {
-              // position: 'absolute',
-              // left: 0,
-              // right: 0,
-              // bottom: tabBarHeight,
-              // paddingBottom: tabBarHeight,
-            },
-          ]}>
+        <View style={[styles.bottomContainer, {}]}>
           <TouchableOpacity
             style={styles.signoutButton}
             onPress={handleSignOutClick}>
@@ -252,7 +239,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
             <Switch
               trackColor={{false: '#767577', true: '#1bd40b'}}
               thumbColor={isDarkMode ? '#f4f3f4' : '#f4f3f4'}
-              ios_backgroundColor="#3e3e3e"
+              ios_backgroundColor="#b7a1a1"
               onValueChange={handleDarkModeToggle}
               value={isDarkMode}
             />

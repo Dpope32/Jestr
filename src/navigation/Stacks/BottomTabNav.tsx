@@ -1,15 +1,18 @@
-import {Dimensions, View, StyleSheet} from 'react-native';
+import {Dimensions, View, StyleSheet, Text} from 'react-native';
 import {
   BottomTabNavigationOptions,
   BottomTabBar,
 } from '@react-navigation/bottom-tabs';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {RouteProp, ParamListBase} from '@react-navigation/native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faHome, faPlus, faEnvelope} from '@fortawesome/free-solid-svg-icons';
-// import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 import {useTabBarStore} from '../../store/tabBarStore';
+// import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
+// import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import HeaderFeed from '../../components/HeaderFeed/HeaderFeed';
+// import {useTabBarStore} from '../../store/tabBarStore';
 
 // STACKS
 import FeedStackNav from './FeedStackNav';
@@ -30,7 +33,7 @@ const BottomTabNav = () => {
     route: RouteProp<ParamListBase, string>,
   ): BottomTabNavigationOptions => {
     return {
-      headerShown: false,
+      //   headerShown: false,
       tabBarStyle: {
         display: isTabBarVisible ? 'flex' : 'none',
       },
@@ -43,11 +46,6 @@ const BottomTabNav = () => {
     route: RouteProp<ParamListBase, string>,
   ): BottomTabNavigationOptions => {
     // console.log('route: ', route);
-    // const routeName = getFocusedRouteNameFromRoute(route) ?? 'HomeScreen';
-    // console.log('routeName: ', routeName);
-    // const shouldHideTabBar = ['SingleVisual', 'SingleAudio'].includes(
-    //   routeName,
-    // );
 
     return {
       tabBarStyle: {
@@ -64,6 +62,10 @@ const BottomTabNav = () => {
           style={{color: '#1bd40b'}}
         />
       ),
+      header: ({navigation, route, options}) => {
+        if (!isTabBarVisible) return null;
+        return <HeaderFeed />;
+      },
     };
   };
 
@@ -71,6 +73,8 @@ const BottomTabNav = () => {
     route: RouteProp<ParamListBase, string>,
   ): BottomTabNavigationOptions => {
     return {
+      headerShown: false,
+
       tabBarStyle: {
         display: 'flex',
         backgroundColor: 'transparent',
@@ -90,6 +94,8 @@ const BottomTabNav = () => {
     route: RouteProp<ParamListBase, string>,
   ): BottomTabNavigationOptions => {
     return {
+      headerShown: false,
+
       tabBarStyle: {
         display: 'flex',
         backgroundColor: 'transparent',
@@ -110,7 +116,7 @@ const BottomTabNav = () => {
       initialRouteName="FeedStackNav"
       screenOptions={({route}) => getTabNavigatorOptions(route)}
       tabBar={props => {
-        console.log('props: ', props);
+        // console.log('props: ', props);
         if (!isTabBarVisible) return null;
 
         return (
