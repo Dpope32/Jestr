@@ -112,26 +112,17 @@ export type OnViewableItemsChanged = {
 };
 
 export type MediaPlayerProps = {
-  memeUser: Partial<User>;
   currentMedia: string;
   mediaType: string;
   username: string;
-  caption: string;
-  currentUserId?: string;
-  uploadTimestamp: string;
   handleSingleTap?: () => void;
   goToPrevMedia: () => void;
   goToNextMedia: () => void;
-  user: User | null;
-  likeCount: number;
-  downloadCount: number;
-  commentCount: number;
-  shareCount: number;
+  // user: User | null;
   profilePicUrl: string;
   memeID: string;
   index: number;
   currentIndex: number;
-  liked: boolean;
   numOfComments?: number;
 };
 

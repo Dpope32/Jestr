@@ -1,18 +1,15 @@
-import {Dimensions, View, StyleSheet, Text} from 'react-native';
+import {Dimensions, View, StyleSheet} from 'react-native';
 import {
   BottomTabNavigationOptions,
   BottomTabBar,
 } from '@react-navigation/bottom-tabs';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {RouteProp, ParamListBase} from '@react-navigation/native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faHome, faPlus, faEnvelope} from '@fortawesome/free-solid-svg-icons';
 import {useTabBarStore} from '../../store/tabBarStore';
-// import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
-// import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import HeaderFeed from '../../components/HeaderFeed/HeaderFeed';
-// import {useTabBarStore} from '../../store/tabBarStore';
+// import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 // STACKS
 import FeedStackNav from './FeedStackNav';
@@ -23,7 +20,7 @@ const Tab = createBottomTabNavigator();
 
 // ########## START ##########
 const BottomTabNav = () => {
-  const insets = useSafeAreaInsets();
+  // const insets = useSafeAreaInsets();
   const isTabBarVisible = useTabBarStore(state => state.isTabBarVisible);
 
   const customIcons = {home: faHome, upload: faPlus, inbox: faEnvelope};
@@ -33,12 +30,7 @@ const BottomTabNav = () => {
     route: RouteProp<ParamListBase, string>,
   ): BottomTabNavigationOptions => {
     return {
-      //   headerShown: false,
-      tabBarStyle: {
-        display: isTabBarVisible ? 'flex' : 'none',
-      },
       tabBarShowLabel: false,
-      tabBarItemStyle: {},
     };
   };
 
@@ -116,9 +108,7 @@ const BottomTabNav = () => {
       initialRouteName="FeedStackNav"
       screenOptions={({route}) => getTabNavigatorOptions(route)}
       tabBar={props => {
-        // console.log('props: ', props);
         if (!isTabBarVisible) return null;
-
         return (
           <View style={styles.tabBarPropStyle}>
             <BottomTabBar {...props} />

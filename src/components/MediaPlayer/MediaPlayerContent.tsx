@@ -37,7 +37,6 @@ interface IconsAndContentProps {
   };
   debouncedHandleLike: () => void;
   liked: boolean;
-  iconAreaRef: React.RefObject<View>;
   onShare: (type: ShareType, username: string, message: string) => void;
   user: User | null;
   numOfComments: number;
@@ -64,7 +63,6 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
   counts,
   debouncedHandleLike,
   liked,
-  iconAreaRef,
   isFollowing,
   index,
   currentIndex,
@@ -111,7 +109,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
       </View>
 
       {/* CONTENT ON RIGHT */}
-      <View ref={iconAreaRef} style={styles.iconColumn}>
+      <View style={styles.iconColumn}>
         <View style={styles.profilePicContainer}>
           <Image
             source={

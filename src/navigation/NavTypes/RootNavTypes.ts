@@ -30,8 +30,8 @@ export type RootStackParamList = {
 };
 
 export type AppNavParamList = {
-  BottomTabNav: undefined;
-  DrawerNav: undefined;
+  Home: undefined;
   Profile: undefined;
-  Settings: {email: string};
+  Settings: undefined;
+  Notifications: undefined;
 };

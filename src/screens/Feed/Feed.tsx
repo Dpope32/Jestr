@@ -1,43 +1,65 @@
 import React, {useState, useCallback, useMemo} from 'react';
 import {View, FlatList, ViewToken} from 'react-native';
-import {ActivityIndicator, Dimensions} from 'react-native';
+import {ActivityIndicator, ViewStyle} from 'react-native';
 import {debounce} from 'lodash';
+import LottieView from 'lottie-react-native';
+// import Toast from 'react-native-toast-message';
 // import {useNavigation} from '@react-navigation/native';
 // import * as Haptics from 'expo-haptics';
 
 import {useTheme} from '../../theme/ThemeContext';
 import {useMemes} from './useMemes';
 import {useUserStore} from '../../store/userStore';
-// import {fetchComments} from '../../components/Meme/memeService';
 
 import MediaPlayer from '../../components/MediaPlayer/MediaPlayer';
 import styles from './Feed.styles';
-import {Meme, User} from '../../types/types';
-import ProfilePanel from '../../components/Panels/ProfilePanel';
-import {useTabBarStore} from '../../store/tabBarStore';
-// import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
+import {Meme, User, ShareType} from '../../types/types';
+import {IconsAndContent} from '../../components/MediaPlayer/MediaPlayerContent';
+import ShareModal from '../../components/Modals/ShareModal';
+import SaveSuccessModal from '../../components/Modals/SaveSuccessModal';
+import {LongPressModal} from '../../components/MediaPlayer/LongPressModal';
 
+// import {fetchComments} from '../../components/Meme/memeService';
+// import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
 // import {LoadingText} from '../../components/ErrorFallback/ErrorFallback';
+// const {height} = Dimensions.get('window');
 
 const viewabilityConfig = {itemVisiblePercentThreshold: 50};
-// const {height} = Dimensions.get('window');
 
 const Feed = () => {
   // const navigation = useNavigation<FeedNavProp>();
   const {isDarkMode} = useTheme();
 
   const user = useUserStore(state => state as User);
-  const setTabBarVisibility = useTabBarStore(
-    state => state.setTabBarVisibility,
-  );
-  const setSidePanelVisibility = useTabBarStore(
-    state => state.setSidePanelVisibility,
-  );
-  const isSidePanelVisible = useTabBarStore(state => state.isSidePanelVisible);
 
   const bgdColor = isDarkMode ? '#000' : '#1C1C1C';
 
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [isLongPressModalVisible, setIsLongPressModalVisible] = useState(false);
+  const [showLikeAnimation, setShowLikeAnimation] = useState(false);
+
+  const counts = {
+    likes: 0,
+    comments: 0,
+    downloads: 0,
+    shares: 0,
+  };
+
+  const memeDetails = {
+    id: 'memeID',
+    url: '',
+    caption: '',
+  };
+
+  const lottieStyle = {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: 200,
+    height: 200,
+  };
 
   // == CUSTOM HOOK for DATA in LISTING ==
   const {memes, isLoading, error, fetchMoreMemes, fetchInitialMemes} =
@@ -49,17 +71,123 @@ const Feed = () => {
     [fetchMoreMemes],
   );
 
+  const handleFollow = async () => {
+    // if (!currentUserId || !memeUser.email) return;
+    // try {
+    //   await addFollow(currentUserId, memeUser.email);
+    //   setIsFollowing(true);
+    //   useUserStore.getState().incrementFollowingCount();
+    //   Toast.show({
+    //     type: 'success',
+    //     text1: 'Successfully followed user',
+    //     position: 'bottom',
+    //     visibilityTime: 2000,
+    //   });
+    // } catch (error) {
+    //   console.error('Error following user:', error);
+    // }
+  };
+
+  const handleLikePress = async () => {
+    console.log('handleLikePress');
+    // if (user) {
+    //   const newLikedState = !liked;
+    //   let newDoubleLikedState = doubleLiked;
+    //   let newLikeCount = counts.likes;
+
+    //   if (newLikedState) {
+    //     if (doubleLiked) {
+    //       newDoubleLikedState = false;
+    //       newLikeCount -= 1;
+    //     } else {
+    //       newLikeCount += 1;
+    //     }
+    //   } else {
+    //     newLikeCount -= 1;
+    //   }
+
+    //   setLiked(newLikedState);
+    //   setDoubleLiked(newDoubleLikedState);
+    //   setCounts(prevCounts => ({...prevCounts, likes: newLikeCount}));
+
+    //   try {
+    //     // COMMENTED OUT FOR NOW
+    //     // await updateMemeReaction(
+    //     //   memeID,
+    //     //   newLikedState,
+    //     //   newDoubleLikedState,
+    //     //   false,
+    //     //   user.email,
+    //     // );
+    //   } catch (error) {
+    //     console.error('Error updating meme reaction:', error);
+    //     // Revert changes if the request fails
+    //     setLiked(!newLikedState);
+    //     setDoubleLiked(!newDoubleLikedState);
+    //     setCounts(prevCounts => ({...prevCounts, likes: initialLikeCount}));
+    //   }
+    // }
+  };
+
+  const onShare = async (
+    type: ShareType,
+    username: string,
+    message: string,
+  ) => {
+    // if (user && type === 'friend' && username) {
+    //   try {
+    //     await handleShareMeme(
+    //       memeID,
+    //       user.email,
+    //       user.username,
+    //       username,
+    //       message,
+    //     );
+    //     setCounts(prev => ({...prev, shares: prev.shares + 1}));
+    //   } catch (error) {
+    //     console.error('Sharing failed:', error);
+    //   }
+    // }
+  };
+
+  const handleDownloadPress = async () => {
+    // if (user) {
+    //   try {
+    //     const newSavedState = !isSaved;
+    //     // COMMENTED OUT FOR NOW
+    //     // await updateMemeReaction(
+    //     //   memeID,
+    //     //   false,
+    //     //   false,
+    //     //   newSavedState,
+    //     //   user.email,
+    //     // );
+    //     setIsSaved(newSavedState);
+    //     setCounts(prev => ({
+    //       ...prev,
+    //       downloads: prev.downloads + (newSavedState ? 1 : -1),
+    //     }));
+    //   } catch (error) {
+    //     console.error('Error updating meme reaction:', error);
+    //   }
+    // }
+  };
+
+  const closeLongPressModal = () => {
+    setIsLongPressModalVisible(false);
+    // Animated.timing(blurOpacity, {
+    //   toValue: 0,
+    //   duration: 300,
+    //   useNativeDriver: false,
+    // }).start();
+  };
+
   // Handle End Reached
   const handleEndReached = useCallback(() => {
     if (!isLoading && memes.length > 0) {
       debouncedFetchMoreMemes();
     }
   }, [isLoading, memes.length, debouncedFetchMoreMemes]);
-
-  const onCloseSidePanel = () => {
-    setTabBarVisibility(true);
-    setSidePanelVisibility(false);
-  };
 
   const setCurrentMediaIndexCallback = useCallback(
     (index: number) => {
@@ -76,6 +204,7 @@ const Feed = () => {
         viewableItems.length > 0 &&
         typeof viewableItems[0].index === 'number'
       ) {
+        console.log('Currently visible media index:', viewableItems[0].index);
         setCurrentMediaIndexCallback(viewableItems[0].index);
       }
     },
@@ -115,17 +244,12 @@ const Feed = () => {
         key={item.memeID}
         index={index}
         currentIndex={currentMediaIndex}
-        //
-        user={user}
-        currentUserId={user.email}
-        memeUser={item.memeUser || {}}
-        //
         currentMedia={item.url}
-        liked={item.liked ?? false}
-        numOfComments={0}
-        //
         goToPrevMedia={goToPrevMedia}
         goToNextMedia={goToNextMedia}
+        // user={user}
+        // currentUserId={user.email}
+        // memeUser={item.memeUser || {}}
       />
     );
   };
@@ -141,18 +265,57 @@ const Feed = () => {
   // TODO: should apply a linear gradient overlay for bottom half of screen
   return (
     <View style={[styles.container, {backgroundColor: bgdColor}]}>
-      {/* == PROFILE SIDE PANEL == */}
-      {isSidePanelVisible && (
-        <ProfilePanel
-          isVisible={isSidePanelVisible}
-          onClose={onCloseSidePanel}
+      {/* == LOTTIE LIKE ANIMATION == */}
+      {showLikeAnimation && (
+        <LottieView
+          source={require('../../assets/animations/lottie-liked.json')}
+          style={lottieStyle as ViewStyle}
+          autoPlay
+          loop={false}
         />
       )}
 
-      {/* add here what is <IconsAndContent /> */}
-      {/* also <LongPressModal /> */}
-      {/* also <ShareModal /> */}
-      {/* also <SaveSuccessModal /> */}
+      {/* == LIKE, COMMENT, SHARE ICONS == */}
+      <IconsAndContent
+        memeUser={''}
+        caption={''}
+        uploadTimestamp={''}
+        isFollowing={false}
+        handleFollow={handleFollow}
+        counts={counts}
+        debouncedHandleLike={handleLikePress}
+        liked={false}
+        index={0}
+        currentIndex={currentMediaIndex}
+        onShare={() => setShowShareModal(true)}
+        user={user}
+        numOfComments={0}
+      />
+      {/* L O N G  P R E S S  M O D A L */}
+      <LongPressModal
+        isVisible={isLongPressModalVisible}
+        onClose={closeLongPressModal}
+        meme={memeDetails}
+        onSaveToProfile={handleDownloadPress}
+        onShare={() => setShowShareModal(true)}
+        onReport={() => {}}
+      />
+
+      {/* S H A R E  M O D A L */}
+      <ShareModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShare={onShare}
+        // currMedia is item.url
+        currentMedia={''}
+      />
+
+      {/* S A V E  S U C C E S S  M O D A L */}
+      {/* == TODO: replace with CustomToast component == */}
+      <SaveSuccessModal
+        visible={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+      />
 
       {/* == M E M E S  L I S T == */}
       <FlatList
@@ -164,7 +327,7 @@ const Feed = () => {
         viewabilityConfig={viewabilityConfig}
         onViewableItemsChanged={onViewableItemsChanged}
         style={{}}
-        contentContainerStyle={{}}
+        contentContainerStyle={{flexGrow: 1}}
         pagingEnabled
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={true}

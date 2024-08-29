@@ -43,6 +43,7 @@ export const usePanResponder = ({
 
   const handleSwipe = useCallback(
     (isUpSwipe: boolean) => {
+      console.log('handleSwipe');
       if (isSwiping.current) {
         return;
       }

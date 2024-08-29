@@ -29,7 +29,6 @@ export const useMediaPlayerLogic = ({
   const [isSaved, setIsSaved] = useState(false);
 
   const [liked, setLiked] = useState(false);
-  // const [doubleLiked, setDoubleLiked] = useState(false);
 
   const [counts, setCounts] = useState({
     likes: initialLikeCount,

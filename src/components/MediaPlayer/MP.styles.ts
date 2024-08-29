@@ -15,6 +15,12 @@ const styles = StyleSheet.create({
     // borderWidth: 2,
     // borderColor: 'yellow',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
   blurInner: {
     position: 'absolute',
     flexDirection: 'row',
@@ -26,6 +32,7 @@ const styles = StyleSheet.create({
     // borderRadius: 12,
     // borderWidth: 1,
     // borderColor: 'blue',
+    zIndex: 100,
   },
   videoWrapper: {
     flex: 1,
@@ -44,6 +51,10 @@ const styles = StyleSheet.create({
     // justifyContent: 'center',
     // alignItems: 'center',
     // paddingBottom: Platform.OS === 'ios' ? 260 : 100,
+
+    // borderWidth: 1,
+    // borderColor: 'red',
+    // zIndex: 1,
   },
 
   textContainer: {
@@ -77,6 +88,7 @@ const styles = StyleSheet.create({
     // gap: 0,
     // bottom: Platform.OS === 'ios' ? 230 : 150,
     // alignItems: 'center',
+    zIndex: 10,
 
     // borderWidth: 1,
     // borderColor: 'blue',
@@ -96,7 +108,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1,
+    // zIndex: 1,
   },
   followButtonText: {
     color: '#fff',
@@ -112,8 +124,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     backgroundColor: '#FFF',
+    // zIndex: 1000,
 
-    // borderWidth: 1,
+    // borderWidth: 2,
     // borderColor: 'red',
   },
   absoluteFill: {
