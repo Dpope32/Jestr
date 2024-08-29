@@ -12,6 +12,7 @@ export default StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 0 : 50,
   },
   header: {
     flexDirection: 'row',
@@ -25,7 +26,10 @@ export default StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'center',
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: Platform.OS === 'ios' ? 60 : 10,
   },
   backButton: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -146,7 +150,7 @@ export default StyleSheet.create({
   },
   modalBackButton: {
     position: 'absolute',
-    top: 30,
+    top: 10,
     left: 20,
     zIndex: 1,
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -190,7 +194,7 @@ export default StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 15,
+    marginVertical: 20,
     alignSelf: 'flex-start',
   },
   dangerButtonText: {

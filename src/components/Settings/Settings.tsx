@@ -6,6 +6,7 @@ import {faUser,faBell,faLock,faShieldAlt,faHandsHelping,faCommentDots,faSignOutA
    faArrowLeft,faUserCircle,faKey,faUserSlash,faDownload, faUserLock,faEnvelope,faAddressBook,faFileAlt,} from '@fortawesome/free-solid-svg-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { BlurView } from 'expo-blur';
 import InputField from '../shared/Input/InutField';
 import styles from './Settings.styles';
@@ -399,7 +400,7 @@ These Terms constitute the entire agreement between you and us regarding the use
 ];
 
 const Settings: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<any>>();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedSetting, setSelectedSetting] = useState<SettingOption | null>(null);
   const [fontSize, setFontSize] = useState<number>(1);

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Animated, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Animated, Image, ImageSourcePropType, Dimensions } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { User } from '../../types/types'; 
+import { User, ProfileImage } from '../../types/types'; 
 import { getAllUsers } from '../../services/authFunctions';
 import { FlashList } from '@shopify/flash-list';
+import styles from './NewMM.styles'
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface NewMessageModalProps {
   isVisible: boolean;
@@ -13,15 +16,25 @@ interface NewMessageModalProps {
   currentUser: Partial<User>;
   allUsers: User[];
   existingConversations: Conversation[];
-};
+}
 
 type Conversation = {
   id: string;
   userEmail: string;
-  lastMessage: string;
+  lastMessage: {
+    Content: string;
+    Timestamp: string;
+  };
 };
 
-const NewMessageModal: React.FC<NewMessageModalProps> = ({ isVisible, onClose, onSelectUser, currentUser, allUsers: initialUsers, existingConversations
+
+const NewMessageModal: React.FC<NewMessageModalProps> = ({
+  isVisible,
+  onClose,
+  onSelectUser,
+  currentUser,
+  allUsers: initialUsers,
+  existingConversations
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -44,20 +57,15 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isVisible, onClose, o
       }).start();
     }
   }, [isVisible, modalY]);
-  
 
-
-  //search query to populate potential users
   useEffect(() => {
     const filtered = allUsers.filter(user => 
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      user.email !== currentUser.email // Exclude the current user
+      user.email !== currentUser.email
     );
     setFilteredUsers(filtered);
   }, [searchQuery, allUsers, currentUser.email]);
 
-
-  //get all users except yourself
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -71,30 +79,43 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isVisible, onClose, o
   
     fetchUsers();
   }, [currentUser.email]);
+
   const handleSelectUser = (user: User) => {
     onSelectUser(user);
     onClose();
+  };
+
+  const getImageSource = (profilePic: string | ProfileImage | null | undefined): ImageSourcePropType => {
+    if (typeof profilePic === 'string') {
+      return { uri: profilePic };
+    } else if (profilePic && 'uri' in profilePic) {
+      return { uri: profilePic.uri };
+    } else if (profilePic && 'url' in profilePic) {
+      return { uri: profilePic.url };
+    }
+    return require('../../assets/images/Jestr.jpg'); // Replace with your default avatar image
   };
 
   const renderUserItem = ({ item }: { item: User }) => {
     const existingConversation = existingConversations.find(
       conv => conv.userEmail === item.email
     );
-
+  
     return (
       <TouchableOpacity onPress={() => onSelectUser(item)}>
         <View style={styles.userItem}>
-          <Image source={{ uri: item.profilePic }} style={styles.userAvatar} />
+          <Image source={getImageSource(item.profilePic)} style={styles.userAvatar} />
           <View>
             <Text style={styles.username}>{item.username}</Text>
             {existingConversation && (
-              <Text style={styles.lastMessage}>{existingConversation.lastMessage}</Text>
+              <Text style={styles.lastMessage}>{existingConversation.lastMessage.Content}</Text> 
             )}
           </View>
         </View>
       </TouchableOpacity>
     );
   };
+  
 
   return (
     <Modal
@@ -110,7 +131,7 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isVisible, onClose, o
               {
                 translateY: modalY.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [300, 0],
+                  outputRange: [SCREEN_HEIGHT, 0],
                 }),
               },
             ],
@@ -120,24 +141,23 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isVisible, onClose, o
         <View style={styles.header}>
           <Text style={styles.headerTitle}>New Chat Message</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <FontAwesomeIcon icon={faTimes} size={24} color="#1bd40b" />
+            <FontAwesomeIcon icon={faTimes} size={20} color="#1bd40b" />
           </TouchableOpacity>
         </View>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="To: Enter username"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="To: Enter username"
+            placeholderTextColor="#999"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
         <FlashList
           data={filteredUsers}
           keyExtractor={(item) => item.email}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleSelectUser(item)} style={styles.userItem}>
-             {item.profilePic && <Image source={{ uri: item.profilePic }} style={styles.userAvatar} />}
-              <Text style={styles.username}>{item.username}</Text>
-            </TouchableOpacity>
-          )}
+          renderItem={renderUserItem}
+          contentContainerStyle={styles.userList}
         />
         <View style={styles.suggestionsContainer}>
           <Text style={styles.suggestionsTitle}>Suggested Users</Text>
@@ -146,88 +166,19 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({ isVisible, onClose, o
             keyExtractor={(item) => item.email}
             horizontal
             renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleSelectUser(item)} style={styles.suggestionItem}>
-                <Image source={{ uri: item.profilePic }} style={styles.userAvatar} />
-                <Text style={styles.username}>{item.username}</Text>
+              <TouchableOpacity onPress={() => onSelectUser(item)} style={styles.suggestionItem}>
+                <Image source={getImageSource(item.profilePic)} style={styles.suggestionAvatar} />
+                <Text style={styles.suggestionUsername} numberOfLines={1} ellipsizeMode="tail">
+                  {item.username}
+                </Text>
               </TouchableOpacity>
             )}
+            contentContainerStyle={styles.suggestionsList}
           />
         </View>
       </Animated.View>
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  modalContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '80%',
-    backgroundColor: '#1C1C1C',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  userAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  lastMessage: {
-    color: '#999',
-    fontSize: 14,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#444',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  closeButton: {
-    padding: 5,
-  },
-  searchInput: {
-    backgroundColor: '#333',
-    color: '#FFF',
-    padding: 10,
-    margin: 10,
-    borderRadius: 10,
-  },
-  userItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#444',
-  },
-  username: {
-    color: '#FFF',
-    fontSize: 16,
-    marginLeft: 10,
-  },
-  suggestionsContainer: {
-    marginTop: 10,
-    padding: 10,
-  },
-  suggestionsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 10,
-  },
-  suggestionItem: {
-    alignItems: 'center',
-    marginRight: 10,
-  },
-});
 
 export default NewMessageModal;

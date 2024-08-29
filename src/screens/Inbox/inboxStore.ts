@@ -1,7 +1,6 @@
-// inboxStore.ts
 import create from 'zustand';
-import { fetchConversations } from '../../services/authFunctions';
-import {Conversation} from '../Inbox/Conversations';
+import { fetchConversations as apiFetchConversations } from '../../services/authFunctions';
+import { Conversation } from './Conversations';
 
 interface InboxState {
   conversations: Conversation[];
@@ -21,8 +20,21 @@ export const useInboxStore = create<InboxState>((set, get) => ({
   fetchConversations: async (userEmail: string) => {
     set({ isLoading: true });
     try {
-      const userConversations = await fetchConversations(userEmail);
-      set({ conversations: userConversations, isLoading: false });
+      const userConversations = await apiFetchConversations(userEmail);
+      const formattedConversations: Conversation[] = userConversations.map((conv: any) => ({
+        id: conv.ConversationID,
+        ConversationID: conv.ConversationID,
+        userEmail: conv.partnerUser.email,
+        username: conv.partnerUser.username || conv.partnerUser.email,
+        profilePicUrl: conv.partnerUser.profilePic,
+        lastMessage: conv.lastMessage,
+        timestamp: conv.lastMessage.Timestamp,
+        messages: [],
+        UnreadCount: conv.UnreadCount,
+        LastReadMessageID: conv.LastReadMessageID,
+        partnerUser: conv.partnerUser
+      }));
+      set({ conversations: formattedConversations, isLoading: false });
     } catch (error) {
       console.error('Error loading conversations:', error);
       set({ isLoading: false });

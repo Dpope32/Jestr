@@ -8,6 +8,7 @@ const {
   BatchWriteCommand,
   PutCommand,
   UpdateCommand,
+  BatchGetCommand,
   ScanCommand,
   QueryCommand
 } = require('@aws-sdk/lib-dynamodb');
@@ -675,7 +676,7 @@ console.log('Request body:', JSON.stringify(event.body));
         let unseenMemes = [];
         let scanParams = {
           TableName: 'Memes',
-          Limit: 25,
+          Limit: 100,
         };
     
         if (lastViewedMemeId) {
@@ -736,7 +737,34 @@ console.log('Request body:', JSON.stringify(event.body));
       }
     }
 
-
+    case 'sendNotification': {
+      const { memeID, catchUser, fromUser, type, message } = requestBody;
+      if (!memeID || !catchUser || !fromUser || !type || !message) {
+        return createResponse(400, 'memeID, catchUser, fromUser, type, and message are required for sending a notification.');
+      }
+      try {
+        const notificationID = uuidv4();
+        const timestamp = new Date().toISOString();
+        const notificationParams = {
+          TableName: 'Notis',
+          Item: {
+            MemeID: memeID,
+            CatchUser: catchUser,
+            FromUser: fromUser,
+            NotificationID: notificationID,
+            Type: type,
+            Message: message,
+            Seen: false,
+            Timestamp: timestamp
+          }
+        };
+        await docClient.send(new PutCommand(notificationParams));
+        return createResponse(200, 'Notification sent successfully.', { notificationID });
+      } catch (error) {
+        console.error(`Error sending notification: ${error}`);
+        return createResponse(500, 'Failed to send notification.');
+      }
+    }
 
     case 'uploadMeme': {
       console.log('Processing operation:', event.operation);
@@ -1423,19 +1451,21 @@ console.log(`Updating ${imageType} image for ${email}`);
     }
   }
   
-  case 'checkFollowStatus': {
-    const { followerId, followeeId } = requestBody;
-    if (!followerId || !followeeId) {
-      return createResponse(400, 'followerId and followeeId are required.');
-    }
-    try {
-      const followStatus = await checkFollowStatus(followerId, followeeId);
-      return createResponse(200, 'Follow status checked successfully.', followStatus);
-    } catch (error) {
-      console.error(`Error checking follow status: ${error}`);
-      return createResponse(500, 'Failed to check follow status.');
-    }
+case 'checkFollowStatus': {
+  const { followerId, followeeId } = JSON.parse(event.body);
+  if (!followerId || !followeeId) {
+    return createResponse(400, 'followerId and followeeId are required.');
   }
+  try {
+    const followStatus = await checkFollowStatus(followerId, followeeId);
+    // Ensure mutual exclusivity
+    followStatus.canFollow = !followStatus.isFollowing;
+    return createResponse(200, 'Follow status checked successfully.', followStatus);
+  } catch (error) {
+    console.error(`Error checking follow status: ${error}`);
+    return createResponse(500, 'Failed to check follow status.');
+  }
+}
   
 case 'fetchViewHistory': {
   const { email, lastEvaluatedKey, limit = 50 } = requestBody;
@@ -1444,65 +1474,73 @@ case 'fetchViewHistory': {
     return createResponse(400, 'Email is required to fetch view history.');
   }
 
-  const queryParams = {
-    TableName: 'UserViewHistory',
+  const viewHistoryCommand = new QueryCommand({
+    TableName: 'UserMemeViews',
     KeyConditionExpression: 'email = :email',
-    ExpressionAttributeValues: {
-      ':email': email
-    },
-    ScanIndexForward: false,
+    ExpressionAttributeValues: { ':email': email }, 
+    ScanIndexForward: false, // to get the most recent views first
     Limit: limit,
     ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
-  };
+  });
 
   try {
-   // console.log('Querying UserViewHistory with params:', queryParams);
-    const result = await docClient.send(new QueryCommand(queryParams));
-   // console.log('UserViewHistory query result:', result);
+    console.log('Querying UserMemeViews with params:', viewHistoryCommand);
+    const viewHistoryResponse = await docClient.send(viewHistoryCommand);
+    console.log('UserMemeViews query result:', viewHistoryResponse);
 
-    if (!result.Items || result.Items.length === 0) {
+    if (!viewHistoryResponse.Items || viewHistoryResponse.Items.length === 0) {
       return createResponse(200, 'No view history found.', { data: { memes: [], lastEvaluatedKey: null } });
     }
 
-    // Fetch additional meme details
-    const memeDetails = await Promise.all(result.Items.map(async (item) => {
-        const memeParams = {
-            TableName: 'Memes',
-            Key: { MemeID: item.MemeID }
-        };
-        try {
-            const { Item: memeItem } = await docClient.send(new GetCommand(memeParams));
-            if (!memeItem) {
-                console.warn(`Meme not found for MemeID: ${item.MemeID}`);
-                return null;
-            }
-            return {
-                ...memeItem,
-                viewedAt: item.Timestamp,
-                mediaType: memeItem.mediaType || 'image' // Add this line
-            };
-        } catch (memeError) {
-            console.error(`Error fetching meme details for MemeID: ${item.MemeID}`, memeError);
-            return null;
+    // Extract viewed meme IDs from the response, limited to the first 50
+    const viewedMemeIDs = viewHistoryResponse.Items
+      .flatMap(item => item.viewedMemes || [])
+      .slice(0, limit)
+      .map(meme => typeof meme === 'string' ? meme : meme.S);
+
+    // Fetch meme details
+    const batchGetParams = {
+      RequestItems: {
+        'Memes': {
+          Keys: viewedMemeIDs.map(memeID => ({ MemeID: memeID }))
         }
-    }));
+      }
+    };
 
+    const batchGetCommand = new BatchGetCommand(batchGetParams);
+    const batchGetResponse = await docClient.send(batchGetCommand);
 
-    const validMemeDetails = memeDetails.filter(meme => meme !== null);
-   // console.log('Valid meme details:', validMemeDetails);
+    const memeDetailsMap = new Map(
+      batchGetResponse.Responses.Memes.map(meme => [meme.MemeID, meme])
+    );
+
+    // Prepare the final meme details
+    const memeDetails = viewedMemeIDs.map(memeID => {
+      const memeItem = memeDetailsMap.get(memeID);
+      if (!memeItem) {
+        console.warn(`Meme not found for MemeID: ${memeID}`);
+        return null;
+      }
+      return {
+        ...memeItem,
+        viewedAt: viewHistoryResponse.Items.find(item => item.viewedMemes.includes(memeID)).date,
+        mediaType: memeItem.mediaType || 'image'
+      };
+    }).filter(meme => meme !== null);
+
+    console.log('Valid meme details:', memeDetails);
 
     return createResponse(200, 'View history retrieved successfully.', {
       data: {
-        memes: validMemeDetails,
-        lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
+        memes: memeDetails,
+        lastEvaluatedKey: viewHistoryResponse.LastEvaluatedKey ? JSON.stringify(viewHistoryResponse.LastEvaluatedKey) : null
       }
     });
   } catch (error) {
     console.error('Error fetching view history:', error);
-    return createResponse(500, 'Failed to fetch view history.');
+    return createResponse(500, 'Failed to fetch view history.', { error: error.message });
   }
 }
-
 case 'getFollowers': {
   const { userId } = requestBody;
   if (!userId) {

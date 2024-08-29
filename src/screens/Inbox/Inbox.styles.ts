@@ -130,11 +130,16 @@ const { width, height } = Dimensions.get('window');
         },
         username: {
           fontWeight: '600',
-          fontSize: 18,
+          fontSize: 16,
           color: '#FFFF',
         },
         timestamp: {
           fontSize: 14,
+          color: '#999',
+          marginTop: 2,
+        },
+        preview: {
+          fontSize: 15,
           color: '#999',
           marginTop: 2,
         },

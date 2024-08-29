@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Clipboard, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowUp, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { User } from '../../types/types';
@@ -11,6 +11,7 @@ import { sendMessage, fetchMessages } from '../../services/authFunctions';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
 import { useTheme } from '../../theme/ThemeContext';
 import styles from './convoStyles'
+import { ProfileImage } from '../../types/types';
 
 export type Message = {
   MessageID: string;
@@ -25,15 +26,28 @@ export type Message = {
   reactions?: string[];
 };
 
-export type Conversation = {
+export interface Conversation {
   id: string;
+  ConversationID: string;
   userEmail: string;
   username: string;
-  profilePicUrl: string;
-  lastMessage: string;
+  profilePicUrl: string | ProfileImage | null;
+  lastMessage: {
+    Content: string;
+    Timestamp: string;
+  };
   timestamp: string;
-  messages: Message[];
-};
+  messages: any[];
+  UnreadCount: number;
+  LastReadMessageID: string;
+  partnerUser: {
+    email: string;
+    username: string | null;
+    profilePic: string | null;
+  };
+}
+
+
 
 type ConversationsParams = {
   localUser: User;
@@ -47,9 +61,22 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
   const { localUser, partnerUser, conversation } = route.params;
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const navigation = useNavigation();
   const { isDarkMode } = useTheme();
+
+  const loadMessages = useCallback(async () => {
+    try {
+      const fetchedMessages = await fetchMessages(localUser.email, conversation.id);
+      setMessages(fetchedMessages);
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+      Alert.alert('Error', 'Failed to load messages. Please try again.');
+    }
+  }, [conversation.id, localUser.email]);
+
+  useEffect(() => {
+    loadMessages();
+  }, [loadMessages]);
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === '') return;
@@ -70,6 +97,8 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
 
     try {
       await sendMessage(localUser.email, partnerUser.email, newMessage);
+      // Reload messages after sending to ensure consistency
+      loadMessages();
     } catch (error) {
       console.error('Failed to send message:', error);
       Alert.alert('Error', 'Failed to send message. Please try again.');
@@ -110,7 +139,7 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
       ]}>
         {isMemeShare && (
           <Image 
-            source={{uri: `https://jestr-bucket.s3.amazonaws.com/Memes/${memeUrl}`}}
+            source={{uri: `https://jestr-bucket.s3.amazonaws.com/${memeUrl}`}}
             style={styles.sharedMemeImage}
             resizeMode="contain"
           />

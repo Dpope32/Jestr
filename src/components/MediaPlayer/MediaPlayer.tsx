@@ -275,6 +275,12 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         });
       } catch (error) {
         console.error('Error following user:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to follow user',
+          position: 'bottom',
+          visibilityTime: 2000,
+        });
       }
     }, [currentUserId, memeUser.email]);
 
@@ -294,8 +300,8 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
 
         // Adjusted these values to allign double tap and animation
         const updateLikePosition = (x: number, y: number) => {
-          const xOffset = Platform.OS === 'ios' ? -150 : -100; 
-          const yOffset = Platform.OS === 'ios' ? -300 : -220;
+          const xOffset = Platform.OS === 'ios' ? -150 : -140; 
+          const yOffset = Platform.OS === 'ios' ? -300 : -265;
 
           setLikePosition({
             x: x + xOffset,
