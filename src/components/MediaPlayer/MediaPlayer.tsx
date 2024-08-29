@@ -6,7 +6,7 @@ import {GestureResponderEvent, ActivityIndicator} from 'react-native';
 import {Video, AVPlaybackStatus, ResizeMode} from 'expo-av';
 
 import SafeImage from '../shared/SafeImage';
-import styles from './MP.styles';
+import styles from './styles';
 import {MediaPlayerProps} from '../../types/types';
 import {getMediaSource} from '../../utils/utils';
 // import {usePanResponder} from './usePanResponder';
@@ -29,6 +29,14 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const [mediaLoadError, setMediaLoadError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [lastTap, setLastTap] = useState(0);
+
+  const isLocalFile = currentMedia.startsWith('../assets/');
+  const isVideo =
+    currentMedia.toLowerCase().endsWith('.mp4') || mediaType === 'video';
+
+  const mediaSource = isLocalFile
+    ? getMediaSource(currentMedia)
+    : {uri: currentMedia};
 
   const handleMediaError = () => {
     setMediaLoadError(true);
@@ -109,82 +117,59 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   //   isProfilePanelVisible: false,
   // });
 
-  const renderMedia = () => {
-    if (!currentMedia) {
-      return (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.errorText}>Media not available</Text>
-        </View>
-      );
-    }
+  if (!currentMedia) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorText}>Media not available</Text>
+      </View>
+    );
+  }
 
-    if (isLoading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1bd40b" />
-        </View>
-      );
-    }
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1bd40b" />
+      </View>
+    );
+  }
 
-    if (mediaLoadError) {
-      return (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.errorText}>Failed to load media.</Text>
-        </View>
-      );
-    }
+  if (mediaLoadError) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorText}>Failed to load media.</Text>
+      </View>
+    );
+  }
 
-    const isLocalFile = currentMedia.startsWith('../assets/');
-    const isVideo =
-      currentMedia.toLowerCase().endsWith('.mp4') || mediaType === 'video';
-
-    const mediaSource = isLocalFile
-      ? getMediaSource(currentMedia)
-      : {uri: currentMedia};
-
-    if (isVideo) {
-      console.log('Rendering video:', currentMedia);
-      return (
-        <Animated.View style={[StyleSheet.absoluteFill, styles.videoContainer]}>
-          <Video
-            ref={video}
-            source={mediaSource}
-            style={styles.video}
-            resizeMode={ResizeMode.CONTAIN}
-            useNativeControls
-            shouldPlay={!isLoading}
-            isLooping
-            // onPlaybackStatusUpdate={status => setStatus(() => status)}
-            isMuted={true}
-            onError={handleMediaError}
-          />
-        </Animated.View>
-      );
-    } else {
-      console.log('Rendering image:', currentMedia);
-      return (
-        <AnimatedSafeImage
-          source={mediaSource}
-          style={styles.memeImage}
-          width={screenWidth}
-          height={screenHeight}
-          resizeMode="cover"
-          onError={handleMediaError}
-        />
-      );
-    }
-  };
-
-  // === M A I N   R E N D E R ===
-  // TODO: add a play icon when video is paused
-  return (
-    <View
-      style={styles.container}
-      // {...panHandlers}
-    >
-      {renderMedia()}
-    </View>
-  );
+  if (isVideo) {
+    console.log('Rendering video:', currentMedia);
+    return (
+      <Video
+        ref={video}
+        source={mediaSource}
+        style={[StyleSheet.absoluteFill, styles.video]}
+        resizeMode={ResizeMode.COVER}
+        useNativeControls
+        // shouldPlay={!isLoading}
+        isLooping
+        // onPlaybackStatusUpdate={status => setStatus(() => status)}
+        isMuted={true}
+        onError={handleMediaError}
+      />
+    );
+  } else {
+    console.log('Rendering image:', currentMedia);
+    return (
+      <AnimatedSafeImage
+        source={mediaSource}
+        style={[styles.imgContainer]}
+        width={screenWidth}
+        height={screenHeight}
+        resizeMode="contain"
+        onError={handleMediaError}
+      />
+    );
+  }
 };
 
 export default MediaPlayer;

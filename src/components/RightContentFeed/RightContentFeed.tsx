@@ -3,13 +3,16 @@ import {View, Text, TouchableOpacity, Image} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faThumbsUp, faComment} from '@fortawesome/free-solid-svg-icons';
 import {faShare, faPlus} from '@fortawesome/free-solid-svg-icons';
-// import {Animated} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
+
+// import {Animated} from 'react-native';
 // import {BlurView} from 'expo-blur';
 
 import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
 
-import styles from './MP.styles';
+import styles from './styles';
 import {ShareType, User} from '../../types/types';
 import {COLORS} from '../../theme/theme';
 import {formatDate} from '../../utils/dateUtils';
@@ -23,8 +26,8 @@ interface IconButtonProps {
 
 interface IconsAndContentProps {
   memeUser: any;
-  caption: string;
-  uploadTimestamp: string;
+  // caption: string;
+  // uploadTimestamp: string;
   index: number;
   currentIndex: number;
   isFollowing: boolean;
@@ -56,10 +59,10 @@ const IconButton: React.FC<IconButtonProps> = React.memo(
   },
 );
 
-export const IconsAndContent: React.FC<IconsAndContentProps> = ({
+export const RightContentFeed: React.FC<IconsAndContentProps> = ({
   memeUser,
-  caption,
-  uploadTimestamp,
+  // caption,
+  // uploadTimestamp,
   counts,
   debouncedHandleLike,
   liked,
@@ -72,12 +75,19 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
   numOfComments,
 }) => {
   // console.log('numOfComments in IconsAndContent ===>', numOfComments);
+  // const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
+
   const navigation = useNavigation<FeedNavProp>();
   const isActive = index === currentIndex;
 
-  if (!isActive) {
-    return null;
-  }
+  const imgSrc = memeUser?.profilePic
+    ? {uri: memeUser.profilePic}
+    : require('../../assets/images/Jestr.jpg');
+
+  // if (!isActive) {
+  //   return null;
+  // }
 
   const handleLikePress = useCallback(() => {
     console.log('Like button pressed');
@@ -89,64 +99,47 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = ({
     navigation.navigate('CommentFeed');
   };
 
-  const handleSharePress = useCallback(() => {
+  const handleSharePress = () => {
     if (user && memeUser?.username) {
       onShare('friend', memeUser.username, 'Check out this meme!');
     }
-  }, [user, memeUser, onShare]);
+  };
 
   return (
-    <View style={styles.blurInner}>
-      {/* CONTENT ON LEFT */}
-      <View style={styles.textContainer}>
-        <View style={styles.textContent}>
-          <Text style={styles.username}>
-            {memeUser?.username || 'Anonymous'}
-          </Text>
-          {caption && <Text style={styles.caption}>{caption}</Text>}
-          <Text style={styles.date}>{formatDate(uploadTimestamp)}</Text>
-        </View>
+    <View
+      pointerEvents="auto"
+      style={[styles.contentContainer, {bottom: tabBarHeight + 10}]}>
+      {/* ====== */}
+      <View style={styles.profilePicContainer}>
+        {!isFollowing && (
+          <TouchableOpacity onPress={handleFollow} style={styles.followButton}>
+            <FontAwesomeIcon icon={faPlus} size={12} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
+        <Image source={imgSrc} style={styles.profilePic} />
       </View>
-
-      {/* CONTENT ON RIGHT */}
-      <View style={styles.iconColumn}>
-        <View style={styles.profilePicContainer}>
-          <Image
-            source={
-              memeUser?.profilePic
-                ? {uri: memeUser.profilePic}
-                : require('../../assets/images/Jestr.jpg')
-            }
-            style={styles.profilePic}
-          />
-          {!isFollowing && (
-            <TouchableOpacity
-              onPress={handleFollow}
-              style={styles.followButton}>
-              <FontAwesomeIcon icon={faPlus} size={12} color="#FFFFFF" />
-            </TouchableOpacity>
-          )}
-        </View>
-        <IconButton
-          icon={faThumbsUp}
-          count={counts.likes}
-          onPress={handleLikePress}
-          color={liked ? '#023020' : COLORS.primary}
-        />
-        <IconButton
-          icon={faComment}
-          // count={counts.comments}
-          count={numOfComments}
-          onPress={handleCommentPress}
-        />
-        <IconButton
-          icon={faShare}
-          count={counts.shares}
-          onPress={handleSharePress}
-        />
-      </View>
+      {/* ===== */}
+      <IconButton
+        icon={faThumbsUp}
+        count={counts.likes}
+        onPress={handleLikePress}
+        color={liked ? '#023020' : COLORS.primary}
+      />
+      {/* ====  */}
+      <IconButton
+        icon={faComment}
+        // count={counts.comments}
+        count={numOfComments}
+        onPress={handleCommentPress}
+      />
+      {/* ===== */}
+      <IconButton
+        icon={faShare}
+        count={counts.shares}
+        onPress={handleSharePress}
+      />
     </View>
   );
 };
 
-export default IconsAndContent;
+export default RightContentFeed;

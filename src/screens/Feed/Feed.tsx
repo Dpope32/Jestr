@@ -1,8 +1,14 @@
 import React, {useState, useCallback, useMemo} from 'react';
+import {useRef} from 'react';
 import {View, FlatList, ViewToken} from 'react-native';
-import {ActivityIndicator, ViewStyle} from 'react-native';
+import {ActivityIndicator, ViewStyle, StyleSheet} from 'react-native';
+import {Pressable, Animated, Image} from 'react-native';
 import {debounce} from 'lodash';
 import LottieView from 'lottie-react-native';
+import {Dimensions} from 'react-native';
+import {LinearGradient} from 'expo-linear-gradient';
+import {Video, AVPlaybackStatus, ResizeMode} from 'expo-av';
+// import {SafeAreaView} from 'react-native-safe-area-context';
 // import Toast from 'react-native-toast-message';
 // import {useNavigation} from '@react-navigation/native';
 // import * as Haptics from 'expo-haptics';
@@ -11,32 +17,33 @@ import {useTheme} from '../../theme/ThemeContext';
 import {useMemes} from './useMemes';
 import {useUserStore} from '../../store/userStore';
 
-import MediaPlayer from '../../components/MediaPlayer/MediaPlayer';
-import styles from './Feed.styles';
+// import MediaPlayer from '../../components/MediaPlayer/MediaPlayer';
+import styles from './styles';
 import {Meme, User, ShareType} from '../../types/types';
-import {IconsAndContent} from '../../components/MediaPlayer/MediaPlayerContent';
+import RightContentFeed from '../../components/RightContentFeed/RightContentFeed';
+import LeftContentFeed from '../../components/LeftContentFeed/LeftContentFeed';
 import ShareModal from '../../components/Modals/ShareModal';
-import SaveSuccessModal from '../../components/Modals/SaveSuccessModal';
 import {LongPressModal} from '../../components/MediaPlayer/LongPressModal';
+import {getMediaSource} from '../../utils/utils';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
-// import {fetchComments} from '../../components/Meme/memeService';
 // import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
 // import {LoadingText} from '../../components/ErrorFallback/ErrorFallback';
-// const {height} = Dimensions.get('window');
 
 const viewabilityConfig = {itemVisiblePercentThreshold: 50};
+const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
 const Feed = () => {
-  // const navigation = useNavigation<FeedNavProp>();
   const {isDarkMode} = useTheme();
 
   const user = useUserStore(state => state as User);
 
   const bgdColor = isDarkMode ? '#000' : '#1C1C1C';
 
+  const video = useRef<Video>(null);
+
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showSaveModal, setShowSaveModal] = useState(false);
   const [isLongPressModalVisible, setIsLongPressModalVisible] = useState(false);
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
 
@@ -64,6 +71,8 @@ const Feed = () => {
   // == CUSTOM HOOK for DATA in LISTING ==
   const {memes, isLoading, error, fetchMoreMemes, fetchInitialMemes} =
     useMemes();
+
+  // console.log('memes:', memes);
 
   // Debounced Fetch More Memes
   const debouncedFetchMoreMemes = useMemo(
@@ -198,31 +207,22 @@ const Feed = () => {
     [setCurrentMediaIndex],
   );
 
-  const onViewableItemsChanged = useCallback(
-    ({viewableItems}: {viewableItems: ViewToken[]}) => {
-      if (
-        viewableItems.length > 0 &&
-        typeof viewableItems[0].index === 'number'
-      ) {
-        console.log('Currently visible media index:', viewableItems[0].index);
-        setCurrentMediaIndexCallback(viewableItems[0].index);
-      }
-    },
-    [setCurrentMediaIndexCallback],
-  );
+  const onViewableItemsChanged = ({
+    viewableItems,
+  }: {
+    viewableItems: ViewToken[];
+  }) => {
+    if (
+      viewableItems.length > 0 &&
+      typeof viewableItems[0].index === 'number'
+    ) {
+      console.log('Currently visible media index:', viewableItems[0].index);
+      setCurrentMediaIndexCallback(viewableItems[0].index);
+    }
+  };
 
   const keyExtractor = (item: Meme | undefined, index: number) =>
     item?.memeID || `meme-${index}`;
-
-  const goToNextMedia = useCallback(() => {
-    setCurrentMediaIndexCallback(
-      Math.min(currentMediaIndex + 1, memes.length - 1),
-    );
-  }, [currentMediaIndex, setCurrentMediaIndexCallback]);
-
-  const goToPrevMedia = useCallback(() => {
-    setCurrentMediaIndexCallback(Math.max(currentMediaIndex - 1, 0));
-  }, [currentMediaIndex, setCurrentMediaIndexCallback]);
 
   // == ITEM IN THE LIST ==
   const renderItem = ({
@@ -236,22 +236,44 @@ const Feed = () => {
       return null;
     }
 
-    // console.log('MemeList - Rendering item:', item);
+    // console.log('Rendering item:', item);
 
-    return (
-      <MediaPlayer
-        {...item}
-        key={item.memeID}
-        index={index}
-        currentIndex={currentMediaIndex}
-        currentMedia={item.url}
-        goToPrevMedia={goToPrevMedia}
-        goToNextMedia={goToNextMedia}
-        // user={user}
-        // currentUserId={user.email}
-        // memeUser={item.memeUser || {}}
-      />
-    );
+    const isLocalFile = item.url.startsWith('../assets/');
+    const isVideo =
+      item.url.toLowerCase().endsWith('.mp4') || item.mediaType === 'video';
+
+    const mediaSource = isLocalFile
+      ? getMediaSource(item.url)
+      : {uri: item.url};
+
+    const loadMedia = () => {
+      if (isVideo) {
+        return (
+          <Video
+            ref={video}
+            source={mediaSource}
+            style={[StyleSheet.absoluteFill, styles.video]}
+            resizeMode={ResizeMode.COVER}
+            useNativeControls
+            // shouldPlay={!isLoading}
+            shouldPlay={true}
+            isLooping
+            isMuted={true}
+            videoStyle={{}}
+          />
+        );
+      } else {
+        return (
+          <Image
+            source={mediaSource}
+            style={[styles.imgContainer]}
+            resizeMode="contain"
+          />
+        );
+      }
+    };
+
+    return <View style={{height: screenHeight}}>{loadMedia()}</View>;
   };
 
   if (isLoading) {
@@ -262,9 +284,9 @@ const Feed = () => {
     );
   }
 
-  // TODO: should apply a linear gradient overlay for bottom half of screen
+  // == M A I N  R E N D E R ==
   return (
-    <View style={[styles.container, {backgroundColor: bgdColor}]}>
+    <View style={styles.container}>
       {/* == LOTTIE LIKE ANIMATION == */}
       {showLikeAnimation && (
         <LottieView
@@ -275,22 +297,47 @@ const Feed = () => {
         />
       )}
 
-      {/* == LIKE, COMMENT, SHARE ICONS == */}
-      <IconsAndContent
-        memeUser={''}
-        caption={''}
-        uploadTimestamp={''}
-        isFollowing={false}
-        handleFollow={handleFollow}
-        counts={counts}
-        debouncedHandleLike={handleLikePress}
-        liked={false}
-        index={0}
-        currentIndex={currentMediaIndex}
-        onShare={() => setShowShareModal(true)}
-        user={user}
-        numOfComments={0}
+      {/* == M E M E S  L I S T == */}
+      <FlatList
+        keyExtractor={keyExtractor}
+        data={memes}
+        renderItem={renderItem}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={1}
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged}
+        style={{
+          height: screenHeight,
+          // borderWidth: 3,
+          // borderColor: 'red',
+        }}
+        contentContainerStyle={{}}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
       />
+
+      <LinearGradient
+        pointerEvents="box-none"
+        colors={['transparent', 'rgba(0,0,0,0.9)']}
+        style={[StyleSheet.absoluteFillObject, styles.overlay]}>
+        <LeftContentFeed memeUser={''} caption={''} uploadTimestamp={''} />
+
+        <RightContentFeed
+          memeUser={''}
+          isFollowing={false}
+          handleFollow={handleFollow}
+          counts={counts}
+          debouncedHandleLike={handleLikePress}
+          liked={false}
+          index={0}
+          currentIndex={currentMediaIndex}
+          onShare={() => setShowShareModal(true)}
+          user={user}
+          numOfComments={0}
+        />
+      </LinearGradient>
+
       {/* L O N G  P R E S S  M O D A L */}
       <LongPressModal
         isVisible={isLongPressModalVisible}
@@ -308,29 +355,6 @@ const Feed = () => {
         onShare={onShare}
         // currMedia is item.url
         currentMedia={''}
-      />
-
-      {/* S A V E  S U C C E S S  M O D A L */}
-      {/* == TODO: replace with CustomToast component == */}
-      <SaveSuccessModal
-        visible={showSaveModal}
-        onClose={() => setShowSaveModal(false)}
-      />
-
-      {/* == M E M E S  L I S T == */}
-      <FlatList
-        keyExtractor={keyExtractor}
-        data={memes}
-        renderItem={renderItem}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={1}
-        viewabilityConfig={viewabilityConfig}
-        onViewableItemsChanged={onViewableItemsChanged}
-        style={{}}
-        contentContainerStyle={{flexGrow: 1}}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        removeClippedSubviews={true}
       />
     </View>
   );
