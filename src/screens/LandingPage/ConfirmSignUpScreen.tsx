@@ -12,6 +12,7 @@ import { RouteProp } from '@react-navigation/core';
 import { confirmSignUp } from 'aws-amplify/auth';
 import { COLORS, SPACING, FONT_SIZES, FONTS, wp, elevationShadowStyle } from '../../theme/theme';
 import { storeUserIdentifier } from '../../utils/secureStore';
+
 type ConfirmSignUpScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, 'ConfirmSignUp'>;
   route: RouteProp<RootStackParamList, 'ConfirmSignUp'>;
@@ -22,7 +23,7 @@ const CELL_COUNT = 6;
 const ConfirmSignUpScreen: React.FC<ConfirmSignUpScreenProps> = ({ navigation, route }) => {
   const { email } = route.params;
   const [value, setValue] = useState('');
-  const ref = useBlurOnFulfill({value, cellCount: CELL_COUNT});
+  const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value,
     setValue,
@@ -43,6 +44,7 @@ const ConfirmSignUpScreen: React.FC<ConfirmSignUpScreenProps> = ({ navigation, r
     <View style={styles.container}>
       <Text style={styles.title}>Enter Confirmation Code</Text>
       <Text style={styles.subtitle}>Please enter the code sent to your email</Text>
+
       <CodeField
         ref={ref}
         {...props}
@@ -52,7 +54,7 @@ const ConfirmSignUpScreen: React.FC<ConfirmSignUpScreenProps> = ({ navigation, r
         rootStyle={styles.codeFieldRoot}
         keyboardType="number-pad"
         textContentType="oneTimeCode"
-        renderCell={({index, symbol, isFocused}) => (
+        renderCell={({ index, symbol, isFocused }) => (
           <View
             key={index}
             onLayout={getCellOnLayoutHandler(index)}
@@ -64,6 +66,7 @@ const ConfirmSignUpScreen: React.FC<ConfirmSignUpScreenProps> = ({ navigation, r
           </View>
         )}
       />
+
       <TouchableOpacity style={styles.button} onPress={handleConfirmSignUp}>
         <Text style={styles.buttonText}>Confirm</Text>
       </TouchableOpacity>
@@ -134,6 +137,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     width: '100%',
     paddingHorizontal: 20,
+    justifyContent: 'center',
   },
   cellRoot: {
     width: 50,

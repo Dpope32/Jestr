@@ -27,7 +27,6 @@ import {IconsAndContent} from './MediaPlayerContent';
 import {useMediaPlayerLogic} from './useMediaPlayerLogic';
 import {useUserStore} from '../../utils/userStore';
 import {LongPressModal} from './LongPressModal';
-import {checkFollowStatus} from '../../services/authFunctions';
 import {useTheme} from '../../theme/ThemeContext';
 import { debounce } from 'lodash';
 
