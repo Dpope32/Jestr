@@ -774,6 +774,21 @@ console.log('Request body:', JSON.stringify(event.body));
       }
     
       try {
+        // First, fetch the user's profile to get the ProfilePicUrl
+        const userProfileParams = {
+          TableName: 'Profiles',
+          Key: { email: email }
+        };
+    
+        const userProfileResult = await docClient.send(new GetCommand(userProfileParams));
+        const userProfile = userProfileResult.Item;
+    
+        if (!userProfile) {
+          return createResponse(404, 'User profile not found');
+        }
+    
+        const profilePicUrl = userProfile.profilePic || ''; // Assuming 'profilePic' is the correct attribute name
+    
         const memeMetadataParams = {
           TableName: 'Memes',
           Item: {
@@ -787,12 +802,18 @@ console.log('Request body:', JSON.stringify(event.body));
             LikeCount: 0,
             DownloadsCount: 0,
             CommentCount: 0,
-            mediaType: mediaType
+            mediaType: mediaType,
+            ProfilePicUrl: profilePicUrl // Add this line to include the ProfilePicUrl
           },
         };
+    
         await docClient.send(new PutCommand(memeMetadataParams));
-   //     console.log('Meme metadata stored successfully in DynamoDB');
-        return createResponse(200, 'Meme metadata processed successfully.', { url: `https://${BUCKET_NAME}.s3.amazonaws.com/${memeKey}` });
+        console.log('Meme metadata stored successfully in DynamoDB');
+    
+        return createResponse(200, 'Meme metadata processed successfully.', { 
+          url: `https://${BUCKET_NAME}.s3.amazonaws.com/${memeKey}`,
+          profilePicUrl: profilePicUrl // Include this in the response
+        });
       } catch (error) {
         console.error('Error storing meme metadata in DynamoDB:', error);
         return createResponse(500, `Failed to store meme metadata: ${error.message}`);
@@ -878,39 +899,55 @@ console.log('Request body:', JSON.stringify(event.body));
 
     case 'deleteMeme': {
       const { memeID, userEmail } = requestBody;
+      console.log(`Attempting to delete meme. MemeID: ${memeID}, UserEmail: ${userEmail}`);
+    
       if (!memeID || !userEmail) {
+        console.log('Missing required fields for deleting a meme');
         return createResponse(400, 'MemeID and userEmail are required for deleting a meme.');
       }
     
       try {
-        // First, check if the user is the owner of the meme
+        // First, check if the meme exists
         const getMemeParams = {
           TableName: 'Memes',
           Key: { MemeID: memeID },
         };
     
+        console.log('Fetching meme data:', JSON.stringify(getMemeParams));
         const memeData = await docClient.send(new GetCommand(getMemeParams));
-        if (!memeData.Item || memeData.Item.Email !== userEmail) {
+        console.log('Meme data fetched:', JSON.stringify(memeData.Item));
+    
+        if (!memeData.Item) {
+          console.log(`Meme not found. MemeID: ${memeID}`);
+          return createResponse(404, 'Meme not found');
+        }
+    
+        if (memeData.Item.Email !== userEmail) {
+          console.log(`Unauthorized delete attempt. Meme owner: ${memeData.Item.Email}, Requester: ${userEmail}`);
           return createResponse(403, 'You are not authorized to delete this meme');
         }
     
-        // If the user is the owner, proceed with deletion
+        // If the meme exists and the user is the owner, proceed with deletion
         const deleteParams = {
           TableName: 'Memes',
           Key: { MemeID: memeID },
         };
     
+        console.log('Deleting meme:', JSON.stringify(deleteParams));
         await docClient.send(new DeleteCommand(deleteParams));
+        console.log('Meme deleted successfully');
     
         return createResponse(200, 'Meme deleted successfully');
       } catch (error) {
         console.error('Error deleting meme:', error);
-        return createResponse(500, 'Error deleting meme');
+        return createResponse(500, 'Error deleting meme', { error: error.message });
       }
     }
     
     case 'removeDownloadedMeme': {
       const { userEmail, memeID } = requestBody;
+      console.log(`Attempting to remove downloaded meme. MemeID: ${memeID}, UserEmail: ${userEmail}`);
+    
       if (!userEmail || !memeID) {
         return createResponse(400, 'UserEmail and memeID are required for removing a downloaded meme.');
       }
@@ -925,10 +962,11 @@ console.log('Request body:', JSON.stringify(event.body));
         };
     
         await docClient.send(new DeleteCommand(params));
+        console.log('Downloaded meme removed successfully');
         return createResponse(200, 'Downloaded meme removed successfully');
       } catch (error) {
         console.error('Error removing downloaded meme:', error);
-        return createResponse(500, 'Error removing downloaded meme');
+        return createResponse(500, 'Error removing downloaded meme', { error: error.message });
       }
     }
     
@@ -1159,41 +1197,55 @@ case 'getLikeStatus': {
 }
 
 case 'getUserMemes': {
-  const { email } = requestBody;
+  const { email, lastEvaluatedKey, limit = 50 } = requestBody;
   if (!email) {
     return createResponse(400, 'Email is required to fetch user memes.');
   }
 
   const queryParams = {
     TableName: 'Memes',
-    IndexName: 'Email-UploadTimestamp-index', // Assuming you have a GSI on Email and UploadTimestamp
+    IndexName: 'Email-UploadTimestamp-index',
     KeyConditionExpression: 'Email = :email',
     ExpressionAttributeValues: {
       ':email': email
     },
-    ScanIndexForward: false, // to get the latest memes first
-    Limit: 50 // Limit the results to 50 items
+    ScanIndexForward: false,
+    Limit: limit,
+    ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
   };
 
   try {
-    const { Items, LastEvaluatedKey } = await docClient.send(new QueryCommand(queryParams));
-    const userMemes = Items.map(item => ({
+    const result = await docClient.send(new QueryCommand(queryParams));
+    
+    const userMemes = result.Items ? result.Items.map(item => ({
       memeID: item.MemeID,
-      caption: item.Caption,
+      email: item.Email,
       url: item.MemeURL,
+      caption: item.Caption,
       uploadTimestamp: item.UploadTimestamp,
       likeCount: item.LikeCount || 0,
       downloadCount: item.DownloadsCount || 0,
       commentCount: item.CommentCount || 0,
-      shareCount: item.ShareCount || 0
-    }));
+      shareCount: item.ShareCount || 0,
+      username: item.Username,
+      profilePicUrl: item.ProfilePicUrl || '',
+      mediaType: item.mediaType || 'image',
+      liked: item.Liked || false,
+      doubleLiked: item.DoubleLiked || false,
+      memeUser: {
+        email: item.Email,
+        username: item.Username,
+        profilePic: item.ProfilePicUrl || '',
+      },
+    })) : [];
+
     return createResponse(200, 'User memes retrieved successfully.', {
       memes: userMemes,
-      lastEvaluatedKey: LastEvaluatedKey || null
+      lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
     });
   } catch (error) {
     console.error('Error fetching user memes:', error);
-    return createResponse(500, 'Failed to fetch user memes.');
+    return createResponse(500, 'Failed to fetch user memes.', { memes: [], lastEvaluatedKey: null });
   }
 }
 
@@ -1278,6 +1330,8 @@ case 'fetchLikedMemes': {
             return {
                 ...item,
                 MemeURL: memeItem.MemeURL,
+                ProfilePicUrl: memeItem.ProfilePicUrl,
+                Username: memeItem.Username,
                 Caption: memeItem.Caption,
                 LikeCount: memeItem.LikeCount || 0,
                 DownloadsCount: memeItem.DownloadsCount || 0,
@@ -1342,12 +1396,14 @@ case 'fetchDownloadedMemes': {
             return {
                 ...item,
                 MemeURL: memeItem.MemeURL,
+                Username: memeItem.Username,
                 Caption: memeItem.Caption,
                 LikeCount: memeItem.LikeCount || 0,
                 DownloadsCount: memeItem.DownloadsCount || 0,
                 CommentCount: memeItem.CommentCount || 0,
                 ShareCount: memeItem.ShareCount || 0,
-                mediaType: memeItem.mediaType || 'image' // Add this line
+                mediaType: memeItem.mediaType || 'image', // Add this line
+                ProfilePicUrl: memeItem.ProfilePicUrl || ''
             };
         } catch (memeError) {
             console.error(`Error fetching meme details for MemeID: ${item.MemeID}`, memeError);
@@ -1366,6 +1422,7 @@ case 'fetchDownloadedMemes': {
     return createResponse(500, 'Failed to fetch downloaded memes.');
   }
 }
+
   case 'updateProfileImage': {
   //  console.log('Entering updateProfileImage case');
     const { email, imageType, image } = requestBody;
@@ -1541,6 +1598,7 @@ case 'fetchViewHistory': {
     return createResponse(500, 'Failed to fetch view history.', { error: error.message });
   }
 }
+
 case 'getFollowers': {
   const { userId } = requestBody;
   if (!userId) {

@@ -106,6 +106,7 @@ export type Meme = {
   liked?: boolean; // Add this line
   doubleLiked?: boolean; // Add this line
   memeUser?: Partial<User>;
+  downloaded?: boolean;
   followStatus?: {
     isFollowing: boolean;
     canFollow: boolean;
@@ -135,7 +136,7 @@ export type MediaPlayerProps = {
   likedIndices: Set<number>;
   doubleLikedIndices: Set<number>;
   downloadedIndices: Set<number>;
-  likeDislikeCounts: Record<number, number>;
+  likeDislikeCounts: Record<number, { likeCount: number; dislikeCount: number }>;
   currentMediaIndex: number;
   user: User | null;
   likeCount: number;

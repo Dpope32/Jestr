@@ -171,10 +171,16 @@ export const useProfileHandlers = (
   };
 
   const handleMemePress = (meme: Meme, index: number) => {
-    setSelectedMeme(meme);
+    setSelectedMeme({
+      ...meme,
+      liked: meme.liked || false,
+      doubleLiked: meme.doubleLiked || false,
+      downloaded: meme.downloaded || false,
+    });
     setCurrentMemeIndex(index);
     setIsCommentFeedVisible(false);
   };
+
 
   const handleDeleteMeme = async (memeID: string) => {
     Alert.alert(

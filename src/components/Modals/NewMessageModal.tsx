@@ -27,7 +27,6 @@ type Conversation = {
   };
 };
 
-
 const NewMessageModal: React.FC<NewMessageModalProps> = ({
   isVisible,
   onClose,
@@ -93,7 +92,7 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
     } else if (profilePic && 'url' in profilePic) {
       return { uri: profilePic.url };
     }
-    return require('../../assets/images/Jestr.jpg'); // Replace with your default avatar image
+    return require('../../assets/images/Jestr.jpg'); 
   };
 
   const renderUserItem = ({ item }: { item: User }) => {

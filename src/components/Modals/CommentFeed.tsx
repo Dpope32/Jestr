@@ -233,8 +233,7 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
     } else if (profilePic && 'uri' in profilePic) {
       return {uri: profilePic.uri};
     } else {
-      // Return a default image source or null
-      return require('../../assets/images/apple.jpg'); // Adjust the path as needed
+      return require('../../assets/images/apple.jpg'); 
     }
   };
 

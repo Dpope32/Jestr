@@ -118,7 +118,6 @@ export default StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 5,
-    marginTop: 10,
   },
   tabButton: {
     alignItems: 'center',
@@ -181,12 +180,13 @@ export default StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: -20,
   },
   noMemesText: {
     color: '#FFFFFF',
     fontSize: 18,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 0,
     fontStyle: 'italic',
   },
   editContainer: {
@@ -293,8 +293,8 @@ export default StyleSheet.create({
   },
   activityIndicatorContainer: {
     position: 'absolute',
-    top: height / 2 - 50,
-    left: width / 2 - 50,
+    top: height / 2 ,
+    left: width / 2 ,
     justifyContent: 'center',
     alignItems: 'center',
     width: 100,
@@ -313,6 +313,6 @@ export default StyleSheet.create({
   },
   memeGridContainer: {
     flex: 1,
-    minHeight: 500,
+    minHeight: 400,
   },
 });

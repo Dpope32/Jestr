@@ -638,20 +638,30 @@ export const handleChangePassword = async (
 
 export const deleteMeme = async (memeID: string, userEmail: string) => {
   try {
+    console.log(`Attempting to delete meme. MemeID: ${memeID}, UserEmail: ${userEmail}`);
     const response = await fetch(
       'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/deleteMeme',
       {
-        method: 'DELETE',
+        method: 'POST',  // Changed from DELETE to POST
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({operation: 'deleteMeme', memeID, userEmail}),
       },
     );
+    const responseData = await response.json();
+    console.log('Delete meme response:', responseData);
+    
     if (!response.ok) {
-      throw new Error('Failed to delete meme');
+      if (response.status === 404) {
+        throw new Error('Meme not found');
+      } else if (response.status === 403) {
+        throw new Error('You are not authorized to delete this meme');
+      } else {
+        throw new Error(responseData.message || 'Failed to delete meme');
+      }
     }
-    return await response.json();
+    return responseData;
   } catch (error) {
     console.error('Error deleting meme:', error);
     throw error;
@@ -663,6 +673,7 @@ export const removeDownloadedMeme = async (
   memeID: string,
 ) => {
   try {
+    console.log(`Attempting to remove meme: ${memeID} for user: ${userEmail}`);
     const response = await fetch(
       'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/removeDownloadedMeme',
       {
@@ -677,10 +688,12 @@ export const removeDownloadedMeme = async (
         }),
       },
     );
+    const responseData = await response.json();
+    console.log('Remove downloaded meme response:', responseData);
     if (!response.ok) {
-      throw new Error('Failed to remove downloaded meme');
+      throw new Error(responseData.message || 'Failed to remove downloaded meme');
     }
-    return await response.json();
+    return responseData;
   } catch (error) {
     console.error('Error removing downloaded meme:', error);
     throw error;
@@ -786,7 +799,7 @@ export const fetchMemes = async (
     }
 
     const responseData = await response.json();
-    //  console.log('Raw API response:', JSON.stringify(responseData));
+     console.log('Raw API response:', JSON.stringify(responseData));
 
     // Check for the nested data structure
     const data =
@@ -820,7 +833,7 @@ export const fetchMemes = async (
       },
     }));
 
-    //  console.log(`Processed ${memes.length} memes`);
+      console.log(`Processed ${memes.length} memes`);
 
     return {
       memes,
@@ -856,14 +869,22 @@ export const getUserMemes = async (
       throw new Error('Network response was not ok');
     }
 
-    const data = await response.json();
-    return {
-      memes: data.data.memes,
-      lastEvaluatedKey: data.data.lastEvaluatedKey,
-    };
+    const responseData = await response.json();
+    console.log('getUserMemes response:', responseData);  // Add this line for debugging
+
+    // Check if the response has the expected structure
+    if (responseData && responseData.data && Array.isArray(responseData.data.memes)) {
+      return {
+        memes: responseData.data.memes,
+        lastEvaluatedKey: responseData.data.lastEvaluatedKey,
+      };
+    } else {
+      console.error('Unexpected response structure:', responseData);
+      return { memes: [], lastEvaluatedKey: null };
+    }
   } catch (error) {
     console.error('Error fetching user memes:', error);
-    return {memes: [], lastEvaluatedKey: null};
+    return { memes: [], lastEvaluatedKey: null };
   }
 };
 

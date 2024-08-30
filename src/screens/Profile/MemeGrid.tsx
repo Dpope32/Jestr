@@ -73,10 +73,10 @@ const MemeGrid: React.FC<MemeGridProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    minHeight: 500,
+    minHeight: 300,
   },
   flashListContent: {
-    paddingBottom: 20,
+    paddingBottom: 0,
   },
   skeletonItem: {
     width: '33%',
