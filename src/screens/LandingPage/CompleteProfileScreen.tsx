@@ -17,7 +17,7 @@ import {RouteProp} from '@react-navigation/core';
 import {RootStackParamList, ProfileImage} from '../../types/types';
 import HeaderPicUpload from '../../components/Upload/HeaderPicUpload';
 import ProfilePicUpload from '../../components/Upload/ProfilePicUpload';
-import InputField from '../../components/shared/Input/InutField';
+import InputField from '../../components/Input/InutField';
 import {LinearGradient} from 'expo-linear-gradient';
 import {handleCompleteProfile} from '../../services/authFunctions';
 import {useUserStore} from '../../store/userStore';

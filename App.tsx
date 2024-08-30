@@ -4,14 +4,12 @@ import {enableScreens} from 'react-native-screens';
 import {NavigationContainer} from '@react-navigation/native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {ErrorBoundary} from 'react-error-boundary';
-import {Amplify} from 'aws-amplify';
 import {Inter_400Regular, Inter_700Bold} from '@expo-google-fonts/inter';
 import {activateKeepAwakeAsync, deactivateKeepAwake} from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
-import awsconfig from './src/aws-exports';
 import {ThemeProvider} from './src/theme/ThemeContext';
 import CustomToast from './src/components/ToastMessages/CustomToast';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -23,8 +21,6 @@ const fontz = {
   Inter_400Regular,
   Inter_700Bold,
 };
-
-Amplify.configure(awsconfig);
 
 const App = () => {
   const [isReady, setIsReady] = useState(false);

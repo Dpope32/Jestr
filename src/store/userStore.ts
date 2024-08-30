@@ -1,6 +1,5 @@
 import {create} from 'zustand';
 import {Meme, ProfileImage} from '../types/types';
-// import { ImagePickerAsset } from 'expo-image-picker';
 
 export interface UserState {
   resetUserState: () => void;
@@ -11,7 +10,7 @@ export interface UserState {
   creationDate: string;
   CreationDate?: string;
   followersCount: number;
-  language: 'en' | 'es' | 'fr'; // We'll just use 'en' for now
+  language: 'en' | 'es' | 'fr';
   notificationsEnabled: boolean;
   likesPublic: boolean;
   darkMode: boolean;
@@ -21,8 +20,8 @@ export interface UserState {
   likedMemes: Meme[];
   downloadedMemes: Meme[];
   viewedMemes: Meme[];
-  profilePic: string | ProfileImage | null; // Allow string or ProfileImage
-  headerPic: string | ProfileImage | null; // Allow string or ProfileImage
+  profilePic: string | ProfileImage | null;
+  headerPic: string | ProfileImage | null;
   setDarkMode?: (darkMode: boolean) => void;
   setLanguage?: (language: 'en' | 'es' | 'fr') => void;
   setLikesPublic?: (likesPublic: boolean) => void;

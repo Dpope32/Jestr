@@ -18,27 +18,9 @@ import {RootStackParamList, ProfileImage} from '../types/types';
 import * as FileSystem from 'expo-file-system';
 import {v4 as uuidv4} from 'uuid';
 import {useUserStore} from '../store/userStore';
-import {
-  storeToken,
-  getToken,
-  removeToken,
-  storeUserIdentifier,
-} from '../store/secureStore';
+import {getToken, removeToken, storeUserIdentifier} from '../store/secureStore';
 import * as SecureStore from 'expo-secure-store';
 import * as ImageManipulator from 'expo-image-manipulator';
-
-type ProfileImageOrString = ProfileImage | string;
-
-type Asset = {
-  uri: string;
-  type: string;
-  name: string;
-};
-
-type MemeView = {
-  email: string;
-  memeID: string;
-};
 
 type TransformedMemeView = {
   email: string;
@@ -46,32 +28,8 @@ type TransformedMemeView = {
   ttl: number;
 };
 
-type LandingPageNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'Feed'
->;
 const API_ENDPOINT =
   'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser';
-
-// const [request, response, promptAsync] = Google.useAuthRequest({
-// expoClientId: 'YOUR_EXPO_CLIENT_ID',
-//  iosClientId: 'YOUR_IOS_CLIENT_ID',
-//   androidClientId: '667171669430-9hqir57viejk59ud9b02g7cijc2v56tc.apps.googleusercontent.com',
-//    webClientId: 'YOUR_WEB_CLIENT_ID',
-//  });
-
-// const handleGoogleSignIn = async () => {
-//   try {
-//    const result = await promptAsync();
-//    if (result.type === 'success') {
-// Handle successful sign-in
-//      const { authentication } = result;
-// Use the access token to fetch user info or sign in to your backend
-////     }
-//  } catch (error) {
-//   console.error('Google Sign-In Error:', error);
-// }
-//  };
 
 export const handleGoogleSignIn = async () => {
   // Implementation based on '@react-native-google-signin/google-signin'
@@ -1183,7 +1141,6 @@ export const updateProfileImage = async (
   }
 };
 
-// In authFunctions.ts
 export const getUserById = async (userId: string): Promise<User> => {
   try {
     const response = await fetch(
@@ -1248,7 +1205,6 @@ export const verifyToken = async (token: string) => {
   }
 };
 
-// Add these new functions
 export const getFollowing = async (userId: string): Promise<string[]> => {
   try {
     const response = await fetch(

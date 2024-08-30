@@ -5,7 +5,7 @@ import {AppNavParamList} from './NavTypes/RootNavTypes';
 import BottomTabNav from './Stacks/BottomTabNav';
 import CustomDrawer from '../components/CustomDrawer/CustomDrawer';
 import Profile from '../screens/Profile/Profile';
-import Settings from '../components/Settings/Settings';
+import Settings from '../screens/Settings/Settings';
 import Notifications from '../screens/NotificationsScreen';
 import {FONTS} from '../theme/theme';
 

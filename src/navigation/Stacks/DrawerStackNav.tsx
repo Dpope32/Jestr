@@ -2,7 +2,7 @@ import React from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 
 import Profile from '../../screens/Profile/Profile';
-import Settings from '../../components/Settings/Settings';
+import Settings from '../../screens/Settings/Settings';
 import Notifications from '../../screens/NotificationsScreen';
 import CustomDrawer from '../../components/CustomDrawer/CustomDrawer';
 

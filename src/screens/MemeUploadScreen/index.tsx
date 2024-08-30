@@ -1,22 +1,34 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, Alert, Animated, TouchableOpacity, Easing } from 'react-native';
+import React, {useState, useRef, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Alert,
+  Animated,
+  TouchableOpacity,
+  Easing,
+} from 'react-native';
 import MemeUpload from '../../components/Meme/MemeUpload';
 import TopPanel from '../../components/Panels/TopPanel';
 import ProfilePanel from '../../components/Panels/ProfilePanel';
-import { User } from '../../types/types';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import {User} from '../../types/types';
+import {faArrowLeft} from '@fortawesome/free-solid-svg-icons';
+import {LinearGradient} from 'expo-linear-gradient';
 import LottieView from 'lottie-react-native';
-import { FONTS, COLORS } from '../../theme/theme';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import {FONTS, COLORS} from '../../theme/theme';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 
 type MemeUploadScreenProps = {
   navigation: any;
   route: any;
 };
 
-const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }) => {
-  const { user } = route.params;
+const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({
+  navigation,
+  route,
+}) => {
+  const {user} = route.params;
   const [isDarkMode, setIsDarkMode] = useState(true); // Set default to true for dark mode
   const [imageUploaded, setImageUploaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -94,14 +106,13 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
     shake();
   }, [shakeAnim]);
 
-
   const shakeInterpolate = shakeAnim.interpolate({
     inputRange: [-1, 1],
     outputRange: ['-5deg', '5deg'],
   });
 
   const animatedStyle = {
-    transform: [{ rotate: shakeInterpolate }],
+    transform: [{rotate: shakeInterpolate}],
   };
 
   // New feature: Add a fade-in animation for the card
@@ -135,9 +146,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
         onAdminClick={console.log}
         isUploading={isUploading} // Pass the isUploading state to TopPanel
       />
-      {profilePanelVisible && (
-        <View style={styles.overlay} />
-      )}
+      {profilePanelVisible && <View style={styles.overlay} />}
       {profilePanelVisible && localUser && (
         <ProfilePanel
           isVisible={profilePanelVisible}
@@ -152,16 +161,20 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
           navigation={navigation}
         />
       )}
-      <Animated.View style={[styles.card, { opacity: cardFadeAnim }]}>
+      <Animated.View style={[styles.card, {opacity: cardFadeAnim}]}>
         <View style={styles.titleContainer}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <FontAwesomeIcon icon={faArrowLeft} size={24} color="#1bd40b" />
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}>
+            <FontAwesomeIcon icon={faArrowLeft} size={24} color="#1bd40b" />
+          </TouchableOpacity>
           <Text style={styles.title}>This </Text>
-          <Animated.Text style={[styles.title, styles.better, animatedStyle]}>BETTER</Animated.Text>
+          <Animated.Text style={[styles.title, styles.better, animatedStyle]}>
+            BETTER
+          </Animated.Text>
           <Text style={styles.title}> be funny!</Text>
         </View>
-        <MemeUpload 
+        <MemeUpload
           userEmail={user.email}
           username={user.username}
           navigation={navigation}
@@ -175,8 +188,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
         <View style={styles.fullScreenOverlay}>
           <LinearGradient
             colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.7)']}
-            style={styles.gradientBackground}
-          >
+            style={styles.gradientBackground}>
             <View style={styles.uploadingContainer}>
               <LottieView
                 source={require('../../assets/animations/loading-animation.json')}
@@ -184,7 +196,9 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
                 loop
                 style={styles.lottieAnimation}
               />
-              <Text style={styles.uploadingText}>Uploading meme, please standby...</Text>
+              <Text style={styles.uploadingText}>
+                Uploading meme, please standby...
+              </Text>
             </View>
           </LinearGradient>
         </View>
@@ -233,7 +247,7 @@ const styles = StyleSheet.create({
   better: {
     color: COLORS.accent, // Change color for BETTER
     textShadowColor: '#000',
-    textShadowOffset: { width: 1, height: 1 },
+    textShadowOffset: {width: 1, height: 1},
     textShadowRadius: 1,
     fontFamily: FONTS.bold,
   },
@@ -256,7 +270,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
