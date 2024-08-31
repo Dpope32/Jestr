@@ -21,7 +21,7 @@ import LottieView from 'lottie-react-native';
 import SafeImage from '../shared/SafeImage';
 import styles from './MP.styles';
 import {MediaPlayerProps} from '../../types/types';
-import {addFollow , fetchBatchStatus} from '../../services/authFunctions';
+import {addFollow} from '../../services/authFunctions';
 import {usePanResponder} from './usePanResponder';
 import {IconsAndContent} from './MediaPlayerContent';
 import {useMediaPlayerLogic} from './useMediaPlayerLogic';
@@ -38,7 +38,7 @@ const AnimatedSafeImage = Animated.createAnimatedComponent(SafeImage);
 
 const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
   ({
-    memeUser = {email: ''},
+    memeUser = {email: '', isFollowed: false},
     currentMedia,
     mediaType,
     prevMedia,
@@ -82,11 +82,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     const [isLoading, setIsLoading] = useState(true);
     const [mediaLoadError, setMediaLoadError] = useState(false);
     // const [retryCount, setRetryCount] = useState(0);
-    const [isFollowing, setIsFollowing] = useState(false);
+    const [isFollowed, setIsFollowed] = useState(false);
     const [canFollow, setCanFollow] = useState(true);
     const [lastTap, setLastTap] = useState(0);
     const [isLongPressModalVisible, setIsLongPressModalVisible] = useState(false);
-    const [followStatuses, setFollowStatuses] = useState({});
     const [likePosition, setLikePosition] = useState({x: 0, y: 0});
     const [showLikeAnimation, setShowLikeAnimation] = useState(false);
     // const isActive = index === currentIndex;
@@ -94,11 +93,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     const lastBatchCheckTimeRef = useRef(0);
     const lastRecordTimeRef = useRef(0);
 
-    const updateFollowStatus = useCallback((email: string, status: boolean) => {
-      setFollowStatuses(prev => ({...prev, [email]: status}));
-    }, []);
-
-    
     const handleMediaError = useCallback(() => {
       setMediaLoadError(true);
       goToNextMedia();
@@ -149,38 +143,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         useNativeDriver: true,
       }).start();
     }, [currentMedia, mediaType, handleMediaError, fadeAnim]);
-    
-  //  const checkBatchStatus = useCallback(async () => {
-  //    if (currentUserId && memes.length > 0 && user?.email) {
-  //      const memeIDs = memes.map(meme => meme.memeID);
-  //      const uniqueUserEmails = Array.from(new Set(
-  //        memes.map(meme => meme.memeUser?.email).filter((email): email is string => Boolean(email))
-  //      ));
-        
-  //      try {
-  //        const batchStatus = await fetchBatchStatus(memeIDs, user.email, uniqueUserEmails);
-          
-  //        if (batchStatus && batchStatus.followStatuses) {
-  //          uniqueUserEmails.forEach(email => {
-  //            if (batchStatus.followStatuses[email] !== undefined) {
-  //              updateFollowStatus(email, batchStatus.followStatuses[email]);
-  //            }
-  //          });
-  //        }
-  //      } catch (error) {
-  //        console.error('Error checking batch status:', error);
-   //     }
-   //   }
-  //  }, [currentUserId, memes, user, updateFollowStatus]);
-    
-    // Debouncing the function to avoid frequent calls during rapid state updates
-    
-    
-
- //   const debouncedCheckBatchStatus = useMemo(
- //     () => debounce(checkBatchStatus, 1000),
- //     [checkBatchStatus]
- //   );
+  
 
     useEffect(() => {
       loadMedia();
@@ -195,6 +158,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       if (memeID && index === currentIndex && !viewedMemes.has(memeID)) {
         setViewedMemes(prev => new Set(prev).add(memeID));
       }
+      setIsFollowed(memeUser.isFollowed ?? false);
     }, [
       loadMedia,
       nextMedia,
@@ -202,7 +166,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       memeID,
       index,
       currentIndex,
-//      debouncedCheckBatchStatus,
     ]);
     
     const handleSingleTap = useCallback(() => {
@@ -264,7 +227,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       if (!currentUserId || !memeUser.email) return;
       try {
         await addFollow(currentUserId, memeUser.email);
-        setIsFollowing(true);
+        setIsFollowed(true);
         useUserStore.getState().incrementFollowingCount();
         Toast.show({
           type: 'success',
@@ -453,10 +416,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         </TouchableWithoutFeedback>
 
         <IconsAndContent
+          isFollowed={isFollowed}
           memeUser={memeUser}
           caption={caption}
           uploadTimestamp={uploadTimestamp}
-          isFollowing={isFollowing}
           handleFollow={handleFollow}
           counts={counts}
           debouncedHandleLike={debouncedHandleLike}

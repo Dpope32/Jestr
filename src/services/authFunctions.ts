@@ -1166,6 +1166,11 @@ export const updateProfileImage = async (
   imagePath: string,
 ) => {
   try {
+    const accessToken = await SecureStore.getItemAsync('accessToken');
+    if (!accessToken) {
+      throw new Error('No access token available');
+    }
+
     const imageBase64 = await FileSystem.readAsStringAsync(imagePath, {
       encoding: FileSystem.EncodingType.Base64,
     });
@@ -1188,6 +1193,7 @@ export const updateProfileImage = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify(profileData),
       },

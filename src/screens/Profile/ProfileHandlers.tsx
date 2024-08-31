@@ -29,11 +29,14 @@ export const useProfileHandlers = (
     setIsLoading(true);
     try {
       await updateProfileImage(user.email, type, imagePath);
-      
+            // Close the full-screen image view
+            setFullScreenImage(null);
+            setIsBlurVisible(false);
       // Update Zustand store
       useUserStore.getState().setUserDetails({
-        [type]: { uri: imagePath, width: 300, height: 300 }
+        [type + 'Pic']: imagePath  // Changed from { uri: imagePath, width: 300, height: 300 }
       });
+  
       Toast.show({
         type: 'success',
         text1: 'Profile updated successfully!',
@@ -43,6 +46,8 @@ export const useProfileHandlers = (
         bottomOffset: 40,
         props: { backgroundColor: '#333', textColor: '#00ff00' },
       });
+
+  
     } catch (error) {
       console.error('Failed to update image:', error);
       Toast.show({

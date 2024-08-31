@@ -22,7 +22,7 @@ const verifier = CognitoJwtVerifier.create({
 });
 
 const publicOperations = [
-    'sendMessage', 'getMessages', 'updateProfileImage', 'getConversations', 'shareMeme',
+    'sendMessage', 'getMessages', 'getConversations', 'shareMeme',
     'postComment', 'updateCommentReaction', 'getComments', 'fetchLikedMemes', 'fetchDownloadedMemes',
     'fetchViewHistory', 'sendNotification'
 ];
@@ -160,6 +160,72 @@ const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
       throw new Error(`S3 upload failed: ${error.message}`);
     }
   };
+
+  const recordShare = async (memeID, userEmail, shareType, username, catchUser, message) => {
+    const shareID = uuidv4();
+    const timestamp = new Date().toISOString();
+    const notificationID = uuidv4();
+    const notificationMessage = message ? `${username} sent you a meme: "${message}"` : `${username} sent you a meme`;
+  
+    const putParams = {
+      TableName: 'Shares',
+      Item: {
+        MemeID: memeID,
+        ShareID: shareID,
+        UserEmail: userEmail,
+        ShareType: shareType,
+        Timestamp: timestamp,
+        ShareCaption: message,
+      },
+    };
+  
+    const updateShareCountParams = {
+      TableName: 'Memes',
+      Key: { MemeID: memeID },
+      UpdateExpression: 'SET ShareCount = if_not_exists(ShareCount, :start) + :inc',
+      ExpressionAttributeValues: {
+        ':start': 0,
+        ':inc': 1
+      }
+    };
+  
+    const putNotificationParams = {
+      TableName: 'Notis',
+      Item: {
+        MemeID: memeID,
+        CatchUser: catchUser,
+        FromUser: username,
+        NotificationID: notificationID,
+        Type: shareType,
+        Message: notificationMessage,
+        Seen: false,
+        Timestamp: timestamp
+      }
+    };
+  
+    try {
+      await docClient.send(new PutCommand(putParams));
+     // console.log('Share recorded successfully');
+      await docClient.send(new UpdateCommand(updateShareCountParams));
+     // console.log('Share count updated successfully');
+      await docClient.send(new PutCommand(putNotificationParams));
+     // console.log('Noti recorded successfully');
+  
+      // Send a message with the meme
+       const messageContent = JSON.stringify({
+        type: 'meme_share',
+        memeID: memeID,
+        message: message || ''
+      });
+      await sendMessage(userEmail, catchUser, messageContent);
+     // console.log('Meme share message sent successfully');
+  
+    } catch (error) {
+      console.error('Error recording share, updating share count, Notis, or sending message:', error);
+      throw error;
+    }
+  };
+  
 
 export const handler = async (event) => {
     console.log('Received event:', JSON.stringify(event, null, 2));
@@ -319,39 +385,338 @@ export const handler = async (event) => {
                   return createResponse(500, 'Failed to share meme or send message.');
                 }
                 }
-            case 'updateUserProfile':
-                // Implementation here
-                break;
-            case 'getTotalUsers':
-                // Implementation here
-                break;
-            case 'getUserGrowthRate':
-                // Implementation here
-                break;
-            case 'getDAU':
-                // Implementation here
-                break;
-            case 'addFollow':
-                // Implementation here
-                break;
-            case 'removeFollow':
-                // Implementation here
-                break;
-            case 'getFollowing':
-                // Implementation here
-                break;
-            case 'getFollowers':
-                // Implementation here
-                break;
-            case 'checkFollowStatus':
-                // Implementation here
-                break;
-            case 'getAllUsers':
-                // Implementation here
-                break;
-            case 'batchCheckStatus':
-                // Implementation here
-                break;
+              case 'postComment': {
+                const { memeID, text, email, username, profilePic, parentCommentID = null } = requestBody;
+                if (!memeID || !text || !email || !username || !profilePic) {
+                  return createResponse(400, 'Missing required fields for posting a comment.');
+                }
+              
+                const commentID = uuidv4();
+                const commentTimestamp = new Date().toISOString();
+                const putCommentParams = {
+                  TableName: 'Comments',
+                  Item: {
+                    MemeID: memeID,
+                    CommentID: commentID,
+                    Text: text,
+                    ProfilePicUrl: profilePic,
+                    Username: username,
+                    Timestamp: commentTimestamp,
+                    LikesCount: 0,
+                    DislikesCount: 0,
+                    ParentCommentID: parentCommentID
+                  },
+                };
+              
+              //   console.log("Attempting to post comment:", putCommentParams);
+              
+                const updateCommentCountParams = {
+                  TableName: 'Memes',
+                  Key: { MemeID: memeID },
+                  UpdateExpression: 'SET CommentCount = if_not_exists(CommentCount, :zero) + :inc',
+                  ExpressionAttributeValues: {
+                    ':inc': 1,
+                    ':zero': 0
+                  },
+                  ReturnValues: "UPDATED_NEW"
+                };
+              
+                try {
+                  // Post the comment
+                  const result = await docClient.send(new PutCommand(putCommentParams));
+                //  console.log("Comment posted successfully, result:", result);
+              
+                  // Update the comment count
+                  const updateResult = await docClient.send(new UpdateCommand(updateCommentCountParams));
+                //   console.log("Comment count updated successfully, result:", updateResult);
+              
+                  return createResponse(200, 'Comment posted and comment count updated successfully.');
+                } catch (error) {
+                  console.error('Error posting comment or updating comment count:', error);
+                  return createResponse(500, 'Failed to post comment or update comment count.');
+                }
+              }
+              case 'updateCommentReaction': {
+                const { commentID, memeID, incrementLikes, incrementDislikes } = requestBody;
+              
+                let updateExpression = 'SET ';
+                const expressionAttributeValues = {};
+                if (incrementLikes) {
+                  updateExpression += 'LikesCount = LikesCount + :inc';
+                  expressionAttributeValues[':inc'] = 1;
+                }
+                if (incrementDislikes) {
+                  updateExpression += (incrementLikes ? ', ' : '') + 'DislikesCount = DislikesCount + :dec';
+                  expressionAttributeValues[':dec'] = 1;
+                }
+              
+                const updateCommentParams = {
+                  TableName: 'Comments',
+                  Key: { MemeID: memeID, CommentID: commentID },
+                  UpdateExpression: updateExpression,
+                  ExpressionAttributeValues: expressionAttributeValues,
+                  ReturnValues: "UPDATED_NEW"
+                };
+              
+                try {
+                  await docClient.send(new UpdateCommand(updateCommentParams));
+                  return createResponse(200, 'Comment updated successfully.');
+                } catch (error) {
+                  console.error('Error updating comment:', error);
+                  return createResponse(500, 'Failed to update comment.');
+                }
+              }
+              case 'getComments': {
+                const { memeID } = requestBody;
+                const queryParams = {
+                  TableName: 'Comments',
+                  KeyConditionExpression: 'MemeID = :memeID',
+                  ExpressionAttributeValues: { ':memeID': memeID },
+                  ScanIndexForward: false // if you have sort key setup and want latest comments first
+                };
+              
+              //  console.log("Querying comments with params:", queryParams);
+              
+                try {
+                  const { Items } = await docClient.send(new QueryCommand(queryParams));
+                  return createResponse(200, 'Comments retrieved successfully.', Items);
+                } catch (error) {
+                  console.error(`Error  ${error}`);
+                  return createResponse(500, 'Failed to retrieve comments.');
+                }
+              }
+              case 'fetchLikedMemes': {
+                const { email, lastEvaluatedKey, limit = 10 } = requestBody;
+                if (!email) {
+                    console.error('Email is required to fetch liked memes.');
+                    return createResponse(400, 'Email is required to fetch liked memes.');
+                }
+                
+                const queryParams = {
+                    TableName: 'UserLikes',
+                    IndexName: 'email-Timestamp-index',
+                    KeyConditionExpression: 'email = :email',
+                    ExpressionAttributeValues: {
+                        ':email': email,
+                    },
+                    ScanIndexForward: false,
+                    Limit: limit,
+                    ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
+                };
+                
+                try {
+                  //   console.log('Querying UserLikes with params:', queryParams);
+                    const result = await docClient.send(new QueryCommand(queryParams));
+                  //   console.log('UserLikes query result:', result);
+                
+                    // Fetch additional meme details
+                  const memeDetails = await Promise.all(result.Items.map(async (item) => {
+                    const memeParams = {
+                        TableName: 'Memes',
+                        Key: { MemeID: item.MemeID }
+                    };
+                    try {
+                        const { Item: memeItem } = await docClient.send(new GetCommand(memeParams));
+                        if (!memeItem) {
+                            console.warn(`Meme not found for MemeID: ${item.MemeID}`);
+                            return null;
+                        }
+                        return {
+                            ...item,
+                            MemeURL: memeItem.MemeURL,
+                            ProfilePicUrl: memeItem.ProfilePicUrl,
+                            Username: memeItem.Username,
+                            Caption: memeItem.Caption,
+                            LikeCount: memeItem.LikeCount || 0,
+                            DownloadsCount: memeItem.DownloadsCount || 0,
+                            CommentCount: memeItem.CommentCount || 0,
+                            ShareCount: memeItem.ShareCount || 0,
+                            mediaType: memeItem.mediaType || 'image' // Add this line
+                        };
+                    } catch (memeError) {
+                        console.error(`Error fetching meme details for MemeID: ${item.MemeID}`, memeError);
+                        return null;
+                    }
+                }));
+                
+                    const validMemeDetails = memeDetails.filter(meme => meme !== null);
+                //     console.log('Valid meme details:', validMemeDetails);
+                
+                    return createResponse(200, 'Liked memes retrieved successfully.', {
+                        data: {
+                            memes: validMemeDetails,
+                            lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error fetching liked memes:', error);
+                    return createResponse(500, 'Failed to fetch liked memes.');
+                }
+                }
+              case 'fetchDownloadedMemes': {
+                const { email, lastEvaluatedKey, limit = 10 } = requestBody;
+                if (!email) {
+                return createResponse(400, 'Email is required to fetch downloaded memes.');
+                }
+                const queryParams = {
+                TableName: 'UserDownloads',
+                IndexName: 'email-Timestamp-index',
+                KeyConditionExpression: 'email = :email',
+                ExpressionAttributeValues: {
+                  ':email': email
+                },
+                ScanIndexForward: false,
+                Limit: limit,
+                ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
+                };
+                try {
+                const result = await docClient.send(new QueryCommand(queryParams));
+                if (!result.Items || result.Items.length === 0) {
+                  return createResponse(200, 'No downloaded memes found.', { data: { memes: [], lastEvaluatedKey: null } });
+                }
+                // Fetch additional meme details
+                const memeDetails = await Promise.all(result.Items.map(async (item) => {
+                    const memeParams = {
+                        TableName: 'Memes',
+                        Key: { MemeID: item.MemeID }
+                    };
+                    try {
+                        const { Item: memeItem } = await docClient.send(new GetCommand(memeParams));
+                        if (!memeItem) {
+                            console.warn(`Meme not found for MemeID: ${item.MemeID}`);
+                            return null;
+                        }
+                        return {
+                            ...item,
+                            MemeURL: memeItem.MemeURL,
+                            Username: memeItem.Username,
+                            Caption: memeItem.Caption,
+                            LikeCount: memeItem.LikeCount || 0,
+                            DownloadsCount: memeItem.DownloadsCount || 0,
+                            CommentCount: memeItem.CommentCount || 0,
+                            ShareCount: memeItem.ShareCount || 0,
+                            mediaType: memeItem.mediaType || 'image', // Add this line
+                            ProfilePicUrl: memeItem.ProfilePicUrl || ''
+                        };
+                    } catch (memeError) {
+                        console.error(`Error fetching meme details for MemeID: ${item.MemeID}`, memeError);
+                        return null;
+                    }
+                }));
+                const validMemeDetails = memeDetails.filter(meme => meme !== null);
+                return createResponse(200, 'Downloaded memes retrieved successfully.', {
+                  data: {
+                    memes: validMemeDetails,
+                    lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
+                  }
+                });
+                } catch (error) {
+                console.error('Error fetching downloaded memes:', error);
+                return createResponse(500, 'Failed to fetch downloaded memes.');
+                }
+                }
+              case 'fetchViewHistory': {
+                const { email, lastEvaluatedKey, limit = 50 } = requestBody;
+                if (!email) {
+                console.error('Email is required to fetch view history.');
+                return createResponse(400, 'Email is required to fetch view history.');
+                }
+                
+                const viewHistoryCommand = new QueryCommand({
+                TableName: 'UserMemeViews',
+                KeyConditionExpression: 'email = :email',
+                ExpressionAttributeValues: { ':email': email }, 
+                ScanIndexForward: false, // to get the most recent views first
+                Limit: limit,
+                ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
+                });
+                
+                try {
+                console.log('Querying UserMemeViews with params:', viewHistoryCommand);
+                const viewHistoryResponse = await docClient.send(viewHistoryCommand);
+                console.log('UserMemeViews query result:', viewHistoryResponse);
+                
+                if (!viewHistoryResponse.Items || viewHistoryResponse.Items.length === 0) {
+                  return createResponse(200, 'No view history found.', { data: { memes: [], lastEvaluatedKey: null } });
+                }
+                
+                // Extract viewed meme IDs from the response, limited to the first 50
+                const viewedMemeIDs = viewHistoryResponse.Items
+                  .flatMap(item => item.viewedMemes || [])
+                  .slice(0, limit)
+                  .map(meme => typeof meme === 'string' ? meme : meme.S);
+                
+                // Fetch meme details
+                const batchGetParams = {
+                  RequestItems: {
+                    'Memes': {
+                      Keys: viewedMemeIDs.map(memeID => ({ MemeID: memeID }))
+                    }
+                  }
+                };
+                
+                const batchGetCommand = new BatchGetCommand(batchGetParams);
+                const batchGetResponse = await docClient.send(batchGetCommand);
+                
+                const memeDetailsMap = new Map(
+                  batchGetResponse.Responses.Memes.map(meme => [meme.MemeID, meme])
+                );
+                
+                // Prepare the final meme details
+                const memeDetails = viewedMemeIDs.map(memeID => {
+                  const memeItem = memeDetailsMap.get(memeID);
+                  if (!memeItem) {
+                    console.warn(`Meme not found for MemeID: ${memeID}`);
+                    return null;
+                  }
+                  return {
+                    ...memeItem,
+                    viewedAt: viewHistoryResponse.Items.find(item => item.viewedMemes.includes(memeID)).date,
+                    mediaType: memeItem.mediaType || 'image'
+                  };
+                }).filter(meme => meme !== null);
+                
+                console.log('Valid meme details:', memeDetails);
+                
+                return createResponse(200, 'View history retrieved successfully.', {
+                  data: {
+                    memes: memeDetails,
+                    lastEvaluatedKey: viewHistoryResponse.LastEvaluatedKey ? JSON.stringify(viewHistoryResponse.LastEvaluatedKey) : null
+                  }
+                });
+                } catch (error) {
+                console.error('Error fetching view history:', error);
+                return createResponse(500, 'Failed to fetch view history.', { error: error.message });
+                }
+                }
+              case 'sendNotification': {
+                const { memeID, catchUser, fromUser, type, message } = requestBody;
+                if (!memeID || !catchUser || !fromUser || !type || !message) {
+                  return createResponse(400, 'memeID, catchUser, fromUser, type, and message are required for sending a notification.');
+                }
+                try {
+                  const notificationID = uuidv4();
+                  const timestamp = new Date().toISOString();
+                  const notificationParams = {
+                    TableName: 'Notis',
+                    Item: {
+                      MemeID: memeID,
+                      CatchUser: catchUser,
+                      FromUser: fromUser,
+                      NotificationID: notificationID,
+                      Type: type,
+                      Message: message,
+                      Seen: false,
+                      Timestamp: timestamp
+                    }
+                  };
+                  await docClient.send(new PutCommand(notificationParams));
+                  return createResponse(200, 'Notification sent successfully.', { notificationID });
+                } catch (error) {
+                  console.error(`Error sending notification: ${error}`);
+                  return createResponse(500, 'Failed to send notification.');
+                }
+              }
             default:
                 return createResponse(400, `Unsupported operation: ${operation}`);
         }

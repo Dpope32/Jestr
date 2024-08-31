@@ -29,6 +29,7 @@ export interface User {
   darkMode?: boolean;
   likesPublic?: boolean;
   notificationsEnabled?: boolean;
+  isFollowed?: boolean;
 }
 
 export type ProfileImage = {
@@ -102,6 +103,7 @@ export type Meme = {
   shareCount: number;
   username: string;
   profilePicUrl: string;
+  isFollowed: boolean;
   email: string;
   liked?: boolean; // Add this line
   doubleLiked?: boolean; // Add this line

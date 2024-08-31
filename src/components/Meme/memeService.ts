@@ -63,7 +63,10 @@ export const fetchMemes = async (
       }
 
       return {
-        memes: data.data.memes,
+        memes: data.data.memes.map((meme: { isFollowed: boolean; }) => ({
+          ...meme,
+          isFollowed: meme.isFollowed || false, // Ensure isFollowed is always defined
+        })),
         lastEvaluatedKey: data.data.lastEvaluatedKey,
       };
     } catch (error) {

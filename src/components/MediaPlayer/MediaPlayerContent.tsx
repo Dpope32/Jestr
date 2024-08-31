@@ -29,8 +29,9 @@ interface IconsAndContentProps {
   caption: string;
   uploadTimestamp: string;
   index: number;
+  isFollowed: boolean;
   currentIndex: number;
-  isFollowing: boolean;
+  isFollowing?: boolean;
   handleFollow: () => void;
   counts: {
     likes: number;
@@ -99,6 +100,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   animatedBlurIntensity,
   iconAreaRef,
   isFollowing,
+  isFollowed,
   index,
   currentIndex,
   handleFollow,
@@ -169,7 +171,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
               }
               style={styles.profilePic}
             />
-            {!isFollowing && (
+            {isFollowed && (
               <TouchableOpacity
                 onPress={handleFollow}
                 style={styles.followButton}>

@@ -24,7 +24,7 @@ const verifier = CognitoJwtVerifier.create({
 const publicOperations = [
     'getUser', 'updateBio', 'updateProfileImage', 'completeProfile', 'updateUserProfile',
     'getUserGrowthRate', 'getTotalUsers', 'getDAU', 'addFollow', 'removeFollow',
-    'getFollowing', 'getFollowers', 'fetchDownloadedMemes', 'getAllUsers',
+    'getFollowing', 'getFollowers', 'getAllUsers',
     'checkFollowStatus', 'batchCheckStatus'
 ];
 
@@ -58,6 +58,185 @@ const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
       throw new Error(`S3 upload failed: ${error.message}`);
     }
   };
+
+const addFollow = async (followerId, followeeId) => {
+  if (followerId === followeeId) {
+  //  console.log('User attempted to follow themselves');
+    return { success: false, message: 'Users cannot follow themselves' };
+  }
+
+  const followParams = {
+    TableName: 'UserRelationships',
+    Item: {
+      UserID: followerId,
+      RelationUserID: followeeId,
+      RelationshipType: 'follows'
+    }
+  };
+
+  const updateFollowerParams = {
+    TableName: 'Profiles',
+    Key: { email: followeeId },
+    UpdateExpression: 'SET FollowersCount = if_not_exists(FollowersCount, :zero) + :inc',
+    ExpressionAttributeValues: {
+      ':zero': 0,
+      ':inc': 1
+    }
+  };
+
+  const updateFollowingParams = {
+    TableName: 'Profiles',
+    Key: { email: followerId },
+    UpdateExpression: 'SET FollowingCount = if_not_exists(FollowingCount, :zero) + :inc',
+    ExpressionAttributeValues: {
+      ':zero': 0,
+      ':inc': 1
+    }
+  };
+
+  try {
+    await docClient.send(new PutCommand(followParams));
+    await docClient.send(new UpdateCommand(updateFollowerParams));
+    await docClient.send(new UpdateCommand(updateFollowingParams));
+    // console.log('Follow added successfully and counts updated');
+    return { success: true, message: 'Follow added successfully' };
+  } catch (error) {
+    console.error('Error adding follow or updating counts:', error);
+    throw error;
+  }
+}; 
+
+const getFollowers = async (userId) => {
+  const scanParams = {
+    TableName: 'UserRelationships',
+    FilterExpression: 'RelationUserID = :userId AND RelationshipType = :type',
+    ExpressionAttributeValues: {
+      ':userId': userId,
+      ':type': 'follows'
+    }
+  };
+
+  try {
+    const { Items } = await docClient.send(new ScanCommand(scanParams));
+    return Items.map(item => item.UserID); // Return list of UserIDs who follow the given user
+  } catch (error) {
+    console.error('Error getting followers:', error);
+    throw error;
+  }
+};
+
+const removeFollow = async (followerId, followeeId) => {
+  const unfollowParams = {
+    TableName: 'UserRelationships',
+    Key: {
+      UserID: followerId,
+      RelationUserID: followeeId
+    }
+  };
+
+  const updateFollowerParams = {
+    TableName: 'Profiles',
+    Key: { email: followeeId },
+    UpdateExpression: 'SET FollowersCount = if_not_exists(FollowersCount, :zero) - :dec',
+    ExpressionAttributeValues: {
+      ':zero': 0,
+      ':dec': 1
+    },
+    ConditionExpression: 'FollowersCount > :zero'
+  };
+
+  const updateFollowingParams = {
+    TableName: 'Profiles',
+    Key: { email: followerId },
+    UpdateExpression: 'SET FollowingCount = if_not_exists(FollowingCount, :zero) - :dec',
+    ExpressionAttributeValues: {
+      ':zero': 0,
+      ':dec': 1
+    },
+    ConditionExpression: 'FollowingCount > :zero'
+  };
+
+  try {
+    await docClient.send(new DeleteCommand(unfollowParams));
+    await docClient.send(new UpdateCommand(updateFollowerParams));
+    await docClient.send(new UpdateCommand(updateFollowingParams));
+  //  console.log('Unfollowed successfully and counts updated');
+  } catch (error) {
+    if (error.name === 'ConditionalCheckFailedException') {
+   //   console.log('Follow counts already at zero, no update needed');
+    } else {
+      console.error('Error removing follow or updating counts:', error);
+      throw error;
+    }
+  }
+};
+
+// Function to get all users a user is following
+const getFollowing = async (userId) => {
+  const queryParams = {
+    TableName: 'UserRelationships',
+    KeyConditionExpression: 'UserID = :userId',
+    FilterExpression: 'RelationshipType = :type',
+    ExpressionAttributeValues: {
+      ':userId': userId,
+      ':type': 'follows'
+    }
+  };
+
+  try {
+    const { Items } = await docClient.send(new QueryCommand(queryParams));
+    return Items.map(item => item.RelationUserID); // Return list of UserIDs that the given user is following
+  } catch (error) {
+    console.error('Error getting following:', error);
+    throw error;
+  }
+};
+
+// Function to check if one user follows another
+const checkFollowStatus = async (followerId, followeeId) => {
+  if (!followerId || !followeeId) {
+    console.log('Invalid followerId or followeeId:', followerId, followeeId);
+    return { isFollowing: false, canFollow: true };
+  }
+
+  if (followerId === followeeId) {
+    return { isFollowing: false, canFollow: false };
+  }
+
+  const queryParams = {
+    TableName: 'UserRelationships',
+    KeyConditionExpression: 'UserID = :followerId AND RelationUserID = :followeeId',
+    ExpressionAttributeValues: {
+      ':followerId': followerId,
+      ':followeeId': followeeId
+    },
+    Limit: 1
+  };
+
+  try {
+    console.log('Checking follow status with params:', JSON.stringify(queryParams));
+    const { Items } = await docClient.send(new QueryCommand(queryParams));
+    console.log('Query result:', JSON.stringify(Items));
+    return { isFollowing: Items && Items.length > 0, canFollow: true };
+  } catch (error) {
+    console.error('Error checking follow status:', error);
+    return { isFollowing: false, canFollow: true };
+  }
+};
+
+const batchCheckFollowStatus = async (followerId, followeeIDs) => {
+  const batchGetParams = {
+    RequestItems: {
+      'UserRelationships': {
+        Keys: followeeIDs.map(followeeId => ({
+          UserID: followerId,
+          RelationUserID: followeeId
+        }))
+      }
+    }
+  };
+}
+
 
 export const handler = async (event) => {
     console.log('Received event:', JSON.stringify(event, null, 2));
@@ -93,193 +272,361 @@ export const handler = async (event) => {
         }
 
         switch (operation) {
-                case 'getUser':
-                    const { identifier } = requestBody;
-                    if (!identifier) {
-                        return createResponse(400, 'Identifier is required for getting user details.');
+            case 'getUser':
+                const { identifier } = requestBody;
+                if (!identifier) {
+                    return createResponse(400, 'Identifier is required for getting user details.');
+                }
+                try {
+                    const user = await getUser(identifier);
+                    if (user) {
+                        return createResponse(200, 'User details retrieved successfully.', user);
+                    } else {
+                        return createResponse(404, 'User not found');
                     }
-                    try {
-                        const user = await getUser(identifier);
-                        if (user) {
-                            return createResponse(200, 'User details retrieved successfully.', user);
-                        } else {
-                            return createResponse(404, 'User not found');
-                        }
-                    } catch (error) {
-                        console.error(`Error getting user details: ${error}`);
-                        return createResponse(500, 'Failed to get user details.');
-                    }
-                    case 'updateBio': {
-                        const { email, bio } = requestBody;              
-                        if (!email || bio === undefined) {
-                          return createResponse(400, 'Email and bio are required for updating bio.');
-                        } 
-                        const updateParams = {
-                          TableName: 'Profiles',
-                          Key: { email: email },
-                          UpdateExpression: 'set bio = :b, Bio = :b',
-                          ExpressionAttributeValues: {
-                            ':b': bio
-                          },
-                          ReturnValues: 'UPDATED_NEW'
-                        };
-                      
-                        try {
-                          const result = await docClient.send(new UpdateCommand(updateParams));
-                          return createResponse(200, 'Bio updated successfully.', { data: { updatedBio: bio } });
-                        } catch (error) {
-                          console.error('Error updating bio:', error);
-                          return createResponse(500, 'Failed to update bio.');
-                        }
+                } catch (error) {
+                    console.error(`Error getting user details: ${error}`);
+                    return createResponse(500, 'Failed to get user details.');
+              }
+            case 'updateBio': {
+                const { email, bio } = requestBody;              
+                if (!email || bio === undefined) {
+                  return createResponse(400, 'Email and bio are required for updating bio.');
+                } 
+                const updateParams = {
+                  TableName: 'Profiles',
+                  Key: { email: email },
+                  UpdateExpression: 'set bio = :b, Bio = :b',
+                  ExpressionAttributeValues: {
+                    ':b': bio
+                  },
+                  ReturnValues: 'UPDATED_NEW'
+                };
+              
+                try {
+                  const result = await docClient.send(new UpdateCommand(updateParams));
+                  return createResponse(200, 'Bio updated successfully.', { data: { updatedBio: bio } });
+                } catch (error) {
+                  console.error('Error updating bio:', error);
+                  return createResponse(500, 'Failed to update bio.');
+                }
+              }
+              case 'updateProfileImage': {
+                const { email, imageType, image } = requestBody;
+                if (!email || !imageType || !image) {
+                  console.error('Missing required fields for updateProfileImage:', { email, imageType, imageProvided: !!image });
+                  return createResponse(400, 'Email, imageType, and image are required for updating profile image.');
+                }
+                try {
+                  console.log(`Updating ${imageType} image for ${email}`);
+                  const bucketName = 'jestr-bucket';
+                  let newImageUrl;
+              
+                  if (imageType === 'profile') {
+                    const profilePicKey = `ProfilePictures/${email}-profilePic-${Date.now()}.jpg`;
+                    newImageUrl = await uploadToS3(image, profilePicKey, 'image/jpeg', bucketName);
+                  } else if (imageType === 'header') {
+                    const headerPicKey = `HeaderPictures/${email}-headerPic-${Date.now()}.jpg`;
+                    newImageUrl = await uploadToS3(image, headerPicKey, 'image/jpeg', bucketName);
+                  } else {
+                    throw new Error('Invalid image type');
+                  }
+                  
+                  console.log('New image URL:', newImageUrl);
+              
+                  const updateProfileParams = {
+                    TableName: 'Profiles',
+                    Key: { email },
+                    UpdateExpression: 'SET #imagePic = :url',
+                    ExpressionAttributeNames: {
+                      '#imagePic': `${imageType}Pic`
+                    },
+                    ExpressionAttributeValues: {
+                      ':url': newImageUrl
+                    },
+                    ReturnValues: 'ALL_NEW'
+                  };
+              
+                  console.log('Update profile params:', JSON.stringify(updateProfileParams));
+                  const updateProfileResult = await docClient.send(new UpdateCommand(updateProfileParams));
+                  console.log('Update profile result:', JSON.stringify(updateProfileResult));
+              
+                  if (imageType === 'profile') {
+                    const queryMemesParams = {
+                      TableName: 'Memes',
+                      IndexName: 'Email-UploadTimestamp-index', 
+                      KeyConditionExpression: 'Email = :email',
+                      ExpressionAttributeValues: {
+                        ':email': email
                       }
-                      case 'updateProfileImage': {
-                        const { email, imageType, image } = requestBody;
-                        if (!email || !imageType || !image) {
-                          console.error('Missing required fields for updateProfileImage');
-                          return createResponse(400, 'Email, imageType, and image are required for updating profile image.');
+                    };
+                  
+                    const memesResult = await docClient.send(new QueryCommand(queryMemesParams));
+                    console.log('Memes query result:', JSON.stringify(memesResult));
+              
+                    for (const meme of memesResult.Items) {
+                      const updateMemeParams = {
+                        TableName: 'Memes',
+                        Key: { MemeID: meme.MemeID },
+                        UpdateExpression: 'SET ProfilePicUrl = :newUrl',
+                        ExpressionAttributeValues: {
+                          ':newUrl': newImageUrl
                         }
-                        try {
-                        console.log(`Updating ${imageType} image for ${email}`);
-                          const imageBuffer = Buffer.from(image, 'base64');
-                          let newImageUrl;
-                          if (imageType === 'profile') {
-                            const profilePicKey = `${email}-profilePic-${Date.now()}.jpg`;
-                            await uploadToS3(imageBuffer, profilePicKey, 'ProfilePictures');
-                            newImageUrl = `https://jestr-bucket.s3.amazonaws.com/ProfilePictures/${profilePicKey}`;
-                          } else if (imageType === 'header') {
-                            const headerPicKey = `${email}-headerPic-${Date.now()}.jpg`;
-                            await uploadToS3(imageBuffer, headerPicKey, 'HeaderPictures');
-                            newImageUrl = 'https://jestr-bucket.s3.amazonaws.com/HeaderPictures/${headerPicKey}';
-                          } else {
-                            throw new Error('Invalid image type');
-                          }
-                          const updateProfileParams = {
-                            TableName: 'Profiles',
-                            Key: { email },
-                            UpdateExpression: 'SET #imagePic = :url',
-                            ExpressionAttributeNames: {
-                              '#imagePic': `${imageType}Pic`
-                            },
-                            ExpressionAttributeValues: {
-                              ':url': newImageUrl
-                            },
-                            ReturnValues: 'ALL_NEW'
-                          };
-                          const updateProfileResult = await docClient.send(new UpdateCommand(updateProfileParams));
-                          if (imageType === 'profile') {
-                            const queryMemesParams = {
-                              TableName: 'Memes',
-                              IndexName: 'Email-UploadTimestamp-index', 
-                              KeyConditionExpression: 'Email = :email',
-                              ExpressionAttributeValues: {
-                                ':email': email
-                              }
-                            };
-                        
-                            const memesResult = await docClient.send(new QueryCommand(queryMemesParams));
-                            for (const meme of memesResult.Items) {
-                              const updateMemeParams = {
-                                TableName: 'Memes',
-                                Key: { MemeID: meme.MemeID },
-                                UpdateExpression: 'SET ProfilePicUrl = :newUrl',
-                                ExpressionAttributeValues: {
-                                  ':newUrl': newImageUrl
-                                }
-                              };
-                              await docClient.send(new UpdateCommand(updateMemeParams));
-                            }
-                          }
-                          const getParams = { TableName: 'Profiles', Key: { email } };
-                          const { Item } = await docClient.send(new GetCommand(getParams));
-                          return createResponse(200, 'Profile image updated successfully.', { [imageType + 'Pic']: newImageUrl });
-                        } catch (error) {
-                          console.error('Error updating profile image:', error);
-                          return createResponse(500, 'Failed to update profile image.');
-                        }
-                        }
-                        case 'completeProfile': {
-                            const { email, username, profilePic, headerPic, displayName, bio } = requestBody;
-                            if (!email || !username) {
-                              return createResponse(400, 'Email and username are required for profile completion.');
-                            }
-                          
-                            try {
-                              const bucketName = 'jestr-bucket'; 
-                              let profilePicUrl = 'https://jestr-bucket.s3.us-east-2.amazonaws.com/HeaderPictures/b%40b-headerPic.jpg';
-                              let headerPicUrl = 'https://jestr-bucket.s3.us-east-2.amazonaws.com/ProfilePictures/default-profile-pic.jpg';
-                          
-                              if (profilePic) {
-                                const profilePicKey = `ProfilePictures/${email}-${Date.now()}.jpg`;
-                                profilePicUrl = await uploadToS3(profilePic, profilePicKey, 'image/jpeg', bucketName);
-                              }
-                          
-                              if (headerPic) {
-                                const headerPicKey = `HeaderPictures/${email}-${Date.now()}.jpg`;
-                                headerPicUrl = await uploadToS3(headerPic, headerPicKey, 'image/jpeg', bucketName);
-                              }
-                          
-                              const creationDate = new Date().toISOString();
-                              const accessToken = generateAccessToken();
-                          
-                              const user = {
-                                email,
-                                username,
-                                profilePic: profilePicUrl,
-                                displayName: displayName || username,
-                                headerPic: headerPicUrl,
-                                bio: bio || '',
-                                CreationDate: creationDate,
-                                LastLogin: creationDate,
-                                accessToken,
-                                darkMode: requestBody.darkMode || false,
-                                likesPublic: requestBody.likesPublic || true,
-                                notificationsEnabled: requestBody.notificationsEnabled || true,
-                                userId: uuidv4(), 
-                              };
-                              const putParams = {
-                                TableName: 'Profiles',
-                                Item: user,
-                              };
-                              await docClient.send(new PutCommand(putParams));
-                              return createResponse(200, 'Profile completed successfully.', user);
-                            } catch (error) {
-                              console.error('Error completing profile:', error);
-                              return createResponse(500, `Failed to complete profile: ${error.message}`);
-                            }
-                          }
-            case 'updateUserProfile':
-                // Implementation here
-                break;
+                      };
+                      await docClient.send(new UpdateCommand(updateMemeParams));
+                    }
+                  }
+              
+                  const getParams = { TableName: 'Profiles', Key: { email } };
+                  const { Item } = await docClient.send(new GetCommand(getParams));
+                  console.log('Updated user profile:', JSON.stringify(Item));
+              
+                  return createResponse(200, 'Profile image updated successfully.', { [imageType + 'Pic']: newImageUrl });
+                } catch (error) {
+                  console.error('Error updating profile image:', error);
+                  return createResponse(500, 'Failed to update profile image.', { error: error.message, stack: error.stack });
+                }
+              }
+            case 'completeProfile': {
+                const { email, username, profilePic, headerPic, displayName, bio } = requestBody;
+                if (!email || !username) {
+                  return createResponse(400, 'Email and username are required for profile completion.');
+                }
+              
+                try {
+                  const bucketName = 'jestr-bucket'; 
+                  let profilePicUrl = 'https://jestr-bucket.s3.us-east-2.amazonaws.com/HeaderPictures/b%40b-headerPic.jpg';
+                  let headerPicUrl = 'https://jestr-bucket.s3.us-east-2.amazonaws.com/ProfilePictures/default-profile-pic.jpg';
+              
+                  if (profilePic) {
+                    const profilePicKey = `ProfilePictures/${email}-${Date.now()}.jpg`;
+                    profilePicUrl = await uploadToS3(profilePic, profilePicKey, 'image/jpeg', bucketName);
+                  }
+              
+                  if (headerPic) {
+                    const headerPicKey = `HeaderPictures/${email}-${Date.now()}.jpg`;
+                    headerPicUrl = await uploadToS3(headerPic, headerPicKey, 'image/jpeg', bucketName);
+                  }
+              
+                  const creationDate = new Date().toISOString();
+                  const accessToken = generateAccessToken();
+              
+                  const user = {
+                    email,
+                    username,
+                    profilePic: profilePicUrl,
+                    displayName: displayName || username,
+                    headerPic: headerPicUrl,
+                    bio: bio || '',
+                    CreationDate: creationDate,
+                    LastLogin: creationDate,
+                    accessToken,
+                    darkMode: requestBody.darkMode || false,
+                    likesPublic: requestBody.likesPublic || true,
+                    notificationsEnabled: requestBody.notificationsEnabled || true,
+                    userId: uuidv4(), 
+                  };
+                  const putParams = {
+                    TableName: 'Profiles',
+                    Item: user,
+                  };
+                  await docClient.send(new PutCommand(putParams));
+                  return createResponse(200, 'Profile completed successfully.', user);
+                } catch (error) {
+                  console.error('Error completing profile:', error);
+                  return createResponse(500, `Failed to complete profile: ${error.message}`);
+                }
+              }
             case 'getTotalUsers':
-                // Implementation here
-                break;
+              try {
+              const params = {
+                TableName: 'Profiles',
+                Select: 'COUNT'
+              };
+              const result = await docClient.send(new ScanCommand(params));
+              return createResponse(200, 'Total users retrieved successfully.', { totalUsers: result.Count });
+              } catch (error) {
+              console.error('Error getting total users:', error);
+              return createResponse(500, 'Failed to get total users');
+              }
             case 'getUserGrowthRate':
-                // Implementation here
-                break;
+              try {
+              const today = new Date();
+              const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+              
+              const paramsToday = {
+                TableName: 'Profiles',
+                Select: 'COUNT'
+              };
+              const paramsLastWeek = {
+                TableName: 'Profiles',
+                FilterExpression: '#cd <= :lastWeek',
+                ExpressionAttributeNames: {
+                  '#cd': 'creationDate'
+                },
+                ExpressionAttributeValues: {
+                  ':lastWeek': lastWeek.toISOString()
+                },
+                Select: 'COUNT'
+              };
+              
+              const [resultToday, resultLastWeek] = await Promise.all([
+                docClient.send(new ScanCommand(paramsToday)),
+                docClient.send(new ScanCommand(paramsLastWeek))
+              ]);
+              
+              const growthRate = resultLastWeek.Count === 0 
+                ? 100  // If there were no users last week, set growth rate to 100%
+                : ((resultToday.Count - resultLastWeek.Count) / resultLastWeek.Count) * 100;
+              
+              return createResponse(200, 'User growth rate calculated successfully.', { userGrowthRate: growthRate.toFixed(2) });
+              } catch (error) {
+              console.error('Error calculating user growth rate:', error);
+              return createResponse(500, 'Failed to calculate user growth rate');
+              }
             case 'getDAU':
-                // Implementation here
-                break;
+                try {
+                  // Get the date for 3 days ago in UTC
+                  const threeDaysAgo = new Date();
+                  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+                  const threeDaysAgoString = threeDaysAgo.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                
+                  const params = {
+                    TableName: 'UserMemeViews',
+                    FilterExpression: '#date >= :threeDaysAgo',
+                    ExpressionAttributeNames: {
+                      '#date': 'date'
+                    },
+                    ExpressionAttributeValues: {
+                      ':threeDaysAgo': threeDaysAgoString
+                    }
+                  };
+                  
+                  console.log('DAU Params:', JSON.stringify(params));
+                  const result = await docClient.send(new ScanCommand(params));
+                  console.log('DAU Result:', JSON.stringify(result));
+                  
+                  // Count unique emails
+                  const uniqueEmails = new Set(result.Items.map(item => item.email));
+                  const activeUsers = uniqueEmails.size;
+                
+                  return createResponse(200, 'Active users in the last 3 days retrieved successfully.', { 
+                    activeUsers,
+                    debugInfo: {
+                      fromDate: threeDaysAgoString,
+                      toDate: new Date().toISOString().split('T')[0],
+                      scannedCount: result.ScannedCount,
+                      matchedCount: result.Count,
+                      uniqueEmailCount: activeUsers,
+                      sampleItems: result.Items.slice(0, 5) // Include up to 5 sample items for debugging
+                    }
+                  });
+                } catch (error) {
+                  console.error('Error getting active users:', error);
+                  return createResponse(500, 'Failed to get active users', { error: error.message });
+              }
             case 'addFollow':
-                // Implementation here
-                break;
+              // console.log('Entered addFollow case');
+              const { followerId, followeeId } = requestBody;
+              if (!followerId || !followeeId) {
+              return createResponse(400, 'followerId and followeeId are required.');
+              }
+              try {
+              await (async () => {
+                await addFollow(followerId, followeeId);
+              })();
+              return createResponse(200, 'Follow added successfully.');
+              } catch (error) {
+                console.error('Error adding Follow', error);
+              return createResponse(500, 'Failed to add follow.');
+              }
             case 'removeFollow':
-                // Implementation here
-                break;
+              const { unfollowerId, unfolloweeId } = requestBody;
+              if (!unfollowerId || !unfolloweeId) {
+                return createResponse(400, 'unfollowerId and unfolloweeId are required.');
+              }
+              try {
+                await removeFollow(unfollowerId, unfolloweeId);
+                return createResponse(200, 'Unfollowed successfully.');
+              } catch (error) {
+                  console.error('Error ', error);
+                return createResponse(500, 'Failed to remove follow.');
+              }
+            case 'getFollowers': {
+              const { userId } = requestBody;
+              if (!userId) {
+              return createResponse(400, 'userId is required.');
+              }
+              try {
+              const followers = await getFollowers(userId);
+              return createResponse(200, 'Followers retrieved successfully.', followers);
+              } catch (error) {
+              console.error('Error getting followers:', error);
+              return createResponse(500, 'Failed to get followers.');
+              }
+              }
             case 'getFollowing':
-                // Implementation here
-                break;
-            case 'getFollowers':
-                // Implementation here
-                break;
-            case 'checkFollowStatus':
-                // Implementation here
-                break;
-            case 'getAllUsers':
-                // Implementation here
-                break;
-            case 'batchCheckStatus':
-                // Implementation here
-                break;
+              const { userId } = requestBody;
+              if (!userId) {
+              return createResponse(400, 'userId is required.');
+              }
+              try {
+              const following = await getFollowing(userId);
+              return createResponse(200, 'Following retrieved successfully.', following);
+              } catch (error) {
+                console.error('Error ', error);
+              return createResponse(500, 'Failed to get following.');
+              }
+            case 'getAllUsers': {
+              const params = {
+              TableName: 'Profiles',
+              ProjectionExpression: 'email, username, profilePic'
+              };
+              
+              try {
+              const { Items } = await docClient.send(new ScanCommand(params));
+              const users = Items.map(item => ({
+                email: item.email,
+                username: item.username,
+                profilePic: item.profilePic
+              }));
+              return createResponse(200, 'Users retrieved successfully.', users);
+              } catch (error) {
+              console.error('Error fetching users:', error);
+              return createResponse(500, 'Failed to fetch users.');
+              }
+              }
+            case 'checkFollowStatus': {
+              const { followerId, followeeId } = JSON.parse(event.body);
+              if (!followerId || !followeeId) {
+                return createResponse(400, 'followerId and followeeId are required.');
+              }
+              try {
+                const followStatus = await checkFollowStatus(followerId, followeeId);
+                return createResponse(200, 'Follow status checked successfully.', followStatus);
+              } catch (error) {
+                console.error(`Error checking follow status: ${error}`);
+                return createResponse(500, 'Failed to check follow status.', { error: error.message });
+              }
+            }
+            case 'batchCheckStatus': {
+              const { memeIDs, userEmail, followeeIDs } = requestBody;
+              
+              if (!memeIDs || !userEmail || !followeeIDs) {
+              return createResponse(400, 'memeIDs, userEmail, and followeeIDs are required.');
+              }
+              
+              try {
+              const followStatuses = await batchCheckFollowStatus(userEmail, followeeIDs);
+              
+              return createResponse(200, 'Batch status check successful.', {
+                followStatuses
+              });
+              } catch (error) {
+              console.error(`Error in batch status check: ${error}`);
+              return createResponse(500, 'Failed to perform batch status check.', { error: error.message });
+              }
+              }  
             default:
                 return createResponse(400, `Unsupported operation: ${operation}`);
         }
