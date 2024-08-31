@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import {BlurView} from 'expo-blur';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import InputField from 'components/Input/InutField';
+import InputField from 'components/Input/InputField';
 
 interface ContentModalProps {
   visible: boolean;

@@ -189,32 +189,6 @@ export const handleSignOut = async (
   }
 };
 
-// console.log('Current user:', JSON.stringify(useUserStore.getState(), null, 2));
-
-const clearSecureStore = async () => {
-  const keys = [
-    'accessToken',
-    'userIdentifier' /* add any other keys you use */,
-  ];
-  for (const key of keys) {
-    try {
-      await SecureStore.deleteItemAsync(key);
-      console.log(`Cleared ${key} from SecureStore`);
-    } catch (e) {
-      console.error(`Failed to clear ${key} from SecureStore`, e);
-    }
-  }
-};
-
-const clearAsyncStorage = async () => {
-  try {
-    await AsyncStorage.clear();
-    console.log('AsyncStorage has been cleared!');
-  } catch (e) {
-    console.error('Failed to clear AsyncStorage', e);
-  }
-};
-
 export const handleSignup = async (
   email: string,
   password: string,
@@ -634,12 +608,6 @@ export const removeDownloadedMeme = async (
 
 export const handleAppleSignIn = async () => {
   // Implementation based on '@invertase/react-native-apple-authentication'
-};
-
-export const fetchAllUsers = async (): Promise<User[]> => {
-  // Implement your API call here
-  // For now, return an empty array
-  return [];
 };
 
 export const sendMessage = async (
@@ -1296,50 +1264,6 @@ export const getUser = async (userEmail: string): Promise<User | null> => {
   } catch (error) {
     console.error('Error fetching user:', error);
     return null;
-  }
-};
-
-export const fetchBatchStatus = async (
-  memeIDs: string[],
-  userEmail: string,
-  followeeIDs: string[],
-): Promise<{followStatuses: {[key: string]: boolean}}> => {
-  try {
-    // Log the input parameters to check what is being sent
-    console.log('Fetching batch status with parameters:', {
-      memeIDs,
-      userEmail,
-      followeeIDs,
-    });
-
-    const response = await fetch(
-      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/batchCheckStatus',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          memeIDs,
-          userEmail,
-          followeeIDs,
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch batch status');
-    }
-
-    const data = await response.json();
-
-    // Log the data received from the API to verify the response
-    console.log('Batch status fetched successfully:', data);
-
-    return data;
-  } catch (error) {
-    console.error('Error fetching batch status:', error);
-    return {followStatuses: {}}; // Return an empty object if there's an error
   }
 };
 

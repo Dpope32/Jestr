@@ -2,12 +2,15 @@ import React from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 
 import {AppNavParamList} from './NavTypes/RootNavTypes';
+import {FONTS} from '../theme/theme';
+
+import AuthStackNav from './Stacks/AuthStackNav';
 import BottomTabNav from './Stacks/BottomTabNav';
 import CustomDrawer from '../components/CustomDrawer/CustomDrawer';
+
 import Profile from '../screens/Profile/Profile';
 import Settings from '../screens/Settings/Settings';
 import Notifications from '../screens/NotificationsScreen';
-import {FONTS} from '../theme/theme';
 
 const Drawer = createDrawerNavigator<AppNavParamList>();
 
@@ -24,16 +27,24 @@ const AppNavigator = () => {
     },
   };
 
-  return (
-    <Drawer.Navigator
-      drawerContent={props => <CustomDrawer {...props} />}
-      screenOptions={screenOptions}>
-      <Drawer.Screen name="Home" component={BottomTabNav} />
-      <Drawer.Screen name="Profile" component={Profile} />
-      <Drawer.Screen name="Settings" component={Settings} />
-      <Drawer.Screen name="Notifications" component={Notifications} />
-    </Drawer.Navigator>
-  );
+  // TODO:
+  // if (isFirstLaunch === true) ==> Onboarding Stack (Stack Nav)
+  // ...make isFirstLaunch FALSE at the end of Onboarding flow
+  // else if (isLoggedIn === true) ==> App Stack (DrawerNav)
+  // else ==> Auth Stack (Stack Nav) or Landing Page called
+
+  // return (
+  //   <Drawer.Navigator
+  //     drawerContent={props => <CustomDrawer {...props} />}
+  //     screenOptions={screenOptions}>
+  //     <Drawer.Screen name="Home" component={BottomTabNav} />
+  //     <Drawer.Screen name="Profile" component={Profile} />
+  //     <Drawer.Screen name="Settings" component={Settings} />
+  //     <Drawer.Screen name="Notifications" component={Notifications} />
+  //   </Drawer.Navigator>
+  // );
+
+  return <AuthStackNav />;
 };
 
 export default AppNavigator;

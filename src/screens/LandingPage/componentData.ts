@@ -1,4 +1,35 @@
-import { StyleSheet } from 'react-native';
+import {StyleSheet} from 'react-native';
+
+export const colorsGradient = [
+  '#080808',
+  '#0a0a0a',
+  '#0c0c0c',
+  '#0e0e0e',
+  '#101010',
+  '#121212',
+  '#141414',
+  '#161616',
+  '#181818',
+  '#1a1a1a',
+  '#1c1c1c',
+  '#1e1e1e',
+  '#202020',
+  '#222222',
+  '#242424',
+  '#262626',
+  '#282828',
+  '#2a2a2a',
+  '#2c2c2c',
+  '#2e2e2e',
+  '#303030',
+  '#323232',
+  '#343434',
+  '#363636',
+  '#383838',
+  '#3a3a3a',
+  '#3c3c3c',
+  '#3e3e3e',
+];
 
 export const styles = StyleSheet.create({
   container: {
@@ -43,7 +74,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '97%', 
+    width: '97%',
     borderWidth: 2,
     borderColor: '#00ff00',
     borderRadius: 40,
@@ -96,7 +127,7 @@ export const styles = StyleSheet.create({
     fontSize: 55,
     fontWeight: 'bold',
     color: '#FFF',
-    textShadowOffset: { width: 0, height: 4 },
+    textShadowOffset: {width: 0, height: 4},
     textShadowRadius: 6,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
   },
@@ -105,7 +136,7 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
+    textShadowOffset: {width: -1, height: 1},
     textShadowRadius: 10,
   },
   title: {
@@ -205,7 +236,7 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     marginVertical: 10,
-    textDecorationLine: 'underline',  // This will underline the text
+    textDecorationLine: 'underline', // This will underline the text
   },
   footer: {
     flexDirection: 'row',
@@ -224,7 +255,7 @@ export const styles = StyleSheet.create({
   },
   initialScreen: {
     flex: 1,
-    justifyContent: 'flex-start',  // Changed from 'center' to 'flex-start'
+    justifyContent: 'flex-start', // Changed from 'center' to 'flex-start'
     alignItems: 'center',
     paddingHorizontal: 76,
   },
@@ -232,9 +263,9 @@ export const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: 'bold',
     color: '#ffffff', // Bright white for maximum contrast
-    textShadowColor: 'rgba(0, 255, 0, 0.5)', 
+    textShadowColor: 'rgba(0, 255, 0, 0.5)',
     marginBottom: 40,
-    textShadowOffset: { width: -1, height: 1 },
+    textShadowOffset: {width: -1, height: 1},
     textShadowRadius: 4,
   },
   available: {
@@ -261,7 +292,7 @@ export const styles = StyleSheet.create({
     height: 50,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
@@ -280,7 +311,7 @@ export const styles = StyleSheet.create({
   },
 
   socialHeaderText: {
-     color: '#cccccc',
+    color: '#cccccc',
     fontSize: 16,
     marginBottom: 15,
   },
@@ -293,8 +324,8 @@ export const styles = StyleSheet.create({
   socialButtonIcon: {
     width: 60,
     height: 60,
-    marginBottom: -10
-    },
+    marginBottom: -10,
+  },
   separator: {
     width: '100%',
     height: 1,
@@ -311,7 +342,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '90%',
     marginBottom: -150,
-    
   },
   socialButton: {
     width: 40,
@@ -325,7 +355,7 @@ export const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     marginBottom: 30,
-    marginTop: 50
+    marginTop: 50,
   },
   googleButton: {
     flexDirection: 'row',
@@ -389,7 +419,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff',
     elevation: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 8,
   },
@@ -409,7 +439,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff',
     elevation: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 8,
   },

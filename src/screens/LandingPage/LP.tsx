@@ -1,30 +1,21 @@
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-  ScrollView,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import {View, Text, TouchableOpacity} from 'react-native';
+import {Animated, ScrollView, Image} from 'react-native';
+import {KeyboardAvoidingView, Platform} from 'react-native';
+import {ActivityIndicator, StyleSheet} from 'react-native';
 import {useNavigation} from '@react-navigation/core';
-import {styles} from './LandingPage.styles';
-import InputField from '../../components/Input/InutField';
-import {StackNavigationProp} from '@react-navigation/stack';
 import {LinearGradient} from 'expo-linear-gradient';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import {BlurView} from 'expo-blur';
+
+import {AuthNavProp} from '../../navigation/NavTypes/AuthStackTypes';
+import {styles, colorsGradient} from './componentData';
+import WelcomeText from './WelcomeText';
+import RainEffect from './RainEffect';
+import InputField from '../../components/Input/InputField';
 import SuccessModal from '../../components/Modals/SuccessModal';
 import SignupSuccessModal from '../../components/Modals/SignupSuccessModal';
-import {RootStackParamList, LetterScale} from '../../types/types';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import WelcomeText from './WelcomeText';
-import {BlurView} from 'expo-blur';
-import RainEffect from './RainEffect';
 import {handleForgotPassword} from '../../services/authFunctions';
-import ContentModal from './ContentModal';
 import {
   handleSignup,
   handleLogin,
@@ -42,9 +33,7 @@ interface LPProps {
   titleMarginTop: number;
   titleOpacity: Animated.Value;
   titleTranslateY: Animated.Value;
-  showInitialScreen: boolean;
   isAuthenticated: boolean;
-  setShowInitialScreen: React.Dispatch<React.SetStateAction<boolean>>;
   setShowSignUpForm: React.Dispatch<React.SetStateAction<boolean>>;
   navigateToConfirmSignUp: (email: string) => void;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -55,35 +44,21 @@ const LP: React.FC<LPProps> = ({
   titleMarginTop,
   titleOpacity,
   titleTranslateY,
-  showInitialScreen,
   isAuthenticated,
-  setShowInitialScreen,
   navigateToConfirmSignUp,
 }) => {
-  const navigation =
-    useNavigation<StackNavigationProp<RootStackParamList, 'Feed'>>();
+  const navigation = useNavigation<AuthNavProp>();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [profilePic, setProfilePic] = useState<string | null>(null);
-  const [headerPicFile, setHeaderPicFile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
-
   const [signupSuccessModalVisible, setSignupSuccessModalVisible] =
     useState(false);
   const [modalUsername, setModalUsername] = useState('');
-  const [showSignUpForm, setShowSignUpForm] = useState(false);
-
-  const [letterScale, setLetterScale] = useState<LetterScale>([]);
-
-  const [currentScreen, setCurrentScreen] = useState('initial'); // 'initial', 'login', or 'signup'
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalContent, setModalContent] = useState<
-    'privacy' | 'terms' | 'contact'
-  >('privacy');
+  const [currentScreen, setCurrentScreen] = useState('initial');
 
   const handleFacebookSignIn = () => {
     console.log('Facebook sign-in initiated');
@@ -100,62 +75,14 @@ const LP: React.FC<LPProps> = ({
     // TODO: Implement Instagram authentication
   };
 
-  const handleLoginPress = async () => {
-    setIsLoading(true);
-    await handleLogin(
-      email,
-      password,
-      setIsLoading,
-      navigation,
-      setSuccessModalVisible,
-      setModalUsername,
-    );
-  };
-
-  const openModal = (content: 'privacy' | 'terms' | 'contact') => {
-    setModalContent(content);
-    setModalVisible(true);
-  };
-
   return (
-    <LinearGradient
-      colors={[
-        '#080808',
-        '#0a0a0a',
-        '#0c0c0c',
-        '#0e0e0e',
-        '#101010',
-        '#121212',
-        '#141414',
-        '#161616',
-        '#181818',
-        '#1a1a1a',
-        '#1c1c1c',
-        '#1e1e1e',
-        '#202020',
-        '#222222',
-        '#242424',
-        '#262626',
-        '#282828',
-        '#2a2a2a',
-        '#2c2c2c',
-        '#2e2e2e',
-        '#303030',
-        '#323232',
-        '#343434',
-        '#363636',
-        '#383838',
-        '#3a3a3a',
-        '#3c3c3c',
-        '#3e3e3e',
-      ]}
-      style={styles.container}>
+    <LinearGradient colors={colorsGradient} style={styles.container}>
       <RainEffect />
       {!isAuthenticated && (
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.formContainer1}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
+          keyboardVerticalOffset={0}>
           <ScrollView contentContainerStyle={styles.scrollViewContainer}>
             <View
               style={[
@@ -364,6 +291,8 @@ const LP: React.FC<LPProps> = ({
               </Animated.View>
             )}
           </ScrollView>
+
+          {/* BLURVIEW WHILE LOADING */}
           {isLoading && (
             <BlurView
               intensity={100}
@@ -374,16 +303,28 @@ const LP: React.FC<LPProps> = ({
               </View>
             </BlurView>
           )}
+
+          {/* == FOOTER LINKS == */}
           <View style={styles.footer}>
-            <TouchableOpacity onPress={() => openModal('privacy')}>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('InfoFooterAuth', {
+                  content: 'privacyPolicy',
+                })
+              }>
               <Text style={styles.footerLink}>Privacy Policy</Text>
             </TouchableOpacity>
             <Text style={styles.footerDivider}> | </Text>
-            <TouchableOpacity onPress={() => openModal('terms')}>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('InfoFooterAuth', {
+                  content: 'termsService',
+                })
+              }>
               <Text style={styles.footerLink}>Terms of Service</Text>
             </TouchableOpacity>
             <Text style={styles.footerDivider}> | </Text>
-            <TouchableOpacity onPress={() => openModal('contact')}>
+            <TouchableOpacity onPress={() => navigation.navigate('ContactUs')}>
               <Text style={styles.footerLink}>Contact Us</Text>
             </TouchableOpacity>
           </View>
@@ -397,11 +338,6 @@ const LP: React.FC<LPProps> = ({
       <SignupSuccessModal
         visible={signupSuccessModalVisible}
         onClose={() => setSignupSuccessModalVisible(false)}
-      />
-      <ContentModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        content={modalContent}
       />
     </LinearGradient>
   );

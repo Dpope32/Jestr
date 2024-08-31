@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ViewStyle, TextStyle, TouchableOpacity, Keyboard } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faEye, faEyeSlash, faLock } from '@fortawesome/free-solid-svg-icons';
-import { COLORS } from '../../../theme/theme'
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+  TouchableOpacity,
+  Keyboard,
+} from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faEye, faEyeSlash, faLock} from '@fortawesome/free-solid-svg-icons';
+import {COLORS} from '../../theme/theme';
 
 interface InputFieldProps {
   label: string;
@@ -22,7 +31,6 @@ interface InputFieldProps {
   onSubmitEditing?: () => void;
   style?: TextStyle | TextStyle[]; // Added this line
 }
-
 
 const InputField: React.FC<InputFieldProps> = ({
   label,
@@ -61,26 +69,28 @@ const InputField: React.FC<InputFieldProps> = ({
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <View style={styles.inputContainer}>
-      <TextInput
-        style={[styles.input, inputStyle]}
-        placeholder={placeholder}
-        value={value}
-        onChangeText={handleTextChange}
-        multiline={multiline}
-        numberOfLines={numberOfLines}
-        maxLength={maxLength}
-        textAlignVertical={textAlignVertical}
+        <TextInput
+          style={[styles.input, inputStyle]}
+          placeholder={placeholder}
+          value={value}
+          onChangeText={handleTextChange}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
+          maxLength={maxLength}
+          textAlignVertical={textAlignVertical}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           onBlur={onBlur}
           placeholderTextColor={placeholderTextColor}
           onSubmitEditing={onSubmitEditing}
         />
         {secureTextEntry && (
-          <TouchableOpacity style={styles.eyeIcon} onPress={togglePasswordVisibility}>
-            <FontAwesomeIcon 
-              icon={isPasswordVisible ? faEye : faEyeSlash} 
-              size={20} 
-              color="#999" 
+          <TouchableOpacity
+            style={styles.eyeIcon}
+            onPress={togglePasswordVisibility}>
+            <FontAwesomeIcon
+              icon={isPasswordVisible ? faEye : faEyeSlash}
+              size={20}
+              color="#999"
             />
           </TouchableOpacity>
         )}
@@ -117,7 +127,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 15,
     fontSize: 16,
-    color: 'white'
+    color: 'white',
   },
   eyeIcon: {
     padding: 10,

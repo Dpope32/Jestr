@@ -4,9 +4,6 @@ import {RouteProp} from '@react-navigation/native';
 export type FeedNavParamList = {
   Feed: undefined;
   CommentFeed: undefined;
-  // Profile: undefined;
-  // Settings: undefined;
-  // Notifications: undefined;
 };
 
 export type FeedNavProp = NativeStackNavigationProp<FeedNavParamList>;

@@ -1,6 +1,9 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
+import LandingPage from '../../screens/LandingPage/LandingPage';
+import InfoFooterAuth from '../../screens/InfoFooterAuth/InfoFooterAuth';
+import ContactUs from '../../screens/ContactUs/ContactUs';
 import ConfirmSignUpScreen from '../../screens/LandingPage/ConfirmSignUpScreen';
 import ChangePassword from '../../screens/ChangePasswordScreen';
 import CompleteProfileScreen from '../../screens/LandingPage/CompleteProfileScreen';
@@ -14,6 +17,24 @@ const AuthStackNav: React.FC = () => {
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Screen
+        name="LandingPage"
+        component={LandingPage}
+        options={{headerShown: false}}
+      />
+
+      <Stack.Screen
+        name="InfoFooterAuth"
+        component={InfoFooterAuth}
+        options={{presentation: 'formSheet'}}
+      />
+
+      <Stack.Screen
+        name="ContactUs"
+        component={ContactUs}
+        options={{presentation: 'formSheet'}}
+      />
+
       <Stack.Screen
         name="ConfirmSignUp"
         component={ConfirmSignUpScreen}

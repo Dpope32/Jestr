@@ -1,11 +1,10 @@
 import React, {useState, useRef, useCallback} from 'react';
 import {View, Text} from 'react-native';
 import {Dimensions, Animated} from 'react-native';
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Image} from 'react-native';
 import {GestureResponderEvent, ActivityIndicator} from 'react-native';
 import {Video, AVPlaybackStatus, ResizeMode} from 'expo-av';
 
-import SafeImage from '../shared/SafeImage';
 import styles from './styles';
 import {MediaPlayerProps} from '../../types/types';
 import {getMediaSource} from '../../utils/utils';
@@ -14,7 +13,7 @@ import {getMediaSource} from '../../utils/utils';
 // import {useMediaPlayerLogic} from './useMediaPlayerLogic';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
-const AnimatedSafeImage = Animated.createAnimatedComponent(SafeImage);
+const AnimatedSafeImage = Animated.createAnimatedComponent(Image);
 
 const MediaPlayer: React.FC<MediaPlayerProps> = ({
   currentMedia,

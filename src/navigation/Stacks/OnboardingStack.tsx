@@ -1,13 +1,14 @@
 import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 
-import OnboardingScreen from '../../screens/LandingPage/OnboardingScreen';
+import OnboardingScreen from '../../screens/Onboarding/OnboardingScreen';
 
 const Stack = createStackNavigator();
 
 const Onboarding = () => {
   const onboardingComplete = () => {
     console.log('Onboarding complete');
+    // make isFirstLaunch FALSE
   };
 
   return (
