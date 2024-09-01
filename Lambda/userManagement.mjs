@@ -1,7 +1,6 @@
-import { DynamoDBClient, BatchGetItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { DynamoDBDocumentClient, GetCommand, DeleteCommand, BatchWriteCommand, PutCommand, UpdateCommand, BatchGetCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { DynamoDBDocumentClient, GetCommand, DeleteCommand, BatchWriteCommand, PutCommand, UpdateCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
@@ -11,9 +10,6 @@ import { v4 as uuidv4 } from "uuid";
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({ region: "us-east-2" });
-
-const BUCKET_NAME = 'jestr-meme-uploads';
-const MEMES_FOLDER = 'Memes/';
 
 const verifier = CognitoJwtVerifier.create({
   userPoolId: "us-east-2_ifrUnY9b1",
@@ -195,7 +191,7 @@ const getFollowing = async (userId) => {
 // Function to check if one user follows another
 const checkFollowStatus = async (followerId, followeeId) => {
   if (!followerId || !followeeId) {
-    console.log('Invalid followerId or followeeId:', followerId, followeeId);
+  //  console.log('Invalid followerId or followeeId:', followerId, followeeId);
     return { isFollowing: false, canFollow: true };
   }
 
@@ -214,9 +210,9 @@ const checkFollowStatus = async (followerId, followeeId) => {
   };
 
   try {
-    console.log('Checking follow status with params:', JSON.stringify(queryParams));
+  //  console.log('Checking follow status with params:', JSON.stringify(queryParams));
     const { Items } = await docClient.send(new QueryCommand(queryParams));
-    console.log('Query result:', JSON.stringify(Items));
+  //  console.log('Query result:', JSON.stringify(Items));
     return { isFollowing: Items && Items.length > 0, canFollow: true };
   } catch (error) {
     console.error('Error checking follow status:', error);
@@ -224,34 +220,25 @@ const checkFollowStatus = async (followerId, followeeId) => {
   }
 };
 
-const batchCheckFollowStatus = async (followerId, followeeIDs) => {
-  const batchGetParams = {
-    RequestItems: {
-      'UserRelationships': {
-        Keys: followeeIDs.map(followeeId => ({
-          UserID: followerId,
-          RelationUserID: followeeId
-        }))
-      }
-    }
-  };
-}
 
-
-export const handler = async (event) => {
+exports.handler = async (event) => {
     console.log('Received event:', JSON.stringify(event, null, 2));
-
-    try {
-        let requestBody;
-        if (event.body) {
-            requestBody = JSON.parse(event.body);
-        } else if (event.operation) {
-            requestBody = event;
-        } else {
-            return createResponse(400, 'No valid request body or operation found');
-        }
-
-        const { operation } = requestBody;
+   console.log('Headers:', JSON.stringify(event.headers, null, 2));
+  console.log('Processing operation:', event.operation);
+ console.log('Request body:', JSON.stringify(event.body));
+     try {
+       let requestBody;
+       if (event.body) {
+         requestBody = JSON.parse(event.body);
+       } else if (event.operation) {
+         requestBody = event;
+       } else {
+         return createResponse(400, 'No valid request body or operation found');
+       }
+   
+       const { operation } = requestBody;
+      console.log('Received event:', JSON.stringify(event, null, 2));
+       console.log('Parsed request body:', JSON.stringify(requestBody, null, 2));
 
         let verifiedUser = null;
 
@@ -318,7 +305,7 @@ export const handler = async (event) => {
                   return createResponse(400, 'Email, imageType, and image are required for updating profile image.');
                 }
                 try {
-                  console.log(`Updating ${imageType} image for ${email}`);
+                //  console.log(`Updating ${imageType} image for ${email}`);
                   const bucketName = 'jestr-bucket';
                   let newImageUrl;
               
@@ -332,7 +319,7 @@ export const handler = async (event) => {
                     throw new Error('Invalid image type');
                   }
                   
-                  console.log('New image URL:', newImageUrl);
+                //  console.log('New image URL:', newImageUrl);
               
                   const updateProfileParams = {
                     TableName: 'Profiles',
@@ -347,9 +334,9 @@ export const handler = async (event) => {
                     ReturnValues: 'ALL_NEW'
                   };
               
-                  console.log('Update profile params:', JSON.stringify(updateProfileParams));
+                //  console.log('Update profile params:', JSON.stringify(updateProfileParams));
                   const updateProfileResult = await docClient.send(new UpdateCommand(updateProfileParams));
-                  console.log('Update profile result:', JSON.stringify(updateProfileResult));
+                //  console.log('Update profile result:', JSON.stringify(updateProfileResult));
               
                   if (imageType === 'profile') {
                     const queryMemesParams = {
@@ -362,7 +349,7 @@ export const handler = async (event) => {
                     };
                   
                     const memesResult = await docClient.send(new QueryCommand(queryMemesParams));
-                    console.log('Memes query result:', JSON.stringify(memesResult));
+                  //  console.log('Memes query result:', JSON.stringify(memesResult));
               
                     for (const meme of memesResult.Items) {
                       const updateMemeParams = {
@@ -379,12 +366,17 @@ export const handler = async (event) => {
               
                   const getParams = { TableName: 'Profiles', Key: { email } };
                   const { Item } = await docClient.send(new GetCommand(getParams));
-                  console.log('Updated user profile:', JSON.stringify(Item));
+                //  console.log('Updated user profile:', JSON.stringify(Item));
               
                   return createResponse(200, 'Profile image updated successfully.', { [imageType + 'Pic']: newImageUrl });
                 } catch (error) {
                   console.error('Error updating profile image:', error);
-                  return createResponse(500, 'Failed to update profile image.', { error: error.message, stack: error.stack });
+                  console.error('Stack trace:', error.stack);
+                  return createResponse(500, 'Failed to update profile image.', { 
+                    error: error.message, 
+                    stack: error.stack,
+                    details: error.toString() 
+                  });
                 }
               }
             case 'completeProfile': {
@@ -502,9 +494,9 @@ export const handler = async (event) => {
                     }
                   };
                   
-                  console.log('DAU Params:', JSON.stringify(params));
+                //  console.log('DAU Params:', JSON.stringify(params));
                   const result = await docClient.send(new ScanCommand(params));
-                  console.log('DAU Result:', JSON.stringify(result));
+                //  console.log('DAU Result:', JSON.stringify(result));
                   
                   // Count unique emails
                   const uniqueEmails = new Set(result.Items.map(item => item.email));

@@ -10,6 +10,7 @@ import {useUserStore} from '../../utils/userStore';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
+import { ServerError } from '../../types/types';
 
 export const useProfileHandlers = (
   user: UserState,
@@ -24,17 +25,21 @@ export const useProfileHandlers = (
 ) => {
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [isBlurVisible, setIsBlurVisible] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleUpdateImage = async (imagePath: string, type: 'profile' | 'header') => {
     setIsLoading(true);
     try {
-      await updateProfileImage(user.email, type, imagePath);
-            // Close the full-screen image view
-            setFullScreenImage(null);
-            setIsBlurVisible(false);
-      // Update Zustand store
+      const result = await updateProfileImage(user.email, type, imagePath);
+      console.log('Update profile image result:', JSON.stringify(result, null, 2));
+      
+      // Close the full-screen image view
+      setFullScreenImage(null);
+      setIsBlurVisible(false);
+  
+      // Update Zustand store with the new image URL from the server
       useUserStore.getState().setUserDetails({
-        [type + 'Pic']: imagePath  // Changed from { uri: imagePath, width: 300, height: 300 }
+        [type + 'Pic']: result.data[type + 'Pic']
       });
   
       Toast.show({
@@ -44,21 +49,31 @@ export const useProfileHandlers = (
         autoHide: true,
         topOffset: 30,
         bottomOffset: 40,
-        props: { backgroundColor: '#333', textColor: '#00ff00' },
       });
-
   
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to update image:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to update profile image',
-        visibilityTime: 2000,
-        autoHide: true,
-        topOffset: 30,
-        bottomOffset: 40,
-        props: { backgroundColor: '#333', textColor: '#00ff00' },
-      });
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+        Toast.show({
+          type: 'error',
+          text1: `Failed to update profile image: ${error.message}`,
+          visibilityTime: 3000,
+          autoHide: true,
+          topOffset: 30,
+          bottomOffset: 40,
+        });
+      } else {
+        console.error('Unknown error type:', typeof error);
+        Toast.show({
+          type: 'error',
+          text1: 'An unknown error occurred while updating the profile image',
+          visibilityTime: 3000,
+          autoHide: true,
+          topOffset: 30,
+          bottomOffset: 40,
+        });
+      }
     } finally {
       setIsLoading(false);
     }

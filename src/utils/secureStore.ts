@@ -7,10 +7,22 @@ export const storeToken = async (key: string, value: string | undefined) => {
       console.error('Invalid token type:', typeof value);
       return;
     }
-    console.log('Storing token:', value.substring(0, 10) + '...');
+    console.log(`Storing token for key ${key}:`, value.substring(0, 10) + '...');
     await SecureStore.setItemAsync(key, value);
+    console.log(`Token stored successfully for key ${key}`);
   } catch (error) {
-    console.error('Error storing the token', error);
+    console.error(`Error storing the token for key ${key}:`, error);
+  }
+};
+
+export const getToken = async (key: string) => {
+  try {
+    const token = await SecureStore.getItemAsync(key);
+    console.log(`Retrieved token for key ${key}:`, token ? token.substring(0, 10) + '...' : 'No token found');
+    return token;
+  } catch (error) {
+    console.error(`Error retrieving the token for key ${key}:`, error);
+    return null;
   }
 };
 
@@ -40,17 +52,6 @@ export const removeUserIdentifier = async () => {
     await SecureStore.deleteItemAsync('userIdentifier');
   } catch (error) {
     console.error('Error removing user identifier', error);
-  }
-};
-
-export const getToken = async (key: string) => {
-  try {
-    const token = await SecureStore.getItemAsync(key);
-    console.log(`Retrieved token for key ${key}:`, token ? 'Token exists' : 'No token found');
-    return token;
-  } catch (error) {
-    console.error('Error retrieving the token', error);
-    return null;
   }
 };
 

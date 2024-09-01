@@ -55,7 +55,8 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
   const [isBlurVisible, setIsBlurVisible] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreMemes, setHasMoreMemes] = useState(true);
-
+  const [isUploading, setIsUploading] = useState(false);
+  
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 200],
     outputRange: [200, 0],
@@ -278,6 +279,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
         styles.container,
         {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
       ]}>
+        {isUploading && <ActivityIndicator size="large" color="#00ff00" />}
       <ScrollView>
         <Animated.View style={[styles.headerContainer, {height: headerHeight}]}>
           <TouchableOpacity onPress={() => handleImagePress('header')}>

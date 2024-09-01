@@ -32,6 +32,12 @@ export interface User {
   isFollowed?: boolean;
 }
 
+export interface ServerError extends Error {
+  response?: {
+    data?: any;
+  };
+}
+
 export type ProfileImage = {
   url?: string;
   uri?: string;

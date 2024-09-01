@@ -1,7 +1,6 @@
-import { DynamoDBClient, BatchGetItemCommand } from "@aws-sdk/client-dynamodb";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { DynamoDBDocumentClient, GetCommand, DeleteCommand, BatchWriteCommand, PutCommand, UpdateCommand, BatchGetCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { S3Client } from "@aws-sdk/client-s3";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, BatchGetCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
@@ -11,9 +10,6 @@ import { v4 as uuidv4 } from "uuid";
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({ region: "us-east-2" });
-
-const BUCKET_NAME = 'jestr-meme-uploads';
-const MEMES_FOLDER = 'Memes/';
 
 const verifier = CognitoJwtVerifier.create({
   userPoolId: "us-east-2_ifrUnY9b1",
@@ -26,10 +22,6 @@ const publicOperations = [
     'postComment', 'updateCommentReaction', 'getComments', 'fetchLikedMemes', 'fetchDownloadedMemes',
     'fetchViewHistory', 'sendNotification'
 ];
-
-function generateAccessToken() {
-    return crypto.randomBytes(32).toString('hex');
-  }
 
 //**********************************************************************////////
 // HELPER FUNCTIONS //
@@ -137,29 +129,6 @@ try {
     throw error;
 }
 }; 
-
-const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
-    if (typeof key !== 'string') {
-      console.error('Invalid key type:', typeof key);
-      throw new Error('Invalid key type for S3 upload');
-    }
-    const base64Image = base64Data.replace(/^data:image\/\w+;base64,/, "");
-    const buffer = Buffer.from(base64Image, 'base64');
-    const params = {
-      Bucket: bucketName,
-      Key: key,
-      Body: buffer,
-      ContentType: contentType,
-    };
-    try {
-      const command = new PutObjectCommand(params);
-      const result = await s3Client.send(command);
-      return `https://${bucketName}.s3.amazonaws.com/${key}`;
-    } catch (error) {
-      console.error('Error in uploadToS3:', error);
-      throw new Error(`S3 upload failed: ${error.message}`);
-    }
-  };
 
   const recordShare = async (memeID, userEmail, shareType, username, catchUser, message) => {
     const shareID = uuidv4();
@@ -723,20 +692,6 @@ export const handler = async (event) => {
     } catch (error) {
         console.error('Unexpected error in Lambda:', error);
         return createResponse(500, 'Internal Server Error', { error: error.message });
-    }
-};
-
-const getUser = async (identifier) => {
-    const getParams = {
-        TableName: 'Profiles',
-        Key: { email: identifier },
-    };
-    try {
-        const { Item } = await docClient.send(new GetCommand(getParams));
-        return Item;
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-        throw error;
     }
 };
 

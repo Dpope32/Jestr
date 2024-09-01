@@ -46,7 +46,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
 }) => {
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-  const followersCount = useUserStore(state => state.followingCount);
+  const followersCount = useUserStore(state => state.followersCount);
   const followingCount = useUserStore(
     state => state.FollowingCount || state.followingCount,
   );

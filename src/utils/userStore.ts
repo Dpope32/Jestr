@@ -98,7 +98,7 @@ export const useUserStore = create<UserState>(set => ({
       displayName: details.displayName ?? state.displayName,
       bio: details.bio ?? state.bio,
       creationDate: details.creationDate ?? details.CreationDate ?? state.creationDate,
-      followersCount: details.followersCount ?? details.FollowersCount ?? state.followersCount,
+      followersCount: details.FollowersCount ?? details.FollowersCount ?? state.FollowersCount,
       followingCount: details.followingCount ?? details.FollowingCount ?? state.followingCount,
       posts: details.posts ?? state.posts,
       likedMemes: details.likedMemes ?? state.likedMemes,
