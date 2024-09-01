@@ -1,10 +1,13 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
+import FirstScreen from '../../screens/FirstScreen/FirstScreen';
+import SignUpScreen from '../../screens/SignUp/SignUpScreen';
+import LoginScreen from '../../screens/Login/LoginScreen';
 import LandingPage from '../../screens/LandingPage/LandingPage';
 import InfoFooterAuth from '../../screens/InfoFooterAuth/InfoFooterAuth';
 import ContactUs from '../../screens/ContactUs/ContactUs';
-import ConfirmSignUpScreen from '../../screens/LandingPage/ConfirmSignUpScreen';
+import ConfirmSignUpScreen from '../../screens/ConfirmSignUp/ConfirmSignUpScreen';
 import ChangePassword from '../../screens/ChangePasswordScreen';
 import CompleteProfileScreen from '../../screens/LandingPage/CompleteProfileScreen';
 
@@ -22,6 +25,12 @@ const AuthStackNav: React.FC = () => {
         component={LandingPage}
         options={{headerShown: false}}
       />
+
+      <Stack.Screen name="FirstScreen" component={FirstScreen} />
+
+      <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+
+      <Stack.Screen name="LoginScreen" component={LoginScreen} />
 
       <Stack.Screen
         name="InfoFooterAuth"
@@ -47,9 +56,8 @@ const AuthStackNav: React.FC = () => {
         options={{headerShown: false}}
       />
 
-      {/* THIS MIGHT NOT BE HERE !!! */}
       <Stack.Screen
-        name="CompleteProfileScreen"
+        name="CompleteProfile"
         component={CompleteProfileScreen}
         options={{headerShown: false}}
       />

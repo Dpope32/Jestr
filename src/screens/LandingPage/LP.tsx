@@ -10,8 +10,8 @@ import {BlurView} from 'expo-blur';
 
 import {AuthNavProp} from '../../navigation/NavTypes/AuthStackTypes';
 import {styles, colorsGradient} from './componentData';
-import WelcomeText from './WelcomeText';
-import RainEffect from './RainEffect';
+import WelcomeText from '../../components/WelcomeText/WelcomeText';
+import RainEffect from '../../components/RainEffect/RainEffect';
 import InputField from '../../components/Input/InputField';
 import SuccessModal from '../../components/Modals/SuccessModal';
 import SignupSuccessModal from '../../components/Modals/SignupSuccessModal';
@@ -51,12 +51,16 @@ const LP: React.FC<LPProps> = ({
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSignedUp, setIsSignedUp] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [isSignedUp, setIsSignedUp] = useState(false);
+
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [signupSuccessModalVisible, setSignupSuccessModalVisible] =
     useState(false);
+
   const [modalUsername, setModalUsername] = useState('');
   const [currentScreen, setCurrentScreen] = useState('initial');
 
@@ -84,6 +88,7 @@ const LP: React.FC<LPProps> = ({
           style={styles.formContainer1}
           keyboardVerticalOffset={0}>
           <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+            {/* WHAT IS THIS FOR ?? */}
             <View
               style={[
                 styles.titleContainer,
@@ -96,6 +101,7 @@ const LP: React.FC<LPProps> = ({
                   opacity: titleOpacity,
                   transform: [{translateY: titleTranslateY}],
                 }}>
+                {/* INITIAL SCREEN */}
                 {currentScreen === 'initial' ? (
                   <View style={styles.initialScreen}>
                     <View style={styles.logoContainer}>
@@ -119,6 +125,7 @@ const LP: React.FC<LPProps> = ({
                     </View>
                   </View>
                 ) : (
+                  // FORM SCREEN
                   <View style={styles.formContainer}>
                     <Text style={styles.signupHeader}>
                       {currentScreen === 'signup' ? 'Sign Up' : 'Login'}
@@ -136,6 +143,8 @@ const LP: React.FC<LPProps> = ({
                       value={password}
                       onChangeText={text => setPassword(text)}
                     />
+
+                    {/* SIGN UP SCREEN */}
                     {currentScreen === 'signup' && (
                       <>
                         <InputField
@@ -167,6 +176,7 @@ const LP: React.FC<LPProps> = ({
                       </>
                     )}
 
+                    {/* BUTTON */}
                     <TouchableOpacity
                       onPress={() => {
                         if (currentScreen === 'signup') {
@@ -197,6 +207,7 @@ const LP: React.FC<LPProps> = ({
                       </Text>
                     </TouchableOpacity>
 
+                    {/* BUTTON ANOTHER */}
                     <TouchableOpacity
                       onPress={() =>
                         setCurrentScreen(
@@ -210,6 +221,7 @@ const LP: React.FC<LPProps> = ({
                       </Text>
                     </TouchableOpacity>
 
+                    {/* ANOTHER BUTTON */}
                     {currentScreen === 'login' && (
                       <TouchableOpacity
                         onPress={() => handleForgotPassword(email)}>
@@ -218,6 +230,8 @@ const LP: React.FC<LPProps> = ({
                         </Text>
                       </TouchableOpacity>
                     )}
+
+                    {/* SOCIAL AUTH BUTTONS */}
                     <View style={styles.continueButtonsContainer}>
                       <TouchableOpacity
                         style={styles.googleButton}
@@ -246,6 +260,8 @@ const LP: React.FC<LPProps> = ({
                         </Text>
                       </TouchableOpacity>
                     </View>
+
+                    {/* LOGIN SCREEN - SOCIAL AUTH BUTTONS */}
                     {currentScreen === 'login' && (
                       <View style={styles.socialButtonsRow}>
                         <TouchableOpacity
@@ -330,11 +346,15 @@ const LP: React.FC<LPProps> = ({
           </View>
         </KeyboardAvoidingView>
       )}
+
+      {/*  */}
       <SuccessModal
         visible={successModalVisible}
         onClose={() => setSuccessModalVisible(false)}
         username={modalUsername}
       />
+
+      {/*  */}
       <SignupSuccessModal
         visible={signupSuccessModalVisible}
         onClose={() => setSignupSuccessModalVisible(false)}

@@ -47,18 +47,16 @@ export const checkAuthStatus = async () => {
 export const handleLogin = async (
   username: string,
   password: string,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  navigation: StackNavigationProp<RootStackParamList>,
-  setSuccessModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
-  setModalUsername: React.Dispatch<React.SetStateAction<string>>,
+  // setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  // navigation: StackNavigationProp<RootStackParamList>,
 ) => {
-  setIsLoading(true);
+  // setIsLoading(true);
   try {
     // Clear existing auth data
     await signOut({global: true});
     await SecureStore.deleteItemAsync('accessToken');
     await AsyncStorage.removeItem('userIdentifier');
-    useUserStore.getState().resetUserState(); // Use the resetUserState function
+    useUserStore.getState().resetUserState();
 
     const lowercaseUsername = username.toLowerCase();
     const {isSignedIn, nextStep} = await signIn({
@@ -94,16 +92,16 @@ export const handleLogin = async (
       // Store user identifier
       await storeUserIdentifier(userDetails.email);
 
-      navigation.navigate('Feed', {
-        user: useUserStore.getState() as User, // Cast to User type
-      });
+      // navigation.navigate('Feed', {
+      //   user: useUserStore.getState() as User, // Cast to User type
+      // });
     } else if (
       nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
     ) {
-      navigation.navigate('ChangePassword', {
-        username,
-        nextStep: nextStep,
-      });
+      // navigation.navigate('ChangePassword', {
+      //   username,
+      //   nextStep: nextStep,
+      // });
     } else {
       Alert.alert('Login Failed', 'Unexpected authentication step');
     }
@@ -111,7 +109,7 @@ export const handleLogin = async (
     console.error('Login error:', error);
     Alert.alert('Login Failed', error.message || 'An unknown error occurred');
   } finally {
-    setIsLoading(false);
+    // setIsLoading(false);
   }
 };
 

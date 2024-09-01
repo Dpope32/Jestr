@@ -1,14 +1,12 @@
 import React, {useState} from 'react';
 import {View, Text, TouchableOpacity, Alert, StyleSheet} from 'react-native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../../types/types';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {
   CodeField,
   Cursor,
   useBlurOnFulfill,
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
-import {RouteProp} from '@react-navigation/core';
 import {confirmSignUp} from 'aws-amplify/auth';
 import {
   COLORS,
@@ -19,15 +17,19 @@ import {
   elevationShadowStyle,
 } from '../../theme/theme';
 import {storeUserIdentifier} from '../../store/secureStore';
-type ConfirmSignUpScreenProps = {
-  navigation: StackNavigationProp<RootStackParamList, 'ConfirmSignUp'>;
-  route: RouteProp<RootStackParamList, 'ConfirmSignUp'>;
-};
+import {
+  AuthNavProp,
+  AuthNavRouteProp,
+} from '../../navigation/NavTypes/AuthStackTypes';
 
 const CELL_COUNT = 6;
 
-const ConfirmSignUpScreen = ({navigation, route}) => {
-  const {email} = route.params;
+const ConfirmSignUpScreen = () => {
+  const navigation = useNavigation<AuthNavProp>();
+  const route = useRoute<AuthNavRouteProp>();
+
+  const email = route.params?.email;
+
   const [value, setValue] = useState('');
   const ref = useBlurOnFulfill({value, cellCount: CELL_COUNT});
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
@@ -40,7 +42,7 @@ const ConfirmSignUpScreen = ({navigation, route}) => {
       await confirmSignUp({username: email, confirmationCode: value});
       await storeUserIdentifier(email);
       Alert.alert('Success', 'Your email has been confirmed.');
-      navigation.navigate('CompleteProfileScreen', {email});
+      navigation.navigate('CompleteProfile', {email});
     } catch (error: any) {
       Alert.alert('Error', error.message || 'An unknown error occurred');
     }

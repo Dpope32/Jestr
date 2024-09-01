@@ -204,7 +204,7 @@ export const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: '#00ff00', // Bright green border
+    borderColor: '#00ff00',
     backgroundColor: 'transparent',
     alignItems: 'center',
     marginVertical: 10,
@@ -236,7 +236,7 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     marginVertical: 10,
-    textDecorationLine: 'underline', // This will underline the text
+    textDecorationLine: 'underline',
   },
   footer: {
     flexDirection: 'row',
@@ -255,7 +255,7 @@ export const styles = StyleSheet.create({
   },
   initialScreen: {
     flex: 1,
-    justifyContent: 'flex-start', // Changed from 'center' to 'flex-start'
+    justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 76,
   },
