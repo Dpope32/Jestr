@@ -92,6 +92,8 @@ node_modules/
 aws-exports.js
 /Lambda/check_invalid_media.js
 /Lambda/update_meme_captions.py
+src/assets/meme_clips/
+src/assets/memes
 awsconfiguration.json
 amplifyconfiguration.json
 amplifyconfiguration.dart
