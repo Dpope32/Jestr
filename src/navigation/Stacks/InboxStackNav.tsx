@@ -1,8 +1,8 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
-import Inbox from '../../screens/Inbox/Inbox';
-import Conversations from '../../screens/Inbox/Conversations';
+import Inbox from '../../screens/AppNav/Inbox/Inbox';
+import Conversations from '../../screens/AppNav/Inbox/Conversations';
 
 const Stack = createNativeStackNavigator();
 

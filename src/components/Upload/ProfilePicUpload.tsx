@@ -39,7 +39,8 @@ const styles = StyleSheet.create({
     height: 135,
     borderRadius: 70,
     overflow: 'hidden',
-    marginTop: -110,
+    marginTop: -70,
+    marginLeft: 10,
     backgroundColor: '#e0e0e0',
   },
   placeholder: {

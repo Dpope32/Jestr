@@ -2,6 +2,8 @@ import {create} from 'zustand';
 import {Meme, ProfileImage} from '../types/types';
 
 export interface UserState {
+  loggedIn: boolean;
+  setLoggedIn: (loggedIn: boolean) => void;
   resetUserState: () => void;
   email: string;
   username: string;
@@ -44,6 +46,8 @@ export interface UserState {
   decrementFollowingCount: () => void;
 }
 export const useUserStore = create<UserState>(set => ({
+  loggedIn: false,
+  setLoggedIn: loggedIn => set({loggedIn}),
   bio: '',
   username: '',
   displayName: '',

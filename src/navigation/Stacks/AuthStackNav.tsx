@@ -1,15 +1,16 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
-import FirstScreen from '../../screens/FirstScreen/FirstScreen';
-import SignUpScreen from '../../screens/SignUp/SignUpScreen';
-import LoginScreen from '../../screens/Login/LoginScreen';
-import LandingPage from '../../screens/LandingPage/LandingPage';
-import InfoFooterAuth from '../../screens/InfoFooterAuth/InfoFooterAuth';
-import ContactUs from '../../screens/ContactUs/ContactUs';
-import ConfirmSignUpScreen from '../../screens/ConfirmSignUp/ConfirmSignUpScreen';
-import ChangePassword from '../../screens/ChangePasswordScreen';
-import CompleteProfileScreen from '../../screens/LandingPage/CompleteProfileScreen';
+import FirstScreen from '../../screens/Auth/FirstScreen/FirstScreen';
+import SignUpScreen from '../../screens/Auth/SignUp/SignUpScreen';
+import LoginScreen from '../../screens/Auth/Login/LoginScreen';
+import LandingPage from '../../screens/Auth/LandingPage/LandingPage';
+import InfoFooterAuth from '../../screens/Auth/InfoFooterAuth/InfoFooterAuth';
+import ContactUs from '../../screens//Auth/ContactUs/ContactUs';
+import ConfirmSignUpScreen from '../../screens/Auth/ConfirmSignUp/ConfirmSignUpScreen';
+import ChangePassword from '../../screens/Auth/ChangePassword';
+import CompleteProfileScreen from '../../screens/Auth/CompleteProfile/CompleteProfileScreen';
+import OnboardingScreen from '../../screens/Auth/Onboarding/OnboardingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,18 +20,27 @@ const AuthStackNav: React.FC = () => {
   };
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator
+      screenOptions={screenOptions}
+      initialRouteName="Onboarding">
+      {/* TODO: TO REMOVE LandingPage after duplicating logic necessary */}
       <Stack.Screen
         name="LandingPage"
         component={LandingPage}
         options={{headerShown: false}}
       />
 
+      <Stack.Screen
+        name="Onboarding"
+        component={OnboardingScreen}
+        options={{headerShown: false}}
+      />
+
       <Stack.Screen name="FirstScreen" component={FirstScreen} />
 
-      <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+      <Stack.Screen name="SignUp" component={SignUpScreen} />
 
-      <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
 
       <Stack.Screen
         name="InfoFooterAuth"

@@ -2,8 +2,8 @@ import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NativeStackNavigationOptions} from '@react-navigation/native-stack';
 
-import Feed from '../../screens/Feed/Feed';
-import CommentFeed from '../../screens/CommentFeed/CommentFeed';
+import Feed from '../../screens/AppNav/Feed/Feed';
+import CommentFeed from '../../screens/AppNav/CommentFeed/CommentFeed';
 
 const Stack = createNativeStackNavigator();
 

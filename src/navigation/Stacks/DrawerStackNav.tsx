@@ -1,9 +1,9 @@
 import React from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 
-import Profile from '../../screens/Profile/Profile';
-import Settings from '../../screens/Settings/Settings';
-import Notifications from '../../screens/NotificationsScreen';
+import Profile from '../../screens/AppNav/Profile/Profile';
+import Settings from '../../screens/AppNav/Settings/Settings';
+import Notifications from '../../screens/AppNav/Notifications';
 import CustomDrawer from '../../components/CustomDrawer/CustomDrawer';
 
 const Drawer = createDrawerNavigator();

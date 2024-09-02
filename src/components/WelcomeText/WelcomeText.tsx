@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, View, Dimensions, TextStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, {useEffect, useRef, useState} from 'react';
+import {Animated, StyleSheet, View, Dimensions, TextStyle} from 'react-native';
+import {LinearGradient} from 'expo-linear-gradient';
 
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 
 interface Particle {
   left: number;
@@ -25,15 +25,17 @@ const WelcomeText = () => {
   const fontSize = calculateFontSize();
 
   useEffect(() => {
-    const newParticles: Particle[] = Array(20).fill(0).map(() => ({
-      left: Math.random() * width,
-      top: Math.random() * height,
-      size: Math.random() * 5 + 2,
-      animated: new Animated.Value(0),
-    }));
-  
+    const newParticles: Particle[] = Array(20)
+      .fill(0)
+      .map(() => ({
+        left: Math.random() * width,
+        top: Math.random() * height,
+        size: Math.random() * 5 + 2,
+        animated: new Animated.Value(0),
+      }));
+
     setParticles(newParticles);
-  
+
     newParticles.forEach(particle => {
       Animated.loop(
         Animated.sequence([
@@ -47,7 +49,7 @@ const WelcomeText = () => {
             duration: 2000 + Math.random() * 2000,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
     });
   }, []);
@@ -83,18 +85,18 @@ const WelcomeText = () => {
   });
 
   const textStyle: Animated.WithAnimatedObject<TextStyle> = {
-    fontSize, // Use dynamic font size
+    fontSize,
     fontWeight: 'bold',
     color: textColor,
     textShadowColor: 'rgba(0, 255, 0, 0.7)',
-    textShadowOffset: { width: -2, height: 2 },
+    textShadowOffset: {width: -2, height: 2},
     textShadowRadius: 10,
     transform: [
-      { scale },
-      { translateY },
-      { translateX },
-      { rotateY: rotateYDeg },
-      { perspective: 1000 },
+      {scale},
+      {translateY},
+      {translateX},
+      {rotateY: rotateYDeg},
+      {perspective: 1000},
     ],
     opacity,
   };
@@ -127,8 +129,7 @@ const WelcomeText = () => {
       <Animated.View style={styles.textContainer}>
         <LinearGradient
           colors={['rgba(0,255,0,0.3)', 'rgba(0,255,255,0.3)']}
-          style={styles.gradient}
-        >
+          style={styles.gradient}>
           <Animated.Text style={textStyle}>Jestr</Animated.Text>
         </LinearGradient>
       </Animated.View>
@@ -138,16 +139,14 @@ const WelcomeText = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: 20,
   },
   textContainer: {
     borderColor: '#00FF00',
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 2,
-    width: '110%',
   },
   gradient: {
     padding: 20,

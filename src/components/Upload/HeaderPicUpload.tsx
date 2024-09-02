@@ -50,10 +50,10 @@ const HeaderPicUpload: React.FC<HeaderPicUploadProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: '110%',
+    width: '100%',
     height: 200,
-    marginLeft: -20,
-    marginVertical: 12,
+    // marginLeft: -20,
+    // marginVertical: 12,
     backgroundColor: '#e0e0e0',
     justifyContent: 'center',
     alignItems: 'center',
