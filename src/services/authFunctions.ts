@@ -5,6 +5,7 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {resetPassword} from '@aws-amplify/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {User, Meme, FetchMemesResult} from '../types/types';
+import { logStorageContents } from '../utils/debugUtils';
 import {API_URL} from '../components/Meme/config';
 import {
   signUp,
@@ -28,6 +29,7 @@ import {
 import * as SecureStore from 'expo-secure-store';
 import * as ImageManipulator from 'expo-image-manipulator';
 //import * as Google from 'expo-auth-session/providers/google';
+console.log('Current user:', JSON.stringify(useUserStore.getState(), null, 2));
 
 type ProfileImageOrString = ProfileImage | string;
 
@@ -76,16 +78,50 @@ const API_ENDPOINT =
   // }
 //  };
 
-export const handleGoogleSignIn = async () => {
-  // Implementation based on '@react-native-google-signin/google-signin'
-};
-
 export const checkAuthStatus = async () => {
   try {
     const {tokens} = await fetchAuthSession();
     return tokens !== undefined;
   } catch (error) {
     return false;
+  }
+};
+
+export const getUser = async (userEmail: string): Promise<User | null> => {
+  try {
+    const requestBody = JSON.stringify({
+      operation: 'getUser',
+      email: userEmail, // Add this line
+    });
+
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: requestBody,
+      },
+    );
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      console.error(
+        `HTTP error! status: ${response.status}, body: ${responseText}`,
+      );
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = JSON.parse(responseText);
+    if (!data || !data.data || !data.data.email) {
+      console.error('Invalid or incomplete user data received:', data);
+      throw new Error('Invalid or incomplete user data received');
+    }
+    return data.data || null;
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return null;
   }
 };
 
@@ -150,7 +186,7 @@ export const handleLogin = async (
 
       // Store user identifier
       await storeUserIdentifier(userDetails.email);
-
+      await logStorageContents();
       navigation.navigate('Feed', {
         user: useUserStore.getState() as User, // Cast to User type
       });
@@ -171,6 +207,26 @@ export const handleLogin = async (
     setIsLoading(false);
   }
 };
+
+export const verifyToken = async (token: string) => {
+  try {
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/verifyToken',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.ok;
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    return false;
+  }
+};
+
 
 export const fetchUserDetails = async (identifier: string, token?: string) => {
   // console.log('Fetching user details for identifier:', identifier);
@@ -245,30 +301,6 @@ export const handleSignOut = async (
     throw error;
   }
 };
-console.log('Current user:', JSON.stringify(useUserStore.getState(), null, 2));
-const clearSecureStore = async () => {
-  const keys = [
-    'accessToken',
-    'userIdentifier' /* add any other keys you use */,
-  ];
-  for (const key of keys) {
-    try {
-      await SecureStore.deleteItemAsync(key);
-      console.log(`Cleared ${key} from SecureStore`);
-    } catch (e) {
-      console.error(`Failed to clear ${key} from SecureStore`, e);
-    }
-  }
-};
-
-const clearAsyncStorage = async () => {
-  try {
-    await AsyncStorage.clear();
-    console.log('AsyncStorage has been cleared!');
-  } catch (e) {
-    console.error('Failed to clear AsyncStorage', e);
-  }
-};
 
 export const handleSignup = async (
   email: string,
@@ -289,7 +321,8 @@ export const handleSignup = async (
     };
 
     // console.log('User attributes being sent:', userAttributes);
-
+    useUserStore.getState().setTempPassword(password);
+    
     const {isSignUpComplete, userId, nextStep} = await signUp({
       username: email,
       password,
@@ -391,6 +424,7 @@ export const handleCompleteProfile = async (
   },
 ) => {
   try {
+    // Compress and convert images to base64
     const profilePicBase64 = profilePicAsset
       ? await fileToBase64(await compressImage(profilePicAsset))
       : null;
@@ -398,14 +432,21 @@ export const handleCompleteProfile = async (
       ? await fileToBase64(await compressImage(headerPicAsset))
       : null;
 
-    console.log('Sending to server:', {
-      email,
-      username,
-      displayName,
-      profilePic: profilePicBase64 ? 'Base64 data' : null,
-      headerPic: headerPicBase64 ? 'Base64 data' : null,
-      bio,
-    });
+    // Get the current access token
+    let accessToken = await SecureStore.getItemAsync('accessToken');
+    console.log('Retrieved access token:', accessToken ? 'Token exists' : 'No token');
+
+    if (!accessToken) {
+      console.log('No access token found, attempting to fetch a new session');
+      const { tokens } = await fetchAuthSession();
+      const newAccessToken = tokens?.accessToken?.toString();
+      if (newAccessToken) {
+        accessToken = newAccessToken;
+        await SecureStore.setItemAsync('accessToken', newAccessToken);
+      } else {
+        throw new Error('Unable to obtain access token');
+      }
+    }
 
     const profileData = {
       operation: 'completeProfile',
@@ -420,17 +461,27 @@ export const handleCompleteProfile = async (
       notificationsEnabled: preferences.notificationsEnabled,
     };
 
+    console.log('Sending profile data to API');
     const response = await fetch(
       'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile',
       {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
         body: JSON.stringify(profileData),
       },
     );
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API response not OK:', response.status, errorData);
+      throw new Error(`API error: ${errorData.message || response.statusText}`);
+    }
+
     const responseData = await response.json();
-    console.log('Raw response:', JSON.stringify(responseData));
+    console.log('API response:', responseData);
 
     if (!response.ok) {
       throw new Error(responseData.message || 'Failed to complete profile');
@@ -504,11 +555,17 @@ export const handleCompleteProfile = async (
           {
             name: 'Feed',
             params: {
-              user: {
-                email: user.email,
-                username: user.username,
-                // ... other serializable properties
-              },
+              userEmail: user.email,
+              username: user.username,
+              displayName: user.displayName,
+              profilePic: user.profilePic,
+              bio: user.bio,
+              followersCount: user.followersCount,
+              followingCount: user.followingCount,
+              userId: user.userId,
+              darkMode: user.darkMode,
+              likesPublic: user.likesPublic,
+              notificationsEnabled: user.notificationsEnabled,
             },
           },
         ],
@@ -702,6 +759,16 @@ export const removeDownloadedMeme = async (
 
 export const handleAppleSignIn = async () => {
   // Implementation based on '@invertase/react-native-apple-authentication'
+};
+
+export const handleGoogleSignIn = async () => {
+  // Implementation based on '@react-native-google-signin/google-signin'
+};
+
+export const handleTwitterSignIn = async () => {
+  try {
+    console.log('twit click');
+  } catch (error) {}
 };
 
 export const fetchAllUsers = async (): Promise<User[]> => {
@@ -928,12 +995,6 @@ export const fetchConversations = async (userEmail: string) => {
     console.error('Error fetching conversations:', error);
     return [];
   }
-};
-
-export const handleTwitterSignIn = async () => {
-  try {
-    console.log('twit click');
-  } catch (error) {}
 };
 
 export const fetchMessages = async (userID: string, conversationID: string) => {
@@ -1271,25 +1332,6 @@ export const handleForgotPassword = async (email: string) => {
   }
 };
 
-export const verifyToken = async (token: string) => {
-  try {
-    const response = await fetch(
-      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/verifyToken',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-    return response.ok;
-  } catch (error) {
-    console.error('Error verifying token:', error);
-    return false;
-  }
-};
-
 // Add these new functions
 export const getFollowing = async (userId: string): Promise<string[]> => {
   try {
@@ -1344,44 +1386,6 @@ export const getFollowers = async (userId: string): Promise<string[]> => {
   } catch (error) {
     console.error('Error fetching followers:', error);
     return [];
-  }
-};
-
-export const getUser = async (userEmail: string): Promise<User | null> => {
-  try {
-    const requestBody = JSON.stringify({
-      operation: 'getUser',
-      email: userEmail, // Add this line
-    });
-
-    const response = await fetch(
-      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: requestBody,
-      },
-    );
-    const responseText = await response.text();
-
-    if (!response.ok) {
-      console.error(
-        `HTTP error! status: ${response.status}, body: ${responseText}`,
-      );
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = JSON.parse(responseText);
-    if (!data || !data.data || !data.data.email) {
-      console.error('Invalid or incomplete user data received:', data);
-      throw new Error('Invalid or incomplete user data received');
-    }
-    return data.data || null;
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    return null;
   }
 };
 

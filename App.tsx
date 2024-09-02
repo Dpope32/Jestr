@@ -1,28 +1,29 @@
-import React, {useState, useEffect, lazy, useCallback} from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
-import {View, Text, UIManager} from 'react-native';
-import {enableScreens} from 'react-native-screens';
-import {ThemeProvider} from './src/theme/ThemeContext';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {Amplify} from 'aws-amplify';
-import {getToken, getUserIdentifier} from './src/utils/secureStore';
+import React, { useState, useEffect, lazy, useCallback } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { View, Text, UIManager, AppState } from 'react-native';
+import { enableScreens } from 'react-native-screens';
+import { ThemeProvider } from './src/theme/ThemeContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Amplify } from 'aws-amplify';
+import { getToken, getUserIdentifier } from './src/utils/secureStore';
 import * as Font from 'expo-font';
 import Profile from './src/screens/Profile/Profile';
-import {RootStackParamList} from './src/types/types';
+import { RootStackParamList } from './src/types/types';
 import awsconfig from './src/aws-exports';
-import {Inter_400Regular, Inter_700Bold} from '@expo-google-fonts/inter';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
-import {useUserStore} from './src/utils/userStore';
-import {fetchUserDetails} from './src/services/authFunctions';
+import { useUserStore } from './src/utils/userStore';
+import { fetchUserDetails } from './src/services/authFunctions';
 import Feed from './src/screens/Feed/Feed';
 import { toastConfig } from './src/config/toastConfig';
 import LandingPage from './src/screens/LandingPage/LandingPage';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ErrorBoundary, FallbackProps} from 'react-error-boundary';
+import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 import OnboardingScreen from './src/screens/LandingPage/OnboardingScreen';
-import {activateKeepAwakeAsync, deactivateKeepAwake} from 'expo-keep-awake';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as Linking from 'expo-linking';
 import * as MediaLibrary from 'expo-media-library';
@@ -44,34 +45,26 @@ const AdminPage = lazy(() => import('./src/screens/AdminPageScreen'));
 const Inbox = lazy(() => import('./src/screens/Inbox/Inbox'));
 const Conversations = lazy(() => import('./src/screens/Inbox/Conversations'));
 const ChangePassword = lazy(() => import('./src/screens/ChangePasswordScreen'));
-const ConfirmSignUpScreen = lazy(() => import('./src/screens/LandingPage/ConfirmSignUpScreen'),);
-const CompleteProfileScreen = lazy(() => import('./src/screens/LandingPage/CompleteProfileScreen'),);
+const ConfirmSignUpScreen = lazy(() => import('./src/screens/LandingPage/ConfirmSignUpScreen'));
+const CompleteProfileScreen = lazy(() => import('./src/screens/LandingPage/CompleteProfileScreen'));
 const Settings = lazy(() => import('./src/components/Settings/Settings'));
 
 enableScreens();
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-// Dummy deep linking handler
 const handleDeepLink = (event: Linking.EventType) => {
   let data = Linking.parse(event.url);
   console.log('Received deep link:', data);
-  // For now, we're not doing anything with the deep link. Will set up once navigation stuff is complete 
 };
 
-function ErrorFallback({error}: FallbackProps) {
+function ErrorFallback({ error }: FallbackProps) {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-      }}>
-      <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 10}}>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
         Something went wrong:
       </Text>
-      <Text style={{color: 'red'}}>{error.message}</Text>
+      <Text style={{ color: 'red' }}>{error.message}</Text>
     </View>
   );
 }
@@ -110,6 +103,21 @@ function App(): React.JSX.Element | null {
     }
   };
 
+  const refreshSession = async () => {
+    try {
+      const { tokens } = await fetchAuthSession();
+      const newAccessToken = tokens?.accessToken?.toString();
+      if (newAccessToken) {
+        await SecureStore.setItemAsync('accessToken', newAccessToken);
+        console.log('Session refreshed successfully');
+      } else {
+        console.warn('Failed to refresh session: No new access token');
+      }
+    } catch (error) {
+      console.error('Error refreshing session:', error);
+    }
+  };
+
   const onboardingComplete = useCallback(async () => {
     console.log('Onboarding complete called');
     setIsFirstLaunch(false);
@@ -129,23 +137,22 @@ function App(): React.JSX.Element | null {
 
     lockOrientation();
     const subscription = Linking.addEventListener('url', handleDeepLink);
-    // Check for initial URL
     Linking.getInitialURL().then((url) => {
       if (url) {
         console.log('App opened with URL:', url);
-        // Again, this is not implemented yet.
       }
     });
+
     const initializeApp = async () => {
       try {
         const [fontsLoaded, authStatus, firstLaunch] = await Promise.all([
-          Font.loadAsync({Inter_400Regular, Inter_700Bold}).then(() => true),
+          Font.loadAsync({ Inter_400Regular, Inter_700Bold }).then(() => true),
           checkAuthStatus(),
           checkFirstLaunch(),
         ]);
         setIsReady(fontsLoaded);
         setIsAuthenticated(authStatus);
-        setIsFirstLaunch(!authStatus && firstLaunch); // Only set isFirstLaunch to true if not authenticated and it's actually the first launch
+        setIsFirstLaunch(!authStatus && firstLaunch);
       } catch (error) {
         console.error('Initialization error', error);
         setIsReady(true);
@@ -160,28 +167,33 @@ function App(): React.JSX.Element | null {
     };
   }, []);
 
-  // useEffect(() => {
-  //   (async () => {
-  //     const {status} = await MediaLibrary.requestPermissionsAsync();
-  //     if (status !== 'granted') {
-  //       alert('Sorry, we need media library permissions to make this work!');
-  //     }
-  //   })();
-  // }, []);
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        refreshSession();
+      }
+    });
+  
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+  
 
   async function checkAuthStatus(): Promise<boolean> {
     try {
+      await refreshSession();
       const token = await getToken('accessToken');
       if (!token) {
         useUserStore.getState().setUserDetails({});
         return false;
       }
-
+  
       const identifier = await getUserIdentifier();
       if (!identifier) {
         throw new Error('No valid identifier found for user');
       }
-
+  
       const userDetails = await fetchUserDetails(identifier, token);
       if (userDetails) {
         useUserStore.getState().setUserDetails(userDetails);
@@ -210,15 +222,15 @@ function App(): React.JSX.Element | null {
     }
   }, [isReady, onLayoutRootView]);
 
+  useEffect(() => {
+    const refreshInterval = setInterval(refreshSession, 15 * 60 * 1000); // Refresh every 15 minutes
+  
+    return () => clearInterval(refreshInterval);
+  }, []);
+
   if (!isReady || isFirstLaunch === null || isAuthenticated === null) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#fff',
-        }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <Text>Loading...</Text>
       </View>
     );
@@ -226,7 +238,7 @@ function App(): React.JSX.Element | null {
   console.log('About to render Stack.Navigator');
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <View style={{flex: 1}} onLayout={onLayoutRootView}>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
         <ThemeProvider>
           <NavigationContainer>
             <SafeAreaProvider>
@@ -242,7 +254,7 @@ function App(): React.JSX.Element | null {
                   {isFirstLaunch && (
                     <Stack.Screen
                       name="Onboarding"
-                      options={{headerShown: false}}>
+                      options={{ headerShown: false }}>
                       {props => {
                         console.log('Rendering Onboarding screen');
                         return (
@@ -257,62 +269,62 @@ function App(): React.JSX.Element | null {
                   <Stack.Screen
                     name="LandingPage"
                     component={LandingPage}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="Feed"
                     component={Feed}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="Profile"
                     component={Profile}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="ConfirmSignUp"
                     component={ConfirmSignUpScreen}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="Loading"
                     component={LoadingScreen}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="MemeUploadScreen"
                     component={MemeUploadScreen}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="AdminPage"
                     component={AdminPage}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="ChangePassword"
                     component={ChangePassword}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="CompleteProfileScreen"
                     component={CompleteProfileScreen}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="Inbox"
                     component={Inbox}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="Conversations"
                     component={Conversations}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen
                     name="Settings"
                     component={Settings}
-                    options={{headerShown: false}}
+                    options={{ headerShown: false }}
                   />
                 </Stack.Navigator>
               </React.Suspense>

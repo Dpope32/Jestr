@@ -122,11 +122,12 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   };
 
   const handleProfileClick = () => {
-    navigation.navigate('Profile', {user: localUser});
-    //console.log(localUser)
+    navigation.navigate('Profile', {
+      userEmail: localUser?.email,
+      // Only pass serializable data
+    });
     closePanel();
   };
-
   const handleSettingsClick = () => {
     navigation.navigate('Settings');
   };

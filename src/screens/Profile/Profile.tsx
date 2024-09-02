@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback, useMemo, useRef} from 'react';
 import {View,Text,Image,TouchableOpacity,Modal,Dimensions,ActivityIndicator,Alert,StyleSheet,ScrollView,Animated, ToastAndroid, Clipboard } from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faBox,faHistory,faHeart,faUser,faEdit,faTimes,IconDefinition,faSadTear,faCog,faShare } from '@fortawesome/free-solid-svg-icons';
@@ -33,7 +33,9 @@ type ProfileProps = {route: ProfileScreenRouteProp; navigation: ProfileScreenNav
 export type TabName = 'posts' | 'liked' | 'history' | 'downloaded';
 
 const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
-  const {isDarkMode} = useTheme();
+  console.log('Profile component rendering');
+  const { isDarkMode } = useTheme();
+  const routeUser = route.params.user;
   const user = useUserStore(state => state);
   const {absoluteFill} = StyleSheet;
   const scrollY = new Animated.Value(0);
@@ -56,6 +58,14 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreMemes, setHasMoreMemes] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+
+    // New ref to track if memes have been fetched for the current tab
+    const memesFetchedRef = useRef<{[key in TabName]: boolean}>({
+      posts: false,
+      liked: false,
+      history: false,
+      downloaded: false,
+    });
   
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 200],
@@ -86,49 +96,13 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
     setIsCommentFeedVisible,
   );
 
-  console.log('Profile screen rendered');
-  // console.log('User:', user);
-  // console.log('useUserStore.getState(): ===>', useUserStore.getState());
-
   useEffect(() => {
-    if (route.params?.user) {
-      useUserStore.getState().setUserDetails(route.params.user);
+    if (routeUser) {
+      useUserStore.getState().setUserDetails(routeUser);
     }
-  }, [route.params?.user]);
-
-  // useEffect(() => {
-  //   const unsubscribe = navigation.addListener('focus', () => {
-  //     // console.log('Profile screen focused');
-  //   });
-
-  //   return unsubscribe;
-  // }, [navigation]);
+  }, [routeUser]);
 
   useEffect(() => {
-    tabMemes.forEach(async (meme: Meme) => {
-      if (meme.mediaType === 'video' && !thumbnails[meme.memeID]) {
-        try {
-          const {uri} = await VideoThumbnails.getThumbnailAsync(meme.url);
-          setThumbnails(prev => ({...prev, [meme.memeID]: uri}));
-        } catch (e) {
-          console.warn("Couldn't generate thumbnail", e);
-        }
-      }
-    });
-  }, [tabMemes]);
-
-  const handleImagePress = (type: 'profile' | 'header') => {
-    const imageUri =
-      type === 'profile' ? user?.profilePic || '' : user?.headerPic || '';
-    const finalImageUri: string | null =
-      typeof imageUri === 'string' ? imageUri : null;
-    console.log('Image Pressed:', type, finalImageUri);
-    setFullScreenImage(finalImageUri);
-    setIsBlurVisible(true);
-  };
-
-  useEffect(() => {
-    setDaysSinceCreation(getDaysSinceCreation(user.CreationDate || ''));
     const calculatedDaysSinceCreation = getDaysSinceCreation(
       user.creationDate || user.CreationDate || '',
     );
@@ -136,17 +110,38 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
   }, [user]);
 
   useEffect(() => {
-    if (user.email) {
-      setTabMemes([]); 
-      setLastEvaluatedKey(null);
-      setCurrentPage(1);
+    console.log('Effect triggered. State:', { 
+      userEmail: user.email, 
+      tabMemesLength: tabMemes.length, 
+      isLoading, 
+      selectedTab,
+      memesFetched: memesFetchedRef.current[selectedTab]
+    });
+    if (user.email && !memesFetchedRef.current[selectedTab] && !isLoading) {
+      console.log('Fetching tab memes...');
       fetchTabMemes(selectedTab);
-    } else {
-      console.log('No user data available');
+      memesFetchedRef.current[selectedTab] = true;
     }
-  }, [user, selectedTab]);
+  }, [user.email, selectedTab, isLoading, fetchTabMemes]);
 
-  const renderTabButton = (
+  const handleTabSelect = useCallback((tabName: TabName) => {
+    setSelectedTab(tabName);
+    setTabMemes([]);
+    setLastEvaluatedKey(null);
+    memesFetchedRef.current[tabName] = false;  // Reset the fetched flag for the new tab
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, []);
+
+  const handleImagePress = useCallback((type: 'profile' | 'header') => {
+    const imageUri =
+      type === 'profile' ? user?.profilePic || '' : user?.headerPic || '';
+    const finalImageUri: string | null =
+      typeof imageUri === 'string' ? imageUri : null;
+    setFullScreenImage(finalImageUri);
+    setIsBlurVisible(true);
+  }, [user]);
+
+  const renderTabButton = useCallback((
     tabName: TabName,
     icon: IconDefinition,
     label: string,
@@ -174,30 +169,18 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
         {label}
       </Text>
     </TouchableOpacity>
-  );
+  ), [selectedTab, handleTabSelect]);
 
-  const handleTabSelect = (tabName: TabName) => {
-    setSelectedTab(tabName); // Update the selected tab state
-    setTabMemes([]); // Clear previous tab memes
-    setLastEvaluatedKey(null); // Reset lastEvaluatedKey
-    fetchTabMemes(tabName); // Fetch new tab memes
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  };
-
-  const convertUserStateToUser = (userState: UserState): User => ({
+  const convertUserStateToUser = useCallback((userState: UserState): User => ({
     ...userState,
     profilePic:
       typeof userState.profilePic === 'string' ? userState.profilePic : '',
     headerPic:
       typeof userState.headerPic === 'string' ? userState.headerPic : '',
     CreationDate: userState.CreationDate || userState.creationDate || '',
-  });
+  }), []);
 
-  // const handleContentSizeChange = (width: number, newHeight: number) => {
-  //   setContentHeight(Math.max(height, newHeight));
-  // };
-
-  const renderTabContent = () => {
+  const renderTabContent = useMemo(() => {
     if (isLoading) {
       return (
         <BlurView
@@ -257,6 +240,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
         </TouchableOpacity>
       );
     };
+
     return (
       <MemeGrid
         memes={tabMemes}
@@ -270,7 +254,8 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
         itemSize={itemSize}
       />
     );
-  };
+  }, [isLoading, tabMemes, selectedTab, user, thumbnails, handleMemePress, loadMoreMemes, handleHeightChange, handleDeleteMeme, handleRemoveDownloadedMeme]);
+
   if (!user) return <ActivityIndicator />;
 
   return (
@@ -367,7 +352,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
           {renderTabButton('history', faHistory, 'History')}
           {renderTabButton('liked', faHeart, 'Likes')}
         </View>
-        <View style={styles.memeGridContainer}>{renderTabContent()}</View>
+ <View style={styles.memeGridContainer}>{renderTabContent}</View>
       </ScrollView>
       <BottomPanel
         onHomeClick={() => navigation.navigate('Feed' as never)}

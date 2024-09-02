@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Alert, ToastAndroid, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -25,7 +25,7 @@ export const useProfileHandlers = (
 ) => {
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [isBlurVisible, setIsBlurVisible] = useState<boolean>(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsUploading] = useState(false);
 
   const handleUpdateImage = async (imagePath: string, type: 'profile' | 'header') => {
     setIsLoading(true);
@@ -155,41 +155,41 @@ export const useProfileHandlers = (
     });
   };
 
-  const fetchTabMemes = async (tab: TabName, page: number = 1, pageSize: number = 30) => {
-    if (user && user.email) {
-      try {
-        setIsLoading(true);
-        let result: FetchMemesResult;
-        switch (tab) {
-          case 'posts':
-            result = await getUserMemes(user.email);
-            break;
-          case 'liked':
-            result = await fetchMemes(user.email, 'liked', null, pageSize);
-            break;
-          case 'history':
-            result = await fetchMemes(user.email, 'viewed', null, pageSize);
-            break;
-          case 'downloaded':
-            result = await fetchMemes(user.email, 'downloaded', null, pageSize);
-            break;
-          default:
-            result = { memes: [], lastEvaluatedKey: null };
-        }
-        console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
-        setTabMemes(result.memes);
-        setLastEvaluatedKey(result.lastEvaluatedKey);
-        setHasMoreMemes(result.memes.length === pageSize);
-      } catch (error) {
-        console.error(`Error fetching ${tab} memes:`, error);
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      console.log('No local user data available');
+  const fetchTabMemes = useCallback(async (tab: TabName, page: number = 1, pageSize: number = 30) => {
+    if (!user.email || isLoading) {
+      console.log('Skipping fetch: no user email or already loading');
+      return;
     }
-  };
-
+  
+    setIsLoading(true);
+    try {
+      let result: FetchMemesResult;
+      switch (tab) {
+        case 'posts':
+          result = await getUserMemes(user.email);
+          break;
+        case 'liked':
+          result = await fetchMemes(user.email, 'liked', null, pageSize);
+          break;
+        case 'history':
+          result = await fetchMemes(user.email, 'viewed', null, pageSize);
+          break;
+        case 'downloaded':
+          result = await fetchMemes(user.email, 'downloaded', null, pageSize);
+          break;
+        default:
+          result = { memes: [], lastEvaluatedKey: null };
+      }
+      console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
+      setTabMemes(result.memes);
+      setLastEvaluatedKey(result.lastEvaluatedKey);
+      setHasMoreMemes(result.memes.length === pageSize);
+    } catch (error) {
+      console.error(`Error fetching ${tab} memes:`, error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user.email, isLoading, setTabMemes, setLastEvaluatedKey, setHasMoreMemes, setIsLoading]);
   const handleMemePress = (meme: Meme, index: number) => {
     setSelectedMeme({
       ...meme,

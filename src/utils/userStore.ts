@@ -19,6 +19,8 @@ export interface UserState {
   followingCount: number;
   FollowingCount?: number;
   posts: Meme[];
+  tempPassword: string;
+  setTempPassword: (password: string) => void;
   likedMemes: Meme[];
   downloadedMemes: Meme[];
   viewedMemes: Meme[];
@@ -65,6 +67,8 @@ export const useUserStore = create<UserState>(set => ({
   creationDate: '',
   posts: [],
   likedMemes: [],
+  tempPassword: '',
+  setTempPassword: (password: string) => set({ tempPassword: password }),
   downloadedMemes: [],
   viewedMemes: [],
   profilePic: null,
@@ -112,6 +116,7 @@ export const useUserStore = create<UserState>(set => ({
       notificationsEnabled: details.notificationsEnabled ?? state.notificationsEnabled,
       isAdmin: details.isAdmin ?? state.isAdmin,
       userId: details.userId ?? state.userId,
+      
     })),
 
   resetUserState: () =>

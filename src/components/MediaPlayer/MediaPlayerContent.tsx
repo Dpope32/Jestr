@@ -171,7 +171,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
               }
               style={styles.profilePic}
             />
-            {isFollowed && (
+            {!isFollowed && (
               <TouchableOpacity
                 onPress={handleFollow}
                 style={styles.followButton}>

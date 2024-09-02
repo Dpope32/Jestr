@@ -12,6 +12,9 @@ import { RouteProp } from '@react-navigation/core';
 import { confirmSignUp } from 'aws-amplify/auth';
 import { COLORS, SPACING, FONT_SIZES, FONTS, wp, elevationShadowStyle } from '../../theme/theme';
 import { storeUserIdentifier } from '../../utils/secureStore';
+import { signIn, fetchAuthSession, SignInInput } from 'aws-amplify/auth';
+import * as SecureStore from 'expo-secure-store';
+import { useUserStore } from '../../utils/userStore'; // Adjust the path as needed
 
 type ConfirmSignUpScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, 'ConfirmSignUp'>;
@@ -28,18 +31,55 @@ const ConfirmSignUpScreen: React.FC<ConfirmSignUpScreenProps> = ({ navigation, r
     value,
     setValue,
   });
-
+  
   const handleConfirmSignUp = async () => {
     try {
       await confirmSignUp({ username: email, confirmationCode: value });
-      await storeUserIdentifier(email);
-      Alert.alert('Success', 'Your email has been confirmed.');
-      navigation.navigate('CompleteProfileScreen', { email });
+      
+      const password = useUserStore.getState().tempPassword;
+
+      if (!password) {
+        Alert.alert('Confirmation Successful', 'Your email has been confirmed. Please log in with your credentials.');
+        navigation.navigate('LandingPage');
+        return;
+      }
+
+      const signInInput: SignInInput = {
+        username: email,
+        password: password,
+        options: {
+          authFlowType: "USER_PASSWORD_AUTH"
+        }
+      };
+
+      const { isSignedIn, nextStep } = await signIn(signInInput);
+      
+      if (isSignedIn) {
+        const { tokens } = await fetchAuthSession();
+        const accessToken = tokens?.accessToken?.toString();
+        if (accessToken) {
+          await SecureStore.setItemAsync('accessToken', accessToken);
+          console.log('Access token stored successfully');
+        }
+        
+        await storeUserIdentifier(email);
+        
+        // Clear the temporary password by setting it to an empty string
+        useUserStore.getState().setTempPassword('');
+        
+        Alert.alert('Success', 'Your email has been confirmed and you are now signed in.');
+        navigation.navigate('CompleteProfileScreen', { email });
+      } else {
+        console.log('Additional sign-in step required:', nextStep);
+        Alert.alert('Error', 'Unable to sign in automatically. Please try logging in manually.');
+        navigation.navigate('LandingPage');
+      }
     } catch (error: any) {
+      console.error('Error in handleConfirmSignUp:', error);
       Alert.alert('Error', error.message || 'An unknown error occurred');
     }
   };
-
+  
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Enter Confirmation Code</Text>

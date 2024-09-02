@@ -83,7 +83,7 @@ export type RootStackParamList = {
     };
   };
   Profile: {
-    user: any;
+    user: User;
   };
   ChangePassword: {
     username: string;

@@ -139,7 +139,7 @@ exports.handler = async (event) => {
 
   // List of operations that don't require authentication
   const publicOperations = [
-    'fetchMemes','uploadMeme','getPresignedUrl','getLikeStatus','getUserMemes',
+    'fetchMemes','uploadMeme','getPresignedUrl','getLikeStatus','getUserMemes', 'signin', 'signup',
     'updateMemeReaction','recordMemeView','deleteMeme','removeDownloadedMeme','getPopularMemes','getTotalMemes',
   ];
 
