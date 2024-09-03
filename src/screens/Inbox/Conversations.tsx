@@ -7,7 +7,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types/types';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
-import { sendMessage, fetchMessages } from '../../services/authFunctions';
+import { sendMessage, fetchMessages } from '../../services/socialService';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
 import { useTheme } from '../../theme/ThemeContext';
 import styles from './convoStyles'

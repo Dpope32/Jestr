@@ -10,8 +10,8 @@ import { useMemes } from './useMemes';
 import { useUserStore } from '../../utils/userStore';
 import { getToken } from '../../utils/secureStore';
 import { logStorageContents } from '../../utils/debugUtils';
-import { fetchComments } from '../../components/Meme/memeService';
-import { fetchUserDetails } from '../../services/authFunctions';
+import { fetchComments } from '../../services/socialService';
+import { fetchUserDetails } from '../../services/userService';
 
 import styles from './Feed.styles';
 import { RootStackParamList, User } from '../../types/types';

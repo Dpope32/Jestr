@@ -8,7 +8,7 @@ import HeaderPicUpload from '../../components/Upload/HeaderPicUpload';
 import ProfilePicUpload from '../../components/Upload/ProfilePicUpload';
 import InputField from '../../components/shared/Input/InutField';
 import { LinearGradient } from 'expo-linear-gradient';
-import { handleCompleteProfile } from '../../services/authFunctions';
+import { handleCompleteProfile } from '../../services/userService';
 import { useUserStore } from '../../utils/userStore';
 import * as ImagePicker from 'expo-image-picker';
 import { BlurView } from 'expo-blur';

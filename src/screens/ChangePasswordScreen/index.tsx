@@ -1,7 +1,7 @@
 // src/screens/ChangePassword/ChangePassword.tsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { handleChangePassword } from '../../services/authFunctions';
+import { handleChangePassword } from '../../services/authService';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/core';
 import { RootStackParamList } from '../../types/types';

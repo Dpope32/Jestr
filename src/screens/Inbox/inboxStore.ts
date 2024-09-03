@@ -1,5 +1,5 @@
 import create from 'zustand';
-import { fetchConversations as apiFetchConversations } from '../../services/authFunctions';
+import { fetchConversations as apiFetchConversations } from '../../services/socialService';
 import { Conversation } from './Conversations';
 
 interface InboxState {

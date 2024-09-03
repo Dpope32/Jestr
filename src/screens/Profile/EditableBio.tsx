@@ -3,12 +3,13 @@ import { View, Text, TouchableOpacity, TextInput, Modal, StyleSheet } from 'reac
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import Toast from 'react-native-toast-message';
+import { updateBio } from '../../services/userService';
 
 interface EditableBioProps {
   initialBio: string;
   userEmail: string;
   onBioUpdate: (newBio: string) => void;
-  editable: boolean; // Add the editable prop
+  editable: boolean;
 }
 
 const EditableBio: React.FC<EditableBioProps> = ({ initialBio, userEmail, onBioUpdate, editable }) => {
@@ -19,47 +20,17 @@ const EditableBio: React.FC<EditableBioProps> = ({ initialBio, userEmail, onBioU
     setBio(initialBio);
   }, [initialBio]);
 
-  const updateBio = async () => {
-    const requestBody = {
-      operation: 'updateBio',
-      email: userEmail,
-      bio: bio,
-    };
-
+  const handleUpdateBio = async () => {
     try {
-      const response = await fetch('https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updateBio', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      const responseData = await response.json();
-
-      if (response.ok) {
-        if (responseData.data && responseData.data.data && responseData.data.data.updatedBio) {
-          onBioUpdate(responseData.data.data.updatedBio);
-          setIsEditing(false);
-
-          // Show toast notification
-          Toast.show({
-            type: 'success',
-            text1: 'Bio updated successfully!',
-            visibilityTime: 2000,
-            autoHide: true,
-            topOffset: 30,
-            bottomOffset: 40,
-            props: { backgroundColor: '#333', textColor: '#00ff00' },
-          });
-        } else {
-          console.error('Unexpected response structure:', responseData);
-        }
-      } else {
-        console.error('Failed to update bio. Server response:', responseData);
-      }
+      await updateBio(userEmail, bio, onBioUpdate, setIsEditing);
+      // The updateBio function now handles setting isEditing to false and calling onBioUpdate
     } catch (error) {
       console.error('Error updating bio:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to update bio',
+        text2: 'Please try again later',
+      });
     }
   };
 
@@ -80,7 +51,7 @@ const EditableBio: React.FC<EditableBioProps> = ({ initialBio, userEmail, onBioU
                 <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.button}>
                   <Text style={styles.buttonText}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={updateBio} style={[styles.button, styles.saveButton]}>
+                <TouchableOpacity onPress={handleUpdateBio} style={[styles.button, styles.saveButton]}>
                   <Text style={styles.buttonText}>Save</Text>
                 </TouchableOpacity>
               </View>

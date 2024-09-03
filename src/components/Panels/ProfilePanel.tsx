@@ -26,7 +26,7 @@ import LogoutModal from '../Modals/LogoutModal';
 import {User, ProfilePanelProps} from '../../types/types';
 import NotificationsPanel from './NotificationsPanel';
 import {Switch} from 'react-native';
-import {handleSignOut} from '../../services/authFunctions';
+import {handleSignOut} from '../../services/authService';
 import {CommonActions} from '@react-navigation/native';
 import {useUserStore} from '../../utils/userStore';
 import * as SecureStore from 'expo-secure-store';

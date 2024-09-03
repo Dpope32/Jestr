@@ -1,8 +1,7 @@
 // Implemented this to reduce server load and accurately log when memes are viewed by adding them 
 //to a batch and sending entire batch at the end of the swiping when user closes app. 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { fetchMemes, getLikeStatus } from '../../components/Meme/memeService';
-import { recordMemeViews } from '../../services/authFunctions';
+import { fetchMemes, recordMemeViews} from '../../services/memeService';
 import { Meme, User } from '../../types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

@@ -1,6 +1,6 @@
 import { CognitoUserPool, CognitoUser, AuthenticationDetails, CognitoUserAttribute } from 'amazon-cognito-identity-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { COGNITO_USER_POOL_ID, COGNITO_APP_CLIENT_ID } from '../../src/components/Meme/config';
+import { COGNITO_USER_POOL_ID, COGNITO_APP_CLIENT_ID } from '../config';
 
 const poolData: any = {
     UserPoolId: COGNITO_USER_POOL_ID,

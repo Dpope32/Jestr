@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { fetchConversations } from '../../services/authFunctions'; 
 import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faPlus, faThumbtack, faBell } from '@fortawesome/free-solid-svg-icons';
-import { User, ProfileImage } from '../../types/types'; 
+import { faPlus, faBell } from '@fortawesome/free-solid-svg-icons';
+import { User } from '../../types/types'; 
 import { NavigationProp, useNavigation, useFocusEffect } from '@react-navigation/native';
 import NewMessageModal from '../../components/Modals/NewMessageModal';
 import { format, formatDistanceToNow, isToday } from 'date-fns';

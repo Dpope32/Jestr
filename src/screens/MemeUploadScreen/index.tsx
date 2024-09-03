@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import LottieView from 'lottie-react-native';
 import { FONTS, COLORS } from '../../theme/theme';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { useTheme } from '../../theme/ThemeContext';
 
 type MemeUploadScreenProps = {
   navigation: any;
@@ -17,7 +18,7 @@ type MemeUploadScreenProps = {
 
 const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }) => {
   const { user } = route.params;
-  const [isDarkMode, setIsDarkMode] = useState(true); // Set default to true for dark mode
+  const {isDarkMode} = useTheme();
   const [imageUploaded, setImageUploaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [localUser, setLocalUser] = useState<User | null>(user || null);
@@ -147,7 +148,6 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
           displayName={localUser.displayName || 'N/A'}
           followersCount={localUser.followersCount}
           followingCount={localUser.followingCount}
-          onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
           user={localUser}
           navigation={navigation}
         />

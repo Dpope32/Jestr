@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Animated, I
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { User, ProfileImage } from '../../types/types'; 
-import { getAllUsers } from '../../services/authFunctions';
+import { getAllUsers } from '../../services/userService';
 import { FlashList } from '@shopify/flash-list';
 import styles from './NewMM.styles'
 

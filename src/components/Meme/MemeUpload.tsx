@@ -9,7 +9,7 @@ import { StyleSheet } from 'react-native';
 import { Buffer } from 'buffer';
 import { BlurView } from 'expo-blur';
 import LottieView from 'lottie-react-native';
-import { uploadMeme } from './memeService';
+import { uploadMeme } from '../../services/memeService';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import  styles  from './MemeUpload.styles';

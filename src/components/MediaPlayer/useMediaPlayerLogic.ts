@@ -2,8 +2,8 @@ import {useState, useCallback, useEffect} from 'react';
 import {debounce} from 'lodash';
 import {Video, AVPlaybackStatus} from 'expo-av';
 
-import {updateMemeReaction, getLikeStatus} from '../Meme/memeService';
-import {handleShareMeme} from '../../services/authFunctions';
+import {updateMemeReaction, getLikeStatus} from '../../services/memeService';
+import {handleShareMeme} from '../../services/memeService';
 import {ShareType, User} from '../../types/types';
 
 interface UseMediaPlayerLogicProps {

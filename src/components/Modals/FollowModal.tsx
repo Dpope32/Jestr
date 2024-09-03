@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, Modal, StyleSheet, Animated, ActivityIndicator } from 'react-native';
-import { getFollowers, getFollowing, addFollow, removeFollow, getUserById, checkFollowStatus } from '../../services/authFunctions';
+import { getUserById} from '../../services/userService';
+import { getFollowers, getFollowing, addFollow, removeFollow, checkFollowStatus } from '../../services/socialService';
 import { User } from '../../types/types';
 import { FlashList } from '@shopify/flash-list';
 

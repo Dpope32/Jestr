@@ -15,7 +15,7 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { useUserStore } from './src/utils/userStore';
-import { fetchUserDetails } from './src/services/authFunctions';
+import { fetchUserDetails } from './src/services/userService';
 import Feed from './src/screens/Feed/Feed';
 import { toastConfig } from './src/config/toastConfig';
 import LandingPage from './src/screens/LandingPage/LandingPage';
