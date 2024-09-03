@@ -1,5 +1,3 @@
-// src/types/types.ts
-import {SignInOutput} from '@aws-amplify/auth';
 import {ViewToken} from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Animated} from 'react-native';
@@ -99,7 +97,7 @@ export type LetterScale = {
 
 export type Meme = {
   memeID: string;
-  mediaType: 'image' | 'video';
+  mediaType: string;
   url: string;
   caption: string;
   uploadTimestamp: string;
@@ -111,8 +109,8 @@ export type Meme = {
   profilePicUrl: string;
   isFollowed: boolean;
   email: string;
-  liked?: boolean; // Add this line
-  doubleLiked?: boolean; // Add this line
+  liked?: boolean;
+  doubleLiked?: boolean;
   memeUser?: Partial<User>;
   downloaded?: boolean;
   followStatus?: {
@@ -181,12 +179,4 @@ export type MediaPlayerProps = {
 export type ProfilePanelProps = {
   isVisible: boolean;
   onClose: () => void;
-  profilePicUrl: string | ProfileImage | null;
-  username: string;
-  displayName: string;
-  followersCount: number;
-  followingCount: number;
-  FollowingCount?: number;
-  user: User | null;
-  navigation: any;
 };

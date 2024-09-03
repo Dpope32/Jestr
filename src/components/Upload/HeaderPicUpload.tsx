@@ -1,6 +1,6 @@
 import React from 'react';
 import {TouchableOpacity, Image, StyleSheet, View, Text} from 'react-native';
-import {useUserStore} from '../../utils/userStore';
+import {useUserStore} from '../../store/userStore';
 import {ProfileImage} from '../../types/types';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faImage} from '@fortawesome/free-solid-svg-icons';
@@ -50,10 +50,10 @@ const HeaderPicUpload: React.FC<HeaderPicUploadProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: '110%',
+    width: '100%',
     height: 200,
-    marginLeft: -20,
-    marginVertical: 12,
+    // marginLeft: -20,
+    // marginVertical: 12,
     backgroundColor: '#e0e0e0',
     justifyContent: 'center',
     alignItems: 'center',

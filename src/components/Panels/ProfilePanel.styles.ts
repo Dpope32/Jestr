@@ -1,7 +1,7 @@
-import { StyleSheet, Dimensions, Platform } from 'react-native';
-import { COLORS, SPACING, FONT_SIZES, wp, elevationShadowStyle, FONTS } from '../../theme/theme';
+import {StyleSheet, Dimensions, Platform} from 'react-native';
+import {COLORS, FONTS} from '../../theme/theme';
 
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   profilePanel: {
@@ -10,15 +10,15 @@ const styles = StyleSheet.create({
     height: height * 1.08,
     left: 0,
     top: 0,
-    bottom: Platform.OS === 'ios' ? 20 : 0, // Adjust for bottom navigation20,
-    zIndex: 30000,
+    bottom: Platform.OS === 'ios' ? 20 : 0,
+    zIndex: 390000,
     elevation: 1000000000000,
     marginTop: 0,
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
     fontFamily: FONTS.regular,
     overflow: 'hidden',
-    backgroundColor: COLORS.background
+    backgroundColor: COLORS.background,
   },
   backdrop: {
     position: 'absolute',
@@ -116,15 +116,15 @@ const styles = StyleSheet.create({
   },
   bottomContainer: {
     position: 'absolute',
-    bottom:  Platform.OS === 'ios' ? 100 : 20,
-    fontFamily: FONTS.regular,
     left: 0,
     right: 0,
+    bottom: 100,
+    // bottom: Platform.OS === 'ios' ? 200 : 20,
+    fontFamily: FONTS.regular,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 30,
-    
   },
   signoutButton: {
     flexDirection: 'row',

@@ -1,9 +1,8 @@
-import { registerRootComponent } from 'expo';
+import {registerRootComponent} from 'expo';
 import App from './App'; // Make sure this path is correct
-import { enableScreens } from 'react-native-screens';
-import { LogBox } from 'react-native';
+import {enableScreens} from 'react-native-screens';
+import {LogBox} from 'react-native';
 import '@azure/core-asynciterator-polyfill';
-
 
 LogBox.ignoreLogs(['AsyncStorage has been extracted from react-native core']);
 

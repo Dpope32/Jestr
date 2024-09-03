@@ -53,7 +53,6 @@ type CommentFeedProps = {
 };
 
 const CommentFeed: React.FC<CommentFeedProps> = ({
-  mediaIndex,
   profilePicUrl,
   user,
   memeID,

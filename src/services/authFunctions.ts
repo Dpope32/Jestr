@@ -19,17 +19,17 @@ import {
 import {RootStackParamList, ProfileImage} from '../types/types';
 import * as FileSystem from 'expo-file-system';
 import {v4 as uuidv4} from 'uuid';
-import {useUserStore} from '../utils/userStore';
+import {useUserStore} from '../store/userStore';
 import {
   storeToken,
   getToken,
   removeToken,
   storeUserIdentifier,
-} from '../utils/secureStore';
+} from '../store/secureStore';
 import * as SecureStore from 'expo-secure-store';
 import * as ImageManipulator from 'expo-image-manipulator';
 //import * as Google from 'expo-auth-session/providers/google';
-console.log('Current user:', JSON.stringify(useUserStore.getState(), null, 2));
+//console.log('Current user:', JSON.stringify(useUserStore.getState(), null, 2));
 
 type ProfileImageOrString = ProfileImage | string;
 

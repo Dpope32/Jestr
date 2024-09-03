@@ -1,26 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-  Image,
-  Dimensions,
-  Platform,
-  TouchableWithoutFeedback,
-  Alert,
-  Linking,
-} from 'react-native';
+import {View, Text, StyleSheet, TouchableWithoutFeedback} from 'react-native';
+import {TouchableOpacity, Animated} from 'react-native';
+import {Image, Dimensions} from 'react-native';
+import {Alert, Linking} from 'react-native';
 import {BlurView} from 'expo-blur';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faLink,
-  faSave,
-  faShare,
-  faFlag,
-  faUser,
-} from '@fortawesome/free-solid-svg-icons';
+import {faLink, faSave} from '@fortawesome/free-solid-svg-icons';
+import {faShare, faFlag, faUser} from '@fortawesome/free-solid-svg-icons';
 import Toast from 'react-native-toast-message';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
@@ -40,18 +26,6 @@ interface LongPressModalProps {
   onSaveToProfile: () => Promise<void>;
   onShare: () => void;
   onReport: () => void;
-  user: any;
-  memeID: string;
-  isSaved: boolean;
-  setIsSaved: React.Dispatch<React.SetStateAction<boolean>>;
-  setCounts: React.Dispatch<
-    React.SetStateAction<{
-      likes: number;
-      downloads: number;
-      shares: number;
-      comments: number;
-    }>
-  >;
 }
 
 export const LongPressModal: React.FC<LongPressModalProps> = ({
@@ -118,24 +92,6 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
     onClose();
   };
 
-  // const downloadImage = async (url: string): Promise<string | null> => {
-  //   try {
-  //     const directoryUri = `${FileSystem.cacheDirectory}`;
-  //     const fileUri = `${directoryUri}${meme.id}.jpg`;
-  //     await FileSystem.makeDirectoryAsync(directoryUri, {intermediates: true});
-  //     const {uri} = await FileSystem.downloadAsync(url, fileUri);
-  //     return uri;
-  //   } catch (error) {
-  //     console.error('Error downloading image:', error);
-  //     Toast.show({
-  //       type: 'error',
-  //       text1: 'Download Failed',
-  //       text2: 'Failed to download image.',
-  //     });
-  //     return null;
-  //   }
-  // };
-
   const downloadImage = async (url: string): Promise<string | null> => {
     try {
       const fileType = url.substring(url.lastIndexOf('.') + 1);
@@ -174,8 +130,6 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
         const asset = await MediaLibrary.createAssetAsync(localUri);
         // console.log('Asset created:', asset);
 
-        // createAlbumAsync might not work in Expo Go. If it fails, the image is still saved to the gallery.
-        // a warning is logged to the console.
         try {
           await MediaLibrary.createAlbumAsync('Jestr', asset);
         } catch (albumError) {

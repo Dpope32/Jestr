@@ -3,7 +3,7 @@ import {TouchableOpacity, StyleSheet, View, Image} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
 
-import {useUserStore} from '../../utils/userStore';
+import {useUserStore} from '../../store/userStore';
 // import { ProfileImage } from '../../types/types';
 
 interface ProfilePicUploadProps {
@@ -39,7 +39,8 @@ const styles = StyleSheet.create({
     height: 135,
     borderRadius: 70,
     overflow: 'hidden',
-    marginTop: -110,
+    marginTop: -70,
+    marginLeft: 10,
     backgroundColor: '#e0e0e0',
   },
   placeholder: {
