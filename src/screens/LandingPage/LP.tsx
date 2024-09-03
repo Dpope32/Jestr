@@ -12,22 +12,10 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import WelcomeText from './WelcomeText';
 import { BlurView } from 'expo-blur';
 import RainEffect from './RainEffect';
-import { handleForgotPassword } from '../../services/authFunctions'
+import { handleForgotPassword } from '../../services/authService'
 import  ContentModal  from './ContentModal'
-import { 
-  handleSignup, 
-  handleLogin, 
-  handleGoogleSignIn, 
-  handleAppleSignIn, 
-  handleTwitterSignIn,
-} from '../../services/authFunctions';
-
-import {
-  handleLoginClick,
-  handleHeaderPicChange,
-  handleProfilePicChange,
-  handleSignUpClick,
-} from './LPHandlers';
+import { handleSignup, handleLogin, handleGoogleSignIn, handleAppleSignIn, handleTwitterSignIn} from '../../services/authService';
+import {handleLoginClick,handleHeaderPicChange,handleProfilePicChange,handleSignUpClick,} from './LPHandlers';
 
 interface LPProps {
   animationComplete: boolean;

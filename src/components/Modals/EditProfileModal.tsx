@@ -4,7 +4,7 @@ import { User } from '../../types/types';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTimes, faCamera } from '@fortawesome/free-solid-svg-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { updateProfileImage } from '../../services/authFunctions';
+import { updateProfileImage } from '../../services/userService';
 
 interface EditProfileModalProps {
   isVisible: boolean;

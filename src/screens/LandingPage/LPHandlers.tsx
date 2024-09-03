@@ -1,7 +1,4 @@
-import { NavigationProp } from '@react-navigation/native';
-import { handleForgotPassword, handleCompleteProfile } from '../../services/authFunctions';
-import { RootStackParamList, LandingPageNavigationProp } from '../../types/types'; // Make sure this import points to the correct location
-import { Alert } from 'react-native';
+
 
 export const handleSignUpClick = (
     setShowInitialScreen: React.Dispatch<React.SetStateAction<boolean>>, 

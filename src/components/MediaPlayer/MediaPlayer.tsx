@@ -21,7 +21,7 @@ import LottieView from 'lottie-react-native';
 import SafeImage from '../shared/SafeImage';
 import styles from './MP.styles';
 import {MediaPlayerProps} from '../../types/types';
-import {addFollow} from '../../services/authFunctions';
+import {addFollow} from '../../services/socialService';
 import {usePanResponder} from './usePanResponder';
 import {IconsAndContent} from './MediaPlayerContent';
 import {useMediaPlayerLogic} from './useMediaPlayerLogic';
@@ -60,7 +60,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     currentUserId,
     downloadCount: initialDownloadCount,
     shareCount: initialShareCount,
-    // not used, why?
     commentCount: initialCommentCount,
     onLikeStatusChange,
     setCurrentIndex,

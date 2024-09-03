@@ -5,7 +5,7 @@ import LP from './LP';
 import { User, RootStackParamList, LetterScale } from '../../types/types';
 import { getToken, getUserIdentifier, removeToken, removeUserIdentifier }  from 'utils/secureStore';
 import { getCurrentUser } from '@aws-amplify/auth';
-import { fetchUserDetails } from 'services/authFunctions';
+import { fetchUserDetails } from '../../services/userService';
 import { storeUserIdentifier } from 'utils/secureStore';
 type LandingPageNavigationProp = NavigationProp<RootStackParamList>;
 

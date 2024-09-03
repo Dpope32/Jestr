@@ -1,22 +1,250 @@
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
+import {API_URL} from './config';
+import Toast from 'react-native-toast-message';
+import {FetchMemesResult} from '../types/types';
 import * as FileSystem from 'expo-file-system';
-import {API_URL, AWS_REGION, COGNITO_IDENTITY_POOL_ID} from './config';
+import {getToken} from '../utils/secureStore';
 
-import {User} from '../../types/types';
-import {CommentType} from '../Modals/CommentFeed';
-import {FetchMemesResult} from '../../types/types';
-// import {S3Client} from '@aws-sdk/client-s3';
-// import {CognitoIdentityClient} from '@aws-sdk/client-cognito-identity';
-// import {fromCognitoIdentityPool} from '@aws-sdk/credential-provider-cognito-identity';
 
-// const s3Client = new S3Client({
-//   region: AWS_REGION,
-//   credentials: fromCognitoIdentityPool({
-//     client: new CognitoIdentityClient({region: AWS_REGION}),
-//     identityPoolId: COGNITO_IDENTITY_POOL_ID,
-//   }),
-// });
+type TransformedMemeView = {
+  email: string;
+  memeIDs: string[];
+  ttl: number;
+};
+
+export const getUserMemes = async (
+  email: string,
+  lastEvaluatedKey: string | null = null,
+): Promise<FetchMemesResult> => {
+  try {
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUserMemes',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation: 'getUserMemes',
+          email,
+          lastEvaluatedKey,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const responseData = await response.json();
+    console.log('getUserMemes response:', responseData);  // Add this line for debugging
+
+    // Check if the response has the expected structure
+    if (responseData && responseData.data && Array.isArray(responseData.data.memes)) {
+      return {
+        memes: responseData.data.memes,
+        lastEvaluatedKey: responseData.data.lastEvaluatedKey,
+      };
+    } else {
+      console.error('Unexpected response structure:', responseData);
+      return { memes: [], lastEvaluatedKey: null };
+    }
+  } catch (error) {
+    console.error('Error fetching user memes:', error);
+    return { memes: [], lastEvaluatedKey: null };
+  }
+};
+
+export const deleteMeme = async (memeID: string, userEmail: string) => {
+  try {
+    console.log(`Attempting to delete meme. MemeID: ${memeID}, UserEmail: ${userEmail}`);
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/deleteMeme',
+      {
+        method: 'POST',  // Changed from DELETE to POST
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({operation: 'deleteMeme', memeID, userEmail}),
+      },
+    );
+    const responseData = await response.json();
+    console.log('Delete meme response:', responseData);
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Meme not found');
+      } else if (response.status === 403) {
+        throw new Error('You are not authorized to delete this meme');
+      } else {
+        throw new Error(responseData.message || 'Failed to delete meme');
+      }
+    }
+    return responseData;
+  } catch (error) {
+    console.error('Error deleting meme:', error);
+    throw error;
+  }
+};
+
+export const removeDownloadedMeme = async (
+  userEmail: string,
+  memeID: string,
+) => {
+  try {
+    console.log(`Attempting to remove meme: ${memeID} for user: ${userEmail}`);
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/removeDownloadedMeme',
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation: 'removeDownloadedMeme',
+          userEmail,
+          memeID,
+        }),
+      },
+    );
+    const responseData = await response.json();
+    console.log('Remove downloaded meme response:', responseData);
+    if (!response.ok) {
+      throw new Error(responseData.message || 'Failed to remove downloaded meme');
+    }
+    return responseData;
+  } catch (error) {
+    console.error('Error removing downloaded meme:', error);
+    throw error;
+  }
+};
+
+export const handleShareMeme = async (
+  memeID: string,
+  email: string,
+  username: string,
+  catchUser: string,
+  message: string,
+  setResponseModalVisible: (visible: boolean) => void,
+  setResponseMessage: (message: string) => void,
+) => {
+  const shareData = {
+    operation: 'shareMeme',
+    memeID,
+    email: email,
+    username,
+    catchUser,
+    message,
+  };
+
+  //    console.log('Share data:', shareData);
+
+  try {
+    //   console.log('Initiating share operation...');
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/shareMeme',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(shareData),
+      },
+    );
+
+    //    console.log('Response status:', response.status);
+    //    console.log('Response body:', await response.text());
+
+    if (response.ok) {
+      Toast.show({
+        type: 'success', // There are 'success', 'info', 'error'
+        position: 'top',
+        text1: 'Meme shared successfully!',
+        visibilityTime: 4000,
+        autoHide: true,
+        topOffset: 30,
+        bottomOffset: 40,
+        props: {backgroundColor: '#333', textColor: '#white'},
+      });
+    } else {
+      Toast.show({
+        type: 'error',
+        position: 'top',
+        text1: 'Failed to share meme.',
+        visibilityTime: 4000,
+        autoHide: true,
+        topOffset: 30,
+        props: {backgroundColor: '#333', textColor: '#00ff00'},
+      });
+    }
+  } catch (error) {
+    Toast.show({
+      type: 'error',
+      position: 'top',
+      text1: 'An error occurred while sharing the meme.',
+      visibilityTime: 4000,
+      autoHide: true,
+      topOffset: 30,
+    });
+  }
+};
+
+export const recordMemeViews = async (memeViews: {email: string; memeID: string}[]): Promise<void> => {
+  // Log the incoming data to ensure it's correct
+  console.log('Received meme views:', JSON.stringify(memeViews));
+
+  if (!Array.isArray(memeViews) || memeViews.length === 0) {
+    console.error('memeViews must be a non-empty array.');
+    return;
+  }
+
+  // Transform single meme views to the expected format if necessary
+// Transform single meme views to the expected format if necessary
+const transformedViews = memeViews.reduce<TransformedMemeView[]>((acc, view) => {
+  const existing = acc.find(v => v.email === view.email);
+  if (existing) {
+      existing.memeIDs.push(view.memeID);
+  } else {
+      acc.push({
+          email: view.email,
+          memeIDs: [view.memeID],
+          ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60)  // Add TTL if needed
+      });
+  }
+  return acc;
+}, []);
+
+  // Log transformed data
+  console.log('Transformed meme views for batch processing:', JSON.stringify(transformedViews));
+
+  try {
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/recordMemeView',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken('accessToken')}`,
+        },
+        body: JSON.stringify({
+          operation: 'recordMemeView',
+          memeViews: transformedViews,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to record meme views');
+    }
+
+    console.log('Meme views recorded successfully');
+  } catch (error) {
+    console.error('Error recording meme views:', error);
+    throw error;
+  }
+};
 
 export const fetchMemes = async (
   lastEvaluatedKey: string | null = null,
@@ -248,145 +476,6 @@ export const fetchDownloadedMemes = async (email: string) => {
     console.error('Error fetching downloaded memes:', error);
     throw error;
   }
-};
-
-export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
-  try {
-    //    console.log(`Fetching comments for memeID: ${memeID}`);
-    const response = await fetch(`${API_URL}/getComments`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({operation: 'getComments', memeID}),
-    });
-
-    const data = await response.json();
-    //   console.log(`Raw response data:`, JSON.stringify(data, null, 2));
-
-    if (!response.ok) {
-      console.error(
-        `Failed to fetch comments for memeID ${memeID}:`,
-        data.message,
-      );
-      return [];
-    }
-
-    if (!data.data || !Array.isArray(data.data)) {
-      console.error(`Unexpected data format for memeID ${memeID}:`, data);
-      return [];
-    }
-
-    const flatComments = data.data.map((comment: any) => ({
-      commentID: comment.CommentID || '',
-      text: comment.Text || '',
-      username: comment.Username || 'Unknown user',
-      profilePicUrl: comment.ProfilePicUrl,
-      likesCount: parseInt(comment.LikesCount) || 0,
-      dislikesCount: parseInt(comment.DislikesCount) || 0,
-      timestamp: comment.Timestamp || '',
-      parentCommentID: comment.ParentCommentID || null,
-      replies: [],
-    }));
-
-    //  console.log(`Flat comments:`, JSON.stringify(flatComments, null, 2));
-
-    const organizedComments = organizeCommentsIntoThreads(flatComments);
-
-    //   console.log(`Organized comments:`, JSON.stringify(organizedComments, null, 2));
-
-    return organizedComments;
-  } catch (error) {
-    console.error(`Error fetching comments for memeID ${memeID}:`, error);
-    return [];
-  }
-};
-
-const organizeCommentsIntoThreads = (
-  flatComments: CommentType[],
-): CommentType[] => {
-  const commentMap = new Map<string, CommentType>();
-  const topLevelComments: CommentType[] = [];
-
-  // First pass: create all comment objects
-  flatComments.forEach(comment => {
-    commentMap.set(comment.commentID, {...comment, replies: []});
-  });
-
-  // Second pass: organize into threads
-  flatComments.forEach(comment => {
-    if (comment.parentCommentID) {
-      const parentComment = commentMap.get(comment.parentCommentID);
-      if (parentComment) {
-        parentComment.replies.push(commentMap.get(comment.commentID)!);
-      }
-    } else {
-      topLevelComments.push(commentMap.get(comment.commentID)!);
-    }
-  });
-
-  return topLevelComments;
-};
-
-export const postComment = async (
-  memeID: string,
-  text: string,
-  user: User,
-  parentCommentID?: string,
-): Promise<void> => {
-  const commentData = {
-    operation: 'postComment',
-    memeID,
-    text,
-    email: user.email,
-    username: user.username,
-    profilePic: user.profilePic,
-    ParentCommentID: parentCommentID,
-  };
-
-  // console.log(`Posting comment for memeID: ${memeID} by user: ${user.username}`);
-  const response = await fetch(`${API_URL}/postComment`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(commentData),
-  });
-
-  const data = await response.json();
-  if (!response.ok) {
-    console.error('Failed to post comment:', data.message);
-    throw new Error(data.message);
-  }
-
-  //console.log('Comment posted successfully:', data);
-};
-
-export const updateCommentReaction = async (
-  commentID: string,
-  memeID: string,
-  incrementLikes: boolean,
-  incrementDislikes: boolean,
-): Promise<void> => {
-  const requestBody = {
-    operation: 'updateCommentReaction',
-    commentID,
-    memeID,
-    incrementLikes,
-    incrementDislikes,
-  };
-
-  // console.log('Updating comment reaction for commentID:', commentID);
-
-  const response = await fetch(`${API_URL}/updateCommentReaction`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(requestBody),
-  });
-
-  const data = await response.json();
-  if (!response.ok) {
-    console.error('Failed to update comment reaction:', data.message);
-    throw new Error(data.message);
-  }
-
-  // console.log('Comment reaction updated successfully:', data);
 };
 
 export const updateMemeReaction = async (

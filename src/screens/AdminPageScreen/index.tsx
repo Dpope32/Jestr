@@ -7,6 +7,7 @@ import { COLORS, wp, elevationShadowStyle } from '../../theme/theme';
 import { TouchableOpacity } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faSync } from '@fortawesome/free-solid-svg-icons';
+import { useTheme } from '../../theme/ThemeContext';
 
 type AdminPageProps = {
   route: RouteProp<RootStackParamList, 'AdminPage'>;
@@ -21,6 +22,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ route, navigation }) => {
   const [popularMemes, setPopularMemes] = useState<any[]>([]);
   const [userGrowthRate, setUserGrowthRate] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const {isDarkMode} = useTheme();
 
 useEffect(() => {
   setIsLoading(true);
@@ -71,11 +73,6 @@ const fetchAdminData = async () => {
   }
 };
 
-  
-  
-  
-  
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -87,7 +84,7 @@ const fetchAdminData = async () => {
 
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isDarkMode ? {backgroundColor: '#1C1C1C'} : {backgroundColor: '#fff'}]}>
       <ScrollView style={styles.scrollView}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <FontAwesomeIcon icon={faArrowLeft} size={14} color="#1bd40b" />
@@ -108,8 +105,6 @@ const fetchAdminData = async () => {
           <Text style={styles.statHeader}>User Growth Rate</Text>
           <Text style={styles.statValue}>{userGrowthRate}%</Text>
         </View>
-  
-        {/* New section for displaying DAU */}
         <View style={styles.statContainer}>
           <Text style={styles.statHeader}>Daily Active Users</Text>
           <Text style={styles.statValue}>{dailyActiveUsers}</Text>

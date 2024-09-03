@@ -20,7 +20,7 @@ export interface User {
   followingCount: number;
   Bio?: string;
   bio?: string;
-  isFollowing?: boolean; // Make it optional if not all users have this property
+  isFollowing?: boolean;
   userId?: string;
   isAdmin?: boolean;
   location?: string;

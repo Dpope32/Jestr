@@ -25,7 +25,7 @@ import {
   fetchComments,
   postComment,
   updateCommentReaction,
-} from '../Meme/memeService';
+} from '../../services/socialService';
 import styles from './CommentFeed.styles';
 
 const screenHeight = Dimensions.get('window').height;

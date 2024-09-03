@@ -14,7 +14,7 @@ import styles from './MP.styles';
 import {ShareType, User} from '../../types/types';
 import { COLORS } from '../../theme/theme';
 
-import {fetchComments} from '../Meme/memeService';
+import {fetchComments} from '../../services/socialService';
 
 interface IconButtonProps {
   icon: any;

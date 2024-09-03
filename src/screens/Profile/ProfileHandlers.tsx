@@ -3,7 +3,8 @@ import { Alert, ToastAndroid, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { UserState } from '../../utils/userStore';
-import { updateProfileImage, fetchMemes, getUserMemes, deleteMeme, removeDownloadedMeme } from '../../services/authFunctions';
+import { updateProfileImage, fetchMemes } from '../../services/userService';
+//import { getUserMemes, deleteMeme, removeDownloadedMeme } from '../../services/memeService';
 import { Meme, FetchMemesResult } from '../../types/types';
 import { TabName } from './Profile';
 import {useUserStore} from '../../utils/userStore';
@@ -11,6 +12,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
 import { ServerError } from '../../types/types';
+import { deleteMeme, getUserMemes, removeDownloadedMeme } from 'services/memeService';
 
 export const useProfileHandlers = (
   user: UserState,
