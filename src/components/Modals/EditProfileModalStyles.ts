@@ -1,78 +1,84 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#333',
-        padding: 20,
-        borderRadius: 10,
-      },
-  modalContent: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: '#1C1C1C',
-    borderRadius: 10,
+
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalInput: {
-    backgroundColor: '#444',
-    color: '#fff',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-    width: '100%',
+  modalContent: {
+    width: '90%',
+    backgroundColor: '#333',
+    borderRadius: 10,
+    padding: 20,
   },
-  closeButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
+  },
+  headerText: {
+    fontSize: 20,
+    color: '#FFF',
   },
   input: {
-    width: '100%',
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#CCC',
+    backgroundColor: '#444',
     borderRadius: 5,
-    marginBottom: 20,
+    padding: 10,
+    marginBottom: 10,
+    color: '#FFF',
+  },
+  centeredText: {
+    textAlign: 'center',
   },
   saveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 10,
+    width: '25%',
+    alignSelf: 'flex-end',
     backgroundColor: '#1bd40b',
     borderRadius: 5,
+    padding: 10,
+    alignItems: 'center',
+    marginTop: 10,
   },
   saveButtonText: {
     color: '#FFF',
-    marginLeft: 10,
+    fontSize: 16,
   },
-  modalSaveButton: {
-  backgroundColor: '#1bd40b',
-  padding: 10,
-  borderRadius: 5,
-  alignItems: 'center',
-},
-modalSaveButtonText: {
-  color: '#fff',
-  fontWeight: 'bold',
-},
-modalProfileImage: {
-  width: 50,
-  height: 50,
-  borderRadius: 25,
-  marginBottom: 10,
-},
-modalHeaderImage: {
-  width: '100%',
-  height: 100,
-  marginBottom: 10,
-},
+  label: {
+    color: '#AAA',
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalHeaderImage: {
+    width: '100%',
+    height: 100,
+    marginBottom: -50,
+  },
+  profileImageContainer: {
+    alignItems: 'center',
+    position: 'relative',
+  },
+  modalProfileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  cameraIconContainer: {
+    position: 'absolute',
+    right: 5,
+    bottom: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 12,
+    padding: 3,
+  },
 });
+

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Animated, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/core';
+import { useNavigation } from '@react-navigation/core';
 import { styles } from './LandingPage.styles';
 import InputField from '../../components/shared/Input/InutField';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import SuccessModal from '../../components/Modals/SuccessModal'; 
 import SignupSuccessModal from '../../components/Modals/SignupSuccessModal';
-import { RootStackParamList, LandingPageNavigationProp, LetterScale } from '../../types/types';
+import { RootStackParamList, LetterScale } from '../../types/types';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import WelcomeText from './WelcomeText';
 import { BlurView } from 'expo-blur';
@@ -15,7 +15,7 @@ import RainEffect from './RainEffect';
 import { handleForgotPassword } from '../../services/authService'
 import  ContentModal  from './ContentModal'
 import { handleSignup, handleLogin, handleGoogleSignIn, handleAppleSignIn, handleTwitterSignIn} from '../../services/authService';
-import {handleLoginClick,handleHeaderPicChange,handleProfilePicChange,handleSignUpClick,} from './LPHandlers';
+import {handleLoginClick,handleHeaderPicChange,handleProfilePicChange,handleSignUpClick, handleFacebookSignIn, handleSnapchatSignIn, handleInstagramSignIn} from './LPHandlers';
 
 interface LPProps {
   animationComplete: boolean;
@@ -31,9 +31,7 @@ interface LPProps {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const LP: React.FC<LPProps> = ({
-  animationComplete, titleMarginTop, titleOpacity, titleTranslateY, showInitialScreen, isAuthenticated, setShowInitialScreen, navigateToConfirmSignUp,
-}) => {
+const LP: React.FC<LPProps> = ({animationComplete, titleMarginTop, titleOpacity, titleTranslateY, isAuthenticated, setShowInitialScreen, navigateToConfirmSignUp,}) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'Feed'>>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -57,22 +55,6 @@ const LP: React.FC<LPProps> = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState<'privacy' | 'terms' | 'contact'>('privacy');
 
-
-  const handleFacebookSignIn = () => {
-    console.log('Facebook sign-in initiated');
-    // TODO: Implement Facebook authentication
-  };
-  
-  const handleSnapchatSignIn = () => {
-    console.log('Snapchat sign-in initiated');
-    // TODO: Implement Snapchat authentication
-  };
-  
-  const handleInstagramSignIn = () => {
-    console.log('Instagram sign-in initiated');
-    // TODO: Implement Instagram authentication
-  };
-
   const handleLoginPress = async () => {
     setIsLoading(true);
     await handleLogin(email, password, setIsLoading, navigation, setSuccessModalVisible, setModalUsername);
@@ -87,12 +69,9 @@ const LP: React.FC<LPProps> = ({
   return (
     <LinearGradient
       colors={[
-        '#080808', '#0a0a0a', '#0c0c0c', '#0e0e0e', '#101010',
-        '#121212', '#141414', '#161616', '#181818', '#1a1a1a',
-        '#1c1c1c', '#1e1e1e', '#202020', '#222222', '#242424',
-        '#262626', '#282828', '#2a2a2a', '#2c2c2c', '#2e2e2e',
-        '#303030', '#323232', '#343434', '#363636', '#383838',
-        '#3a3a3a', '#3c3c3c', '#3e3e3e'
+        '#080808', '#0a0a0a', '#0c0c0c', '#0e0e0e', '#101010','#121212', '#141414', '#161616', '#181818', '#1a1a1a',
+        '#1c1c1c', '#1e1e1e', '#202020', '#222222', '#242424','#262626', '#282828', '#2a2a2a', '#2c2c2c', '#2e2e2e',
+        '#303030', '#323232', '#343434', '#363636', '#383838','#3a3a3a', '#3c3c3c', '#3e3e3e'
       ]}
       style={styles.container}
     >
@@ -231,20 +210,20 @@ const LP: React.FC<LPProps> = ({
             )}
           </ScrollView>
           {isLoading && (
-  <BlurView 
-    intensity={100} 
-    style={[
-      StyleSheet.absoluteFill, 
-      styles.blurView,
-      { borderRadius: 20 }  // Add this line
-    ]}
-  >
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#00ff00" />
-      <Text style={styles.loadingText}>Logging in...</Text>
-    </View>
-  </BlurView>
-)}
+          <BlurView 
+            intensity={100} 
+            style={[
+              StyleSheet.absoluteFill, 
+              styles.blurView,
+              { borderRadius: 30 } 
+            ]}
+          >
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#00ff00" />
+              <Text style={styles.loadingText}>Logging in...</Text>
+            </View>
+          </BlurView>
+        )}
           <View style={styles.footer}>
           <TouchableOpacity onPress={() => openModal('privacy')}>
           <Text style={styles.footerLink}>Privacy Policy</Text>

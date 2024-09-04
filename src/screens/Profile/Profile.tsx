@@ -33,7 +33,7 @@ type ProfileProps = {route: ProfileScreenRouteProp; navigation: ProfileScreenNav
 export type TabName = 'posts' | 'liked' | 'history' | 'downloaded';
 
 const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
-  console.log('Profile component rendering');
+  //console.log('Profile component rendering');
   const { isDarkMode } = useTheme();
   const routeUser = route.params.user;
   const user = useUserStore(state => state);
@@ -58,8 +58,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreMemes, setHasMoreMemes] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
-
-    // New ref to track if memes have been fetched for the current tab
+  
     const memesFetchedRef = useRef<{[key in TabName]: boolean}>({
       posts: false,
       liked: false,
@@ -131,6 +130,11 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
     memesFetchedRef.current[tabName] = false;  // Reset the fetched flag for the new tab
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, []);
+
+  const openFollowModal = (tab: 'followers' | 'following') => {
+    setFollowModalTab(tab);
+    setIsFollowModalVisible(true);
+  };
 
   const handleImagePress = useCallback((type: 'profile' | 'header') => {
     const imageUri =
@@ -319,33 +323,27 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
           </View>
         </View>
         <View style={styles.statsContainer}>
-          <View style={styles.followInfo}>
-            <TouchableOpacity
-              style={styles.followInfo}
-              onPress={() => {
-                setFollowModalTab('followers');
-                setIsFollowModalVisible(true);
-              }}>
-              <Text style={styles.followCount}>{followersCount || 0}</Text>
-              <Text style={styles.followLabel}>Followers</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.jestrForContainer}>
-            <Text style={styles.jestrFor}>Jestr for</Text>
-            <Text style={styles.jestrForDays}>{daysSinceCreation} days</Text>
-          </View>
-          <View style={styles.followInfo}>
-            <TouchableOpacity
-              style={styles.followInfo}
-              onPress={() => {
-                setFollowModalTab('following');
-                setIsFollowModalVisible(true);
-              }}>
-              <Text style={styles.followCount}>{followingCount || 0}</Text>
-              <Text style={styles.followLabel}>Following</Text>
-            </TouchableOpacity>
-          </View>
+        <TouchableOpacity
+          style={styles.statItem}
+          onPress={() => openFollowModal('followers')}
+        >
+          <Text style={styles.statCount}>{followersCount}</Text>
+          <Text style={styles.statLabel}>Followers</Text>
+        </TouchableOpacity>
+
+        <View style={styles.jestrForContainer}>
+          <Text style={styles.jestrFor}>Jestr for</Text>
+          <Text style={styles.jestrForDays}>{daysSinceCreation} days</Text>
         </View>
+
+        <TouchableOpacity
+          style={styles.statItem}
+          onPress={() => openFollowModal('following')}
+        >
+          <Text style={styles.statCount}>{followingCount}</Text>
+          <Text style={styles.statLabel}>Following</Text>
+        </TouchableOpacity>
+      </View>
         <View style={styles.tabContainer}>
           {renderTabButton('posts', faUser, 'Posts')}
           {renderTabButton('downloaded', faBox, 'Gallery')}
@@ -369,7 +367,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
         visible={isFollowModalVisible}
         onClose={() => setIsFollowModalVisible(false)}
         userId={user?.email ?? ''}
-        initialTab={followModalTab as 'followers' | 'following'}
+        initialTab={followModalTab}
       />
 
 {selectedMeme && (
@@ -383,7 +381,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
           email: selectedMeme.email,
           username: selectedMeme.username,
           profilePic: selectedMeme.profilePicUrl,
-          displayName: selectedMeme.username, // Add this if you have a separate displayName
+          displayName: selectedMeme.username, 
         }}
         mediaType={selectedMeme.mediaType}
         currentMedia={selectedMeme.url}
@@ -398,8 +396,8 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
         username={selectedMeme.username}
         caption={selectedMeme.caption}
         uploadTimestamp={selectedMeme.uploadTimestamp}
-        handleLike={() => {/* Implement like functionality */}}
-        handleDownload={() => {/* Implement download functionality */}}
+        handleLike={() => {}}
+        handleDownload={() => {}}
         toggleCommentFeed={() =>
           setIsCommentFeedVisible(!isCommentFeedVisible)
         }
@@ -422,7 +420,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
         likeDislikeCounts={{
           [currentMemeIndex]: {
             likeCount: selectedMeme.likeCount,
-            dislikeCount: 0, // Add this if you have dislike functionality
+            dislikeCount: 0, 
           }
         }}
         currentMediaIndex={currentMemeIndex}
@@ -440,9 +438,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
           liked: selectedMeme.liked || false,
           doubleLiked: selectedMeme.doubleLiked || false
         }}
-        onLikeStatusChange={(memeID, status, newLikeCount) => {
-          // Implement the function to handle like status change
-        }}
+        onLikeStatusChange={(memeID, status, newLikeCount) => {}}
         liked={selectedMeme.liked || false}
         doubleLiked={selectedMeme.doubleLiked || false}
         isDarkMode={isDarkMode}

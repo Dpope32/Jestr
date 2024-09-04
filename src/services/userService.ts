@@ -21,12 +21,15 @@
   'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser';
 
   export const getUser = async (userEmail: string): Promise<User | null> => {
+    console.log('getUser called with userEmail:', userEmail);
     try {
       const requestBody = JSON.stringify({
         operation: 'getUser',
-        email: userEmail, // Add this line
+        identifier: userEmail, // Changed from 'email' to 'identifier'
       });
-  
+      
+      console.log('Sending request to getUser API with body:', requestBody);
+      
       const response = await fetch(
         'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser',
         {
@@ -37,20 +40,23 @@
           body: requestBody,
         },
       );
+      
       const responseText = await response.text();
-  
+      console.log('Received response from getUser API:', responseText);
+      
       if (!response.ok) {
         console.error(
           `HTTP error! status: ${response.status}, body: ${responseText}`,
         );
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+      
       const data = JSON.parse(responseText);
       if (!data || !data.data || !data.data.email) {
         console.error('Invalid or incomplete user data received:', data);
         throw new Error('Invalid or incomplete user data received');
       }
+      console.log('Processed user data:', data.data);
       return data.data || null;
     } catch (error) {
       console.error('Error fetching user:', error);
@@ -332,34 +338,6 @@
       return data;
     } catch (error) {
       console.error('Error updating profile image:', error);
-      throw error;
-    }
-  };
-
-  export const getUserById = async (userId: string): Promise<User> => {
-    try {
-      const response = await fetch(
-        'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            operation: 'getUser',
-            email: userId, // Assuming userId is an email
-          }),
-        },
-      );
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      return data.data;
-    } catch (error) {
-      console.error('Error fetching user data:', error);
       throw error;
     }
   };

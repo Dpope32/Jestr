@@ -240,21 +240,21 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#000', // Ensure a consistent background color
+      backgroundColor: '#000', 
     },
     slide: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 30, // Slightly reduce padding for better fit on smaller screens
+      paddingHorizontal: 30, 
     },
     lottieAnimation: {
       width: 200,
       height: 250,
-      marginTop: -100, // Adjusted for a better layout
+      marginTop: -100, 
     },
     title: {
-      fontSize: 30, // Slightly larger for emphasis
+      fontSize: 30, 
       fontWeight: 'bold',
       marginVertical: 10,
       color: '#FFF',
@@ -266,7 +266,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
     description: {
       fontSize: 16,
       textAlign: 'center',
-      color: '#EAEAEA', // Use a lighter color for better readability
+      color: '#EAEAEA', 
       lineHeight: 36,
       marginHorizontal: 10,
       textShadowColor: 'rgba(0, 0, 0, 0.85)',
@@ -275,7 +275,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
     },
     particle: {
       position: 'absolute',
-      backgroundColor: 'rgba(255, 255, 255, 0.8)', // Adjust particle color for better visibility
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
       borderRadius: 50,
     },
     footer: {

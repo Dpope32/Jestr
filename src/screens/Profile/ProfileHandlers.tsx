@@ -1,17 +1,15 @@
 import { useState, useCallback } from 'react';
-import { Alert, ToastAndroid, Platform } from 'react-native';
+import { Alert} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { UserState } from '../../utils/userStore';
 import { updateProfileImage, fetchMemes } from '../../services/userService';
-//import { getUserMemes, deleteMeme, removeDownloadedMeme } from '../../services/memeService';
 import { Meme, FetchMemesResult } from '../../types/types';
 import { TabName } from './Profile';
 import {useUserStore} from '../../utils/userStore';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
-import { ServerError } from '../../types/types';
 import { deleteMeme, getUserMemes, removeDownloadedMeme } from 'services/memeService';
 
 export const useProfileHandlers = (
@@ -134,7 +132,7 @@ export const useProfileHandlers = (
   };
 
   const handleHeightChange = (height: number) => {
-    // Implement if needed
+    // todo
   };
 
   const handleCloseMediaPlayer = () => {
@@ -143,7 +141,7 @@ export const useProfileHandlers = (
   };
 
   const loadMoreMemes = () => {
-    // Implement if needed
+    // todo?
   };
 
   const handleShareProfile = async () => {

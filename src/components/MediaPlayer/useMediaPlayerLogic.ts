@@ -1,8 +1,8 @@
-import {useState, useCallback, useEffect} from 'react';
+import {useState, useCallback} from 'react';
 import {debounce} from 'lodash';
 import {Video, AVPlaybackStatus} from 'expo-av';
 
-import {updateMemeReaction, getLikeStatus} from '../../services/memeService';
+import {updateMemeReaction} from '../../services/memeService';
 import {handleShareMeme} from '../../services/memeService';
 import {ShareType, User} from '../../types/types';
 
@@ -28,19 +28,8 @@ interface UseMediaPlayerLogicProps {
 }
 
 export const useMediaPlayerLogic = ({
-  initialLikeCount,
-  initialDownloadCount,
-  initialShareCount,
-  initialCommentCount,
-  user,
-  memeID,
-  handleDownload,
-  onLikeStatusChange,
-  mediaType,
-  video,
-  status,
-  handleSingleTap,
-}: UseMediaPlayerLogicProps) => {
+  initialLikeCount,initialDownloadCount,initialShareCount,initialCommentCount,user,memeID,
+  handleDownload,onLikeStatusChange,handleSingleTap}: UseMediaPlayerLogicProps) => {
   const [liked, setLiked] = useState(false);
   const [doubleLiked, setDoubleLiked] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -64,23 +53,6 @@ export const useMediaPlayerLogic = ({
     console.log('longpress pressed');
     setModalVisible(true);
   };
-
-//  useEffect(() => {
-//    const checkLikeStatus = async () => {
-//      if (user && user.email) {
-//        try {
-//          const result = await getLikeStatus(memeID, user.email);
-//          if (result) {
-//            setLiked(result.liked);
-//            setDoubleLiked(result.doubleLiked);
-//          }
-//        } catch (error) {
-//          console.error('Error checking like status:', error);
-//        }
-//      }
-//    };
-//    checkLikeStatus();
-//  }, [memeID, user]);
 
   const handleLikePress = useCallback(async () => {
     if (user) {
@@ -118,7 +90,6 @@ export const useMediaPlayerLogic = ({
         );
       } catch (error) {
         console.error('Error updating meme reaction:', error);
-        // Revert changes if the request fails
         setLiked(!newLikedState);
         setDoubleLiked(!newDoubleLikedState);
         setCounts(prevCounts => ({...prevCounts, likes: initialLikeCount}));
@@ -206,26 +177,7 @@ export const useMediaPlayerLogic = ({
   }, []);
 
   return {
-    liked,
-    doubleLiked,
-    isSaved,
-    showSaveModal,
-    showShareModal,
-    showToast,
-    toastMessage,
-    showLikeAnimation,
-    likePosition,
-    counts,
-    friends,
-    debouncedHandleLike,
-    handleDownloadPress,
-    onShare,
-    formatDate,
-    setShowSaveModal,
-    setShowShareModal,
-    handleSingleTap,
-    setIsSaved,
-    setCounts,
-    handleLongPress,
+    liked,doubleLiked,isSaved,showSaveModal,showShareModal,showToast,toastMessage,showLikeAnimation,likePosition,counts,friends,debouncedHandleLike,
+    handleDownloadPress,onShare,formatDate,setShowSaveModal,setShowShareModal,handleSingleTap,setIsSaved,setCounts,handleLongPress,
   };
 };

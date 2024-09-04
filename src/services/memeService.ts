@@ -38,7 +38,7 @@ export const getUserMemes = async (
     }
 
     const responseData = await response.json();
-    console.log('getUserMemes response:', responseData);  // Add this line for debugging
+    //console.log('getUserMemes response:', responseData);  // Add this line for debugging
 
     // Check if the response has the expected structure
     if (responseData && responseData.data && Array.isArray(responseData.data.memes)) {

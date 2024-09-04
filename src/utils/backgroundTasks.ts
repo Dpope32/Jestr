@@ -1,6 +1,6 @@
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
-import { fetchMemes } from '../components/Meme/memeService';
+import { fetchMemes } from '../services/memeService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BACKGROUND_FETCH_TASK = 'background-fetch';
@@ -29,9 +29,6 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
       return BackgroundFetch.BackgroundFetchResult.Failed;
     }
   });
-
-  
-
 
 export async function registerBackgroundFetchAsync() {
   return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
