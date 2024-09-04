@@ -1,23 +1,11 @@
 import React, {useState, useRef, useEffect, useMemo, useCallback} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  Dimensions,
-  Animated,
-  GestureResponderEvent,
-  ActivityIndicator,
-  TouchableWithoutFeedback,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import {View,Text,Image,Dimensions,Animated,GestureResponderEvent,ActivityIndicator,TouchableWithoutFeedback,StyleSheet,Platform} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faCheckCircle} from '@fortawesome/free-solid-svg-icons';
 import {Video, AVPlaybackStatus, ResizeMode} from 'expo-av';
 import {BlurView} from 'expo-blur';
 import Toast from 'react-native-toast-message';
 import LottieView from 'lottie-react-native';
-
 import SafeImage from '../shared/SafeImage';
 import styles from './MP.styles';
 import {MediaPlayerProps} from '../../types/types';
@@ -28,7 +16,6 @@ import {useMediaPlayerLogic} from './useMediaPlayerLogic';
 import {useUserStore} from '../../utils/userStore';
 import {LongPressModal} from './LongPressModal';
 import {useTheme} from '../../theme/ThemeContext';
-import { debounce } from 'lodash';
 
 const SaveSuccessModal = React.lazy(() => import('../Modals/SaveSuccessModal'));
 const ShareModal = React.lazy(() => import('../Modals/ShareModal'));
@@ -42,7 +29,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     currentMedia,
     mediaType,
     prevMedia,
-    memes,
     nextMedia,
     caption,
     uploadTimestamp,
@@ -74,23 +60,17 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     const iconAreaRef = useRef(null);
     const isSwiping = useRef(false);
 
-    const [status, setStatus] = useState<AVPlaybackStatus>(
-      {} as AVPlaybackStatus,
-    );
+    const [status, setStatus] = useState<AVPlaybackStatus>({} as AVPlaybackStatus,);
     const [imageSize, setImageSize] = useState({width: 0, height: 0});
     const [isLoading, setIsLoading] = useState(true);
     const [mediaLoadError, setMediaLoadError] = useState(false);
-    // const [retryCount, setRetryCount] = useState(0);
     const [isFollowed, setIsFollowed] = useState(false);
     const [canFollow, setCanFollow] = useState(true);
     const [lastTap, setLastTap] = useState(0);
     const [isLongPressModalVisible, setIsLongPressModalVisible] = useState(false);
     const [likePosition, setLikePosition] = useState({x: 0, y: 0});
     const [showLikeAnimation, setShowLikeAnimation] = useState(false);
-    // const isActive = index === currentIndex;
     const [viewedMemes, setViewedMemes] = useState<Set<string>>(new Set());
-    const lastBatchCheckTimeRef = useRef(0);
-    const lastRecordTimeRef = useRef(0);
 
     const handleMediaError = useCallback(() => {
       setMediaLoadError(true);
@@ -116,11 +96,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
             let calculatedWidth, calculatedHeight;
 
             if (aspectRatio > screenWidth / screenHeight) {
-              // Image is wider than the screen
               calculatedWidth = screenWidth;
               calculatedHeight = screenWidth / aspectRatio;
             } else {
-              // Image is taller than or equal to the screen
               calculatedHeight = screenHeight;
               calculatedWidth = screenHeight * aspectRatio;
             }
@@ -158,14 +136,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         setViewedMemes(prev => new Set(prev).add(memeID));
       }
       setIsFollowed(memeUser.isFollowed ?? false);
-    }, [
-      loadMedia,
-      nextMedia,
-      prevMedia,
-      memeID,
-      index,
-      currentIndex,
-    ]);
+    }, [loadMedia,nextMedia,prevMedia,memeID,index,currentIndex]);
     
     const handleSingleTap = useCallback(() => {
       if (mediaType === 'video' && video.current) {
@@ -177,39 +148,13 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       }
     }, [mediaType, status]);
 
-    const {
-      liked,
-      doubleLiked,
-      isSaved,
-      showSaveModal,
-      showShareModal,
-      showToast,
-      toastMessage,
-      counts,
-      friends,
-      debouncedHandleLike,
-      handleDownloadPress,
-      onShare,
-      formatDate,
-      setShowSaveModal,
-      setShowShareModal,
-      setIsSaved,
-      setCounts,
+    const {liked,doubleLiked,isSaved,showSaveModal,showShareModal,
+      showToast,toastMessage,counts,friends,debouncedHandleLike,handleDownloadPress,
+      onShare,formatDate,setShowSaveModal,setShowShareModal,setIsSaved,setCounts,
     } = useMediaPlayerLogic({
-      initialLiked,
-      initialDoubleLiked,
-      initialLikeCount,
-      initialDownloadCount,
-      initialShareCount,
-      initialCommentCount,
-      user,
-      memeID,
-      handleDownload,
-      onLikeStatusChange,
-      mediaType,
-      video,
-      status,
-      handleSingleTap,
+      handleDownload,onLikeStatusChange,handleSingleTap,
+      initialLiked,initialDoubleLiked,initialLikeCount,initialDownloadCount,initialShareCount,initialCommentCount,
+      user,memeID,mediaType,video,status,
     });
 
     const handleSwipeUp = useCallback(() => {
@@ -258,11 +203,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       (event: GestureResponderEvent) => {
         const {pageX, pageY}: {pageX: number; pageY: number} =
           event.nativeEvent;
-
-        // Adjusted these values to allign double tap and animation
         const updateLikePosition = (x: number, y: number) => {
-          const xOffset = Platform.OS === 'ios' ? -150 : -140; 
-          const yOffset = Platform.OS === 'ios' ? -300 : -265;
+          const xOffset = Platform.OS === 'ios' ? -150 : -150; 
+          const yOffset = Platform.OS === 'ios' ? -300 : -230;
 
           setLikePosition({
             x: x + xOffset,
@@ -270,13 +213,13 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           });
         };
 
-        updateLikePosition(pageX, pageY); // Ensure both pageX and pageY are passed
+        updateLikePosition(pageX, pageY); 
         setShowLikeAnimation(true);
         debouncedHandleLike();
 
         setTimeout(() => {
           setShowLikeAnimation(false);
-        }, 1000); // Hide the animation after 1 second
+        }, 1000); 
       },
       [debouncedHandleLike],
     );
@@ -289,7 +232,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         if (now - lastTap < DOUBLE_PRESS_DELAY) {
           handleDoubleTap(event);
         } else {
-          handleSingleTap(); // This could be toggling video play/pause
+          handleSingleTap(); 
         }
         setLastTap(now);
       },
@@ -413,7 +356,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
             )}
           </View>
         </TouchableWithoutFeedback>
-
         <IconsAndContent
           isFollowed={isFollowed}
           memeUser={memeUser}
@@ -437,7 +379,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           memeID={memeID}
           numOfComments={numOfComments!}
         />
-
         {showToast && (
           <View
             style={[
@@ -452,12 +393,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
             <Text style={styles.toastMessage}>{toastMessage}</Text>
           </View>
         )}
-
         <SaveSuccessModal
           visible={showSaveModal}
           onClose={() => setShowSaveModal(false)}
         />
-
         <ShareModal
           visible={showShareModal}
           onClose={() => setShowShareModal(false)}
@@ -465,7 +404,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           onShare={onShare}
           currentMedia={currentMedia}
         />
-
         <Animated.View
           style={[
             StyleSheet.absoluteFill,
@@ -478,7 +416,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           ]}>
           <BlurView intensity={10} style={StyleSheet.absoluteFill} />
         </Animated.View>
-
         <LongPressModal
           isVisible={isLongPressModalVisible}
           onClose={closeLongPressModal}

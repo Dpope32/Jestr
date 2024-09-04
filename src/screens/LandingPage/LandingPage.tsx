@@ -2,25 +2,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Animated, View, ActivityIndicator, Text } from 'react-native';
 import { NavigationProp, useNavigation, CommonActions } from '@react-navigation/native';
 import LP from './LP';
-import { User, RootStackParamList, LetterScale } from '../../types/types';
-import { getToken, getUserIdentifier, removeToken, removeUserIdentifier }  from 'utils/secureStore';
+import {RootStackParamList, LetterScale } from '../../types/types';
+import { getToken, getUserIdentifier, removeToken, removeUserIdentifier } from 'utils/secureStore';
 import { getCurrentUser } from '@aws-amplify/auth';
 import { fetchUserDetails } from '../../services/userService';
 import { storeUserIdentifier } from 'utils/secureStore';
+
 type LandingPageNavigationProp = NavigationProp<RootStackParamList>;
 
 const LandingPage: React.FC = () => {
-//  console.log('LandingPage rendering start');
   const navigation = useNavigation<LandingPageNavigationProp>();
   const [isLoading, setIsLoading] = useState(false);
   const logoOpacity = useRef(new Animated.Value(1)).current;
   const [animationComplete, setAnimationComplete] = useState(false);
   const titleOpacity = useRef(new Animated.Value(0)).current;
   const titleTranslateY = useRef(new Animated.Value(30)).current;
-  const [titlePosition, setTitlePosition] = useState({
-    top: new Animated.Value(10),
-    left: new Animated.Value(0)
-  });
+  const [titlePosition, setTitlePosition] = useState({ top: new Animated.Value(10), left: new Animated.Value(0) });
   const titleAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
   const letterAnimations = useRef<Animated.Value[]>([]);
   const [letterScale, setLetterScale] = useState<LetterScale>([]);
@@ -30,24 +27,26 @@ const LandingPage: React.FC = () => {
   const formOpacity = useRef(new Animated.Value(0)).current;
   const [titleMarginTop, setTitleMarginTop] = useState(-300);
 
-  
   useEffect(() => {
-  //  console.log('LandingPage useEffect: Animation start');
     startAnimation();
-  }, []);
+
+    const unsubscribe = navigation.addListener('focus', () => {
+      setShowInitialScreen(true);
+      setTitleMarginTop(-300);
+      setAnimationComplete(false);
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   useEffect(() => {
-  //  console.log('LandingPage useEffect: Auth check start');
     const checkAuth = async () => {
       const token = await getToken('accessToken');
       let identifier = await getUserIdentifier();
-  //    console.log('Token in LandingPage:', token ? 'exists' : 'does not exist');
-  //    console.log('Identifier in LandingPage:', identifier ? 'exists' : 'does not exist');
-  
+
       if (token) {
         try {
           if (!identifier) {
-            // Token exists but identifier doesn't. We need to get the user's email.
             const user = await getCurrentUser();
             identifier = user.signInDetails?.loginId || user.username;
             if (identifier) {
@@ -56,55 +55,30 @@ const LandingPage: React.FC = () => {
               throw new Error('Unable to retrieve user email');
             }
           }
-  
+
           const userDetails = await fetchUserDetails(identifier, token);
           if (userDetails) {
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'Feed' }],
-              })
-            );
+            navigation.dispatch(CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'Feed' }],
+            }));
           } else {
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [
-                  { 
-                    name: 'CompleteProfileScreen', 
-                    params: { email: identifier }
-                  }
-                ],
-              })
-            );
+            navigation.dispatch(CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'CompleteProfileScreen', params: { email: identifier } }],
+            }));
           }
         } catch (error) {
           console.error('Error checking auth in LandingPage:', error);
-          // Clear stored data on error
           await removeToken('accessToken');
           await removeUserIdentifier();
-          // Stay on LandingPage
           setIsAuthenticated(false);
         }
       } else {
-        // No token, stay on LandingPage
         setIsAuthenticated(false);
       }
     };
     checkAuth();
-  }, [navigation]);
-
-  const navigateToConfirmSignUp = (email: string) => {
-    navigation.navigate('ConfirmSignUp', { email });
-  };
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      setShowInitialScreen(true);
-      setTitleMarginTop(-300);
-      setAnimationComplete(false);
-    });
-    return unsubscribe;
   }, [navigation]);
 
   useEffect(() => {
@@ -115,6 +89,10 @@ const LandingPage: React.FC = () => {
     }).start();
   }, [showInitialScreen, showSignUpForm]);
 
+  const navigateToConfirmSignUp = (email: string) => {
+    navigation.navigate('ConfirmSignUp', { email });
+  };
+
   const startAnimation = () => {
     setAnimationComplete(false);
     letterAnimations.current = ['J', 'e', 's', 't', 'r'].map(() => new Animated.Value(0));
@@ -123,7 +101,7 @@ const LandingPage: React.FC = () => {
       Animated.timing(anim, {
         toValue: 1,
         duration: 1000,
-        delay: index * 200, // Stagger the animations
+        delay: index * 200, 
         useNativeDriver: true
       })
     );
@@ -143,12 +121,12 @@ const LandingPage: React.FC = () => {
     const scale: LetterScale = letterAnimations.current.map(animation => ({
       scale: animation.interpolate({
         inputRange: [0, 1],
-        outputRange: [0.5, 1] // Start from half size
+        outputRange: [0.5, 1] 
       }),
       opacity: animation,
       translateY: animation.interpolate({
         inputRange: [0, 1],
-        outputRange: [50, 0] // Start 50 pixels below and move up
+        outputRange: [50, 0]
       })
     }));
     setLetterScale(scale);
@@ -169,10 +147,6 @@ const LandingPage: React.FC = () => {
      // console.log('Animation Complete');
     }
   };
-
-  
-
-  //console.log('LandingPage rendering end, isLoading:', isLoading);
 
    return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>

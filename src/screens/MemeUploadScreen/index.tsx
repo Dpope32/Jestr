@@ -3,27 +3,27 @@ import { View, Text, StyleSheet, StatusBar, Alert, Animated, TouchableOpacity, E
 import MemeUpload from '../../components/Meme/MemeUpload';
 import TopPanel from '../../components/Panels/TopPanel';
 import ProfilePanel from '../../components/Panels/ProfilePanel';
-import { User } from '../../types/types';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import LottieView from 'lottie-react-native';
 import { FONTS, COLORS } from '../../theme/theme';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useTheme } from '../../theme/ThemeContext';
+import { useUserStore } from '../../utils/userStore';
 
 type MemeUploadScreenProps = {
   navigation: any;
   route: any;
 };
 
-const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }) => {
-  const { user } = route.params;
+const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation }) => {
   const {isDarkMode} = useTheme();
   const [imageUploaded, setImageUploaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [localUser, setLocalUser] = useState<User | null>(user || null);
   const [imageSelected, setImageSelected] = useState(false);
   const [profilePanelVisible, setProfilePanelVisible] = useState(false);
+
+  const user = useUserStore(state => state);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -88,7 +88,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
           useNativeDriver: true,
         }),
       ]).start(() => {
-        setTimeout(shake, 2000); // Shake every 2 seconds
+        setTimeout(shake, 2000);
       });
     };
 
@@ -105,7 +105,6 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
     transform: [{ rotate: shakeInterpolate }],
   };
 
-  // New feature: Add a fade-in animation for the card
   const cardFadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -134,21 +133,21 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
         showLogo={true}
         isAdmin={false}
         onAdminClick={console.log}
-        isUploading={isUploading} // Pass the isUploading state to TopPanel
+        isUploading={isUploading}
       />
       {profilePanelVisible && (
         <View style={styles.overlay} />
       )}
-      {profilePanelVisible && localUser && (
+      {profilePanelVisible && user && (
         <ProfilePanel
           isVisible={profilePanelVisible}
           onClose={() => setProfilePanelVisible(false)}
-          profilePicUrl={localUser.profilePic}
-          username={localUser.username}
-          displayName={localUser.displayName || 'N/A'}
-          followersCount={localUser.followersCount}
-          followingCount={localUser.followingCount}
-          user={localUser}
+          profilePicUrl={user.profilePic}
+          username={user.username}
+          displayName={user.displayName || 'N/A'}
+          followersCount={user.followersCount}
+          followingCount={user.followingCount}
+          user={user}
           navigation={navigation}
         />
       )}
@@ -168,7 +167,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({ navigation, route }
           onUploadSuccess={handleUploadSuccess}
           onImageSelect={handleImageSelect}
           isDarkMode={isDarkMode}
-          creationDate={user.creationDate} // Add this prop
+          creationDate={user.creationDate} 
         />
       </Animated.View>
       {isUploading && (
@@ -231,7 +230,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   better: {
-    color: COLORS.accent, // Change color for BETTER
+    color: COLORS.accent, 
     textShadowColor: '#000',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,

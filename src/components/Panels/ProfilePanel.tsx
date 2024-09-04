@@ -1,25 +1,8 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  Animated,
-  PanResponder,
-  Dimensions,
-} from 'react-native';
+import {View,Text,Image,TouchableOpacity,Animated,PanResponder,Dimensions,} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import styles from './ProfilePanel.styles';
-import {
-  faUser,
-  faRibbon,
-  faBell,
-  faHistory,
-  faCog,
-  faMoon,
-  faSignOutAlt,
-  faTimes,
-} from '@fortawesome/free-solid-svg-icons';
+import {faUser,faRibbon,faBell,faHistory,faCog,faMoon,faSignOutAlt,faTimes,} from '@fortawesome/free-solid-svg-icons';
 import Anon1Image from '../../assets/images/Jestr5.jpg';
 import {useTheme} from '../../theme/ThemeContext'; // Import useTheme
 import LogoutModal from '../Modals/LogoutModal';
@@ -30,6 +13,7 @@ import {handleSignOut} from '../../services/authService';
 import {CommonActions} from '@react-navigation/native';
 import {useUserStore} from '../../utils/userStore';
 import * as SecureStore from 'expo-secure-store';
+import { useFollowStore } from '../../utils/followStore';
 
 const {width} = Dimensions.get('window');
 
@@ -55,7 +39,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   const bio = localUser?.Bio || localUser?.bio || 'Default bio';
   const panelTranslateX = useRef(new Animated.Value(-width)).current;
   const {isDarkMode, toggleDarkMode} = useTheme();
-
+  const resetFollowStore = useFollowStore(state => state.reset);
   // console.log('ProfilePanel: localUser', localUser);
 
   // useEffect(() => {
@@ -154,7 +138,7 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   const confirmSignOut = async () => {
     try {
       await handleSignOut(navigation);
-      // Clear SecureStore
+      const resetFollowStore = useFollowStore(state => state.reset);
       await SecureStore.deleteItemAsync('accessToken');
       // Clear Zustand store
       useUserStore.getState().setUserDetails({});

@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { View, Text } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { debounce } from 'lodash';
 import * as Haptics from 'expo-haptics';
@@ -14,7 +14,7 @@ import { fetchComments } from '../../services/socialService';
 import { fetchUserDetails } from '../../services/userService';
 
 import styles from './Feed.styles';
-import { RootStackParamList, User } from '../../types/types';
+import { RootStackParamList } from '../../types/types';
 import TopPanel from '../../components/Panels/TopPanel';
 import BottomPanel from '../../components/Panels/BottomPanel';
 import ProfilePanel from '../../components/Panels/ProfilePanel';
@@ -22,45 +22,49 @@ import CommentFeed from '../../components/Modals/CommentFeed';
 import MemeList from '../../components/MediaPlayer/MemeList';
 
 const Feed: React.FC = React.memo(() => {
-  const route = useRoute<RouteProp<RootStackParamList, 'Feed'>>();
-  const userParams = route.params?.user ?? {};
-  const userStore = useUserStore(state => state as User);
+  const userStore = useUserStore();
   const { isDarkMode } = useTheme();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-
-  const [user, setUser] = useState<User>({ ...userStore, ...userParams });
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
-  const { memes, isLoading, error, fetchMoreMemes, fetchInitialMemes } = useMemes(
-    user,
-    accessToken,
-  );
+  const { memes, isLoading, error, fetchMoreMemes, fetchInitialMemes } = useMemes(userStore, accessToken);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [currCommentsLength, setCurrCommentsLength] = useState(0);
 
-  const updateCommentCount = async (memeID: string) => {
+  const isFocused = useRef(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      isFocused.current = true;
+      if (memes.length === 0) {
+        fetchInitialMemes();
+      }
+      return () => {
+        isFocused.current = false;
+      };
+    }, [fetchInitialMemes, memes.length])
+  );
+
+  const updateCommentCount = useCallback(async (memeID: string) => {
     const updatedComments = await fetchComments(memeID);
     setCurrCommentsLength(updatedComments.length);
-  };
+  }, []);
 
-  useEffect(() => {
-    console.log('Feed - Current media index changed:', currentMediaIndex);
-  }, [currentMediaIndex, memes]);
-
-  useEffect(() => {
-    const loadUserData = async () => {
-      const token = await getToken('accessToken');
-      setAccessToken(token);
-      if (token && user.email) {
-        const userDetails = await fetchUserDetails(user.email, token);
-        setUser(prevUser => ({ ...prevUser, ...userDetails }));
-        useUserStore.getState().setUserDetails(userDetails);
-      }
-    };
-    loadUserData();
-    logStorageContents();
-  }, [user.email]);
+  useFocusEffect(
+    useCallback(() => {
+      const loadUserData = async () => {
+        const token = await getToken('accessToken');
+        setAccessToken(token);
+        if (token && userStore.email) {
+          const userDetails = await fetchUserDetails(userStore.email, token);
+          useUserStore.getState().setUserDetails(userDetails);
+        }
+      };
+      loadUserData();
+      logStorageContents();
+    }, [userStore.email])
+  );
 
   const toggleProfilePanel = useCallback(() => {
     setProfilePanelVisible(prev => !prev);
@@ -71,25 +75,31 @@ const Feed: React.FC = React.memo(() => {
   }, []);
 
   const debouncedFetchMoreMemes = useMemo(
-    () => debounce(fetchMoreMemes, 500, { leading: true, trailing: false }),
-    [fetchMoreMemes],
+    () => debounce(() => {
+      if (isFocused.current) {
+        fetchMoreMemes();
+      }
+    }, 500, { leading: true, trailing: false }),
+    [fetchMoreMemes]
   );
 
   const handleHomeClick = useCallback(() => {
-    fetchInitialMemes();
-    setCurrentMediaIndex(0);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (isFocused.current) {
+      fetchInitialMemes();
+      setCurrentMediaIndex(0);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
   }, [fetchInitialMemes]);
 
   const updateLikeStatus = useCallback(
     (memeID: string, status: any, newLikeCount: number) => {
       console.log('Like status updated:', { memeID, status, newLikeCount });
     },
-    [],
+    []
   );
 
   const handleEndReached = useCallback(() => {
-    if (!isLoading && memes.length > 0) {
+    if (!isLoading && memes.length > 0 && isFocused.current) {
       debouncedFetchMoreMemes();
     }
   }, [isLoading, memes.length, debouncedFetchMoreMemes]);
@@ -98,16 +108,16 @@ const Feed: React.FC = React.memo(() => {
     () => (
       <TopPanel
         onProfileClick={toggleProfilePanel}
-        profilePicUrl={user.profilePic || ''}
-        username={user.username || ''}
+        profilePicUrl={userStore.profilePic || ''}
+        username={userStore.username || ''}
         enableDropdown={true}
         showLogo={true}
-        isAdmin={user.isAdmin || false}
+        isAdmin={userStore.isAdmin || false}
         isUploading={false}
         onAdminClick={() => navigation.navigate('AdminPage')}
       />
     ),
-    [user.profilePic, user.username, user.isAdmin, toggleProfilePanel, navigation],
+    [userStore.profilePic, userStore.username, userStore.isAdmin, toggleProfilePanel, navigation]
   );
 
   const memoizedMemeList = useMemo(() => {
@@ -115,14 +125,14 @@ const Feed: React.FC = React.memo(() => {
     return (
       <MemeList
         memes={memes}
-        user={user}
+        user={userStore}
         isDarkMode={isDarkMode}
         onEndReached={handleEndReached}
         toggleCommentFeed={toggleCommentFeed}
         updateLikeStatus={updateLikeStatus}
         currentMediaIndex={currentMediaIndex}
         setCurrentMediaIndex={setCurrentMediaIndex}
-        currentUserId={user.email}
+        currentUserId={userStore.email}
         isCommentFeedVisible={isCommentFeedVisible}
         isProfilePanelVisible={profilePanelVisible}
         isLoadingMore={isLoading}
@@ -131,7 +141,7 @@ const Feed: React.FC = React.memo(() => {
     );
   }, [
     memes,
-    user,
+    userStore,
     isDarkMode,
     handleEndReached,
     toggleCommentFeed,
@@ -149,10 +159,10 @@ const Feed: React.FC = React.memo(() => {
         onHomeClick={handleHomeClick}
         currentMediaIndex={currentMediaIndex}
         toggleCommentFeed={toggleCommentFeed}
-        user={user}
+        user={userStore}
       />
     ),
-    [handleHomeClick, currentMediaIndex, toggleCommentFeed, user],
+    [handleHomeClick, currentMediaIndex, toggleCommentFeed, userStore]
   );
 
   if (isLoading && memes.length === 0) {
@@ -167,7 +177,7 @@ const Feed: React.FC = React.memo(() => {
     return <Text>{error}</Text>;
   }
 
-  if (!user || !accessToken) {
+  if (!userStore || !accessToken) {
     return <Text>User or access token not available</Text>;
   }
 
@@ -184,12 +194,12 @@ const Feed: React.FC = React.memo(() => {
         <ProfilePanel
           isVisible={profilePanelVisible}
           onClose={() => setProfilePanelVisible(false)}
-          profilePicUrl={user.profilePic || null}
-          username={user.username || ''}
-          displayName={user.displayName || 'N/A'}
-          followersCount={user.followersCount || 0}
-          followingCount={user.followingCount || 0}
-          user={user}
+          profilePicUrl={userStore.profilePic || null}
+          username={userStore.username || ''}
+          displayName={userStore.displayName || 'N/A'}
+          followersCount={userStore.followersCount || 0}
+          followingCount={userStore.followingCount || 0}
+          user={userStore}
           navigation={navigation}
         />
       )}
@@ -197,8 +207,8 @@ const Feed: React.FC = React.memo(() => {
         <CommentFeed
           memeID={memes[currentMediaIndex].memeID}
           mediaIndex={currentMediaIndex}
-          profilePicUrl={user.profilePic || ''}
-          user={user}
+          profilePicUrl={userStore.profilePic || ''}
+          user={userStore}
           isCommentFeedVisible={isCommentFeedVisible}
           toggleCommentFeed={toggleCommentFeed}
           updateCommentCount={updateCommentCount}

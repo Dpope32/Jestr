@@ -1,6 +1,6 @@
-import {create} from 'zustand';
-import {Meme, ProfileImage} from '../types/types';
-// import { ImagePickerAsset } from 'expo-image-picker';
+import { create } from 'zustand';
+import { Meme, ProfileImage } from '../types/types';
+import { immer } from 'zustand/middleware/immer';
 
 export interface UserState {
   resetUserState: () => void;
@@ -12,7 +12,7 @@ export interface UserState {
   CreationDate?: string;
   followersCount: number;
   FollowersCount?: number;
-  language: 'en' | 'es' | 'fr'; // We'll just use 'en' for now
+  language: 'en' | 'es' | 'fr'; 
   notificationsEnabled: boolean;
   likesPublic: boolean;
   darkMode: boolean;
@@ -24,8 +24,8 @@ export interface UserState {
   likedMemes: Meme[];
   downloadedMemes: Meme[];
   viewedMemes: Meme[];
-  profilePic: string | ProfileImage | null; // Allow string or ProfileImage
-  headerPic: string | ProfileImage | null; // Allow string or ProfileImage
+  profilePic: string | ProfileImage | null; 
+  headerPic: string | ProfileImage | null; 
   setDarkMode?: (darkMode: boolean) => void;
   setLanguage?: (language: 'en' | 'es' | 'fr') => void;
   setLikesPublic?: (likesPublic: boolean) => void;
@@ -47,7 +47,7 @@ export interface UserState {
   incrementFollowingCount: () => void;
   decrementFollowingCount: () => void;
 }
-export const useUserStore = create<UserState>(set => ({
+export const useUserStore = create(immer<UserState>((set) => ({
   bio: '',
   username: '',
   displayName: '',
@@ -141,4 +141,4 @@ export const useUserStore = create<UserState>(set => ({
       isAdmin: undefined,
       userId: undefined,
     }),
-}));
+  })));

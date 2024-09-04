@@ -14,7 +14,9 @@ import { useUserStore } from 'utils/userStore';
 import BottomPanel from '../../components/Panels/BottomPanel'; 
 import { useInboxStore } from './inboxStore';
 
-const windowWidth = Dimensions.get('window').width;
+type InboxProps = {
+  navigation: any;
+};
 
 type RootStackParamList = {
   Feed: undefined;
@@ -29,15 +31,14 @@ type RootStackParamList = {
 };
 
 
-const Inbox: React.FC<{ route: any }> = ({ route }) => {
+const Inbox: React.FC<InboxProps> = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { user } = route.params || {};
+  const user = useUserStore(state => state);
   const [localUser, setLocalUser] = useState<User | null>(user || null);
   const [isNewMessageModalVisible, setIsNewMessageModalVisible] = useState(false);
-  const navigation = useNavigation<NavigationProp<RootStackParamList, 'Inbox'>>();
   const { conversations, isLoading, fetchConversations } = useInboxStore();
   const { isDarkMode } = useTheme();
-  const [pinnedConversations, setPinnedConversations] = useState<Conversation[]>([]);
+  //const [pinnedConversations, setPinnedConversations] = useState<Conversation[]>([]);
   const [notifications, setNotifications] = useState<string[]>([]);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const setDarkMode = useUserStore((state) => state.setDarkMode);
@@ -133,7 +134,7 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
           partnerUser: {
             email: selectedUser.email,
             username: selectedUser.username,
-            profilePic: typeof selectedUser.profilePic === 'string' ? selectedUser.profilePic : null // Ensure it's string or null
+            profilePic: typeof selectedUser.profilePic === 'string' ? selectedUser.profilePic : null
           }
         }
       });
@@ -158,23 +159,23 @@ const Inbox: React.FC<{ route: any }> = ({ route }) => {
   );
 
 
- const getMessagePreview = (content: string) => {
-    if (typeof content !== 'string') {
-      return 'Unable to display message';
-    }
-    if (content.trim().startsWith('{')) {
-      try {
-        const parsedContent = JSON.parse(content);
-        if (parsedContent.type === 'meme_share') {
-          return parsedContent.message || 'Shared a meme';
-        }
-      } catch (e) {}
-    }
-    return content.length > 50 ? content.substring(0, 47) + '...' : content;
-  };
+ //const getMessagePreview = (content: string) => {
+ //   if (typeof content !== 'string') {
+ //     return 'Unable to display message';
+ //   }
+ //   if (content.trim().startsWith('{')) {
+ //     try {
+ //       const parsedContent = JSON.parse(content);
+ //       if (parsedContent.type === 'meme_share') {
+ //         return parsedContent.message || 'Shared a meme';
+ //       }
+ //     } catch (e) {}
+ //   }
+ //   return content.length > 50 ? content.substring(0, 47) + '...' : content;
+ // };
 
   const SkeletonLoader = () => {
-    const skeletons = Array.from({ length: 5 }); // Number of skeleton items
+    const skeletons = Array.from({ length: 5 }); 
     return (
       <View>
         {skeletons.map((_, index) => (

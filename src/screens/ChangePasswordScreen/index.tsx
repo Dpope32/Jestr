@@ -5,7 +5,6 @@ import { handleChangePassword } from '../../services/authService';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/core';
 import { RootStackParamList } from '../../types/types';
-import { SignInOutput } from '@aws-amplify/auth';
 type ChangePasswordRouteProp = RouteProp<RootStackParamList, 'ChangePassword'>;
 type ChangePasswordNavigationProp = StackNavigationProp<RootStackParamList, 'ChangePassword'>;
 

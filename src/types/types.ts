@@ -87,7 +87,7 @@ export type RootStackParamList = {
   };
   ChangePassword: {
     username: string;
-    nextStep: any; // Replace 'any' with the correct type from AWS Amplify
+    nextStep: any;
   };
 };
 
@@ -111,8 +111,8 @@ export type Meme = {
   profilePicUrl: string;
   isFollowed: boolean;
   email: string;
-  liked?: boolean; // Add this line
-  doubleLiked?: boolean; // Add this line
+  liked?: boolean; 
+  doubleLiked?: boolean; 
   memeUser?: Partial<User>;
   downloaded?: boolean;
   followStatus?: {

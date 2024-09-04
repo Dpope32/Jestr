@@ -1,18 +1,10 @@
 /* eslint-disable react/no-deprecated */
 import React, {useMemo} from 'react';
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  Platform,
-} from 'react-native';
+import {View,TouchableOpacity,StyleSheet,Dimensions,Platform,} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faHome, faPlus, faEnvelope} from '@fortawesome/free-solid-svg-icons';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
-
 import {RootStackParamList, User} from '../../types/types';
-import {useUserStore} from '../../utils/userStore';
 import * as Haptics from 'expo-haptics';
 
 type BottomPanelProps = {
@@ -42,8 +34,7 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
   customIcons = {home: faHome, upload: faPlus, inbox: faEnvelope},
   additionalButtons = [],
 }) => {
-  const user = useUserStore(state => state);
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>()
 
   const iconSize = useMemo(
     () => Math.floor(Dimensions.get('window').width * 0.07),
@@ -52,26 +43,30 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
 
   const handleHomeClick = useMemo(
     () => () => {
-      Haptics.selectionAsync(); // Trigger haptic feedback
+      Haptics.selectionAsync();
       onHomeClick();
-      navigation.navigate('Feed', {user});
+      navigation.navigate('Feed' as never);
     },
-    [onHomeClick, navigation, user],
+    [onHomeClick, navigation],
   );
 
   const handleUploadClick = useMemo(
     () => () => {
-      navigation.navigate('MemeUploadScreen', {user});
+      Haptics.selectionAsync(); 
+      navigation.navigate('MemeUploadScreen' as never);
     },
-    [navigation, user],
+    [navigation],
   );
 
   const handleInboxClick = useMemo(
     () => () => {
-      navigation.navigate('Inbox', {user});
+      Haptics.selectionAsync(); 
+      navigation.navigate('Inbox' as never);
     },
-    [navigation, user],
+    [navigation],
   );
+
+
 
   if (!visible) return null;
 

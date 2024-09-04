@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, TextInput, ActivityIndicator, Alert, ScrollView, Platform, Keyboard, TouchableWithoutFeedback, Animated, Easing } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, Text, TouchableOpacity, Image, TextInput, ActivityIndicator, Alert, Platform, Keyboard, TouchableWithoutFeedback} from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faUpload, faCheck, faTags } from '@fortawesome/free-solid-svg-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -33,14 +33,7 @@ interface MediaState {
   type: 'image' | 'video';
 }
 
-const MemeUpload: React.FC<MemeUploadProps> = ({ 
-  userEmail, 
-  username, 
-  onUploadSuccess, 
-  onImageSelect, 
-  isDarkMode,
-  creationDate
-}) => {
+const MemeUpload: React.FC<MemeUploadProps> = ({ userEmail, username, onImageSelect, creationDate}) => {
   const [media, setMedia] = useState<MediaState | null>(null);
   const [caption, setCaption] = useState('');
   const [tags, setTags] = useState('');
@@ -49,7 +42,6 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
   const [uploadStage, setUploadStage] = useState(0);
   const videoRef = useRef<Video>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const navigation = useNavigation();
 
   const pickMedia = useCallback(async () => {
@@ -108,8 +100,6 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
       const tagsArray = tags.split(',').map(tag => tag.trim());
   
       const result = await uploadMeme(media.uri, userEmail, username, caption, tagsArray, media.type);
-     // console.log('Upload result:', result);
-  
       Toast.show({
         type: 'success',
         text1: 'Meme uploaded successfully!',
@@ -184,9 +174,9 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
       scrollEnabled={true}
       enableOnAndroid={true}
       enableAutomaticScroll={true}
-      extraScrollHeight={Platform.OS === 'ios' ? 175 : 150}  // Adjust this value as needed
+      extraScrollHeight={Platform.OS === 'ios' ? 175 : 150}  
       keyboardOpeningTime={0}
-      keyboardShouldPersistTaps="always"  // Ensure taps are handled properly
+      keyboardShouldPersistTaps="always"  
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View>
@@ -217,7 +207,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
               </View>
             )}
           </TouchableOpacity>
-  
+
           <TextInput
             style={styles.input}
             placeholder="Add a caption..."
@@ -226,9 +216,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
             onChangeText={setCaption}
             multiline
             onFocus={() => {
-              // Optional: Additional actions on focus if needed
-            }}
-          />
+            }}/>
   
           <View style={styles.tagsContainer}>
             <TextInput
@@ -264,9 +252,6 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
       </TouchableWithoutFeedback>
     </KeyboardAwareScrollView>
   );
-  
-  
-  
 };
 
 export default MemeUpload;

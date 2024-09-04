@@ -13,6 +13,18 @@ export default StyleSheet.create({
   scrollView: {
     flexGrow: 1,
   },
+  statItem: {
+    alignItems: 'center',
+  },
+  statCount: {
+    color: '#00ff00',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  statLabel: {
+    color: '#ffffff',
+    fontSize: 14,
+  },
   headerContainer: {
     position: 'relative',
     height: 220,
@@ -48,7 +60,7 @@ export default StyleSheet.create({
   userInfoContainer: {
     alignItems: 'center',
     marginTop: 60,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     zIndex: 10,
   },
   displayName: {
@@ -74,11 +86,10 @@ export default StyleSheet.create({
   
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    borderRadius: 15,
+    marginVertical: 10,
+    marginHorizontal: 20,
   },
   followInfo: {
     alignItems: 'center',
@@ -99,7 +110,7 @@ export default StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 10,
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
   },
   jestrFor: {
     fontSize: 14,
