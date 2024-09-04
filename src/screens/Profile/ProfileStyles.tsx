@@ -7,28 +7,29 @@ const itemSize = width / 3 - 4;
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black',
-    minHeight: height,
+    backgroundColor: '#121212',
   },
   scrollView: {
     flexGrow: 1,
   },
   statItem: {
     alignItems: 'center',
+    flex: 1,
+    marginLeft: 12, // Add left margin for spacing
+    marginBottom: 4, // Add bottom margin in case of wrapping
   },
   statCount: {
-    color: '#00ff00',
-    fontSize: 18,
+    color: '#1bd40b',
+    fontSize: 16, // Reduced font size
     fontWeight: 'bold',
   },
   statLabel: {
     color: '#ffffff',
-    fontSize: 14,
+    fontSize: 11, // Reduced font size
+    marginTop: 2,
   },
   headerContainer: {
-    position: 'relative',
-    height: 220,
-    zIndex: 10,
+    height: 200,
   },
   headerImage: {
     width: '100%',
@@ -36,13 +37,13 @@ export default StyleSheet.create({
     resizeMode: 'cover',
   },
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     position: 'absolute',
     left: '50%',
     bottom: -60,
-    transform: [{ translateX: -60 }],
+    transform: [{ translateX: -70 }],
     borderWidth: 4,
     borderColor: '#1bd40b',
     ...Platform.select({
@@ -58,42 +59,61 @@ export default StyleSheet.create({
     }),
   },
   userInfoContainer: {
-    alignItems: 'center',
-    marginTop: 60,
+    alignItems: 'flex-start',
+    marginTop: 70, // Increased to account for the profile picture
     paddingHorizontal: 16,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     zIndex: 10,
   },
   displayName: {
-    fontSize: 28,
+    fontSize: 22, // Slightly reduced font size
     fontWeight: 'bold',
     color: '#1bd40b',
-    marginBottom: 5,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+    marginBottom: 2,
+    alignItems: 'flex-start',
   },
   username: {
-    fontSize: 18,
-    color: '#ccc',
-    marginBottom: 10,
+    fontSize: 14, // Slightly reduced font size
+    color: '#AAAAAA',
+    marginBottom: 15,
   },
   bioWrapper: {
     width: '100%',
-    paddingHorizontal: 10,
-    alignItems: 'flex-start',  // Align items to the start (left)
-    justifyContent: 'flex-start',  // Justify content to start
+    marginTop: -20, // Reduced from 10
+    alignItems: 'flex-start',
+    flexWrap: 'wrap', // Allow wrapping
+  },
+  bio: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    lineHeight: 20,
   },
   
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 10,
-    marginHorizontal: 20,
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+  nameContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    flex: 1,
+    
+  },
+  numContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap', // Allow wrapping
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    maxWidth: '60%', // Limit width to ensure it doesn't push name off-screen
+    marginTop: -20,
   },
   followInfo: {
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
   followCount: {
     fontSize: 24,
@@ -107,52 +127,48 @@ export default StyleSheet.create({
   },
   jestrForContainer: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginLeft: 12, // Add left margin for spacing
+    backgroundColor: 'rgba(27, 212, 11, 0.0)',
     borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
   },
   jestrFor: {
-    fontSize: 14,
-    color: '#aaa',
+    fontSize: 11, // Reduced font size
+    color: '#b0b0b0', // Even brighter gray
   },
   jestrForDays: {
-    fontSize: 20,
+    fontSize: 14, // Reduced font size
     fontWeight: 'bold',
     color: '#1bd40b',
-    marginTop: 5,
   },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#222',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 5,
+    borderTopWidth: 1,
+    borderTopColor: '#333',
   },
   tabButton: {
+    flex: 1,
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
   },
   activeTabButton: {
-    backgroundColor: '#1bd40b',
+    borderBottomWidth: 2,
+    borderBottomColor: '#1bd40b',
   },
   tabIcon: {
-    color: '#888',
+    color: '#a0a0a0', // Brighter gray color
   },
   activeTabIcon: {
-    color: '#000',
+    color: '#1bd40b', // Bright green color
   },
   tabLabel: {
-    fontSize: 12,
     marginTop: 5,
-    color: '#888',
+    fontSize: 12,
+    color: '#a0a0a0', // Brighter gray color
   },
   activeTabLabel: {
-    color: '#000',
-    fontWeight: 'bold',
+    color: '#1bd40b', // Bright green color
   },
   memeGrid: {
     padding: 2,
@@ -208,7 +224,7 @@ export default StyleSheet.create({
     left: 10,
     paddingHorizontal: 15,
     paddingVertical: 8,
-    backgroundColor: 'rgba(27, 212, 11, 0.2)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 20,
     zIndex: 20,
   },
@@ -300,23 +316,28 @@ export default StyleSheet.create({
   loadingText: {
     color: COLORS.primary,
     fontSize: FONT_SIZES.lg,
-    marginTop: SPACING.md,
+    marginTop: 10,
   },
   activityIndicatorContainer: {
     position: 'absolute',
-    top: height / 2 ,
-    left: width / 2 ,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    width: 100,
-    height: 100,
-    borderRadius: 10,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  loadingIndicator: {
+    backgroundColor: 'rgba(0, 0, 0, 0.0)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -100,
   },
   shareIcon: {
     position: 'absolute',
     top: -50,
-    right: 50, // Adjust this value to position it to the left of the settings icon
+    right: 50, 
     zIndex: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 20,

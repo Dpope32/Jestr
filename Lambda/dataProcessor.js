@@ -482,7 +482,7 @@ exports.handler = async (event) => {
       }
 
       case 'getUserMemes': {
-      const { email, lastEvaluatedKey, limit = 50 } = requestBody;
+      const { email, lastEvaluatedKey, limit = 20 } = requestBody;
       if (!email) {
       return createResponse(400, 'Email is required to fetch user memes.');
       }

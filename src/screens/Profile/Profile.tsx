@@ -187,22 +187,12 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
   const renderTabContent = useMemo(() => {
     if (isLoading) {
       return (
-        <BlurView
-          intensity={90}
-          style={{
-            position: 'absolute',
-            top: 20,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            width,
-            height,
-          }}>
-          <View style={styles.activityIndicatorContainer}>
+        <View style={styles.activityIndicatorContainer}>
+          <View style={styles.loadingIndicator}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading...</Text>
           </View>
-        </BlurView>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
       );
     }
 
@@ -307,8 +297,32 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
         <TouchableOpacity style={styles.settingsIcon} onPress={handleSettingsClick}>
           <FontAwesomeIcon icon={faCog} size={24} color="#1bd40b" />
         </TouchableOpacity>
-          <Text style={styles.displayName}>{user?.displayName || 'Anon'}</Text>
-          <Text style={styles.username}>@{user?.username || 'Username'}</Text>
+        <View style={styles.statsContainer}>
+  <View style={styles.nameContainer}>
+    <Text style={styles.displayName}>{user?.displayName || 'Anon'}</Text>
+    <Text style={styles.username}>@{user?.username || 'Username'}</Text>
+  </View>
+  <View style={styles.numContainer}>
+    <TouchableOpacity
+      style={styles.statItem}
+      onPress={() => openFollowModal('followers')}
+    >
+      <Text style={styles.statCount}>{followersCount}</Text>
+      <Text style={styles.statLabel}>Followers</Text>
+    </TouchableOpacity>
+    <View style={styles.statItem}>
+      <Text style={styles.jestrForDays}>{daysSinceCreation} days</Text>
+      <Text style={styles.statLabel}>Jestr for</Text>
+      </View>
+    <TouchableOpacity
+      style={styles.statItem}
+      onPress={() => openFollowModal('following')}
+    >
+      <Text style={styles.statCount}>{followingCount}</Text>
+      <Text style={styles.statLabel}>Following</Text>
+    </TouchableOpacity>
+  </View>
+</View>
           <View
             style={[
               styles.bioWrapper,
@@ -322,28 +336,6 @@ const Profile: React.FC<ProfileProps> = React.memo(({route, navigation}) => {
             />
           </View>
         </View>
-        <View style={styles.statsContainer}>
-        <TouchableOpacity
-          style={styles.statItem}
-          onPress={() => openFollowModal('followers')}
-        >
-          <Text style={styles.statCount}>{followersCount}</Text>
-          <Text style={styles.statLabel}>Followers</Text>
-        </TouchableOpacity>
-
-        <View style={styles.jestrForContainer}>
-          <Text style={styles.jestrFor}>Jestr for</Text>
-          <Text style={styles.jestrForDays}>{daysSinceCreation} days</Text>
-        </View>
-
-        <TouchableOpacity
-          style={styles.statItem}
-          onPress={() => openFollowModal('following')}
-        >
-          <Text style={styles.statCount}>{followingCount}</Text>
-          <Text style={styles.statLabel}>Following</Text>
-        </TouchableOpacity>
-      </View>
         <View style={styles.tabContainer}>
           {renderTabButton('posts', faUser, 'Posts')}
           {renderTabButton('downloaded', faBox, 'Gallery')}
