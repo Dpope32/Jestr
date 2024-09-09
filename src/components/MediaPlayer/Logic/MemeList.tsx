@@ -1,14 +1,8 @@
 import React, {useCallback, useRef, useEffect} from 'react';
-import {
-  Dimensions,
-  ViewToken,
-  FlatList,
-  ActivityIndicator,
-  View,
-} from 'react-native';
+import {Dimensions,ViewToken,FlatList,ActivityIndicator} from 'react-native';
 
-import MediaPlayer from './MediaPlayer';
-import {Meme, User} from '../../types/types';
+import MediaPlayer from '../MediaPlayer';
+import {Meme, User} from '../../../types/types';
 
 const {height} = Dimensions.get('window');
 
@@ -87,10 +81,6 @@ const MemeList: React.FC<MemeListProps> = React.memo(
       setCurrentMediaIndexCallback(Math.max(currentMediaIndex - 1, 0));
     }, [currentMediaIndex, setCurrentMediaIndexCallback]);
 
-    const handleDownloadMedia = () => {
-      console.log('Of course it does nothing');
-    };
-
     const renderItem = useCallback(
       ({item, index}: {item: Meme | undefined; index: number}) => {
         if (!item || !item.url) {
@@ -120,7 +110,6 @@ const MemeList: React.FC<MemeListProps> = React.memo(
             }
             handleLike={() => {}}
             handleDownload={() => {}}
-            // handleDownload={handleDownloadMedia}
             likedIndices={new Set()}
             doubleLikedIndices={new Set()}
             downloadedIndices={new Set()}
@@ -140,19 +129,9 @@ const MemeList: React.FC<MemeListProps> = React.memo(
           />
         );
       },
-      [
-        user,
-        isDarkMode,
-        toggleCommentFeed,
-        updateLikeStatus,
-        currentMediaIndex,
-        setCurrentMediaIndex,
-        currentUserId,
-        isCommentFeedVisible,
-        isProfilePanelVisible,
-        goToPrevMedia,
-        goToNextMedia,
-      ],
+      [user,numOfComments, isDarkMode,
+        currentMediaIndex,currentUserId,isCommentFeedVisible,isProfilePanelVisible,
+        setCurrentMediaIndex,goToPrevMedia,goToNextMedia,toggleCommentFeed,updateLikeStatus],
     );
 
     const onViewableItemsChanged = useCallback(

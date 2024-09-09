@@ -1,6 +1,6 @@
 import create from 'zustand';
-import { fetchConversations as apiFetchConversations } from '../../services/socialService';
-import { Conversation } from './Conversations';
+import { fetchConversations as apiFetchConversations } from '../services/socialService';
+import { Conversation } from '../screens/Inbox/Conversations';
 
 interface InboxState {
   conversations: Conversation[];

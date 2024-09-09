@@ -1,0 +1,169 @@
+Jestr-Mobile
+├── JestrMobile
+│   ├── __tests__
+│   │   └── App.test.tsx
+│   ├── .bundle
+│   ├── .expo
+│   ├── amplify
+│   ├── android
+│   ├── ios
+│   ├── Lambda
+│   │   ├── Extras
+│   │   │   ├── adminAnalytics.mjs
+│   │   │   ├── check_invalid_media.js
+│   │   │   ├── output.txt
+│   │   │   └── update_meme_captions.py
+│   │   ├── Lambda.zip
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── socialInteraction.mjs
+│   │   └── userManagement.mjs
+│   ├── node_modules
+│   ├── src
+│   │   ├── assets
+│   │   │   ├── animations
+│   │   │   │   ├── loading-animation.json
+│   │   │   │   ├── create.json
+│   │   │   │   ├── join.json
+│   │   │   │   ├── search.json
+│   │   │   │   ├── discover.json
+│   │   │   │   ├── swipe-up.json
+│   │   │   │   ├── think.json
+│   │   │   │   ├── welcome.json
+│   │   │   │   └── welcome1.json
+│   │   │   ├── fonts
+│   │   │   ├── images
+│   │   │   ├── memes
+│   │   │   └── videos
+│   │   ├── components
+│   │   │   ├── MediaPlayer
+│   │   │   │   ├── LongPress
+│   │   │   │   ├── LongPressModal.tsx
+│   │   │   │   ├── lottie-liked.json
+│   │   │   │   ├── MediaPlayer.tsx
+│   │   │   │   ├── MediaPlayerContent.tsx
+│   │   │   │   ├── MemeList.tsx
+│   │   │   │   ├── MP.styles.ts
+│   │   │   │   ├── useMediaPlayerLogic.tsx
+│   │   │   │   └── usePanResponder.tsx
+│   │   │   ├── Meme
+│   │   │   │   ├── config.ts
+│   │   │   │   ├── memeService.ts
+│   │   │   │   ├── MemeUpload.styles.ts
+│   │   │   │   └── MemeUpload.tsx
+│   │   │   ├── Modals
+│   │   │   │   ├── Comment.tsx
+│   │   │   │   ├── CommentFeed.tsx
+│   │   │   │   ├── CommentFeed.styles.ts
+│   │   │   │   ├── EditProfileModal.tsx
+│   │   │   │   ├── EditProfileModalStyles.ts
+│   │   │   │   ├── FollowModal.tsx
+│   │   │   │   ├── LogoutModal.tsx
+│   │   │   │   ├── NewMessageModal.tsx
+│   │   │   │   ├── SaveSuccessModal.tsx
+│   │   │   │   ├── ShareModal.tsx
+│   │   │   │   ├── SignupSuccessModal.tsx
+│   │   │   │   └── SuccessModal.tsx
+│   │   │   ├── Panels
+│   │   │   │   ├── BottomPanel.tsx
+│   │   │   │   ├── NotificationsPanel.tsx
+│   │   │   │   ├── ProfilePanel.styles.ts
+│   │   │   │   ├── ProfilePanel.tsx
+│   │   │   │   └── TopPanel.tsx
+│   │   │   ├── Settings
+│   │   │   │   ├── Settings.styles.tsx
+│   │   │   │   └── Settings.tsx
+│   │   │   ├── shared
+│   │   │   │   ├── Button
+│   │   │   │   │   └── Button.tsx
+│   │   │   │   └── Input
+│   │   │   │       └── InutField.tsx
+│   │   │   ├── Upload
+│   │   │   │   ├── HeaderPicUpload.tsx
+│   │   │   │   └── ProfilePicUpload.tsx
+│   │   │   └── ErrorBoundary.tsx
+│   │   ├── screens
+│   │   │   ├── AdminPage
+│   │   │   │   └── AdminPage.tsx
+│   │   │   ├── ChangePassword
+│   │   │   │   └── ChangePassword.tsx
+│   │   │   ├── Feed
+│   │   │   │   ├── Feed.tsx
+│   │   │   │   ├── Feed.styles.ts
+│   │   │   │   └── useMemes.ts
+│   │   │   ├── Inbox
+│   │   │   │   ├── Conversations.tsx
+│   │   │   │   ├── convoStyles.ts
+│   │   │   │   ├── Inbox.styles.ts
+│   │   │   │   ├── Inbox.tsx
+│   │   │   │   ├── inboxStore.ts
+│   │   │   │   ├── SkeletonLoader.tsx
+│   │   │   │   └── UnreadNotifications.tsx
+│   │   │   ├── Loading
+│   │   │   │   └── LoadingScreen.tsx
+│   │   │   ├── LandingPage
+│   │   │   │   ├── CompleteProfileScreen.tsx
+│   │   │   │   ├── ConfirmSignUpScreen.tsx
+│   │   │   │   ├── ContentModal.tsx
+│   │   │   │   ├── declarations.d.ts
+│   │   │   │   ├── GradientText.tsx
+│   │   │   │   ├── LandingPage.styles.ts
+│   │   │   │   ├── LandingPage.tsx
+│   │   │   │   ├── LP.tsx
+│   │   │   │   ├── LPHandlers.tsx
+│   │   │   │   ├── OnboardingScreen.tsx
+│   │   │   │   ├── ProfileCompletedSlideshow.tsx
+│   │   │   │   ├── RainEffect.tsx
+│   │   │   │   └── WelcomeText.tsx
+│   │   │   ├── MemeUploadScreen
+│   │   │   │   └── index.tsx
+│   │   │   ├── Profile
+│   │   │   │   ├── Profile.tsx
+│   │   │   │   ├── EditableBio.tsx
+│   │   │   │   ├── MemeGrid.tsx
+│   │   │   │   ├── ProfileHandlers.tsx
+│   │   │   │   └── ProfileStyles.tsx
+│   │   │   └── NotificationsScreen
+│   │   │       └── index.tsx
+│   │   ├── stores
+│   │   │   ├── userStore.ts
+│   │   │   ├── followStore.ts
+│   │   │   ├── inboxStore.ts
+│   │   │   ├── memeStore.ts
+│   │   │   ├── notificationStore.ts
+│   │   │   └── themeStore.ts
+│   │   ├── services
+│   │   │   ├── authFunctions.ts
+│   │   │   ├── cognitoService.ts
+│   │   │   └── UserContext.js
+│   │   ├── theme
+│   │   │   ├── theme.ts
+│   │   │   └── ThemeContext.tsx
+│   │   ├── types
+│   │   │   ├── types.ts
+│   │   │   └── react-native-particles.d.ts
+│   │   └── utils
+│   │       ├── dateUtils.ts
+│   │       ├── secureStore.ts
+│   │       └── userStore.ts
+│   ├── .eslintrc.js
+│   ├── .gitignore
+│   ├── .prettierrc.js
+│   ├── .watchmanconfig
+│   ├── amplifyconfiguration.json
+│   ├── aws-exports.js
+│   ├── app.json
+│   ├── App.tsx
+│   ├── babel.config.js
+│   ├── declarations.d.ts
+│   ├── files.txt
+│   ├── Gemfile
+│   ├── index.js
+│   ├── items.json
+│   ├── jest.config.js
+│   ├── metro.config.js
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── react-native.config.js
+│   └── README.md
+└── JestrMobile_Backup (same as JestrMobile)

@@ -1,33 +1,15 @@
-import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-  Image,
-  Dimensions,
-  Platform,
-  TouchableWithoutFeedback,
-  Alert,
-  Linking,
-} from 'react-native';
+import React, {useEffect} from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Image, TouchableWithoutFeedback, Alert, Linking} from 'react-native';
 import {BlurView} from 'expo-blur';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faLink,
-  faSave,
-  faShare,
-  faFlag,
-  faUser,
-} from '@fortawesome/free-solid-svg-icons';
+import {faLink,faSave,faShare,faFlag,faUser} from '@fortawesome/free-solid-svg-icons';
 import Toast from 'react-native-toast-message';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system';
+import { styles } from './LongPress.styles';
 
-const {width, height} = Dimensions.get('window');
 
 interface LongPressModalProps {
   isVisible: boolean;
@@ -101,7 +83,6 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
         friction: 8,
         tension: 65,
       }).start(() => {
-        // This callback ensures the modal is fully closed before resetting
         onClose();
       });
     }
@@ -139,12 +120,12 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
   const downloadImage = async (url: string): Promise<string | null> => {
     try {
       const fileType = url.substring(url.lastIndexOf('.') + 1);
-      console.log('File type:', fileType);
+      //console.log('File type:', fileType);
       const directoryUri = `${FileSystem.cacheDirectory}`;
-      console.log('Directory URI:', directoryUri);
+      //console.log('Directory URI:', directoryUri);
       // const fileUri = `${directoryUri}${meme.id}.${fileType}`;
       const fileUri = `${directoryUri}${meme.id}`;
-      console.log('File URI:', fileUri);
+      //console.log('File URI:', fileUri);
 
       await FileSystem.makeDirectoryAsync(directoryUri, {intermediates: true});
       const {uri} = await FileSystem.downloadAsync(url, fileUri);
@@ -172,7 +153,6 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
       console.log('Local URI:', localUri);
       if (localUri) {
         const asset = await MediaLibrary.createAssetAsync(localUri);
-        // console.log('Asset created:', asset);
 
         // createAlbumAsync might not work in Expo Go. If it fails, the image is still saved to the gallery.
         // a warning is logged to the console.
@@ -292,8 +272,6 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
                   )}
                 </View>
               </TouchableWithoutFeedback>
-
-              {/* ICONS WITH OPTIONS */}
               <View style={styles.optionsContainer}>{renderOptions()}</View>
             </Animated.View>
           </View>
@@ -302,71 +280,3 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    top: -200,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1000,
-    elevation: 999, // For Android
-  },
-  modalContainer: {
-    width: width * 0.75,
-    maxHeight: height,
-    backgroundColor: '#2E2E2E',
-    borderRadius: 20,
-    padding: 10,
-    alignItems: 'center',
-    zIndex: 10000,
-    elevation: 1000,
-  },
-  memePreview: {
-    width: '100%',
-    height: height * 0.3,
-    borderRadius: 10,
-    overflow: 'hidden',
-    marginVertical: 20,
-  },
-  memeImage: {
-    width: '100%',
-    height: '100%',
-  },
-  caption: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    color: '#fff',
-    padding: 10,
-    fontSize: 14,
-  },
-  optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  option: {
-    width: '33%',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  optionText: {
-    color: '#fff',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-});

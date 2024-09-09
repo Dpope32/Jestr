@@ -11,10 +11,10 @@ import {
 import { RouteProp } from '@react-navigation/core';
 import { confirmSignUp } from 'aws-amplify/auth';
 import { COLORS, SPACING, FONT_SIZES, FONTS, wp, elevationShadowStyle } from '../../theme/theme';
-import { storeUserIdentifier } from '../../utils/secureStore';
+import { storeUserIdentifier } from '../../stores/secureStore';
 import { signIn, fetchAuthSession, SignInInput } from 'aws-amplify/auth';
 import * as SecureStore from 'expo-secure-store';
-import { useUserStore } from '../../utils/userStore'; // Adjust the path as needed
+import { useUserStore } from '../../stores/userStore'; // Adjust the path as needed
 
 type ConfirmSignUpScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, 'ConfirmSignUp'>;

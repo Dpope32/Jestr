@@ -142,6 +142,8 @@ const styles = StyleSheet.create({
   darkModeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
   },
   darkModeIcon: {
     color: '#1bd40b',

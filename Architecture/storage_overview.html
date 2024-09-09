@@ -1,0 +1,100 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Data Overview</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        td {
+            word-wrap: break-word;
+            max-width: 400px;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Storage Data Overview</h1>
+<table>
+    <tr>
+        <th>Key</th>
+        <th>Value</th>
+        <th>Summary</th>
+    </tr>
+    <tr>
+        <td>Cognito LastAuthUser</td>
+        <td>pope.dawson@gmail.com</td>
+        <td>Last authenticated user email.</td>
+    </tr>
+    <tr>
+        <td>Cognito Access Token</td>
+        <td>token</td>
+        <td>Short-lived token for API access authorization.</td>
+    </tr>
+    <tr>
+        <td>Cognito clockDrift</td>
+        <td>355</td>
+        <td>Time difference between client and server (in seconds).</td>
+    </tr>
+    <tr>
+        <td>Cognito idToken</td>
+        <td>token</td>
+        <td>Contains authenticated user profile information.</td>
+    </tr>
+    <tr>
+        <td>Cognito Refresh Token</td>
+        <td>token</td>
+        <td>Used to obtain new access tokens after expiration.</td>
+    </tr>
+    <tr>
+        <td>Sign In Details</td>
+        <td>{"loginId":"pope.dawson@gmail.com","authFlowType":"USER_PASSWORD_AUTH"}</td>
+        <td>Details of the last sign-in process for the user.</td>
+    </tr>
+    <tr>
+        <td>alreadyLaunched</td>
+        <td>True</td>
+        <td>Flag to indicate the app has been launched before.</td>
+    </tr>
+    <tr>
+        <td>cachedMemes</td>
+        <td>10 memes cached</td>
+        <td>Stores information on 10 cached memes.</td>
+    </tr>
+    <tr>
+        <td>follow-storage</td>
+        <td>Details on followers and following lists</td>
+        <td>Contains details on followers and following lists.</td>
+    </tr>
+    <tr>
+        <td>Zustand Store</td>
+        <td>{ "bio": "Red meat, thick thighs, fantasy football and creampies...", "username": "Admin", "followersCount": 33, "followingCount": 26, ... }</td>
+        <td>User profile details, UI preferences, and settings.</td>
+    </tr>
+</table>
+
+</body>
+</html>

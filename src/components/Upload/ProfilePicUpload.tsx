@@ -3,7 +3,7 @@ import {TouchableOpacity, StyleSheet, View, Image} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
 
-import {useUserStore} from '../../utils/userStore';
+import {useUserStore} from '../../stores/userStore';
 // import { ProfileImage } from '../../types/types';
 
 interface ProfilePicUploadProps {

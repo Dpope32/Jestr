@@ -1,5 +1,5 @@
 // src/types/types.ts
-import {SignInOutput} from '@aws-amplify/auth';
+import {View} from 'react-native';
 import {ViewToken} from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Animated} from 'react-native';
@@ -67,7 +67,7 @@ export type RootStackParamList = {
   Loading: undefined;
   LandingPage: undefined;
   Onboarding: undefined;
-  Feed: {user: User};
+  Feed: { userEmail: string };
   Settings: {email: string};
   MemeUploadScreen: {user: any};
   CompleteProfileScreen: {email: string};
@@ -190,3 +190,34 @@ export type ProfilePanelProps = {
   user: User | null;
   navigation: any;
 };
+
+
+export interface IconsAndContentProps {
+  memeUser: any;
+  caption: string;
+  uploadTimestamp: string;
+  index: number;
+  isFollowed: boolean;
+  currentIndex: number;
+  isFollowing?: boolean;
+  handleFollow: () => void;
+  counts: {
+    likes: number;
+    comments: number;
+    shares: number;
+    downloads: number;
+  };
+  debouncedHandleLike: () => void;
+  liked: boolean;
+  doubleLiked: boolean;
+  handleDownloadPress: () => void;
+  isSaved: boolean;
+  toggleCommentFeed: () => void;
+  formatDate: (date: string) => string;
+  animatedBlurIntensity: Animated.Value;
+  iconAreaRef: React.RefObject<View>;
+  onShare: (type: ShareType, username: string, message: string) => void;
+  user: User | null;
+  memeID: string;
+  numOfComments: number;
+}

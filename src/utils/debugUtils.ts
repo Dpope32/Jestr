@@ -2,7 +2,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { useUserStore } from '../utils/userStore';
+import { useUserStore } from '../stores/userStore';
 
 export const logStorageContents = async () => {
   // Log AsyncStorage contents

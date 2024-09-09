@@ -2,15 +2,15 @@ import { useState, useCallback } from 'react';
 import { Alert} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { UserState } from '../../utils/userStore';
+import { UserState } from '../../stores/userStore';
 import { updateProfileImage, fetchMemes } from '../../services/userService';
 import { Meme, FetchMemesResult } from '../../types/types';
-import { TabName } from './Profile';
-import {useUserStore} from '../../utils/userStore';
+import { TabName } from './useProfileLogic';
+import {useUserStore} from '../../stores/userStore';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
-import { deleteMeme, getUserMemes, removeDownloadedMeme } from 'services/memeService';
+import { deleteMeme, getUserMemes, removeDownloadedMeme } from '../../services/memeService';
 
 export const useProfileHandlers = (
   user: UserState,

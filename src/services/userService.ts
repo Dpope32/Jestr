@@ -9,8 +9,8 @@
   import {RootStackParamList, ProfileImage} from '../types/types';
   import * as FileSystem from 'expo-file-system';
   import {v4 as uuidv4} from 'uuid';
-  import {useUserStore} from '../utils/userStore';
-  import {storeUserIdentifier} from '../utils/secureStore';
+  import {useUserStore} from '../stores/userStore';
+  import {storeUserIdentifier} from '../stores/secureStore';
   import * as SecureStore from 'expo-secure-store';
   import * as ImageManipulator from 'expo-image-manipulator';
   //import * as Google from 'expo-auth-session/providers/google';

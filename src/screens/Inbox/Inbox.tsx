@@ -1,33 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPlus, faBell } from '@fortawesome/free-solid-svg-icons';
 import { User } from '../../types/types'; 
-import { NavigationProp, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import NewMessageModal from '../../components/Modals/NewMessageModal';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
 import { Conversation } from './Conversations';
 import styles from './Inbox.styles';
-import { Dimensions } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
-import { useUserStore } from 'utils/userStore';
+import { useUserStore } from 'stores/userStore';
 import BottomPanel from '../../components/Panels/BottomPanel'; 
-import { useInboxStore } from './inboxStore';
+import { useInboxStore } from '../../stores/inboxStore';
 
 type InboxProps = {
   navigation: any;
-};
-
-type RootStackParamList = {
-  Feed: undefined;
-  MemeUpload: undefined;
-  Inbox: undefined;
-  Profile: { user: User };
-  Conversations: { 
-    localUser: User;
-    partnerUser: User;
-    conversation: Conversation;
-  };
 };
 
 

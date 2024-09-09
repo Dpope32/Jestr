@@ -26,7 +26,7 @@ import {
   postComment,
   updateCommentReaction,
 } from '../../services/socialService';
-import styles from './CommentFeed.styles';
+import styles from './ModalStyles/CommentFeed.styles';
 
 const screenHeight = Dimensions.get('window').height;
 

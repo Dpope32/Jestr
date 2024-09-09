@@ -10,11 +10,11 @@ import SafeImage from '../shared/SafeImage';
 import styles from './MP.styles';
 import {MediaPlayerProps} from '../../types/types';
 import {addFollow} from '../../services/socialService';
-import {usePanResponder} from './usePanResponder';
+import {usePanResponder} from './Logic/usePanResponder';
 import {IconsAndContent} from './MediaPlayerContent';
-import {useMediaPlayerLogic} from './useMediaPlayerLogic';
-import {useUserStore} from '../../utils/userStore';
-import {LongPressModal} from './LongPressModal';
+import {useMediaPlayerLogic} from './Logic/useMediaPlayerLogic';
+import {useUserStore} from '../../stores/userStore';
+import {LongPressModal} from './LongPress/LongPressModal';
 import {useTheme} from '../../theme/ThemeContext';
 
 const SaveSuccessModal = React.lazy(() => import('../Modals/SaveSuccessModal'));
@@ -48,7 +48,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     shareCount: initialShareCount,
     commentCount: initialCommentCount,
     onLikeStatusChange,
-    setCurrentIndex,
     numOfComments,
   }) => {
     const {isDarkMode} = useTheme();
@@ -65,7 +64,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     const [isLoading, setIsLoading] = useState(true);
     const [mediaLoadError, setMediaLoadError] = useState(false);
     const [isFollowed, setIsFollowed] = useState(false);
-    const [canFollow, setCanFollow] = useState(true);
     const [lastTap, setLastTap] = useState(0);
     const [isLongPressModalVisible, setIsLongPressModalVisible] = useState(false);
     const [likePosition, setLikePosition] = useState({x: 0, y: 0});
@@ -158,12 +156,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     });
 
     const handleSwipeUp = useCallback(() => {
-      // console.log(`MediaPlayer ${index} - Swipe up`);
       goToNextMedia();
     }, [index, goToNextMedia]);
 
     const handleSwipeDown = useCallback(() => {
-      //  console.log(`MediaPlayer ${index} - Swipe down`);
       goToPrevMedia();
     }, [index, goToPrevMedia]);
 
@@ -342,7 +338,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
             {showLikeAnimation && (
               <LottieView
                 ref={lottieRef}
-                source={require('./lottie-liked.json')}
+                source={require('../../assets/animations/lottie-liked.json')}
                 style={{
                   position: 'absolute',
                   left: likePosition.x,

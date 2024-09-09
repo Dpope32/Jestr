@@ -15,17 +15,17 @@ export default StyleSheet.create({
   statItem: {
     alignItems: 'center',
     flex: 1,
-    marginLeft: 12, // Add left margin for spacing
-    marginBottom: 4, // Add bottom margin in case of wrapping
+    marginLeft: 12,
+    marginBottom: 4,
   },
   statCount: {
     color: '#1bd40b',
-    fontSize: 16, // Reduced font size
+    fontSize: 16,
     fontWeight: 'bold',
   },
   statLabel: {
     color: '#ffffff',
-    fontSize: 11, // Reduced font size
+    fontSize: 11,
     marginTop: 2,
   },
   headerContainer: {
@@ -60,36 +60,36 @@ export default StyleSheet.create({
   },
   userInfoContainer: {
     alignItems: 'flex-start',
-    marginTop: 70, // Increased to account for the profile picture
+    marginTop: 70,
     paddingHorizontal: 16,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     zIndex: 10,
+    paddingBottom: 20,
   },
   displayName: {
-    fontSize: 22, // Slightly reduced font size
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#1bd40b',
     marginBottom: 2,
     alignItems: 'flex-start',
   },
   username: {
-    fontSize: 14, // Slightly reduced font size
+    fontSize: 14,
     color: '#AAAAAA',
     marginBottom: 15,
   },
   bioWrapper: {
     width: '100%',
-    marginTop: -20, // Reduced from 10
+    marginTop: -20,
     alignItems: 'flex-start',
-    flexWrap: 'wrap', // Allow wrapping
+    flexWrap: 'wrap',
   },
   bio: {
     color: '#FFFFFF',
     fontSize: 14,
     lineHeight: 20,
   },
-  
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -102,14 +102,13 @@ export default StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-start',
     flex: 1,
-    
   },
   numContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap', // Allow wrapping
+    flexWrap: 'wrap',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    maxWidth: '60%', // Limit width to ensure it doesn't push name off-screen
+    maxWidth: '60%',
     marginTop: -20,
   },
   followInfo: {
@@ -127,16 +126,16 @@ export default StyleSheet.create({
   },
   jestrForContainer: {
     alignItems: 'center',
-    marginLeft: 12, // Add left margin for spacing
+    marginLeft: 12,
     backgroundColor: 'rgba(27, 212, 11, 0.0)',
     borderRadius: 10,
   },
   jestrFor: {
-    fontSize: 11, // Reduced font size
-    color: '#b0b0b0', // Even brighter gray
+    fontSize: 11,
+    color: '#b0b0b0',
   },
   jestrForDays: {
-    fontSize: 14, // Reduced font size
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#1bd40b',
   },
@@ -157,18 +156,18 @@ export default StyleSheet.create({
     borderBottomColor: '#1bd40b',
   },
   tabIcon: {
-    color: '#a0a0a0', // Brighter gray color
+    color: '#a0a0a0',
   },
   activeTabIcon: {
-    color: '#1bd40b', // Bright green color
+    color: '#1bd40b',
   },
   tabLabel: {
     marginTop: 5,
     fontSize: 12,
-    color: '#a0a0a0', // Brighter gray color
+    color: '#a0a0a0',
   },
   activeTabLabel: {
-    color: '#1bd40b', // Bright green color
+    color: '#1bd40b',
   },
   memeGrid: {
     padding: 2,
@@ -232,15 +231,6 @@ export default StyleSheet.create({
     color: '#1bd40b',
     marginLeft: 10,
     fontWeight: 'bold',
-  },
-  settingsIcon: {
-    position: 'absolute',
-    top: -50,
-    right: 10,
-    zIndex: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 20,
-    padding: 8,
   },
   fullScreenContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -337,7 +327,7 @@ export default StyleSheet.create({
   shareIcon: {
     position: 'absolute',
     top: -50,
-    right: 50, 
+    right: 10, 
     zIndex: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 20,

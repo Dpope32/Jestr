@@ -1,9 +1,9 @@
 import { StyleSheet, Platform } from 'react-native';
 import { Dimensions } from 'react-native';
-import { COLORS, SPACING, FONT_SIZES, wp } from '../../theme/theme';
+import { COLORS, SPACING, FONT_SIZES } from '../../theme/theme';
 
 const { width, height } = Dimensions.get('window');
-const SWIPE_THRESHOLD = height * 0.1;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     width: width,
   },
   blurInner: {
-    borderRadius: 12, // Slightly increased for a more modern look
+    borderRadius: 12, 
   },
   videoWrapper: {
     flex: 1,
@@ -34,15 +34,15 @@ const styles = StyleSheet.create({
   blurContainer: {
     position: 'absolute',
     left: 0,
-    right: -12, //icons closer to edge of screen
+    right: -12, 
     bottom: 0,
     padding: 10,
     zIndex: 10,
-    elevation: 10, // for Android
+    elevation: 10, 
   },
   textContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 240 : 150, // Adjust based on platform
+    bottom: Platform.OS === 'ios' ? 240 : 150, 
     left: 0,
     right: 20,
     flexDirection: 'row',
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-    paddingBottom: Platform.OS === 'ios' ? 260 : 150, // Adjust for bottom navigation
+    paddingBottom: Platform.OS === 'ios' ? 260 : 150, 
   },
   iconColumn: {
     position: 'absolute',
@@ -106,12 +106,12 @@ const styles = StyleSheet.create({
   },
   longPressModal: {
     position: 'absolute', 
-    zIndex: 100, // Ensure it is on top of other elements
-    elevation: 100, // Required for Android to support zIndex
+    zIndex: 100, 
+    elevation: 100,
     left: 0,
     right: 0,
     bottom: 0,
-    top: 0,  // Adjust as necessary for your design
+    top: 0,  
   },
   profilePic: {
     width: 40,
@@ -176,7 +176,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  // Define static parts of iconText style here
   iconText: {
     fontSize: 20,
     fontWeight: 'bold',

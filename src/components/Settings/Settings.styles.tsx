@@ -17,6 +17,7 @@ export default StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start', // Ensure items start from the left
     paddingTop: Platform.OS === 'ios' ? 50 : 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -26,16 +27,24 @@ export default StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'center',
+    flex: 1, // Allow it to take up remaining space
+    paddingTop: Platform.OS === 'ios' ? 60 : 10,
+  },
+  backButtonTouchable: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    top: Platform.OS === 'ios' ? 60 : 10,
+    top: Platform.OS === 'ios' ? 100 : 70, // Increased by 50 pixels
+    left: 20,
+    width: 50,
+    height: 50,
+    zIndex: 999,
   },
   backButton: {
     backgroundColor: 'rgba(255,255,255,0.1)',
-    padding: 10,
-    borderRadius: 20,
-    marginRight: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContent: {
     paddingHorizontal: 20,

@@ -1,20 +1,14 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useCallback} from 'react';
 import {View, Text, TouchableOpacity, Image} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faThumbsUp,
-  faComment,
-  faShare,
-  faPlus,
-} from '@fortawesome/free-solid-svg-icons';
+import {faThumbsUp,faComment,faShare,faPlus} from '@fortawesome/free-solid-svg-icons';
 import {BlurView} from 'expo-blur';
 import {Animated} from 'react-native';
 
 import styles from './MP.styles';
-import {ShareType, User} from '../../types/types';
+import { IconsAndContentProps } from '../../types/types';
 import { COLORS } from '../../theme/theme';
 
-import {fetchComments} from '../../services/socialService';
 
 interface IconButtonProps {
   icon: any;
@@ -24,55 +18,8 @@ interface IconButtonProps {
   memeID: string;
 }
 
-interface IconsAndContentProps {
-  memeUser: any;
-  caption: string;
-  uploadTimestamp: string;
-  index: number;
-  isFollowed: boolean;
-  currentIndex: number;
-  isFollowing?: boolean;
-  handleFollow: () => void;
-  counts: {
-    likes: number;
-    comments: number;
-    shares: number;
-    downloads: number;
-  };
-  debouncedHandleLike: () => void;
-  liked: boolean;
-  doubleLiked: boolean;
-  handleDownloadPress: () => void;
-  isSaved: boolean;
-  toggleCommentFeed: () => void;
-  formatDate: (date: string) => string;
-  animatedBlurIntensity: Animated.Value;
-  iconAreaRef: React.RefObject<View>;
-  onShare: (type: ShareType, username: string, message: string) => void;
-  user: User | null;
-  memeID: string;
-  numOfComments: number;
-}
 
-const IconButton: React.FC<IconButtonProps> = React.memo(({
-  icon,
-  count,
-  onPress,
-  color = COLORS.primary,
-  memeID,
-}) => {
-  // UNECESSARY !!!
-  // const [commentsLength, setCommentsLength] = useState(0);
-  // console.log('count in IconButton ===>', count);
-
-  // useEffect(() => {
-  //   const getCommentsLength = async () => {
-  //     const updatedComments = await fetchComments(memeID);
-  //     setCommentsLength(updatedComments.length);
-  //   };
-
-  //   getCommentsLength();
-  // }, [memeID]);
+const IconButton: React.FC<IconButtonProps> = React.memo(({icon,count,onPress,color = COLORS.primary}) => {
 
   return (
     <TouchableOpacity
@@ -86,28 +33,9 @@ const IconButton: React.FC<IconButtonProps> = React.memo(({
 });
 
 export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
-  memeUser,
-  caption,
-  uploadTimestamp,
-  counts,
-  debouncedHandleLike,
-  liked,
-  doubleLiked,
-  handleDownloadPress,
-  isSaved,
-  toggleCommentFeed,
-  formatDate,
-  animatedBlurIntensity,
-  iconAreaRef,
-  isFollowing,
-  isFollowed,
-  index,
-  currentIndex,
-  handleFollow,
-  onShare,
-  user,
-  memeID,
-  numOfComments,
+  memeUser,caption,uploadTimestamp,counts,liked,doubleLiked,
+  toggleCommentFeed,handleFollow,onShare,formatDate,  debouncedHandleLike,
+  animatedBlurIntensity,iconAreaRef,isFollowed,index,currentIndex,user,memeID, numOfComments,
 }) => {
   // console.log('memeID in IconsAndContent ===>', memeID);
   // console.log('numOfComments in IconsAndContent ===>', numOfComments);
@@ -115,7 +43,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
   const isActive = index === currentIndex;
 
   if (!isActive) {
-    return null; // Don't render if not the active item
+    return null; 
   }
 
   const handleLikePress = useCallback(() => {
@@ -189,7 +117,6 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(({
           <IconButton
             icon={faComment}
             memeID={memeID}
-            // count={counts.comments}
             count={numOfComments}
             onPress={handleCommentPress}
           />

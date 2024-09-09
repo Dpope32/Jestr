@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, Modal, StyleSheet, Animated, ActivityIndicator } from 'react-native';
 import { User } from '../../types/types';
 import { FlashList } from '@shopify/flash-list';
-import { useFollowStore } from '../../utils/followStore';
-import styles from './FollowModalStyles';
+import { useFollowStore } from '../../stores/followStore';
+import styles from './ModalStyles/FollowModalStyles';
 
 interface FollowModalProps {
   visible: boolean;

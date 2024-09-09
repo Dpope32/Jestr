@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import InputField from 'components/shared/Input/InutField';
+import InputField from '../../components/shared/Input/InutField';
 
 interface ContentModalProps {
   visible: boolean;

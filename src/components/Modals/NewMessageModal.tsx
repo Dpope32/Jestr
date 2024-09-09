@@ -5,7 +5,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { User, ProfileImage } from '../../types/types'; 
 import { getAllUsers } from '../../services/userService';
 import { FlashList } from '@shopify/flash-list';
-import styles from './NewMM.styles'
+import styles from './ModalStyles/NewMM.styles'
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 

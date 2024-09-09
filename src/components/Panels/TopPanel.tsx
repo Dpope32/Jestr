@@ -20,7 +20,7 @@ import {
 import {FONTS} from '../../theme/theme';
 import {ProfileImage} from 'types/types';
 import {useTheme} from '../../theme/ThemeContext';
-import { useUserStore } from 'utils/userStore';
+import { useUserStore } from '../../stores/userStore';
 
 interface TopPanelProps {
   onProfileClick: () => void;

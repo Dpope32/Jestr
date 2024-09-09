@@ -4,7 +4,7 @@ import {API_URL} from './config';
 import Toast from 'react-native-toast-message';
 import {FetchMemesResult} from '../types/types';
 import * as FileSystem from 'expo-file-system';
-import {getToken} from '../utils/secureStore';
+import {getToken} from '../stores/secureStore';
 
 
 type TransformedMemeView = {

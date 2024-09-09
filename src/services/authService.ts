@@ -9,8 +9,8 @@ import {User} from '../types/types';
 import { logStorageContents } from '../utils/debugUtils';
 import {signUp,signOut,confirmSignIn,getCurrentUser,fetchAuthSession,signIn,} from '@aws-amplify/auth';
 import {RootStackParamList} from '../types/types';
-import {useUserStore} from '../utils/userStore';
-import {removeToken,storeUserIdentifier,} from '../utils/secureStore';
+import {useUserStore} from '../stores/userStore';
+import {removeToken,storeUserIdentifier,} from '../stores/secureStore';
 import * as SecureStore from 'expo-secure-store';
 import {fetchUserDetails} from './userService';
 //import * as Google from 'expo-auth-session/providers/google';
@@ -88,7 +88,7 @@ import {fetchUserDetails} from './userService';
         await storeUserIdentifier(userDetails.email);
         await logStorageContents();
         navigation.navigate('Feed', {
-          user: useUserStore.getState() as User, // Cast to User type
+          userEmail: userDetails.email, // Pass only the necessary identifier
         });
       } else if (
         nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
@@ -247,7 +247,7 @@ import {fetchUserDetails} from './userService';
           const authUser = await getCurrentUser();
           const user = convertAuthUserToUser(authUser);
           useUserStore.getState().setUserDetails(user);
-          navigation.navigate('Feed', {user});
+          navigation.navigate('Feed', { userEmail: user.email });
         } else {
           throw new Error('Failed to change password');
         }

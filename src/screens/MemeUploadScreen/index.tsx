@@ -9,7 +9,7 @@ import LottieView from 'lottie-react-native';
 import { FONTS, COLORS } from '../../theme/theme';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useTheme } from '../../theme/ThemeContext';
-import { useUserStore } from '../../utils/userStore';
+import { useUserStore } from '../../stores/userStore';
 
 type MemeUploadScreenProps = {
   navigation: any;

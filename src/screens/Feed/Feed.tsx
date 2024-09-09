@@ -7,8 +7,8 @@ import * as Haptics from 'expo-haptics';
 
 import { useTheme } from '../../theme/ThemeContext';
 import { useMemes } from './useMemes';
-import { useUserStore } from '../../utils/userStore';
-import { getToken } from '../../utils/secureStore';
+import { useUserStore } from '../../stores/userStore';
+import { getToken } from '../../stores/secureStore';
 import { logStorageContents } from '../../utils/debugUtils';
 import { fetchComments } from '../../services/socialService';
 import { fetchUserDetails } from '../../services/userService';
@@ -19,7 +19,7 @@ import TopPanel from '../../components/Panels/TopPanel';
 import BottomPanel from '../../components/Panels/BottomPanel';
 import ProfilePanel from '../../components/Panels/ProfilePanel';
 import CommentFeed from '../../components/Modals/CommentFeed';
-import MemeList from '../../components/MediaPlayer/MemeList';
+import MemeList from '../../components/MediaPlayer/Logic/MemeList';
 
 const Feed: React.FC = React.memo(() => {
   const userStore = useUserStore();

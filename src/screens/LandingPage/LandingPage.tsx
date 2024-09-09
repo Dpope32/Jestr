@@ -3,10 +3,10 @@ import { Animated, View, ActivityIndicator, Text } from 'react-native';
 import { NavigationProp, useNavigation, CommonActions } from '@react-navigation/native';
 import LP from './LP';
 import {RootStackParamList, LetterScale } from '../../types/types';
-import { getToken, getUserIdentifier, removeToken, removeUserIdentifier } from 'utils/secureStore';
+import { getToken, getUserIdentifier, removeToken, removeUserIdentifier } from '../../stores/secureStore';
 import { getCurrentUser } from '@aws-amplify/auth';
 import { fetchUserDetails } from '../../services/userService';
-import { storeUserIdentifier } from 'utils/secureStore';
+import { storeUserIdentifier } from '../../stores/secureStore';
 
 type LandingPageNavigationProp = NavigationProp<RootStackParamList>;
 

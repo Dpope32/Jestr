@@ -2,9 +2,9 @@ import {useState, useCallback} from 'react';
 import {debounce} from 'lodash';
 import {Video, AVPlaybackStatus} from 'expo-av';
 
-import {updateMemeReaction} from '../../services/memeService';
-import {handleShareMeme} from '../../services/memeService';
-import {ShareType, User} from '../../types/types';
+import {updateMemeReaction} from '../../../services/memeService';
+import {handleShareMeme} from '../../../services/memeService';
+import {ShareType, User} from '../../../types/types';
 
 interface UseMediaPlayerLogicProps {
   initialLiked: boolean;
@@ -40,6 +40,7 @@ export const useMediaPlayerLogic = ({
   const [likePosition, setLikePosition] = useState({x: 0, y: 0});
   const [isModalVisible, setModalVisible] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [friends, setFriends] = useState([]);
 
   const [counts, setCounts] = useState({
     likes: initialLikeCount,
@@ -48,7 +49,6 @@ export const useMediaPlayerLogic = ({
     comments: initialCommentCount,
   });
 
-  const [friends, setFriends] = useState([]);
   const handleLongPress = () => {
     console.log('longpress pressed');
     setModalVisible(true);
