@@ -10,29 +10,31 @@ import InputField from '../../components/shared/Input/InutField';
 import { LinearGradient } from 'expo-linear-gradient';
 import { handleCompleteProfile } from '../../services/userService';
 import { useUserStore } from '../../stores/userStore';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { useNotificationStore } from '../../stores/notificationStore';
 import * as ImagePicker from 'expo-image-picker';
 import { BlurView } from 'expo-blur';
 import LottieView from 'lottie-react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faMoon, faHeart, faBell } from '@fortawesome/free-solid-svg-icons';
+import { faMoon, faHeart, faBell, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { styles } from './CompleteProfile.styles';
 
+
 const CompleteProfileScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'CompleteProfileScreen'>>();
-  const { headerPic, profilePic, bio, setBio, setLikesPublic, setNotificationsEnabled } = useUserStore();
+  const { headerPic, profilePic, bio, setBio, setDarkMode } = useUserStore();
+  const { privacySafety, updatePrivacySafety } = useSettingsStore();
+  const { pushEnabled, setNotificationPreferences } = useNotificationStore();
   const { email } = route.params;
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { setDarkMode } = useUserStore();
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [darkMode, setDarkModeLocal] = useState(isDarkMode);
-  const [likesPublic, setLikesPublicLocal] = useState(true);
-  const [notificationsEnabled, setNotificationsEnabledLocal] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -96,10 +98,13 @@ const CompleteProfileScreen: React.FC = () => {
     try {
       const validProfilePic = profilePic && typeof profilePic !== 'string' ? profilePic : null;
       const validHeaderPic = headerPic && typeof headerPic !== 'string' ? headerPic : null;
-  
+
       setDarkMode?.(darkMode);
-      setLikesPublic?.(likesPublic);
-      setNotificationsEnabled?.(notificationsEnabled);
+      updatePrivacySafety({
+        likesPublic: privacySafety.likesPublic,
+        allowDMsFromEveryone: privacySafety.allowDMsFromEveryone,
+      });
+      setNotificationPreferences({ pushEnabled });
 
       await handleCompleteProfile(
         email,
@@ -110,9 +115,13 @@ const CompleteProfileScreen: React.FC = () => {
         bio,
         () => {}, 
         navigation,
-        { darkMode, likesPublic, notificationsEnabled }
+        { 
+          darkMode, 
+          likesPublic: privacySafety.likesPublic, 
+          notificationsEnabled: pushEnabled 
+        }
       );
-  
+
       setError(null);
     } catch (error: unknown) {
       console.error('Error completing profile:', error);
@@ -125,6 +134,7 @@ const CompleteProfileScreen: React.FC = () => {
       setIsLoading(false);
     }
   };
+
   
 
   if (isLoading) {
@@ -197,21 +207,22 @@ const CompleteProfileScreen: React.FC = () => {
               <FontAwesomeIcon icon={faHeart} size={24} color="#1bd40b" />
               <Text style={styles.preferenceText}>Likes Public</Text>
               <Switch
-                value={likesPublic}
-                onValueChange={setLikesPublicLocal}
+                value={privacySafety.likesPublic}
+                onValueChange={(value) => updatePrivacySafety({ likesPublic: value })}
                 trackColor={{ false: "#767577", true: "#1bd40b" }}
-                thumbColor={likesPublic ? "#f4f3f4" : "#f4f3f4"}
+                thumbColor={privacySafety.likesPublic ? "#f4f3f4" : "#f4f3f4"}
               />
             </View>
 
+
             <View style={styles.preferenceItem}>
               <FontAwesomeIcon icon={faBell} size={24} color="#1bd40b" />
-              <Text style={styles.preferenceText}>Notifications</Text>
+              <Text style={styles.preferenceText}>Push Notifications</Text>
               <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabledLocal}
+                value={pushEnabled}
+                onValueChange={(value) => setNotificationPreferences({ pushEnabled: value })}
                 trackColor={{ false: "#767577", true: "#1bd40b" }}
-                thumbColor={notificationsEnabled ? "#f4f3f4" : "#f4f3f4"}
+                thumbColor={pushEnabled ? "#f4f3f4" : "#f4f3f4"}
               />
             </View>
 

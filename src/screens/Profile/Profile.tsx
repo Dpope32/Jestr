@@ -219,7 +219,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
                 style={styles.statItem}
                 onPress={() => openFollowModal('following')}
               >
-                <Text style={styles.statCount}>{followersCount}</Text>
+                <Text style={styles.statCount}>{followersCount || 0}</Text>
                 <Text style={styles.statLabel}>Followers</Text>
               </TouchableOpacity>
               <View style={styles.statItem}>
@@ -230,7 +230,7 @@ const Profile: React.FC<ProfileProps> = React.memo(({ route, navigation }) => {
                 style={styles.statItem}
                 onPress={() => openFollowModal('followers')}
               >
-                <Text style={styles.statCount}>{followingCount}</Text>
+                <Text style={styles.statCount}>{followingCount || 0}</Text>
                 <Text style={styles.statLabel}>Following</Text>
               </TouchableOpacity>
             </View>

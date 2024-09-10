@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   },
   bottomContainer: {
     position: 'absolute',
-    bottom:  Platform.OS === 'ios' ? 100 : 20,
+    bottom:  Platform.OS === 'ios' ? 100 : 80,
     fontFamily: FONTS.regular,
     left: 0,
     right: 0,

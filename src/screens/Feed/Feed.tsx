@@ -115,12 +115,17 @@ const Feed: React.FC = React.memo(() => {
         showLogo={true}
         isAdmin={userStore.isAdmin || false}
         isUploading={false}
-        onAdminClick={() => navigation.navigate('AdminPage')}
+        onAdminClick={() => {
+          if (navigation) {
+            navigation.navigate('AdminPage');
+          } else {
+            console.warn('Navigation object is not available');
+          }
+        }}
       />
     ),
     [userStore.profilePic, userStore.username, userStore.isAdmin, toggleProfilePanel, navigation]
   );
-
   const memoizedMemeList = useMemo(() => {
     console.log('Feed - Rendering MemeList with', memes.length, 'memes');
     return (
@@ -201,9 +206,9 @@ const Feed: React.FC = React.memo(() => {
           followersCount={userStore.followersCount || 0}
           followingCount={userStore.followingCount || 0}
           user={userStore}
-          navigation={navigation}
-        />
-      )}
+          navigation={navigation ? navigation : undefined}
+          />
+        )}        
       {isCommentFeedVisible && memes[currentMediaIndex] && (
         <CommentFeed
           memeID={memes[currentMediaIndex].memeID}

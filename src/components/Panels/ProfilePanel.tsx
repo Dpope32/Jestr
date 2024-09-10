@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {View,Text,Image,TouchableOpacity,Animated,PanResponder,Dimensions,} from 'react-native';
+import {View,Text,Image,TouchableOpacity,Animated,PanResponder,Dimensions, Easing} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import styles from './ProfilePanel.styles';
 import {faUser,faRibbon,faBell,faCog,faMoon,faTimes,} from '@fortawesome/free-solid-svg-icons';
@@ -12,17 +12,7 @@ import {useUserStore} from '../../stores/userStore';
 
 const {width} = Dimensions.get('window');
 
-const ProfilePanel: React.FC<ProfilePanelProps> = ({
-  isVisible,
-  onClose,
-  profilePicUrl,
-  username,
-  displayName,
-  followersCount: initialFollowersCount,
-  followingCount: initialFollowingCount,
-  user,
-  navigation,
-}) => {
+const ProfilePanel: React.FC<ProfilePanelProps> = ({isVisible,onClose,profilePicUrl,username,displayName,followersCount: initialFollowersCount,followingCount: initialFollowingCount,user,navigation}) => {
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const followersCount = useUserStore(state => state.followersCount);
   const followingCount = useUserStore(
@@ -33,6 +23,14 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   const bio = localUser?.Bio || localUser?.bio || 'Default bio';
   const panelTranslateX = useRef(new Animated.Value(-width)).current;
   const {isDarkMode, toggleDarkMode} = useTheme();
+  const spinValue = useRef(new Animated.Value(0)).current;
+
+
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
+
 
   const panResponder = useRef(
     PanResponder.create({
@@ -82,6 +80,12 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
 
   const handleDarkModeToggle = () => {
     toggleDarkMode();
+    Animated.timing(spinValue, {
+      toValue: isDarkMode ? 0 : 1,
+      duration: 300,
+      easing: Easing.linear,
+      useNativeDriver: true
+    }).start();
   };
 
   const getProfilePic = () => {
@@ -179,11 +183,19 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
               onValueChange={handleDarkModeToggle}
               value={isDarkMode}
             />
-            <FontAwesomeIcon
-              icon={faMoon}
-              style={styles.darkModeIcon}
-              size={24}
-            />
+            <Animated.View 
+              style={{ 
+                transform: [{ rotate: spin }],
+                padding: 6,
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faMoon}
+                style={styles.darkModeIcon}
+                color={isDarkMode ? '#1bd40b' : '#ffffff'}
+                size={24}
+              />
+            </Animated.View>
           </View>
         </View>
       </Animated.View>
