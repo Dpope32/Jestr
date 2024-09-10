@@ -1,6 +1,8 @@
 import { create } from 'zustand';
-import { Meme, ProfileImage } from '../types/types';
 import { immer } from 'zustand/middleware/immer';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Meme, ProfileImage } from '../types/types';
 
 export interface UserState {
   resetUserState: () => void;
@@ -33,7 +35,9 @@ export interface UserState {
   incrementFollowingCount: () => void;
   decrementFollowingCount: () => void;
 }
-export const useUserStore = create(immer<UserState>((set) => ({
+export const useUserStore = create(
+  persist(
+    immer<UserState>((set) => ({
   bio: '',
   username: '',
   displayName: '',
@@ -99,4 +103,10 @@ export const useUserStore = create(immer<UserState>((set) => ({
       isAdmin: undefined,
       userId: undefined,
     }),
-  })));
+  })),
+  {
+    name: 'user-storage',
+    storage: createJSONStorage(() => AsyncStorage),
+  }
+)
+);

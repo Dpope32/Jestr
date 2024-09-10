@@ -8,7 +8,7 @@ const { CognitoJwtVerifier } = require('aws-jwt-verify');
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({ region: "us-east-2" });
-
+const cachedViewedMemes = {}; 
 const BUCKET_NAME = 'jestr-meme-uploads';
 
 const verifier = CognitoJwtVerifier.create({
@@ -30,6 +30,15 @@ const createResponse = (statusCode, message, data = null) => ({
 
 // Function to send a message
 const batchCheckFollowStatus = async (followerId, followeeIDs) => {
+  // Check if followeeIDs array is empty
+  if (followeeIDs.length === 0) {
+    console.log('No followee IDs provided. Returning empty follow statuses.');
+    return followeeIDs.reduce((acc, followeeId) => {
+      acc[followeeId] = false; // Default to false if no followee provided
+      return acc;
+    }, {});
+  }
+
   const batchGetParams = {
     RequestItems: {
       'UserRelationships': {
@@ -69,6 +78,7 @@ const batchCheckFollowStatus = async (followerId, followeeIDs) => {
     }, {});
   }
 };
+
 
 async function recordMemeViews(userEmail, memeIDs) {
   const now = new Date();
@@ -165,96 +175,136 @@ exports.handler = async (event) => {
 
   switch (operation) {
 
-      case 'fetchMemes': {
-     //   console.log('Processing operation: fetchMemes');
-        const { lastViewedMemeId, userEmail, limit = 5 } = requestBody;
-        if (!userEmail) {
-          return createResponse(400, 'userEmail is required.');
-        }
-        try {
-          // Fetch user's entire view history
+    case 'fetchMemes': {
+      const { lastViewedMemeId, userEmail, limit = 5 } = requestBody;
+      if (!userEmail) {
+        return createResponse(400, 'userEmail is required.');
+      }
+      
+      try {
+        // Check cache for existing viewedMemes
+        let viewedMemeIDs = cachedViewedMemes[userEmail];
+    
+        if (viewedMemeIDs) {
+          console.log(`Cache hit for user: ${userEmail}. Using cached viewedMemeIDs.`);
+        } else {
+          console.log(`Cache miss for user: ${userEmail}. Fetching from DynamoDB.`);
+          
+          // Fetch user's entire view history from DynamoDB if not in cache
           const viewHistoryCommand = new QueryCommand({
             TableName: 'UserMemeViews',
             KeyConditionExpression: 'email = :email',
             ExpressionAttributeValues: { ':email': userEmail }
           });
-      
+    
           const viewHistoryResponse = await docClient.send(viewHistoryCommand);
-      
-          // Extract all viewed meme IDs
-          const viewedMemeIDs = new Set(
+    
+          // Extract all viewed meme IDs and cache them
+          viewedMemeIDs = new Set(
             viewHistoryResponse.Items.flatMap(item =>
               (item.viewedMemes || []).map(meme => typeof meme === 'string' ? meme : meme.S)
             )
           );
-      
-          // Fetch memes, excluding viewed ones
-          let unseenMemes = [];
-          let scanParams = {
-            TableName: 'Memes',
-            Limit: 100,
-          };
-      
-          if (lastViewedMemeId) {
-            scanParams.ExclusiveStartKey = { MemeID: lastViewedMemeId };
-          }
-      
-          while (unseenMemes.length < limit) {
-            const scanCommand = new ScanCommand(scanParams);
-            const result = await docClient.send(scanCommand);
-      
-            const newUnseenMemes = result.Items.filter(meme => !viewedMemeIDs.has(meme.MemeID));
-         //   console.log(`Fetched ${result.Items.length} memes, ${newUnseenMemes.length} are unseen`);
-      
-            unseenMemes = [...unseenMemes, ...newUnseenMemes];
-            
-            if (!result.LastEvaluatedKey) break;
-            scanParams.ExclusiveStartKey = result.LastEvaluatedKey;
-          }
-      
-          // Extract unique followee IDs
-          const followeeIDs = [...new Set(unseenMemes.slice(0, limit).map(item => item.Email).filter(email => email !== userEmail))];
-          
-          // Batch check follow status
-          const followStatuses = await batchCheckFollowStatus(userEmail, followeeIDs);
-      
-          // Process memes and attach follow status
-          const memes = unseenMemes.slice(0, limit).map(item => ({
-            memeID: item.MemeID,
-            email: item.Email,
-            url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
-            uploadTimestamp: item.UploadTimestamp,
-            username: item.Username,
-            caption: item.Caption,
-            likeCount: item.LikeCount || 0,
-            downloadCount: item.DownloadsCount || 0,
-            commentCount: item.CommentCount || 0,
-            shareCount: item.ShareCount || 0,
-            profilePicUrl: item.ProfilePicUrl || '',
-            mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
-            memeUser: {
-              email: item.Email,
-              username: item.Username,
-              profilePic: item.ProfilePicUrl || '',
-              displayName: item.Username,
-              headerPic: '',
-              creationDate: item.UploadTimestamp
-            },
-            isFollowed: item.Email !== userEmail ? followStatuses[item.Email] || false : null
-          }));
-      
-          // Record meme views
-          await recordMemeViews(userEmail, memes.map(meme => meme.memeID));
-      
-          return createResponse(200, 'Memes retrieved successfully.', {
-            memes,
-            lastEvaluatedKey: scanParams.ExclusiveStartKey ? JSON.stringify(scanParams.ExclusiveStartKey) : null
-          });
-        } catch (error) {
-          console.error('Error fetching memes:', error);
-          return createResponse(500, 'Internal Server Error', { error: error.message, stack: error.stack });
+    
+          // Cache viewedMemeIDs
+          cachedViewedMemes[userEmail] = viewedMemeIDs;
+    
+          console.log(`Cached viewedMemeIDs for user: ${userEmail}.`);
         }
-      }
+    
+        // Fetch memes using the new GSI
+        let queryParams = {
+          TableName: 'Memes',
+          IndexName: 'ByStatusAndTimestamp',
+          KeyConditionExpression: '#status = :status',
+          ExpressionAttributeNames: {
+            '#status': 'Status'
+          },
+          ExpressionAttributeValues: {
+            ':status': 'active'
+          },
+          ScanIndexForward: false, // To get the most recent memes first
+          Limit: 100 // We'll filter out viewed memes, so we fetch more than needed
+        };
+    
+        if (lastViewedMemeId) {
+          // Fetch the last viewed meme to get its timestamp
+          const lastViewedMemeCommand = new GetCommand({
+            TableName: 'Memes',
+            Key: { MemeID: lastViewedMemeId }
+          });
+          const lastViewedMeme = await docClient.send(lastViewedMemeCommand);
+    
+          if (lastViewedMeme.Item) {
+            queryParams.ExclusiveStartKey = { 
+              Status: 'active',
+              UploadTimestamp: lastViewedMeme.Item.UploadTimestamp,
+              MemeID: lastViewedMemeId
+            };
+          }
+        }
+    
+        let unseenMemes = [];
+        while (unseenMemes.length < limit) {
+          const queryCommand = new QueryCommand(queryParams);
+          const result = await docClient.send(queryCommand);
+    
+          const newUnseenMemes = result.Items.filter(meme => !viewedMemeIDs.has(meme.MemeID));
+          unseenMemes = [...unseenMemes, ...newUnseenMemes];
+    
+          if (!result.LastEvaluatedKey || unseenMemes.length >= limit) break;
+          queryParams.ExclusiveStartKey = result.LastEvaluatedKey;
+        }
+    
+        // Process memes and attach follow status (rest of your existing code)
+        const followeeIDs = [...new Set(unseenMemes.slice(0, limit).map(item => item.Email).filter(email => email !== userEmail))];
+    
+        let followStatuses = {};
+        if (followeeIDs.length > 0) {
+          followStatuses = await batchCheckFollowStatus(userEmail, followeeIDs);
+        } else {
+          console.log('No followee IDs provided. Returning empty follow statuses.');
+        }
+    
+        const memes = unseenMemes.slice(0, limit).map(item => ({
+          memeID: item.MemeID,
+          email: item.Email,
+          url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
+          uploadTimestamp: item.UploadTimestamp,
+          username: item.Username,
+          caption: item.Caption,
+          likeCount: item.LikeCount || 0,
+          downloadCount: item.DownloadsCount || 0,
+          commentCount: item.CommentCount || 0,
+          shareCount: item.ShareCount || 0,
+          profilePicUrl: item.ProfilePicUrl || '',
+          mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
+          memeUser: {
+            email: item.Email,
+            username: item.Username,
+            profilePic: item.ProfilePicUrl || '',
+            displayName: item.Username,
+            headerPic: '',
+            creationDate: item.UploadTimestamp
+          },
+          isFollowed: item.Email !== userEmail ? followStatuses[item.Email] || false : null
+        }));
+    // Update the cache with new views
+    memes.forEach(meme => viewedMemeIDs.add(meme.memeID));
+
+    // Record meme views in DynamoDB
+    await recordMemeViews(userEmail, memes.map(meme => meme.memeID));
+
+    return createResponse(200, 'Memes retrieved successfully.', {
+      memes,
+      lastEvaluatedKey: queryParams.ExclusiveStartKey ? JSON.stringify(queryParams.ExclusiveStartKey) : null
+    });
+  } catch (error) {
+    console.error('Error fetching memes:', error);
+    return createResponse(500, 'Internal Server Error', { error: error.message, stack: error.stack });
+  }
+}
+    
 
       case 'uploadMeme': {
     //    console.log('Processing operation:', event.operation);

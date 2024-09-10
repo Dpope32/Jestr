@@ -9,7 +9,7 @@
   import {RootStackParamList, ProfileImage} from '../types/types';
   import * as FileSystem from 'expo-file-system';
   import {v4 as uuidv4} from 'uuid';
-  import {useUserStore} from '../stores/userStore';
+  import { useUserStore, UserState } from '../stores/userStore'; // Adjust the import path as needed
   import {storeUserIdentifier} from '../stores/secureStore';
   import * as SecureStore from 'expo-secure-store';
   import * as ImageManipulator from 'expo-image-manipulator';
@@ -66,44 +66,73 @@
     }
   };
 
-  export const fetchUserDetails = async (identifier: string, token?: string) => {
-    // console.log('Fetching user details for identifier:', identifier);
-    // console.log('Using API endpoint:', API_ENDPOINT);
-    // console.log('Token being sent:', token);
+
+  //adjusted to use the user store details if available, otherwise fetch from API, Singificantly reduces API calls and speeds up load times
+  export const fetchUserDetails = async (identifier: string, token?: string): Promise<UserState> => {
+    // Get the current user state from the store
+    const currentUserState = useUserStore.getState();
+    
+    // Check if the current user state is not empty and matches the identifier
+    if (!isEmptyUserState(currentUserState) && (currentUserState.email === identifier || currentUserState.userId === identifier)) {
+      console.log('Using user details from store');
+      return currentUserState;
+    }
+  
+    console.log('Fetching user details from API for identifier:', identifier);
   
     const requestBody = {
       operation: 'getUser',
       identifier: identifier,
     };
   
-    const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-    console.log('Response status:', response.status);
-    //  console.log('Response headers:', JSON.stringify(response.headers));
+    try {
+      const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
   
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('Error response body:', errorBody);
-      throw new Error(
-        `HTTP error! status: ${response.status}, body: ${errorBody}`,
-      );
+      console.log('Response status:', response.status);
+  
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('Error response body:', errorBody);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
+      }
+  
+      const data = await response.json();
+  
+      if (!data.data) {
+        throw new Error('No user data returned from server');
+      }
+  
+      // Update the user store with the new data
+      useUserStore.getState().setUserDetails(data.data);
+  
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      throw error;
     }
-    const data = await response.json();
-    // console.log('User details fetched successfully:', JSON.stringify(data, null, 2));
-  
-    if (!data.data) {
-      throw new Error('No user data returned from server');
-    }
-  
-    return data.data; // Return only the data part
   };
-
+  
+  export const isEmptyUserState = (state: UserState): boolean => {
+    return (
+      !state.email &&
+      !state.username &&
+      !state.displayName &&
+      !state.bio &&
+      !state.creationDate &&
+      state.followersCount === 0 &&
+      state.followingCount === 0 &&
+      !state.profilePic &&
+      !state.headerPic &&
+      !state.userId
+    );
+  }
   
   export const handleCompleteProfile = async (
     email: string,

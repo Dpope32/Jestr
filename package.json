@@ -107,7 +107,8 @@
     "stream-browserify": "^3.0.0",
     "uuid": "^10.0.0",
     "web-streams-polyfill": "^4.0.0",
-    "zustand": "^4.5.4"
+    "zustand": "^4.5.4",
+    "expo-dev-client": "~4.0.26"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

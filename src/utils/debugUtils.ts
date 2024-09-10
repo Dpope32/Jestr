@@ -52,8 +52,7 @@ export const logStoreContents = (storeName: string) => {
     settings: useSettingsStore,
   };
   if (storeName in stores) {
-    const store = stores[storeName as keyof typeof stores];
-    console.log(`${storeName}Store:`, safeStringify(store.getState()));
+    console.log(`${storeName}Store:`, safeStringify((stores[storeName as keyof typeof stores]).getState()));
   } else {
     console.log(`Store "${storeName}" not found.`);
   }

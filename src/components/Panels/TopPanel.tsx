@@ -237,6 +237,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: 'row',
+    marginRight: 50, 
     alignItems: 'center',
     width: wp('10%'), // Default width when search is not active
   },

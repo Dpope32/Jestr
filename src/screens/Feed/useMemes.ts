@@ -4,18 +4,21 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { fetchMemes, recordMemeViews} from '../../services/memeService';
 import { Meme, User } from '../../types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { debounce } from 'lodash';
 
 const LAST_VIEWED_MEME_KEY = 'lastViewedMemeId';
+const FETCH_LOCK_KEY = 'fetchMemesLock';
 
 export const useMemes = (user: User | null, accessToken: string | null) => {
   const [memes, setMemes] = useState<Meme[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
   const [allMemesViewed, setAllMemesViewed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const memeViewBatchRef = useRef<{email: string; memeID: string}[]>([]);
   const lastRecordTimeRef = useRef(0);
+  const isFetchingRef = useRef(false);
 
   const recordMemeViewBatch = useCallback(async () => {
     const now = Date.now();
@@ -59,50 +62,71 @@ export const useMemes = (user: User | null, accessToken: string | null) => {
     }
   };
 
+  const acquireLock = async () => {
+    if (isFetchingRef.current) return false;
+    const lockValue = await AsyncStorage.getItem(FETCH_LOCK_KEY);
+    if (lockValue) return false;
+    isFetchingRef.current = true;
+    await AsyncStorage.setItem(FETCH_LOCK_KEY, 'locked');
+    return true;
+  };
+
+  const releaseLock = async () => {
+    isFetchingRef.current = false;
+    await AsyncStorage.removeItem(FETCH_LOCK_KEY);
+  };
+
+  const debouncedFetchMemes = useCallback(
+    debounce(async (lastViewedMemeId: string | null, email: string, limit: number, token: string) => {
+      if (!(await acquireLock())) return;
+      try {
+        const result = await fetchMemes(lastViewedMemeId, email, limit, token);
+        setMemes(prevMemes => lastViewedMemeId ? [...prevMemes, ...result.memes] : result.memes);
+        setLastEvaluatedKey(result.lastEvaluatedKey);
+        setAllMemesViewed(result.memes.length === 0 || !result.lastEvaluatedKey);
+      } catch (error) {
+        setError('Failed to fetch memes. Please try again later.');
+      } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+        releaseLock();
+      }
+    }, 500),
+    []
+  );
+
   const fetchInitialMemes = useCallback(async () => {
-    if (!user?.email || !accessToken) return;
-    setIsLoading(true);
+    if (!user?.email || !accessToken || isLoading || !(await acquireLock())) return;
     try {
+      setIsLoading(true);
       const lastViewedMemeId = await getLastViewedMeme();
       const result = await fetchMemes(lastViewedMemeId, user.email, 10, accessToken);
       setMemes(result.memes);
       setLastEvaluatedKey(result.lastEvaluatedKey);
-      setAllMemesViewed(result.memes.length === 0);
-      
-      // Update cache with new memes
-      await AsyncStorage.setItem('cachedMemes', JSON.stringify(result.memes));
+      setAllMemesViewed(result.memes.length === 0 || !result.lastEvaluatedKey);
     } catch (error) {
-      setError('Failed to fetch memes. Please try again later.');
+      setError('Failed to fetch initial memes. Please try again later.');
     } finally {
       setIsLoading(false);
+      releaseLock();
     }
-  }, [user, accessToken]);
-  
-  const fetchMoreMemes = useCallback(async () => {
+  }, [user, accessToken, isLoading, acquireLock, releaseLock]);
+
+  const fetchMoreMemes = useCallback(() => {
     if (isLoadingMore || allMemesViewed || !user?.email || !accessToken) return;
     setIsLoadingMore(true);
-    try {
-      console.log('Fetching more memes with lastEvaluatedKey:', lastEvaluatedKey);
-      const result = await fetchMemes(lastEvaluatedKey, user.email, 10, accessToken);
-      setMemes(prevMemes => [...prevMemes, ...result.memes]);
-      setLastEvaluatedKey(result.lastEvaluatedKey);
-      setAllMemesViewed(result.memes.length === 0 || !result.lastEvaluatedKey);
-      console.log('Fetched more memes:', result.memes.length);
-    } catch (error) {
-      console.error('Error fetching more memes:', error);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [isLoadingMore, allMemesViewed, user, accessToken, lastEvaluatedKey]);
+    debouncedFetchMemes(lastEvaluatedKey, user.email, 10, accessToken);
+  }, [isLoadingMore, allMemesViewed, user, accessToken, lastEvaluatedKey, debouncedFetchMemes]);
+
 
   useEffect(() => {
-    fetchInitialMemes();
+
     const intervalId = setInterval(recordMemeViewBatch, 30000);
     return () => {
       clearInterval(intervalId);
       recordMemeViewBatch();
     };
-  }, [fetchInitialMemes, recordMemeViewBatch]);
+  }, [recordMemeViewBatch]);
 
   const handleMemeViewed = useCallback((memeId: string) => {
     setLastViewedMeme(memeId);

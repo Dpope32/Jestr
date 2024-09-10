@@ -11,7 +11,7 @@ import { useUserStore } from '../../stores/userStore';
 import { getToken } from '../../stores/secureStore';
 import { logStorageContents } from '../../utils/debugUtils';
 import { fetchComments } from '../../services/socialService';
-import { fetchUserDetails } from '../../services/userService';
+import { fetchUserDetails, isEmptyUserState } from '../../services/userService';
 
 import styles from './Feed.styles';
 import { RootStackParamList } from '../../types/types';
@@ -56,14 +56,12 @@ const Feed: React.FC = React.memo(() => {
       const loadUserData = async () => {
         const token = await getToken('accessToken');
         setAccessToken(token);
-        if (token && userStore.email) {
+        if (token && userStore.email && isEmptyUserState(userStore)) {
           const userDetails = await fetchUserDetails(userStore.email, token);
           useUserStore.getState().setUserDetails(userDetails);
         }
       };
       loadUserData();
-   // only uncomment if you want to see the storage contents in the console    
-   //   logStorageContents();
     }, [userStore.email])
   );
 

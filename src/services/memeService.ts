@@ -5,13 +5,155 @@ import Toast from 'react-native-toast-message';
 import {FetchMemesResult} from '../types/types';
 import * as FileSystem from 'expo-file-system';
 import {getToken} from '../stores/secureStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { debounce } from 'lodash';
 
+const COOLDOWN_PERIOD = 5000; // 5 seconds in milliseconds
+const CACHE_KEY_PREFIX = 'memes_cache_';
+const LOCK_KEY = 'fetch_memes_lock';
+
+let isLocked = false;
+let requestQueue: (() => void)[] = [];
 
 type TransformedMemeView = {
   email: string;
   memeIDs: string[];
   ttl: number;
 };
+
+
+export const recordMemeViews = async (memeViews: {email: string; memeID: string}[]): Promise<void> => {
+  // Log the incoming data to ensure it's correct
+  console.log('Received meme views:', JSON.stringify(memeViews));
+
+  if (!Array.isArray(memeViews) || memeViews.length === 0) {
+    console.error('memeViews must be a non-empty array.');
+    return;
+  }
+
+  // Transform single meme views to the expected format if necessary
+// Transform single meme views to the expected format if necessary
+const transformedViews = memeViews.reduce<TransformedMemeView[]>((acc, view) => {
+  const existing = acc.find(v => v.email === view.email);
+  if (existing) {
+      existing.memeIDs.push(view.memeID);
+  } else {
+      acc.push({
+          email: view.email,
+          memeIDs: [view.memeID],
+          ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60)  // Add TTL if needed
+      });
+  }
+  return acc;
+}, []);
+
+  // Log transformed data
+  console.log('Transformed meme views for batch processing:', JSON.stringify(transformedViews));
+
+  try {
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/recordMemeView',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getToken('accessToken')}`,
+        },
+        body: JSON.stringify({
+          operation: 'recordMemeView',
+          memeViews: transformedViews,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to record meme views');
+    }
+
+    console.log('Meme views recorded successfully');
+  } catch (error) {
+    console.error('Error recording meme views:', error);
+    throw error;
+  }
+};
+
+
+const debouncedFetchMemes = debounce(async (
+  lastEvaluatedKey: string | null,
+  userEmail: string,
+  limit: number,
+  accessToken: string,
+  resolve: (result: FetchMemesResult) => void,
+  reject: (error: any) => void
+) => {
+  console.log(`Debounced fetchMemes called for user: ${userEmail}`);
+
+  try {
+    const cacheKey = `${CACHE_KEY_PREFIX}${userEmail}`;
+    const now = Date.now();
+    const lastFetchTime = await AsyncStorage.getItem(`${cacheKey}_time`);
+
+    if (lastFetchTime && now - parseInt(lastFetchTime) < COOLDOWN_PERIOD) {
+      console.log('Using cached data');
+      const cachedData = await AsyncStorage.getItem(cacheKey);
+      if (cachedData) {
+        resolve(JSON.parse(cachedData));
+        return;
+      }
+    }
+
+    console.log('Fetching new data from API');
+    const response = await fetch(`${API_URL}/fetchMemes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        operation: 'fetchMemes',
+        lastEvaluatedKey,
+        userEmail,
+        limit,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const result = {
+      memes: data.data.memes.map((meme: { isFollowed: boolean }) => ({
+        ...meme,
+        isFollowed: meme.isFollowed || false,
+      })),
+      lastEvaluatedKey: data.data.lastEvaluatedKey,
+    };
+
+    await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
+    await AsyncStorage.setItem(`${cacheKey}_time`, now.toString());
+
+    console.log(`Fetched and cached ${result.memes.length} memes`);
+    resolve(result);
+  } catch (error) {
+    console.error('Fetch memes failed:', error);
+    reject(error);
+  }
+}, 100);
+
+
+export const fetchMemes = (
+  lastEvaluatedKey: string | null = null,
+  userEmail: string,
+  limit: number = 10,
+  accessToken: string,
+): Promise<FetchMemesResult> => {
+  return new Promise((resolve, reject) => {
+    debouncedFetchMemes(lastEvaluatedKey, userEmail, limit, accessToken, resolve, reject);
+  });
+};
+
 
 export const getUserMemes = async (
   email: string,
@@ -188,125 +330,6 @@ export const handleShareMeme = async (
       topOffset: 30,
     });
   }
-};
-
-export const recordMemeViews = async (memeViews: {email: string; memeID: string}[]): Promise<void> => {
-  // Log the incoming data to ensure it's correct
-  console.log('Received meme views:', JSON.stringify(memeViews));
-
-  if (!Array.isArray(memeViews) || memeViews.length === 0) {
-    console.error('memeViews must be a non-empty array.');
-    return;
-  }
-
-  // Transform single meme views to the expected format if necessary
-// Transform single meme views to the expected format if necessary
-const transformedViews = memeViews.reduce<TransformedMemeView[]>((acc, view) => {
-  const existing = acc.find(v => v.email === view.email);
-  if (existing) {
-      existing.memeIDs.push(view.memeID);
-  } else {
-      acc.push({
-          email: view.email,
-          memeIDs: [view.memeID],
-          ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60)  // Add TTL if needed
-      });
-  }
-  return acc;
-}, []);
-
-  // Log transformed data
-  console.log('Transformed meme views for batch processing:', JSON.stringify(transformedViews));
-
-  try {
-    const response = await fetch(
-      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/recordMemeView',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await getToken('accessToken')}`,
-        },
-        body: JSON.stringify({
-          operation: 'recordMemeView',
-          memeViews: transformedViews,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to record meme views');
-    }
-
-    console.log('Meme views recorded successfully');
-  } catch (error) {
-    console.error('Error recording meme views:', error);
-    throw error;
-  }
-};
-
-export const fetchMemes = async (
-  lastEvaluatedKey: string | null = null,
-  userEmail: string,
-  limit: number = 10,
-  accessToken: string,
-): Promise<FetchMemesResult> => {
-  const maxRetries = 1;
-  let retries = 0;
-
-  while (retries < maxRetries) {
-    try {
-      //console.log('fetchMemes called with:', { lastEvaluatedKey, userEmail, limit, accessToken: accessToken.substring(0, 10) + '...' });
-
-      const response = await fetch(`${API_URL}/fetchMemes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          operation: 'fetchMemes',
-          lastEvaluatedKey,
-          userEmail,
-          limit,
-        }),
-      });
-
-      //console.log('fetchMemes response status:', response.status);
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('Error response body:', errorBody);
-        throw new Error(
-          `HTTP error! status: ${response.status}, body: ${errorBody}`,
-        );
-      }
-
-      const data = await response.json();
- //   console.log('fetchMemes response data:', JSON.stringify(data, null, 2));
-
-      if (!data.data || !Array.isArray(data.data.memes)) {
-        throw new Error('Invalid response format');
-      }
-
-      return {
-        memes: data.data.memes.map((meme: { isFollowed: boolean; }) => ({
-          ...meme,
-          isFollowed: meme.isFollowed || false, // Ensure isFollowed is always defined
-        })),
-        lastEvaluatedKey: data.data.lastEvaluatedKey,
-      };
-    } catch (error) {
-      console.error(`Attempt ${retries + 1} failed:`, error);
-      retries++;
-      if (retries === maxRetries) {
-        throw error;
-      }
-      await new Promise(resolve => setTimeout(resolve, 1000 * retries));
-    }
-  }
-  throw new Error('Max retries reached');
 };
 
 export const uploadMeme = async (
