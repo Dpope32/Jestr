@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,7 +34,6 @@
     </style>
 </head>
 <body>
-
 <h1>Storage Data Overview</h1>
 <table>
     <tr>
@@ -90,11 +87,40 @@
         <td>Contains details on followers and following lists.</td>
     </tr>
     <tr>
-        <td>Zustand Store</td>
+        <td>user-storage</td>
         <td>{ "bio": "Red meat, thick thighs, fantasy football and creampies...", "username": "Admin", "followersCount": 33, "followingCount": 26, ... }</td>
-        <td>User profile details, UI preferences, and settings.</td>
+        <td>User profile details and authentication information.</td>
+    </tr>
+    <tr>
+        <td>inbox-storage</td>
+        <td>{ conversations: [...], unreadCount: 5 }</td>
+        <td>Direct messages and conversation data.</td>
+    </tr>
+    <tr>
+        <td>meme-storage</td>
+        <td>{ recentMemes: [...], likedMemes: [...] }</td>
+        <td>Meme data and user interactions with memes.</td>
+    </tr>
+    <tr>
+        <td>notification-storage</td>
+        <td>{ pushEnabled: true, emailEnabled: false, ... }</td>
+        <td>Notification preferences and settings.</td>
+    </tr>
+    <tr>
+        <td>settings-storage</td>
+        <td>{ privacySafety: {...}, accessibility: {...} }</td>
+        <td>Privacy, safety, and accessibility settings.</td>
+    </tr>
+    <tr>
+        <td>theme-storage</td>
+        <td>{ darkMode: true, fontSize: 16 }</td>
+        <td>App theme and appearance settings.</td>
+    </tr>
+    <tr>
+        <td>search-storage</td>
+        <td>{ recentSearches: [...], savedSearches: [...] }</td>
+        <td>Recent and saved search queries.</td>
     </tr>
 </table>
-
 </body>
 </html>

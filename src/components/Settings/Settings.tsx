@@ -105,7 +105,9 @@ const Settings: React.FC = () => {
             <Text style={styles.modalHeader}>{selectedSetting?.label}</Text>
             <Text style={styles.modalDescription}>{selectedSetting?.description}</Text>
             <ScrollView style={styles.modalScrollView}>
-              {selectedSetting?.content}
+              {typeof selectedSetting?.content === 'function'
+                ? selectedSetting.content({ closeModal })
+                : selectedSetting?.content}
               {selectedSetting?.subOptions && renderSubOptions(selectedSetting.subOptions)}
             </ScrollView>
           </View>

@@ -12,29 +12,15 @@ export interface UserState {
   CreationDate?: string;
   followersCount: number;
   FollowersCount?: number;
-  language: 'en' | 'es' | 'fr'; 
-  notificationsEnabled: boolean;
-  likesPublic: boolean;
   darkMode: boolean;
   followingCount: number;
   FollowingCount?: number;
-  posts: Meme[];
   tempPassword: string;
   setTempPassword: (password: string) => void;
-  likedMemes: Meme[];
-  downloadedMemes: Meme[];
-  viewedMemes: Meme[];
   profilePic: string | ProfileImage | null; 
   headerPic: string | ProfileImage | null; 
   setDarkMode?: (darkMode: boolean) => void;
-  setLanguage?: (language: 'en' | 'es' | 'fr') => void;
-  setLikesPublic?: (likesPublic: boolean) => void;
-  setNotificationsEnabled?: (notificationsEnabled: boolean) => void;
   setBio?: (bio: string) => void;
-  setPosts?: (posts: Meme[]) => void;
-  setLikedMemes?: (memes: Meme[]) => void;
-  setDownloadedMemes?: (memes: Meme[]) => void;
-  setViewedMemes?: (memes: Meme[]) => void;
   setUserDetails: (details: Partial<UserState>) => void;
   setHeaderPic: (headerPic: string | ProfileImage | null) => void;
   setProfilePic: (profilePic: string | ProfileImage | null) => void;
@@ -65,22 +51,13 @@ export const useUserStore = create(immer<UserState>((set) => ({
   decrementFollowingCount: () =>
     set(state => ({followingCount: Math.max(0, state.followingCount - 1)})),
   creationDate: '',
-  posts: [],
-  likedMemes: [],
   tempPassword: '',
   setTempPassword: (password: string) => set({ tempPassword: password }),
-  downloadedMemes: [],
-  viewedMemes: [],
   profilePic: null,
   headerPic: null,
   darkMode: false,
-  language: 'en',
   likesPublic: true,
-  notificationsEnabled: true,
   setDarkMode: (darkMode: boolean) => set({darkMode}),
-  setLanguage: language => set({language}),
-  setLikesPublic: (likesPublic: boolean) => set({likesPublic}),
-  setNotificationsEnabled: notificationsEnabled => set({notificationsEnabled}),
   setBio: (bio: string) => set({bio}),
   setHeaderPic: (headerPic: string | ProfileImage | null) => set({headerPic}),
   setProfilePic: (profilePic: string | ProfileImage | null) => {
@@ -90,10 +67,6 @@ export const useUserStore = create(immer<UserState>((set) => ({
     }
     set({profilePic});
   },
-  setPosts: posts => set({posts}),
-  setLikedMemes: memes => set({likedMemes: memes}),
-  setDownloadedMemes: memes => set({downloadedMemes: memes}),
-  setViewedMemes: memes => set({viewedMemes: memes}),
   setUserDetails: (details) =>
     set((state) => ({
       ...state,
@@ -104,19 +77,11 @@ export const useUserStore = create(immer<UserState>((set) => ({
       creationDate: details.creationDate ?? details.CreationDate ?? state.creationDate,
       followersCount: details.FollowersCount ?? details.FollowersCount ?? state.FollowersCount,
       followingCount: details.followingCount ?? details.FollowingCount ?? state.followingCount,
-      posts: details.posts ?? state.posts,
-      likedMemes: details.likedMemes ?? state.likedMemes,
-      downloadedMemes: details.downloadedMemes ?? state.downloadedMemes,
-      viewedMemes: details.viewedMemes ?? state.viewedMemes,
       profilePic: details.profilePic || state.profilePic,
       headerPic: details.headerPic || state.headerPic,
       darkMode: details.darkMode ?? state.darkMode,
-      language: details.language ?? state.language,
-      likesPublic: details.likesPublic ?? state.likesPublic,
-      notificationsEnabled: details.notificationsEnabled ?? state.notificationsEnabled,
       isAdmin: details.isAdmin ?? state.isAdmin,
       userId: details.userId ?? state.userId,
-      
     })),
 
   resetUserState: () =>
@@ -128,15 +93,8 @@ export const useUserStore = create(immer<UserState>((set) => ({
       followersCount: 0,
       followingCount: 0,
       creationDate: '',
-      posts: [],
-      likedMemes: [],
-      downloadedMemes: [],
-      viewedMemes: [],
       profilePic: null,
       darkMode: false,
-      language: 'en',
-      likesPublic: true,
-      notificationsEnabled: true,
       headerPic: null,
       isAdmin: undefined,
       userId: undefined,

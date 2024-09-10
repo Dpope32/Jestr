@@ -1,27 +1,60 @@
-// Add this to a utility file, e.g., utils/debugUtils.ts
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { useUserStore } from '../stores/userStore';
+import { useFollowStore } from '../stores/followStore';
+import { useInboxStore } from '../stores/inboxStore';
+import { useNotificationStore } from '../stores/notificationStore';
+import { useSettingsStore } from '../stores/settingsStore';
 
 export const logStorageContents = async () => {
-  // Log AsyncStorage contents
   console.log('AsyncStorage contents:');
   const asyncStorageKeys = await AsyncStorage.getAllKeys();
   for (const key of asyncStorageKeys) {
-    const value = await AsyncStorage.getItem(key);
-    console.log(`${key}: ${value}`);
+    if (!key.includes('cachedMemes') && !key.includes('@MemoryStorage:CognitoIdentityServiceProvider')) {
+      const value = await AsyncStorage.getItem(key);
+      console.log(`${key}: ${value}`);
+    }
   }
 
-  // Log Zustand store contents
   console.log('Zustand store contents:');
-  console.log(JSON.stringify(useUserStore.getState(), null, 2));
+  logStoreContents('user');
+  logStoreContents('follow');
+  logStoreContents('inbox');
+  logStoreContents('notification');
+  logStoreContents('settings');
 
-  // Log SecureStore contents
   console.log('SecureStore contents:');
-  const secureStoreKeys = ['accessToken', 'userIdentifier']; // Add any other keys you're using
+  const secureStoreKeys = ['accessToken', 'userIdentifier', 'refreshToken', 'idToken'];
   for (const key of secureStoreKeys) {
     const value = await SecureStore.getItemAsync(key);
     console.log(`${key}: ${value ? 'exists' : 'does not exist'}`);
+  }
+};
+
+const safeStringify = (obj: any) => {
+  try {
+    return JSON.stringify(obj, null, 2);
+  } catch (error) {
+    if (error instanceof Error) {
+      return `Error stringifying: ${error.message}`;
+    } else {
+      return `Error stringifying: Unknown error`;
+    }
+  }
+};
+
+export const logStoreContents = (storeName: string) => {
+  const stores = {
+    user: useUserStore,
+    follow: useFollowStore,
+    inbox: useInboxStore,
+    notification: useNotificationStore,
+    settings: useSettingsStore,
+  };
+  if (storeName in stores) {
+    const store = stores[storeName as keyof typeof stores];
+    console.log(`${storeName}Store:`, safeStringify(store.getState()));
+  } else {
+    console.log(`Store "${storeName}" not found.`);
   }
 };

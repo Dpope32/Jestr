@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowUp, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { User } from '../../types/types';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types/types';
 import { useNavigation } from '@react-navigation/native';
@@ -10,80 +9,49 @@ import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { sendMessage, fetchMessages } from '../../services/socialService';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
 import { useTheme } from '../../theme/ThemeContext';
-import styles from './convoStyles'
-import { ProfileImage } from '../../types/types';
-
-export type Message = {
-  MessageID: string;
-  SenderID: string;
-  ReceiverID: string;
-  Content: string;
-  Timestamp: string;
-  Status: 'sent' | 'delivered' | 'read';
-  ConversationID: string;
-  sentByMe?: boolean;
-  read?: boolean;
-  reactions?: string[];
-};
-
-export interface Conversation {
-  id: string;
-  ConversationID: string;
-  userEmail: string;
-  username: string;
-  profilePicUrl: string | ProfileImage | null;
-  lastMessage: {
-    Content: string;
-    Timestamp: string;
-  };
-  timestamp: string;
-  messages: any[];
-  UnreadCount: number;
-  LastReadMessageID: string;
-  partnerUser: {
-    email: string;
-    username: string | null;
-    profilePic: string | null;
-  };
-}
-
-
+import styles from './convoStyles';
+import { useUserStore } from '../../stores/userStore';
+import { Message, Conversation, User } from '../../types/types';
 
 type ConversationsParams = {
-  localUser: User;
   partnerUser: User;
   conversation: Conversation;
 };
 
 type ConversationsProps = StackScreenProps<RootStackParamList, 'Conversations'>;
 
-const Conversations: React.FC<ConversationsProps> = ({ route }) => {
-  const { localUser, partnerUser, conversation } = route.params;
+export const Conversations: React.FC<ConversationsProps> = ({ route }) => {
+  const { partnerUser, conversation } = route.params;
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const navigation = useNavigation();
   const { isDarkMode } = useTheme();
+  const currentUser = useUserStore(state => state);
 
   const loadMessages = useCallback(async () => {
+    if (!currentUser.email) {
+      console.error('Current user email is undefined');
+      return;
+    }
     try {
-      const fetchedMessages = await fetchMessages(localUser.email, conversation.id);
+      const fetchedMessages = await fetchMessages(currentUser.email, conversation.id);
       setMessages(fetchedMessages);
     } catch (error) {
       console.error('Failed to fetch messages:', error);
       Alert.alert('Error', 'Failed to load messages. Please try again.');
     }
-  }, [conversation.id, localUser.email]);
+  }, [conversation.id, currentUser.email]);
 
   useEffect(() => {
     loadMessages();
   }, [loadMessages]);
 
   const handleSendMessage = async () => {
-    if (newMessage.trim() === '') return;
+    if (newMessage.trim() === '' || !currentUser.email) return;
 
     const newMsg: Message = {
       MessageID: Date.now().toString(),
-      SenderID: localUser.email,
+      SenderID: currentUser.email,
       ReceiverID: partnerUser.email,
       Content: newMessage,
       Timestamp: new Date().toISOString(),
@@ -96,8 +64,7 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
     setNewMessage('');
 
     try {
-      await sendMessage(localUser.email, partnerUser.email, newMessage);
-      // Reload messages after sending to ensure consistency
+      await sendMessage(currentUser.email, partnerUser.email, newMessage);
       loadMessages();
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -135,7 +102,7 @@ const Conversations: React.FC<ConversationsProps> = ({ route }) => {
     return (
       <View style={[
         styles.messageBubble,
-        item.SenderID === localUser.email ? styles.sentMessage : styles.receivedMessage
+        item.SenderID === currentUser.email ? styles.sentMessage : styles.receivedMessage
       ]}>
         {isMemeShare && (
           <Image 

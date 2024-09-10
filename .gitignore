@@ -1,9 +1,7 @@
 # OSX
-#
 .DS_Store
 
 # Xcode
-#
 build/
 *.pbxuser
 !default.pbxuser
@@ -22,8 +20,8 @@ DerivedData
 *.xcuserstate
 **/.xcode.env.local
 config.ts
+
 # Android/IntelliJ
-#
 build/
 .idea
 .gradle
@@ -35,18 +33,11 @@ local.properties
 !debug.keystore
 
 # node.js
-#
 node_modules/
 npm-debug.log
 yarn-error.log
 
 # fastlane
-#
-# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
-# screenshots whenever they are needed.
-# For more information about the recommended setup visit:
-# https://docs.fastlane.tools/best-practices/source-control/
-
 **/fastlane/report.xml
 **/fastlane/Preview.html
 **/fastlane/screenshots
@@ -94,6 +85,7 @@ aws-exports.js
 /Lambda/update_meme_captions.py
 /src/assets/meme_clips/
 /src/assets/memes/
+/src/assets/videos/
 awsconfiguration.json
 amplifyconfiguration.json
 amplifyconfiguration.dart
@@ -103,6 +95,7 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+
 /ios
 /android
 

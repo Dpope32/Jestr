@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Image, TextInput, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPlus, faBell } from '@fortawesome/free-solid-svg-icons';
-import { User } from '../../types/types'; 
+import { Conversation, User } from '../../types/types'; 
 import { useFocusEffect } from '@react-navigation/native';
 import NewMessageModal from '../../components/Modals/NewMessageModal';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
-import { Conversation } from './Conversations';
+import { Conversations } from './Conversations';
 import styles from './Inbox.styles';
 import { useTheme } from '../../theme/ThemeContext';
 import { useUserStore } from 'stores/userStore';
@@ -38,10 +38,14 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
     setNotifications(['New follower: @Admin']);
   };
 
-  const handleThreadClick = (conversation: Conversation) => {
-    if (localUser) {
-      navigation.navigate('Conversations', {
-        localUser: localUser,
+const handleThreadClick = (conversation: Conversation) => {
+  const currentUser = useUserStore.getState();
+  if (!currentUser.email) {
+    console.error('User is not logged in');
+    return;
+  }
+
+  navigation.navigate('Conversations', {
         partnerUser: {
           email: conversation.userEmail,
           username: conversation.username,
@@ -54,8 +58,7 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
         },
         conversation: conversation
       });
-    }
-  };
+    };
 
   const handleProfileClick = () => {
     if (localUser) {
@@ -98,11 +101,15 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
   };
 
   const handleUserSelect = (selectedUser: User) => {
+    const currentUser = useUserStore.getState();
+    if (!currentUser.email) {
+      console.error('User is not logged in');
+      return;
+    }
+  
     toggleNewMessageModal();
     const conversationID = generateUniqueId();
-    if (localUser) {
-      navigation.navigate('Conversations', {
-        localUser: localUser,
+    navigation.navigate('Conversations', {
         partnerUser: selectedUser,
         conversation: {
           id: conversationID,
@@ -125,8 +132,7 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
           }
         }
       });
-    }
-  };
+    };
 
   const loadConversations = useCallback(async () => {
     if (localUser) {

@@ -12,7 +12,7 @@ export default StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 0 : 50,
+    paddingTop: Platform.OS === 'ios' ? 50 : 50,
   },
   header: {
     flexDirection: 'row',
@@ -145,11 +145,12 @@ export default StyleSheet.create({
     borderTopRightRadius: 30,
     padding: 30,
     paddingTop: 40,
-    alignItems: 'flex-start',
+    alignItems: 'stretch',  // Changed from 'flex-start' to 'stretch' to allow proper alignment
+    justifyContent: 'flex-start',  // Ensure items start from the top
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: -3
+      height: -3,
     },
     shadowOpacity: 0.3,
     shadowRadius: 5,
@@ -255,5 +256,70 @@ export default StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
     width: '100%',
+  },
+   settingSection: {
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 15,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  settingLabel: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  languageButton: {
+    backgroundColor: '#1bd40b',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#2a2a2a',
+    borderRadius: 10,
+    marginBottom: 20,
+    padding: 10,
+  },
+  tab: {
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 5,
+  },
+  activeTab: {
+    backgroundColor: '#1bd40b',
+  },
+  tabIcon: {
+    color: '#FFFFFF',
+    marginBottom: 5,
+  },
+  tabText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+  },
+  languageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  noBlockedAccounts: {
+    color: '#BBBBBB',
+    fontSize: 16,
+    fontStyle: 'italic',
+  },
+  unblockButton: {
+    color: '#1bd40b',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

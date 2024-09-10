@@ -6,6 +6,9 @@ Jestr-Mobile
 │   ├── .expo
 │   ├── amplify
 │   ├── android
+|   |-- docs
+|   |   |-- directory.txt
+|   |   |-- storage_overview.jpeg
 │   ├── ios
 │   ├── Lambda
 │   │   ├── Extras
@@ -131,6 +134,7 @@ Jestr-Mobile
 │   │   │   ├── inboxStore.ts
 │   │   │   ├── memeStore.ts
 │   │   │   ├── notificationStore.ts
+│   │   │   ├── settingsStore.ts
 │   │   │   └── themeStore.ts
 │   │   ├── services
 │   │   │   ├── authFunctions.ts

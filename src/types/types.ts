@@ -221,3 +221,37 @@ export interface IconsAndContentProps {
   memeID: string;
   numOfComments: number;
 }
+
+export type Message = {
+  MessageID: string;
+  SenderID: string;
+  ReceiverID: string;
+  Content: string;
+  Timestamp: string;
+  Status: 'sent' | 'delivered' | 'read';
+  ConversationID: string;
+  sentByMe?: boolean;
+  read?: boolean;
+  reactions?: string[];
+};
+
+export interface Conversation {
+  id: string;
+  ConversationID: string;
+  userEmail: string;
+  username: string;
+  profilePicUrl: string | ProfileImage | null;
+  lastMessage: {
+    Content: string;
+    Timestamp: string;
+  };
+  timestamp: string;
+  messages: any[];
+  UnreadCount: number;
+  LastReadMessageID: string;
+  partnerUser: {
+    email: string;
+    username: string | null;
+    profilePic: string | null;
+  };
+}

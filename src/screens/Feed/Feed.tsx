@@ -62,7 +62,8 @@ const Feed: React.FC = React.memo(() => {
         }
       };
       loadUserData();
-      logStorageContents();
+   // only uncomment if you want to see the storage contents in the console    
+   //   logStorageContents();
     }, [userStore.email])
   );
 

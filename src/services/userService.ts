@@ -15,6 +15,8 @@
   import * as ImageManipulator from 'expo-image-manipulator';
   //import * as Google from 'expo-auth-session/providers/google';
   import { getUserMemes } from './memeService';
+  import { useSettingsStore } from '../stores/settingsStore';
+  import { useNotificationStore } from '../stores/notificationStore';
   
   
   const API_ENDPOINT =
@@ -197,7 +199,6 @@
           userId: responseData.data.userId || uuidv4(),
           darkMode: responseData.data.darkMode || false,
           likesPublic: responseData.data.likesPublic || true,
-          notificationsEnabled: responseData.data.notificationsEnabled || true,
         };
   
         useUserStore.getState().setUserDetails({
@@ -208,10 +209,21 @@
           headerPic: responseData.data.headerPic,
           bio: responseData.data.bio,
           creationDate: responseData.data.CreationDate,
+          followersCount: responseData.data.followersCount,
+          followingCount: responseData.data.followingCount, 
           darkMode: responseData.data.darkMode,
-          likesPublic: responseData.data.likesPublic,
-          notificationsEnabled: responseData.data.notificationsEnabled,
           userId: responseData.data.userId,
+        });
+
+        // Update settingsStore
+        useSettingsStore.getState().updatePrivacySafety({
+          likesPublic: user.likesPublic,
+        });
+
+        useNotificationStore.getState().setNotificationPreferences({
+          pushEnabled: responseData.data.notificationsEnabled,
+          emailEnabled: responseData.data.notificationsEnabled,
+          inAppEnabled: responseData.data.notificationsEnabled,
         });
   
         // Store the access token in SecureStore
@@ -260,7 +272,7 @@
                 userId: user.userId,
                 darkMode: user.darkMode,
                 likesPublic: user.likesPublic,
-                notificationsEnabled: user.notificationsEnabled,
+                notificationsEnabled: responseData.data.notificationsEnabled,
               },
             },
           ],
