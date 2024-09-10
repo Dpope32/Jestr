@@ -62,7 +62,7 @@ const handleThreadClick = (conversation: Conversation) => {
 
   const handleProfileClick = () => {
     if (localUser) {
-      navigation.navigate('Profile', { user: localUser });
+      navigation.navigate('Profile', { });
     }
   };
 

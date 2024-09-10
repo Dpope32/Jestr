@@ -2,125 +2,135 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storage Data Overview</title>
+    <title>Enhanced Compact Storage Data Overview</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-            vertical-align: top;
-        }
-        th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
-        td {
-            word-wrap: break-word;
-            max-width: 400px;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
+        body { font-family: Arial, sans-serif; background-color: #f0f0f0; margin: 0; padding: 5px; font-size: 15px; }
+        h1 { color: #333; text-align: center; font-size: 18px; margin-bottom: 10px; }
+        .stores-container { display: flex; flex-wrap: wrap; justify-content: space-between; }
+        .store-container { width: 32%; margin-bottom: 10px; background-color: #fff; border-radius: 4px; overflow: hidden; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+        .store-header { color: #fff; padding: 5px; font-weight: bold; font-size: 13px; display: flex; align-items: center; }
+        .store-header i { margin-right: 5px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 2px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f2f2f2; font-size: 20px; }
+        td { font-size: 15px; }
+        tr:hover { background-color: #f5f5f5; }
+        .user-store .store-header { background-color: #4CAF50; }
+        .follow-store .store-header { background-color: #2196F3; }
+        .inbox-store .store-header { background-color: #FFC107; }
+        .notification-store .store-header { background-color: #FF5722; }
+        .settings-store .store-header { background-color: #9C27B0; }
+        .secure-store .store-header { background-color: #795548; }
+        .other-storage .store-header { background-color: #607D8B; }
+        .legend { margin-top: 15px; background-color: #fff; padding: 5px; border-radius: 4px; font-size: 10px; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 3px; }
+        .legend-icon { width: 20px; height: 20px; margin-right: 5px; display: flex; justify-content: center; align-items: center; border-radius: 50%; color: white; font-size: 12px; }
     </style>
 </head>
 <body>
-<h1>Storage Data Overview</h1>
-<table>
-    <tr>
-        <th>Key</th>
-        <th>Value</th>
-        <th>Summary</th>
-    </tr>
-    <tr>
-        <td>Cognito LastAuthUser</td>
-        <td>pope.dawson@gmail.com</td>
-        <td>Last authenticated user email.</td>
-    </tr>
-    <tr>
-        <td>Cognito Access Token</td>
-        <td>token</td>
-        <td>Short-lived token for API access authorization.</td>
-    </tr>
-    <tr>
-        <td>Cognito clockDrift</td>
-        <td>355</td>
-        <td>Time difference between client and server (in seconds).</td>
-    </tr>
-    <tr>
-        <td>Cognito idToken</td>
-        <td>token</td>
-        <td>Contains authenticated user profile information.</td>
-    </tr>
-    <tr>
-        <td>Cognito Refresh Token</td>
-        <td>token</td>
-        <td>Used to obtain new access tokens after expiration.</td>
-    </tr>
-    <tr>
-        <td>Sign In Details</td>
-        <td>{"loginId":"pope.dawson@gmail.com","authFlowType":"USER_PASSWORD_AUTH"}</td>
-        <td>Details of the last sign-in process for the user.</td>
-    </tr>
-    <tr>
-        <td>alreadyLaunched</td>
-        <td>True</td>
-        <td>Flag to indicate the app has been launched before.</td>
-    </tr>
-    <tr>
-        <td>cachedMemes</td>
-        <td>10 memes cached</td>
-        <td>Stores information on 10 cached memes.</td>
-    </tr>
-    <tr>
-        <td>follow-storage</td>
-        <td>Details on followers and following lists</td>
-        <td>Contains details on followers and following lists.</td>
-    </tr>
-    <tr>
-        <td>user-storage</td>
-        <td>{ "bio": "Red meat, thick thighs, fantasy football and creampies...", "username": "Admin", "followersCount": 33, "followingCount": 26, ... }</td>
-        <td>User profile details and authentication information.</td>
-    </tr>
-    <tr>
-        <td>inbox-storage</td>
-        <td>{ conversations: [...], unreadCount: 5 }</td>
-        <td>Direct messages and conversation data.</td>
-    </tr>
-    <tr>
-        <td>meme-storage</td>
-        <td>{ recentMemes: [...], likedMemes: [...] }</td>
-        <td>Meme data and user interactions with memes.</td>
-    </tr>
-    <tr>
-        <td>notification-storage</td>
-        <td>{ pushEnabled: true, emailEnabled: false, ... }</td>
-        <td>Notification preferences and settings.</td>
-    </tr>
-    <tr>
-        <td>settings-storage</td>
-        <td>{ privacySafety: {...}, accessibility: {...} }</td>
-        <td>Privacy, safety, and accessibility settings.</td>
-    </tr>
-    <tr>
-        <td>theme-storage</td>
-        <td>{ darkMode: true, fontSize: 16 }</td>
-        <td>App theme and appearance settings.</td>
-    </tr>
-    <tr>
-        <td>search-storage</td>
-        <td>{ recentSearches: [...], savedSearches: [...] }</td>
-        <td>Recent and saved search queries.</td>
-    </tr>
-</table>
+    <h1>Enhanced Compact Storage Data Overview</h1>
+
+    <div class="stores-container">
+        <div class="store-container user-store">
+            <div class="store-header"><i class="fas fa-user"></i> User Store</div>
+            <table>
+                <tr><th>Key</th><th>Value</th></tr>
+                <tr><td>bio</td><td>"Red mean, thick thighs, fantasy football and creampies."</td></tr>
+                <tr><td>username</td><td>"Admin"</td></tr>
+                <tr><td>displayName</td><td>"KingDedle32"</td></tr>
+                <tr><td>email</td><td>"pope.dawson@gmail.com"</td></tr>
+                <tr><td>followersCount</td><td>33</td></tr>
+                <tr><td>followingCount</td><td>26</td></tr>
+                <tr><td>creationDate</td><td>"2024-04-22T21:11:26.270Z"</td></tr>
+                <tr><td>profilePic</td><td>"https://jestr-bucket.s3.amazonaws.com/ProfilePictures/bogdan.georgian370@gmail.com-1724341111688.jpg"</td></tr>
+                <tr><td>headerPic</td><td>"https://jestr-bucket.s3.amazonaws.com/HeaderPictures/pope.dawson@gmail.com-headerPic-1725514703120.jpg"</td></tr>
+                <tr><td>darkMode</td><td>true</td></tr>
+                <tr><td>likesPublic</td><td>true</td></tr>
+                <tr><td>userId</td><td>"54460dd4-c484-4fed-9154-ec19d8cb92bb"</td></tr>
+            </table>
+        </div>
+
+        <div class="store-container follow-store">
+            <div class="store-header"><i class="fas fa-users"></i> Follow Store</div>
+            <table>
+                <tr><th>Key</th><th>Value</th></tr>
+                <tr><td>followers</td><td>[...]</td></tr>
+                <tr><td>following</td><td>[...]</td></tr>
+                <tr><td>hasLoadedFollowers</td><td>true</td></tr>
+                <tr><td>hasLoadedFollowing</td><td>true</td></tr>
+            </table>
+        </div>
+
+        <div class="store-container inbox-store">
+            <div class="store-header"><i class="fas fa-inbox"></i> Inbox Store</div>
+            <table>
+                <tr><th>Key</th><th>Value</th></tr>
+                <tr><td>conversations</td><td>[...]</td></tr>
+                <tr><td>pinnedConversations</td><td>[]</td></tr>
+                <tr><td>notifications</td><td>[]</td></tr>
+                <tr><td>isLoading</td><td>false</td></tr>
+            </table>
+        </div>
+
+        <div class="store-container notification-store">
+            <div class="store-header"><i class="fas fa-bell"></i> Notification Store</div>
+            <table>
+                <tr><th>Key</th><th>Value</th></tr>
+                <tr><td>pushEnabled</td><td>true</td></tr>
+                <tr><td>emailEnabled</td><td>true</td></tr>
+                <tr><td>smsEnabled</td><td>false</td></tr>
+                <tr><td>inAppEnabled</td><td>true</td></tr>
+                <tr><td>newFollowerNotif</td><td>true</td></tr>
+                <tr><td>newCommentNotif</td><td>false</td></tr>
+                <tr><td>newLikeNotif</td><td>false</td></tr>
+                <tr><td>mentionNotif</td><td>true</td></tr>
+                <tr><td>dailyDigest</td><td>false</td></tr>
+            </table>
+        </div>
+
+        <div class="store-container settings-store">
+            <div class="store-header"><i class="fas fa-cog"></i> Settings Store</div>
+            <table>
+                <tr><th>Key</th><th>Value</th></tr>
+                <tr><td>privacySafety</td><td>{ allowDMsFromEveryone: true, allowDMsFromFollowersOnly: false, allowSearchByEmail: false, allowSearchByPhone: false, blockedAccounts: [], likesPublic: true }</td></tr>
+                <tr><td>accessibility</td><td>{ fontSize: 1, language: "en" }</td></tr>
+            </table>
+        </div>
+
+        <div class="store-container secure-store">
+            <div class="store-header"><i class="fas fa-lock"></i> Secure Store</div>
+            <table>
+                <tr><th>Key</th><th>Value</th></tr>
+                <tr><td>accessToken</td><td>exists</td></tr>
+                <tr><td>userIdentifier</td><td>exists</td></tr>
+                <tr><td>refreshToken</td><td>does not exist</td></tr>
+                <tr><td>idToken</td><td>does not exist</td></tr>
+            </table>
+        </div>
+
+        <div class="store-container other-storage">
+            <div class="store-header"><i class="fas fa-database"></i> Other Storage</div>
+            <table>
+                <tr><th>Key</th><th>Value</th></tr>
+                <tr><td>Cognito LastAuthUser</td><td>pope.dawson@gmail.com</td></tr>
+                <tr><td>Cognito clockDrift</td><td>355</td></tr>
+                <tr><td>Sign In Details</td><td>{"loginId":"pope.dawson@gmail.com","authFlowType":"USER_PASSWORD_AUTH"}</td></tr>
+                <tr><td>alreadyLaunched</td><td>true</td></tr>
+                <tr><td>forceOnboarding</td><td>false</td></tr>
+                <tr><td>isAdmin</td><td>true</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <strong>[...]</strong>: Indicates a non-empty array or object with content
+        </div>
+        <div class="legend-item">
+            <strong>[]</strong>: Represents an empty array
+        </div>
+    </div>
 </body>
 </html>
