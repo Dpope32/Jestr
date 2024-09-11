@@ -6,7 +6,6 @@ import { Conversation, User } from '../../types/types';
 import { useFocusEffect } from '@react-navigation/native';
 import NewMessageModal from '../../components/Modals/NewMessageModal';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
-import { Conversations } from './Conversations';
 import styles from './Inbox.styles';
 import { useTheme } from '../../theme/ThemeContext';
 import { useUserStore } from 'stores/userStore';
@@ -147,8 +146,8 @@ const handleThreadClick = (conversation: Conversation) => {
 
   useFocusEffect(
     useCallback(() => {
-      loadConversations();
-    }, [loadConversations])
+      useInboxStore.getState().fetchConversations(user.email);
+    }, [user.email])
   );
 
 

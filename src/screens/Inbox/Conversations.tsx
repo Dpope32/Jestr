@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Animated } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowUp, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowUp, faArrowLeft, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types/types';
 import { useNavigation } from '@react-navigation/native';
@@ -12,6 +12,9 @@ import { useTheme } from '../../theme/ThemeContext';
 import styles from './convoStyles';
 import { useUserStore } from '../../stores/userStore';
 import { Message, Conversation, User } from '../../types/types';
+import { useInboxStore } from '../../stores/inboxStore';
+import { toastConfig } from '../../config/toastConfig';
+import Toast from 'react-native-toast-message';
 
 type ConversationsParams = {
   partnerUser: User;
@@ -27,20 +30,51 @@ export const Conversations: React.FC<ConversationsProps> = ({ route }) => {
   const navigation = useNavigation();
   const { isDarkMode } = useTheme();
   const currentUser = useUserStore(state => state);
+  const [sendingAnimation] = useState(new Animated.Value(0)); // Animation for arrow icon
+  const [messageOpacity] = useState(new Animated.Value(1)); // Animation for message opacity
+  const [isSending, setIsSending] = useState(false); // Track sending state
+  const sendIcon = isSending ? faCheck : faArrowUp; 
 
   const loadMessages = useCallback(async () => {
     if (!currentUser.email) {
       console.error('Current user email is undefined');
       return;
     }
-    try {
-      const fetchedMessages = await fetchMessages(currentUser.email, conversation.id);
-      setMessages(fetchedMessages);
-    } catch (error) {
-      console.error('Failed to fetch messages:', error);
-      Alert.alert('Error', 'Failed to load messages. Please try again.');
+  
+    // Check if messages are already in the store
+    const storedConversation = useInboxStore.getState().conversations.find(
+      (conv) => conv.ConversationID === conversation.id
+    );
+  
+    if (storedConversation && storedConversation.messages.length > 0) {
+      // Use messages from the store
+      setMessages(storedConversation.messages);
+    } else {
+      try {
+        // Fetch messages from the server
+        const fetchedMessages = await fetchMessages(currentUser.email, conversation.id);
+        setMessages(fetchedMessages);
+  
+        // Update the store with the fetched messages
+        useInboxStore.setState((state) => {
+          const updatedConversations = state.conversations.map((conv) => {
+            if (conv.ConversationID === conversation.id) {
+              return {
+                ...conv,
+                messages: fetchedMessages,
+              };
+            }
+            return conv;
+          });
+          return { conversations: updatedConversations };
+        });
+      } catch (error) {
+        console.error('Failed to fetch messages:', error);
+        Alert.alert('Error', 'Failed to load messages. Please try again.');
+      }
     }
   }, [conversation.id, currentUser.email]);
+  
 
   useEffect(() => {
     loadMessages();
@@ -48,7 +82,7 @@ export const Conversations: React.FC<ConversationsProps> = ({ route }) => {
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === '' || !currentUser.email) return;
-
+  
     const newMsg: Message = {
       MessageID: Date.now().toString(),
       SenderID: currentUser.email,
@@ -59,18 +93,107 @@ export const Conversations: React.FC<ConversationsProps> = ({ route }) => {
       ConversationID: conversation.id,
       sentByMe: true,
     };
-
-    setMessages((prevMessages) => [newMsg, ...prevMessages]);
+  
+    // Delay displaying the new message for 0.5 seconds
+    setTimeout(() => {
+      setMessages((prevMessages) => [newMsg, ...prevMessages]);
+    }, 500); // Delay of 0.5 seconds
+  
     setNewMessage('');
-
+    setIsSending(true); // Start sending animation
+  
+    // Animate the up arrow icon
+    Animated.sequence([
+      Animated.timing(sendingAnimation, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(sendingAnimation, {
+        toValue: 2,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Reset animation state
+      sendingAnimation.setValue(0);
+      setIsSending(false); // End sending animation
+    });
+  
+    // Dim the message while "sending"
+    Animated.timing(messageOpacity, {
+      toValue: 0.5,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  
     try {
       await sendMessage(currentUser.email, partnerUser.email, newMessage);
-      loadMessages();
+  
+      // Update the InboxStore with the new message or add a new conversation
+      useInboxStore.setState((state) => {
+        const conversationExists = state.conversations.find(
+          (conv) => conv.ConversationID === conversation.id
+        );
+  
+        let updatedConversations;
+        if (conversationExists) {
+          updatedConversations = state.conversations.map((conv) => {
+            if (conv.ConversationID === conversation.id) {
+              return {
+                ...conv,
+                lastMessage: newMsg,
+                messages: [newMsg, ...conv.messages],
+              };
+            }
+            return conv;
+          });
+        } else {
+          // Add a new conversation if it doesn't exist
+          const newConversation: Conversation = {
+            id: conversation.id,
+            ConversationID: conversation.id,
+            userEmail: partnerUser.email,
+            username: partnerUser.username,
+            profilePicUrl: partnerUser.profilePic,
+            lastMessage: newMsg,
+            timestamp: new Date().toISOString(),
+            messages: [newMsg],
+            UnreadCount: 0,
+            LastReadMessageID: '',
+            partnerUser: partnerUser,
+          };
+          updatedConversations = [newConversation, ...state.conversations];
+        }
+  
+        return { conversations: updatedConversations };
+      });
+  
+      // Show success toast with shorter duration
+      Toast.show({
+        type: 'success',
+        text1: 'Message sent successfully',
+        position: 'top',
+        autoHide: true,
+        visibilityTime: 2000, // Toast visibility time is 2 seconds
+      });
+  
+      // Reset message opacity after sending
+      Animated.timing(messageOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+  
     } catch (error) {
       console.error('Failed to send message:', error);
       Alert.alert('Error', 'Failed to send message. Please try again.');
     }
   };
+  
+  
+  
+  
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -153,8 +276,13 @@ export const Conversations: React.FC<ConversationsProps> = ({ route }) => {
             onChangeText={setNewMessage}
             placeholderTextColor="#999"
           />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-            <FontAwesomeIcon icon={faArrowUp} size={24} color="white" />
+          <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage} disabled={isSending}>
+            <Animated.View style={{ transform: [{ rotate: sendingAnimation.interpolate({
+                inputRange: [0, 1, 2],
+                outputRange: ['0deg', '360deg', '0deg']
+            }) }] }}>
+              <FontAwesomeIcon icon={sendIcon} size={24} color="white" />
+            </Animated.View>
           </TouchableOpacity>
         </View>
       </View>

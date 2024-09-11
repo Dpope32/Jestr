@@ -62,6 +62,7 @@ const Feed: React.FC = React.memo(() => {
         }
       };
       loadUserData();
+      logStorageContents();
     }, [userStore.email])
   );
 
@@ -124,7 +125,7 @@ const Feed: React.FC = React.memo(() => {
     [userStore.profilePic, userStore.username, userStore.isAdmin, toggleProfilePanel, navigation]
   );
   const memoizedMemeList = useMemo(() => {
-    console.log('Feed - Rendering MemeList with', memes.length, 'memes');
+  //  console.log('Feed - Rendering MemeList with', memes.length, 'memes');
     return (
       <MemeList
         memes={memes}
