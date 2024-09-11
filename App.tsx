@@ -11,7 +11,7 @@ import * as Font from 'expo-font';
 import Profile from './src/screens/Profile/Profile';
 import { RootStackParamList } from './src/types/types';
 import awsconfig from './src/aws-exports';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession, signOut } from 'aws-amplify/auth';
 import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { useUserStore } from './src/stores/userStore';
@@ -112,11 +112,14 @@ function App(): React.JSX.Element | null {
       } else {
         console.warn('Failed to refresh session: No new access token');
       }
-    } catch (error) {
-      console.error('Error refreshing session:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'NotAuthorizedException') {
+        console.log('No existing session to refresh');
+      } else {
+        console.error('Error refreshing session:', error);
+      }
     }
   };
-
   const onboardingComplete = useCallback(async () => {
     console.log('Onboarding complete called');
     setIsFirstLaunch(false);
@@ -157,6 +160,8 @@ function App(): React.JSX.Element | null {
         setIsReady(true);
         setIsAuthenticated(false);
         setIsFirstLaunch(true);
+      } finally {
+        SplashScreen.hideAsync();
       }
     };
     initializeApp();
@@ -181,12 +186,19 @@ function App(): React.JSX.Element | null {
 
   async function checkAuthStatus(): Promise<boolean> {
     try {
-      await refreshSession();
-      const token = await getToken('accessToken');
+      const { tokens } = await fetchAuthSession();
+      if (!tokens) {
+        console.log('No existing session');
+        return false;
+      }
+  
+      const token = tokens.accessToken?.toString();
       if (!token) {
         useUserStore.getState().setUserDetails({});
         return false;
       }
+  
+      await SecureStore.setItemAsync('accessToken', token);
   
       const identifier = await getUserIdentifier();
       if (!identifier) {
@@ -200,8 +212,12 @@ function App(): React.JSX.Element | null {
       } else {
         throw new Error('Failed to fetch user details');
       }
-    } catch (error) {
-      console.error('Error checking authentication status:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'NotAuthorizedException') {
+        console.log('No existing session');
+      } else {
+        console.error('Error checking authentication status:', error);
+      }
       await SecureStore.deleteItemAsync('accessToken');
       await SecureStore.deleteItemAsync('userIdentifier');
       useUserStore.getState().setUserDetails({});
@@ -222,10 +238,11 @@ function App(): React.JSX.Element | null {
   }, [isReady, onLayoutRootView]);
 
   useEffect(() => {
-    const refreshInterval = setInterval(refreshSession, 15 * 60 * 1000); // Refresh every 15 minutes
-  
-    return () => clearInterval(refreshInterval);
-  }, []);
+    if (isAuthenticated) {
+      const refreshInterval = setInterval(refreshSession, 15 * 60 * 1000); // Refresh every 15 minutes
+      return () => clearInterval(refreshInterval);
+    }
+  }, [isAuthenticated]);
 
   if (!isReady || isFirstLaunch === null || isAuthenticated === null) {
     return (

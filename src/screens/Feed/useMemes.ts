@@ -115,6 +115,7 @@ export const useMemes = (user: User | null, accessToken: string | null) => {
   const fetchMoreMemes = useCallback(() => {
     if (isLoadingMore || allMemesViewed || !user?.email || !accessToken) return;
     setIsLoadingMore(true);
+    console.log('Fetching more memes with lastEvaluatedKey:', lastEvaluatedKey);
     debouncedFetchMemes(lastEvaluatedKey, user.email, 10, accessToken);
   }, [isLoadingMore, allMemesViewed, user, accessToken, lastEvaluatedKey, debouncedFetchMemes]);
 

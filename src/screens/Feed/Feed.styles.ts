@@ -11,6 +11,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#000',
     zIndex: 5
   },
+  allMemesViewedText: {
+    color: 'white',
+    fontSize: FONT_SIZES.lg,
+    fontFamily: FONTS.regular,
+    textAlign: 'center',
+    marginTop: SPACING.lg,
+  },
   flash: {
     flex: 1,
   },

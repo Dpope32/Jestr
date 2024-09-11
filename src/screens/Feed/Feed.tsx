@@ -82,6 +82,11 @@ const Feed: React.FC = React.memo(() => {
     [fetchMoreMemes]
   );
 
+  const handleEndReached = useCallback(() => {
+    if (!isLoading && memes.length > 0 && isFocused.current) {
+      debouncedFetchMoreMemes();
+    }
+  }, [isLoading, memes.length, debouncedFetchMoreMemes]);
   const handleHomeClick = useCallback(() => {
     if (isFocused.current) {
       fetchInitialMemes();
@@ -96,12 +101,6 @@ const Feed: React.FC = React.memo(() => {
     },
     []
   );
-
-  const handleEndReached = useCallback(() => {
-    if (!isLoading && memes.length > 0 && isFocused.current) {
-      debouncedFetchMoreMemes();
-    }
-  }, [isLoading, memes.length, debouncedFetchMoreMemes]);
 
   const memoizedTopPanel = useMemo(
     () => (

@@ -87,19 +87,22 @@ const debouncedFetchMemes = debounce(async (
   resolve: (result: FetchMemesResult) => void,
   reject: (error: any) => void
 ) => {
-  console.log(`Debounced fetchMemes called for user: ${userEmail}`);
+  console.log(`Debounced fetchMemes called for user: ${userEmail}, lastEvaluatedKey: ${lastEvaluatedKey}`);
 
   try {
     const cacheKey = `${CACHE_KEY_PREFIX}${userEmail}`;
     const now = Date.now();
-    const lastFetchTime = await AsyncStorage.getItem(`${cacheKey}_time`);
 
-    if (lastFetchTime && now - parseInt(lastFetchTime) < COOLDOWN_PERIOD) {
-      console.log('Using cached data');
-      const cachedData = await AsyncStorage.getItem(cacheKey);
-      if (cachedData) {
-        resolve(JSON.parse(cachedData));
-        return;
+    // Only use cache if it's an initial load (lastEvaluatedKey is null)
+    if (!lastEvaluatedKey) {
+      const lastFetchTime = await AsyncStorage.getItem(`${cacheKey}_time`);
+      if (lastFetchTime && now - parseInt(lastFetchTime) < COOLDOWN_PERIOD) {
+        console.log('Using cached data for initial load');
+        const cachedData = await AsyncStorage.getItem(cacheKey);
+        if (cachedData) {
+          resolve(JSON.parse(cachedData));
+          return;
+        }
       }
     }
 
@@ -131,17 +134,19 @@ const debouncedFetchMemes = debounce(async (
       lastEvaluatedKey: data.data.lastEvaluatedKey,
     };
 
-    await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
-    await AsyncStorage.setItem(`${cacheKey}_time`, now.toString());
+    // Only cache the result if it's an initial load
+    if (!lastEvaluatedKey) {
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
+      await AsyncStorage.setItem(`${cacheKey}_time`, now.toString());
+    }
 
-    console.log(`Fetched and cached ${result.memes.length} memes`);
+    console.log(`Fetched ${result.memes.length} memes, new lastEvaluatedKey: ${result.lastEvaluatedKey}`);
     resolve(result);
   } catch (error) {
     console.error('Fetch memes failed:', error);
     reject(error);
   }
 }, 100);
-
 
 export const fetchMemes = (
   lastEvaluatedKey: string | null = null,
