@@ -239,7 +239,7 @@ function App(): React.JSX.Element | null {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const refreshInterval = setInterval(refreshSession, 15 * 60 * 1000); // Refresh every 15 minutes
+      const refreshInterval = setInterval(refreshSession, 5 * 60 * 60 * 1000); // Refresh every 5 hours
       return () => clearInterval(refreshInterval);
     }
   }, [isAuthenticated]);
