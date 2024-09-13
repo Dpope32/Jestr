@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import {create} from 'zustand';
+import {persist, createJSONStorage} from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface NotificationSettings {
+export interface NotificationSettings {
   pushEnabled: boolean;
   emailEnabled: boolean;
   smsEnabled: boolean;
@@ -12,7 +12,6 @@ interface NotificationSettings {
   newLikeNotif: boolean;
   mentionNotif: boolean;
   dailyDigest: boolean;
-
 }
 
 interface NotificationStore extends NotificationSettings {
@@ -35,26 +34,27 @@ const DEFAULT_SETTINGS: NotificationSettings = {
 
 export const useNotificationStore = create<NotificationStore>()(
   persist(
-    (set) => ({
+    set => ({
       ...DEFAULT_SETTINGS,
 
-      updateAllSettings: (settings) => {
-     //   console.log('Updating all settings:', settings);
-        set((state) => {
-          const newState = { ...state, ...settings };
-   //       console.log('New state after update:', newState);
+      updateAllSettings: settings => {
+        //   console.log('Updating all settings:', settings);
+        set(state => {
+          const newState = {...state, ...settings};
+          //       console.log('New state after update:', newState);
           return newState;
         });
       },
-      setNotificationPreferences: (settings) => set((state) => ({ ...state, ...settings })),
+      setNotificationPreferences: settings =>
+        set(state => ({...state, ...settings})),
       resetToDefaults: () => {
-    //    console.log('Resetting to default settings');
+        //    console.log('Resetting to default settings');
         set(DEFAULT_SETTINGS);
-      }
+      },
     }),
     {
       name: 'notification-storage',
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );

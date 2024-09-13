@@ -1,9 +1,7 @@
 import React, {useCallback, useRef, useEffect} from 'react';
-import {Dimensions,ViewToken,FlatList,ActivityIndicator} from 'react-native';
-
+import {Dimensions, ViewToken, FlatList, ActivityIndicator} from 'react-native';
 import MediaPlayer from '../MediaPlayer';
 import {Meme, User} from '../../../types/types';
-
 const {height} = Dimensions.get('window');
 
 const viewabilityConfig = {itemVisiblePercentThreshold: 50};
@@ -129,9 +127,20 @@ const MemeList: React.FC<MemeListProps> = React.memo(
           />
         );
       },
-      [user,numOfComments, isDarkMode,
-        currentMediaIndex,currentUserId,isCommentFeedVisible,isProfilePanelVisible,
-        setCurrentMediaIndex,goToPrevMedia,goToNextMedia,toggleCommentFeed,updateLikeStatus],
+      [
+        user,
+        numOfComments,
+        isDarkMode,
+        currentMediaIndex,
+        currentUserId,
+        isCommentFeedVisible,
+        isProfilePanelVisible,
+        setCurrentMediaIndex,
+        goToPrevMedia,
+        goToNextMedia,
+        toggleCommentFeed,
+        updateLikeStatus,
+      ],
     );
 
     const onViewableItemsChanged = useCallback(
@@ -166,6 +175,8 @@ const MemeList: React.FC<MemeListProps> = React.memo(
       <FlatList
         ref={flatListRef}
         data={memes}
+        // style={{flex: 1}}
+        // contentContainerStyle={{borderWidth: 1, borderColor: '#FFF'}}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         onEndReached={onEndReached}
