@@ -1,8 +1,8 @@
-import { StyleSheet, Platform } from 'react-native';
-import { Dimensions } from 'react-native';
-import { COLORS, SPACING, FONT_SIZES } from '../../theme/theme';
+import {StyleSheet, Platform} from 'react-native';
+import {Dimensions} from 'react-native';
+import {COLORS, SPACING, FONT_SIZES} from '../../theme/theme';
 
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     width: width,
   },
   blurInner: {
-    borderRadius: 12, 
+    borderRadius: 12,
   },
   videoWrapper: {
     flex: 1,
@@ -29,20 +29,20 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: Platform.OS === 'ios' ? 260 : 100,
+    // paddingBottom: Platform.OS === 'ios' ? 260 : 100,
   },
   blurContainer: {
     position: 'absolute',
     left: 0,
-    right: -12, 
+    right: -12,
     bottom: 0,
     padding: 10,
     zIndex: 10,
-    elevation: 10, 
+    elevation: 10,
   },
   textContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 240 : 150, 
+    bottom: Platform.OS === 'ios' ? 240 : 150,
     left: 0,
     right: 20,
     flexDirection: 'row',
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-    paddingBottom: Platform.OS === 'ios' ? 260 : 150, 
+    paddingBottom: Platform.OS === 'ios' ? 260 : 150,
   },
   iconColumn: {
     position: 'absolute',
@@ -105,13 +105,13 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   longPressModal: {
-    position: 'absolute', 
-    zIndex: 100, 
+    position: 'absolute',
+    zIndex: 100,
     elevation: 100,
     left: 0,
     right: 0,
     bottom: 0,
-    top: 0,  
+    top: 0,
   },
   profilePic: {
     width: 40,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     color: '#1E90FF',
     fontSize: 16,
     textDecorationLine: 'underline',
-  }
+  },
 });
 
 export default styles;
