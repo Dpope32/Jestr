@@ -1,7 +1,7 @@
   
   import 'react-native-get-random-values';
   import 'react-native-url-polyfill/auto';
-  import {API_URL} from './config';
+  import { API_URL, API_ENDPOINT} from './config';
   import Toast from 'react-native-toast-message';
   import {StackNavigationProp} from '@react-navigation/stack';
   import {User, Meme, FetchMemesResult} from '../types/types';
@@ -9,7 +9,7 @@
   import {RootStackParamList, ProfileImage} from '../types/types';
   import * as FileSystem from 'expo-file-system';
   import {v4 as uuidv4} from 'uuid';
-  import { useUserStore, UserState } from '../stores/userStore'; // Adjust the import path as needed
+  import { useUserStore, UserState, isEmptyUserState } from '../stores/userStore';
   import {storeUserIdentifier} from '../stores/secureStore';
   import * as SecureStore from 'expo-secure-store';
   import * as ImageManipulator from 'expo-image-manipulator';
@@ -18,10 +18,6 @@
   import { useSettingsStore } from '../stores/settingsStore';
   import { useNotificationStore } from '../stores/notificationStore';
   
-  
-  const API_ENDPOINT =
-  'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser';
-
   export const getUser = async (userEmail: string): Promise<User | null> => {
     console.log('getUser called with userEmail:', userEmail);
     try {
@@ -32,8 +28,7 @@
       
       console.log('Sending request to getUser API with body:', requestBody);
       
-      const response = await fetch(
-        'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser',
+      const response = await fetch(API_ENDPOINT,
         {
           method: 'POST',
           headers: {
@@ -66,7 +61,6 @@
     }
   };
 
-
   //adjusted to use the user store details if available, otherwise fetch from API, Singificantly reduces API calls and speeds up load times
   export const fetchUserDetails = async (identifier: string, token?: string): Promise<UserState> => {
     // Get the current user state from the store
@@ -86,7 +80,7 @@
     };
   
     try {
-      const response = await fetch(API_ENDPOINT, {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,21 +112,7 @@
       throw error;
     }
   };
-  
-  export const isEmptyUserState = (state: UserState): boolean => {
-    return (
-      !state.email &&
-      !state.username &&
-      !state.displayName &&
-      !state.bio &&
-      !state.creationDate &&
-      state.followersCount === 0 &&
-      state.followingCount === 0 &&
-      !state.profilePic &&
-      !state.headerPic &&
-      !state.userId
-    );
-  }
+
   
   export const handleCompleteProfile = async (
     email: string,
@@ -715,4 +695,79 @@
       fileName: image.fileName,
       fileSize: image.fileSize,
     };
+  };
+
+  export const submitFeedback = async (email: string, message: string, status: string = 'Feedback') => {
+    try {
+      const response = await fetch(`${API_URL}/submitFeedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          operation: 'submitFeedback',
+          email, 
+          message,
+          status
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback');
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error('Error in submitFeedback:', error);
+      throw error;
+    }
+  };
+  
+  export const updateFeedback = async (feedbackId: string, status: string) => {
+    try {
+      const response = await fetch(`${API_URL}/updateFeedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          operation: 'updateFeedback',
+          feedbackId, 
+          status 
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to update feedback');
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error('Error in updateFeedback:', error);
+      throw error;
+    }
+  };
+  
+  export const getFeedback = async (email: string) => {
+    try {
+      const response = await fetch(`${API_URL}/getFeedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation: 'getFeedback',
+          email
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to get feedback');
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error('Error in getFeedback:', error);
+      throw error;
+    }
   };

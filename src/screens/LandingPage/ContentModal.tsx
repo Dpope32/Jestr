@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import InputField from '../../components/shared/Input/InutField';
 import { PRIVACY_POLICY, TERMS_OF_SERVICE } from '../../constants/uiConstants';
+import { submitFeedback } from '../../services/userService';
+import Toast from 'react-native-toast-message';
 
 interface ContentModalProps {
   visible: boolean;
@@ -12,6 +14,42 @@ interface ContentModalProps {
 }
 
 const ContentModal: React.FC<ContentModalProps> = ({ visible, onClose, content }) => {
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleContactUs = async () => {
+    if (!email || !message) {
+      showToast('error', 'Error', 'Please fill in all fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await submitFeedback(email, message, 'Contact');
+      showToast('success', 'Success', 'Thank you for contacting us!');
+      setEmail('');
+      setMessage('');
+      onClose();
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      showToast('error', 'Error', 'Failed to send message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const showToast = (type: string, text1: string, text2: string) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+      visibilityTime: 3000,
+      topOffset: 50,
+      position: 'top'
+    });
+  };
+
   const renderContent = () => {
     switch (content) {
       case 'privacy':
@@ -33,50 +71,46 @@ const ContentModal: React.FC<ContentModalProps> = ({ visible, onClose, content }
             </Text>
           </ScrollView>
         );
-      case 'contact':
-        return (
-          <View style={styles.modalContent}>
-            <Text style={[styles.modalHeader, styles.centerText]}>Contact Us</Text>
-            <Text style={[styles.modalText, styles.centerText]}>Please fill out the form below:</Text>
-            <InputField
-  label="Your Email"
-  placeholder="Enter your email"
-  placeholderTextColor="#FFF"
-  value=""
-  onChangeText={() => {}}
-  labelStyle={styles.label} 
-  inputStyle={{ color: '#FFF' }}  // Ensure text color is white
-/>
-<InputField
-  label="Your Message"
-  placeholder="Enter your message"
-  placeholderTextColor="#FFF"
-  value=""
-  onChangeText={() => {}}
-  multiline
-  numberOfLines={6}
-  labelStyle={styles.label} 
-  inputStyle={{ color: '#FFF' }}  // Ensure text color is white
-/>
-            <TouchableOpacity style={styles.submitButton} onPress={() => handleContactUs()}>
-              <Text style={styles.submitButtonText}>Send</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const handleContactUs = async () => {
-    try {
-      // Implement your Lambda invocation logic here
-      onClose();
-      alert('Message sent successfully!');
-    } catch (error) {
-      alert('Failed to send message. Please try again later.');
-    }
-  };
+        case 'contact':
+          return (
+            <View style={styles.modalContent}>
+              <Text style={[styles.modalHeader, styles.centerText]}>Contact Us</Text>
+              <Text style={[styles.modalText, styles.centerText]}>Please fill out the form below:</Text>
+              <InputField
+                label="Your Email"
+                placeholder="Enter your email"
+                placeholderTextColor="#FFF"
+                value={email}
+                onChangeText={setEmail}
+                labelStyle={styles.label} 
+                inputStyle={{ color: '#FFF' }} 
+              />
+              <InputField
+                label="Your Message"
+                placeholder="Enter your message"
+                placeholderTextColor="#FFF"
+                value={message}
+                onChangeText={setMessage}
+                multiline
+                numberOfLines={6}
+                labelStyle={styles.label} 
+                inputStyle={{ color: '#FFF' }} 
+              />
+              <TouchableOpacity 
+                style={styles.submitButton} 
+                onPress={handleContactUs}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.submitButtonText}>
+                  {isSubmitting ? 'Sending...' : 'Send'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          );
+        default:
+          return null;
+      }
+    };
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
@@ -101,7 +135,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginBottom: 8,
-    color: '#FFFFFF', // White text for labels
+    color: '#FFFFFF', 
     fontWeight: '600',
   },
   modalContainer: {

@@ -120,3 +120,46 @@ jestrdev@gmail.com
 
 By using our App, you signify your acceptance of this policy. If you do not agree to this policy, please do not use our App. Your continued use of the App following the posting of changes to this policy will be deemed your acceptance of those changes.
 `;  
+
+export const faqs = [
+    {
+      question: "How do I edit my email address?",
+      answer: "To edit your email, go to Settings > Account Settings > Email. Verify your identity, then enter and confirm your new email address."
+    },
+    {
+      question: "How can I change my password?",
+      answer: "Navigate to Settings > Account Settings > Password. Enter your current password, then your new password twice to confirm the change."
+    },
+    {
+      question: "What should I do if my account is blocked?",
+      answer: "If your account is blocked, please contact our support team through the 'Contact Support' option in the Help section. Provide your username and any relevant details about the issue."
+    },
+    {
+      question: "How can I protect my personal information?",
+      answer: "Enable two-factor authentication, use a strong unique password, be cautious about the information you share publicly, and regularly review your privacy settings."
+    },
+    {
+      question: "How do I report inappropriate content?",
+      answer: "Use the 'Report' button next to the content, or go to Settings > Help > Report a Problem to provide more details about the issue."
+    },
+    {
+      question: "Can I download my data from Jestr?",
+      answer: "Yes, go to Settings > Your Jestr Information > Download Your Information. You can select what data you want to download and in what format."
+    },
+    {
+      question: "How do I delete my account?",
+      answer: "To delete your account, go to Settings > Account Settings > Delete Account. Please note this action is irreversible and will permanently remove all your data."
+    },
+    {
+      question: "What are Jestr's community guidelines?",
+      answer: "Our community guidelines ensure a safe and positive environment for all users. You can find them in full at Settings > Terms and Policies > Community Guidelines."
+    },
+    {
+      question: "How can I control who sees my posts?",
+      answer: "You can adjust your post privacy settings before sharing. Go to Settings > Privacy to set your default audience or change it for individual posts."
+    },
+    {
+      question: "How do I block or unblock someone?",
+      answer: "Visit the profile of the user you want to block/unblock, tap the three dots menu, and select 'Block' or 'Unblock'. You can manage your block list in Settings > Privacy > Blocked Accounts."
+    }
+  ];

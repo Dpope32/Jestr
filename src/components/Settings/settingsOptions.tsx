@@ -1,5 +1,5 @@
-import { View, Text, TouchableOpacity, ScrollView, Switch } from 'react-native';
-import { faUser, faKey, faUserSlash, faUserCircle, faDownload, faBell, faShieldAlt, faUserLock, faEnvelope, faAddressBook, faFileAlt, faHandsHelping, faCommentDots, faUniversalAccess } from '@fortawesome/free-solid-svg-icons';
+import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { faUser, faKey, faUserSlash, faUserCircle, faDownload, faBell, faShieldAlt, faFileAlt, faHandsHelping, faCommentDots, faUniversalAccess } from '@fortawesome/free-solid-svg-icons';
 import InputField from '../shared/Input/InutField';
 import styles from './Settings.styles';
 import PrivacySafetySettings from './PrivacySafetySettings';
@@ -8,6 +8,8 @@ import AccountInformation from './AccountInformation';
 import { ReactNode } from 'react';
 import NotiSettings from './NotiSettings';
 import { TERMS_OF_SERVICE, PRIVACY_POLICY } from '../../constants/uiConstants'; 
+import FeedbackForm from './feedbackForm';
+import SupportHelp from './supportHelp';
 
 export interface SettingOption {
   icon: any;
@@ -16,6 +18,7 @@ export interface SettingOption {
   content: ReactNode | ((props: { closeModal: () => void }) => ReactNode);
   subOptions?: SettingOption[];
 }
+
 
 export const settingsOptions: SettingOption[] = [
   {
@@ -130,46 +133,13 @@ export const settingsOptions: SettingOption[] = [
       icon: faHandsHelping,
       label: 'Support (Help)',
       description: 'Get help and support',
-      content: (
-        <View>
-          <TouchableOpacity style={styles.changeButton}>
-            <Text style={styles.changeButtonText}>Contact Support</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.changeButton}>
-            <Text style={styles.changeButtonText}>FAQs</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.changeButton}>
-            <Text style={styles.changeButtonText}>User Guide</Text>
-          </TouchableOpacity>
-        </View>
-      ),
+      content: <SupportHelp />,
     },
     {
       icon: faCommentDots,
       label: 'Feedback',
       description: 'Provide feedback to the developer',
-      content: (
-        <View>
-          <Text style={styles.modalText}>Please fill out the form below:</Text>
-          <InputField
-            label=""
-            placeholder="Enter your email"
-            value=""
-            onChangeText={() => {}}
-          />
-          <InputField
-            label=""
-            placeholder="Enter your message"
-            value=""
-            onChangeText={() => {}}
-            multiline
-            numberOfLines={6}
-          />
-          <TouchableOpacity style={styles.submitButton} onPress={() => {}}>
-            <Text style={styles.submitButtonText}>Send</Text>
-          </TouchableOpacity>
-        </View>
-      ),
+      content: <FeedbackForm />,
     },
     {
       icon: faUniversalAccess,
@@ -178,3 +148,5 @@ export const settingsOptions: SettingOption[] = [
       content: <AccessibilitySettings />,
     },
   ];
+
+
