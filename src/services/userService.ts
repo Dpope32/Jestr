@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
-import {API_URL} from './config';
+import {API_URL, API_ENDPOINT} from './config';
 import Toast from 'react-native-toast-message';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {User, Meme, FetchMemesResult} from '../types/types';
@@ -8,7 +8,7 @@ import {fetchAuthSession} from '@aws-amplify/auth';
 import {RootStackParamList, ProfileImage} from '../types/types';
 import * as FileSystem from 'expo-file-system';
 import {v4 as uuidv4} from 'uuid';
-import {useUserStore, UserState} from '../stores/userStore'; // Adjust the import path as needed
+import {useUserStore, UserState, isEmptyUserState} from '../stores/userStore';
 import {storeUserIdentifier} from '../stores/secureStore';
 import * as SecureStore from 'expo-secure-store';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -16,9 +16,6 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import {getUserMemes} from './memeService';
 import {useSettingsStore} from '../stores/settingsStore';
 import {useNotificationStore} from '../stores/notificationStore';
-
-const API_ENDPOINT =
-  'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser';
 
 export const getUser = async (userEmail: string): Promise<User | null> => {
   console.log('getUser called with userEmail:', userEmail);
@@ -30,16 +27,13 @@ export const getUser = async (userEmail: string): Promise<User | null> => {
 
     console.log('Sending request to getUser API with body:', requestBody);
 
-    const response = await fetch(
-      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getUser',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: requestBody,
+    const response = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    );
+      body: requestBody,
+    });
 
     const responseText = await response.text();
     console.log('Received response from getUser API:', responseText);

@@ -126,3 +126,18 @@ export const useUserStore = create(
     },
   ),
 );
+
+export const isEmptyUserState = (state: UserState): boolean => {
+  return (
+    !state.email &&
+    !state.username &&
+    !state.displayName &&
+    !state.bio &&
+    !state.creationDate &&
+    state.followersCount === 0 &&
+    state.followingCount === 0 &&
+    !state.profilePic &&
+    !state.headerPic &&
+    !state.userId
+  );
+};

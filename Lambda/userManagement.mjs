@@ -18,7 +18,7 @@ const verifier = CognitoJwtVerifier.create({
 });
 
 const publicOperations = [
-    'getUser', 'updateBio', 'updateProfileImage', 'completeProfile', 'updateUserProfile',
+    'getUser', 'submitFeedback', 'updateFeedback', 'getFeedback', 'updateBio', 'updateProfileImage', 'completeProfile', 'updateUserProfile',
     'getUserGrowthRate', 'getTotalUsers', 'getDAU', 'addFollow', 'removeFollow',
     'getFollowing', 'getFollowers', 'getAllUsers',
     'checkFollowStatus', 'batchCheckStatus'
@@ -188,6 +188,62 @@ const getFollowing = async (userId) => {
   }
 };
 
+const updateFeedback = async (requestBody) => {
+  const { feedbackId, status } = requestBody;
+  if (!feedbackId || !status) {
+    return createResponse(400, 'FeedbackID and status are required for updating feedback.');
+  }
+
+  const validStatuses = ['New', 'In Progress', 'Resolved', 'Closed'];
+  if (!validStatuses.includes(status)) {
+    return createResponse(400, 'Invalid status. Must be one of: New, In Progress, Resolved, Closed');
+  }
+
+  try {
+    const params = {
+      TableName: 'UserFeedback',
+      Key: { FeedbackID: feedbackId },
+      UpdateExpression: 'SET #status = :status',
+      ExpressionAttributeNames: { '#status': 'Status' },
+      ExpressionAttributeValues: { ':status': status },
+      ReturnValues: 'ALL_NEW'
+    };
+
+    const result = await docClient.send(new UpdateCommand(params));
+    return createResponse(200, 'Feedback updated successfully', result.Attributes);
+  } catch (error) {
+    console.error('Error updating feedback:', error);
+    return createResponse(500, 'Failed to update feedback');
+  }
+};
+
+const getFeedback = async (requestBody) => {
+  const { email } = requestBody;
+  if (!email) {
+    return createResponse(400, 'Email is required for getting feedback.');
+  }
+
+  try {
+    const params = {
+      TableName: 'UserFeedback',
+      IndexName: 'EmailIndex',
+      KeyConditionExpression: 'Email = :email',
+      FilterExpression: '#status <> :closedStatus',
+      ExpressionAttributeNames: { '#status': 'Status' },
+      ExpressionAttributeValues: {
+        ':email': email,
+        ':closedStatus': 'Closed'
+      }
+    };
+
+    const result = await docClient.send(new QueryCommand(params));
+    return createResponse(200, 'Feedback retrieved successfully', result.Items);
+  } catch (error) {
+    console.error('Error getting feedback:', error);
+    return createResponse(500, 'Failed to get feedback');
+  }
+};
+
 // Function to check if one user follows another
 const checkFollowStatus = async (followerId, followeeId) => {
   if (!followerId || !followeeId) {
@@ -221,7 +277,7 @@ const checkFollowStatus = async (followerId, followeeId) => {
 };
 
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
     console.log('Received event:', JSON.stringify(event, null, 2));
    console.log('Headers:', JSON.stringify(event.headers, null, 2));
   console.log('Processing operation:', event.operation);
@@ -237,28 +293,25 @@ exports.handler = async (event) => {
        }
    
        const { operation } = requestBody;
-      console.log('Received event:', JSON.stringify(event, null, 2));
-       console.log('Parsed request body:', JSON.stringify(requestBody, null, 2));
 
-        let verifiedUser = null;
-
-        if (!publicOperations.includes(operation)) {
-            const token = event.headers?.Authorization?.split(' ')[1] || event.headers?.authorization?.split(' ')[1];
-
-            if (!token) {
-                return createResponse(401, 'No token provided');
-            }
-
-            try {
-                const payload = await verifier.verify(token);
-                verifiedUser = payload;
-            } catch (error) {
-                console.error('Token verification failed:', error);
-                return createResponse(401, 'Invalid token');
-            }
-        }
+       if (!publicOperations.includes(operation)) {
+         const token = event.headers?.Authorization?.split(' ')[1] || event.headers?.authorization?.split(' ')[1];
+   
+         if (!token) {
+           return createResponse(401, 'No token provided');
+         }
+   
+         try {
+           const payload = await verifier.verify(token);
+           requestBody.verifiedUser = payload;
+         } catch (error) {
+           console.error('Token verification failed:', error);
+           return createResponse(401, 'Invalid token');
+         }
+       }
 
         switch (operation) {
+
             case 'getUser':
                 const { identifier } = requestBody;
                 if (!identifier) {
@@ -275,6 +328,36 @@ exports.handler = async (event) => {
                     console.error(`Error getting user details: ${error}`);
                     return createResponse(500, 'Failed to get user details.');
               }
+              case 'submitFeedback':
+                  const { email, message } = requestBody;
+                  if (!email || !message) {
+                    return createResponse(400, 'Email and message are required for submitting feedback.');
+                  }
+                  try {
+                    const feedbackId = uuidv4();
+                    const params = {
+                      TableName: 'UserFeedback',
+                      Item: {
+                        FeedbackID: feedbackId,
+                        Email: email,
+                        Message: message,
+                        Timestamp: new Date().toISOString(),
+                        Status: 'New'
+                      }
+                    };
+                    await docClient.send(new PutCommand(params));
+                    return createResponse(200, 'Feedback submitted successfully', { feedbackId });
+                  } catch (error) {
+                    console.error('Error submitting feedback:', error);
+                    return createResponse(500, 'Failed to submit feedback');
+              }
+
+              case 'updateFeedback':
+                return await updateFeedback(requestBody);
+            
+              case 'getFeedback':
+                return await getFeedback(requestBody);
+
             case 'updateBio': {
                 const { email, bio } = requestBody;              
                 if (!email || bio === undefined) {
@@ -298,6 +381,7 @@ exports.handler = async (event) => {
                   return createResponse(500, 'Failed to update bio.');
                 }
               }
+
               case 'updateProfileImage': {
                 const { email, imageType, image } = requestBody;
                 if (!email || !imageType || !image) {
@@ -379,6 +463,7 @@ exports.handler = async (event) => {
                   });
                 }
               }
+
             case 'completeProfile': {
                 const { email, username, profilePic, headerPic, displayName, bio } = requestBody;
                 if (!email || !username) {
@@ -429,6 +514,7 @@ exports.handler = async (event) => {
                   return createResponse(500, `Failed to complete profile: ${error.message}`);
                 }
               }
+
             case 'getTotalUsers':
               try {
               const params = {
@@ -441,6 +527,7 @@ exports.handler = async (event) => {
               console.error('Error getting total users:', error);
               return createResponse(500, 'Failed to get total users');
               }
+
             case 'getUserGrowthRate':
               try {
               const today = new Date();
@@ -476,6 +563,7 @@ exports.handler = async (event) => {
               console.error('Error calculating user growth rate:', error);
               return createResponse(500, 'Failed to calculate user growth rate');
               }
+
             case 'getDAU':
                 try {
                   // Get the date for 3 days ago in UTC
@@ -517,6 +605,7 @@ exports.handler = async (event) => {
                   console.error('Error getting active users:', error);
                   return createResponse(500, 'Failed to get active users', { error: error.message });
               }
+
             case 'addFollow':
               // console.log('Entered addFollow case');
               const { followerId, followeeId } = requestBody;
@@ -532,6 +621,7 @@ exports.handler = async (event) => {
                 console.error('Error adding Follow', error);
               return createResponse(500, 'Failed to add follow.');
               }
+
             case 'removeFollow':
               const { unfollowerId, unfolloweeId } = requestBody;
               if (!unfollowerId || !unfolloweeId) {
@@ -544,6 +634,7 @@ exports.handler = async (event) => {
                   console.error('Error ', error);
                 return createResponse(500, 'Failed to remove follow.');
               }
+
             case 'getFollowers': {
               const { userId } = requestBody;
               if (!userId) {
@@ -557,6 +648,7 @@ exports.handler = async (event) => {
               return createResponse(500, 'Failed to get followers.');
               }
               }
+
             case 'getFollowing':
               const { userId } = requestBody;
               if (!userId) {
@@ -569,6 +661,7 @@ exports.handler = async (event) => {
                 console.error('Error ', error);
               return createResponse(500, 'Failed to get following.');
               }
+
             case 'getAllUsers': {
               const params = {
               TableName: 'Profiles',
@@ -588,6 +681,7 @@ exports.handler = async (event) => {
               return createResponse(500, 'Failed to fetch users.');
               }
               }
+
             case 'checkFollowStatus': {
               const { followerId, followeeId } = JSON.parse(event.body);
               if (!followerId || !followeeId) {
@@ -601,6 +695,7 @@ exports.handler = async (event) => {
                 return createResponse(500, 'Failed to check follow status.', { error: error.message });
               }
             }
+
             case 'batchCheckStatus': {
               const { memeIDs, userEmail, followeeIDs } = requestBody;
               

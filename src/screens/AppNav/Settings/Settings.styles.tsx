@@ -1,11 +1,11 @@
 import { StyleSheet, Dimensions, Platform } from 'react-native';
-
+import { COLORS } from '../../theme/theme';
 const { width, height } = Dimensions.get('window');
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#1C1C1C',
   },
   gradient: {
     flex: 1,
@@ -13,6 +13,9 @@ export default StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingTop: Platform.OS === 'ios' ? 50 : 50,
+  },
+  formContainer: {
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
@@ -179,23 +182,44 @@ export default StyleSheet.create({
     lineHeight: 20,
   },
   modalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#FFFFFF',
-    fontSize: 16,
-    marginBottom: 20,
-    lineHeight: 22,
+    marginBottom: 15,
+  },
+  messageInput: {
+    height: 80, // Reduced height
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 5,
   },
   submitButton: {
-    backgroundColor: '#1bd40b',
+    backgroundColor: '#00ff00',
     padding: 15,
-    borderRadius: 12,
+    borderRadius: 8,
     alignItems: 'center',
-    marginTop: 20,
-    width: '100%',
+    marginTop: 10,
+    width: '30%',
+  },
+  feedbackIndex: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginRight: 10,
+    width: 25,
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
     fontWeight: 'bold',
+  },
+  messageContainer: {
+    position: 'relative', 
   },
   blurView: {
     ...StyleSheet.absoluteFillObject,
@@ -321,5 +345,57 @@ export default StyleSheet.create({
     color: '#1bd40b',
     fontSize: 14,
     fontWeight: '600',
+  },
+  feedbackListContainer: {
+    marginTop: 20,
+    padding: 20,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 10,
+  },
+  feedbackListTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 15,
+  },
+  feedbackItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#444444',
+  },
+  feedbackContent: {
+    flex: 1,
+  },
+  feedbackPreview: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  feedbackTimestamp: {
+    color: '#AAAAAA',
+    fontSize: 12,
+  },
+  feedbackStatus: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+    color: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  loadingIndicator: {
+    marginVertical: 20, 
+    alignSelf: 'center', 
+  },
+  
+  charCount: {
+    position: 'absolute',
+    bottom: 10, 
+    right: 10, 
+    fontSize: 12,
+    color: '#999',
   },
 });
