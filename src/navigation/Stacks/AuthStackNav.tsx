@@ -16,8 +16,6 @@ const Stack = createNativeStackNavigator();
 
 const AuthStackNav: React.FC = () => {
   const isFirstLaunch = useUserStore(state => state.isFirstLaunch);
-  // console.log('AuthStackNav - isFirstLaunch:', isFirstLaunch);
-
   const screenOptions = {
     headerShown: false,
   };

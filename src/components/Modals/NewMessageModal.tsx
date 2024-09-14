@@ -153,11 +153,12 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
           />
         </View>
         <FlashList
-          data={filteredUsers}
-          keyExtractor={(item) => item.email}
-          renderItem={renderUserItem}
-          contentContainerStyle={styles.userList}
-        />
+            data={filteredUsers}
+            keyExtractor={(item) => item.email}
+            renderItem={renderUserItem}
+            contentContainerStyle={styles.userList}
+            estimatedItemSize={73}
+          />
         <View style={styles.suggestionsContainer}>
           <Text style={styles.suggestionsTitle}>Suggested Users</Text>
           <FlashList
@@ -171,9 +172,10 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
                   {item.username}
                 </Text>
               </TouchableOpacity>
-            )}
-            contentContainerStyle={styles.suggestionsList}
-          />
+              )}
+              contentContainerStyle={styles.suggestionsList}
+              estimatedItemSize={85}
+            />
         </View>
       </Animated.View>
     </Modal>

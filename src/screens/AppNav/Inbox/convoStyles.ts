@@ -1,4 +1,5 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { COLORS, FONT_SIZES } from '../../../theme/theme';
 
 const styles = StyleSheet.create({
   container: {
@@ -78,9 +79,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 5,
   },
+  lottieAnimation: {
+    width: 200,
+    height: 200,
+  },
+  loadingText: {
+    color: COLORS.primary,
+    fontSize: FONT_SIZES.lg,
+    marginTop: 10,
+  },
   reaction: {
     fontSize: 16,
     marginRight: 2,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+    width: '100%',
   },
   inputContainer: {
     flexDirection: 'row',

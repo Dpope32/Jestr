@@ -5,6 +5,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Meme, ProfileImage } from '../types/types';
 
 export interface UserState {
+  isFirstLaunch: boolean;
+  setIsFirstLaunch: (isFirstLaunch: boolean) => void;
   resetUserState: () => void;
   email: string;
   username: string;
@@ -38,39 +40,41 @@ export interface UserState {
 export const useUserStore = create(
   persist(
     immer<UserState>((set) => ({
-  bio: '',
-  username: '',
-  displayName: '',
-  email: '',
-  followersCount: 0,
-  followingCount: 0,
-  setFollowersCount: count => set({followersCount: count}),
-  setFollowingCount: count => set({followingCount: count}),
-  incrementFollowersCount: () =>
-    set(state => ({followersCount: state.followersCount + 1})),
-  decrementFollowersCount: () =>
-    set(state => ({followersCount: Math.max(0, state.followersCount - 1)})),
-  incrementFollowingCount: () =>
-    set(state => ({followingCount: state.followingCount + 1})),
-  decrementFollowingCount: () =>
-    set(state => ({followingCount: Math.max(0, state.followingCount - 1)})),
-  creationDate: '',
-  tempPassword: '',
-  setTempPassword: (password: string) => set({ tempPassword: password }),
-  profilePic: null,
-  headerPic: null,
-  darkMode: false,
-  likesPublic: true,
-  setDarkMode: (darkMode: boolean) => set({darkMode}),
-  setBio: (bio: string) => set({bio}),
-  setHeaderPic: (headerPic: string | ProfileImage | null) => set({headerPic}),
-  setProfilePic: (profilePic: string | ProfileImage | null) => {
-    // Fallback to a default image if `profilePic` is empty
-    if (typeof profilePic === 'string' && !profilePic.trim()) {
-      profilePic = null;
-    }
-    set({profilePic});
-  },
+      isFirstLaunch: true,
+      setIsFirstLaunch: isFirstLaunch => set({isFirstLaunch}),
+      bio: '',
+      username: '',
+      displayName: '',
+      email: '',
+      followersCount: 0,
+      followingCount: 0,
+      setFollowersCount: count => set({followersCount: count}),
+      setFollowingCount: count => set({followingCount: count}),
+      incrementFollowersCount: () =>
+        set(state => ({followersCount: state.followersCount + 1})),
+      decrementFollowersCount: () =>
+        set(state => ({followersCount: Math.max(0, state.followersCount - 1)})),
+      incrementFollowingCount: () =>
+        set(state => ({followingCount: state.followingCount + 1})),
+      decrementFollowingCount: () =>
+        set(state => ({followingCount: Math.max(0, state.followingCount - 1)})),
+      creationDate: '',
+      tempPassword: '',
+      setTempPassword: (password: string) => set({ tempPassword: password }),
+      profilePic: null,
+      headerPic: null,
+      darkMode: false,
+      likesPublic: true,
+      setDarkMode: (darkMode: boolean) => set({darkMode}),
+      setBio: (bio: string) => set({bio}),
+      setHeaderPic: (headerPic: string | ProfileImage | null) => set({headerPic}),
+      setProfilePic: (profilePic: string | ProfileImage | null) => {
+        // Fallback to a default image if `profilePic` is empty
+        if (typeof profilePic === 'string' && !profilePic.trim()) {
+          profilePic = null;
+        }
+        set({profilePic});
+      },
   setUserDetails: (details) =>
     set((state) => ({
       ...state,

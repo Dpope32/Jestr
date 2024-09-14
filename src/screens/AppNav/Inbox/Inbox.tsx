@@ -1,16 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, Image, TextInput, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPlus, faBell } from '@fortawesome/free-solid-svg-icons';
-import { Conversation, User } from '../../../types/types'; 
-import { useFocusEffect } from '@react-navigation/native';
+import { Conversation, User } from '../../../types/types';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import NewMessageModal from '../../../components/Modals/NewMessageModal';
 import { format, formatDistanceToNow, isToday } from 'date-fns';
 import styles from './Inbox.styles';
 import { useTheme } from '../../../theme/ThemeContext';
 import { useUserStore } from '../../../stores/userStore';
-import BottomPanel from '../../../components/Panels/BottomPanel'; 
 import { useInboxStore } from '../../../stores/inboxStore';
+import BottomPanel from '../../../components/Panels/BottomPanel';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchConversations as apiFetchConversations } from '../../../services/socialService';
 
 type InboxProps = {
   navigation: any;
@@ -19,50 +21,20 @@ type InboxProps = {
 const Inbox: React.FC<InboxProps> = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const user = useUserStore(state => state);
-  const [localUser, setLocalUser] = useState<User | null>(user || null);
   const [isNewMessageModalVisible, setIsNewMessageModalVisible] = useState(false);
-  const { conversations, isLoading, fetchConversations } = useInboxStore();
   const { isDarkMode } = useTheme();
-  //const [pinnedConversations, setPinnedConversations] = useState<Conversation[]>([]);
-  const [notifications, setNotifications] = useState<string[]>([]);
+  const [notifications] = useState<string[]>(['New follower: @Admin']);
   const fadeAnim = useState(new Animated.Value(0))[0];
-  const setDarkMode = useUserStore((state) => state.setDarkMode);
+  const queryClient = useQueryClient();
+  const isInitialMount = useRef(true);
 
-  const toggleNewMessageModal = () => {
-    setIsNewMessageModalVisible(!isNewMessageModalVisible);
-  };
+  const { conversations, isLoading: isStoreLoading, fetchConversations } = useInboxStore();
 
-  const fetchNotifications = () => {
-    setNotifications(['New follower: @Admin']);
-  };
-
-const handleThreadClick = (conversation: Conversation) => {
-  const currentUser = useUserStore.getState();
-  if (!currentUser.email) {
-    console.error('User is not logged in');
-    return;
-  }
-
-  navigation.navigate('Conversations', {
-        partnerUser: {
-          email: conversation.userEmail,
-          username: conversation.username,
-          profilePic: conversation.profilePicUrl,
-          headerPic: null,
-          displayName: '',
-          CreationDate: '',
-          followersCount: 0,
-          followingCount: 0
-        },
-        conversation: conversation
-      });
-    };
-
-  const handleProfileClick = () => {
-    if (localUser) {
-      navigation.navigate('Profile', { });
-    }
-  };
+  const { refetch: refetchConversations, isLoading: isServerLoading, error } = useQuery({
+    queryKey: ['conversations', user.email],
+    queryFn: () => apiFetchConversations(user.email),
+    enabled: false, // Disable automatic fetching
+  });
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -72,15 +44,54 @@ const handleThreadClick = (conversation: Conversation) => {
     }).start();
   }, []);
 
- // const handlePin = (id: string) => {
- //   const conversationToPin = conversations.find(conv => conv.id === id);
- //   if (conversationToPin) {
- //     setPinnedConversations([...pinnedConversations, conversationToPin]);
- //     setConversations(conversations.filter(conv => conv.id !== id));
- //   }
-//  };
+  useFocusEffect(
+    useCallback(() => {
+      if (user.email) {
+        if (isInitialMount.current) {
+          // Fetch from server on initial mount
+          refetchConversations().then((result) => {
+            if (result.data) {
+              fetchConversations(user.email);
+              console.log('Fetched fresh data from server on initial load');
+            }
+          });
+          isInitialMount.current = false;
+        } else {
+          // Use data from InboxStore for subsequent accesses
+          console.log('Using conversations from InboxStore:', conversations.length);
+        }
+      }
+    }, [user.email, refetchConversations, fetchConversations, conversations.length])
+  );
 
+  const toggleNewMessageModal = () => {
+    setIsNewMessageModalVisible(!isNewMessageModalVisible);
+  };
 
+  const handleThreadClick = (conversation: Conversation) => {
+    if (!user.email) {
+      console.error('User is not logged in');
+      return;
+    }
+
+    navigation.navigate('Conversations', {
+      partnerUser: {
+        email: conversation.userEmail,
+        username: conversation.username,
+        profilePic: conversation.profilePicUrl,
+        headerPic: null,
+        displayName: '',
+        CreationDate: '',
+        followersCount: 0,
+        followingCount: 0
+      },
+      conversation: conversation
+    });
+  };
+
+  const handleProfileClick = () => {
+    navigation.navigate('Profile', {});
+  };
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -99,8 +110,7 @@ const handleThreadClick = (conversation: Conversation) => {
   };
 
   const handleUserSelect = (selectedUser: User) => {
-    const currentUser = useUserStore.getState();
-    if (!currentUser.email) {
+    if (!user.email) {
       console.error('User is not logged in');
       return;
     }
@@ -108,62 +118,29 @@ const handleThreadClick = (conversation: Conversation) => {
     toggleNewMessageModal();
     const conversationID = generateUniqueId();
     navigation.navigate('Conversations', {
-        partnerUser: selectedUser,
-        conversation: {
-          id: conversationID,
-          ConversationID: conversationID,
-          userEmail: selectedUser.email,
+      partnerUser: selectedUser,
+      conversation: {
+        id: conversationID,
+        ConversationID: conversationID,
+        userEmail: selectedUser.email,
+        username: selectedUser.username,
+        profilePicUrl: selectedUser.profilePic,
+        lastMessage: {
+          Content: '',
+          Timestamp: new Date().toISOString()
+        },
+        timestamp: new Date().toISOString(),
+        messages: [],
+        UnreadCount: 0,
+        LastReadMessageID: '',
+        partnerUser: {
+          email: selectedUser.email,
           username: selectedUser.username,
-          profilePicUrl: selectedUser.profilePic,
-          lastMessage: {
-            Content: '',
-            Timestamp: new Date().toISOString()
-          },
-          timestamp: new Date().toISOString(),
-          messages: [],
-          UnreadCount: 0,
-          LastReadMessageID: '',
-          partnerUser: {
-            email: selectedUser.email,
-            username: selectedUser.username,
-            profilePic: typeof selectedUser.profilePic === 'string' ? selectedUser.profilePic : null
-          }
+          profilePic: typeof selectedUser.profilePic === 'string' ? selectedUser.profilePic : null
         }
-      });
-    };
-
-  const loadConversations = useCallback(async () => {
-    if (localUser) {
-      await fetchConversations(localUser.email);
-    }
-  }, [localUser, fetchConversations]);
-
-  useEffect(() => {
-    loadConversations();
-    fetchNotifications();
-  }, [loadConversations]);
-
-  useFocusEffect(
-    useCallback(() => {
-      useInboxStore.getState().fetchConversations(user.email);
-    }, [user.email])
-  );
-
-
- //const getMessagePreview = (content: string) => {
- //   if (typeof content !== 'string') {
- //     return 'Unable to display message';
- //   }
- //   if (content.trim().startsWith('{')) {
- //     try {
- //       const parsedContent = JSON.parse(content);
- //       if (parsedContent.type === 'meme_share') {
- //         return parsedContent.message || 'Shared a meme';
- //       }
- //     } catch (e) {}
- //   }
- //   return content.length > 50 ? content.substring(0, 47) + '...' : content;
- // };
+      }
+    });
+  };
 
   const SkeletonLoader = () => {
     const skeletons = Array.from({ length: 5 }); 
@@ -187,14 +164,14 @@ const handleThreadClick = (conversation: Conversation) => {
       <Animated.View style={[styles.container, { opacity: fadeAnim, backgroundColor: isDarkMode ? '#000' : '#2E2E2E' }]}>
         <View style={styles.header}>
           <Text style={styles.sectionHeaderIn}>Inbox</Text>
-          {localUser && (
+          {user && (
             <TouchableOpacity onPress={handleProfileClick}>
               <Image
                 source={{
                   uri:
-                    typeof localUser.profilePic === 'string'
-                      ? localUser.profilePic
-                      : localUser.profilePic?.uri || undefined,
+                    typeof user.profilePic === 'string'
+                      ? user.profilePic
+                      : user.profilePic?.uri || undefined,
                 }}
                 style={styles.profilePic}
               />
@@ -225,31 +202,33 @@ const handleThreadClick = (conversation: Conversation) => {
           </View>
 
           <View style={styles.section}>
-          <Text style={styles.sectionHeader}>All Conversations</Text>
-          {isLoading ? (
-            <SkeletonLoader />
-          ) : (
-            conversations.map(conversation => (
-              <TouchableOpacity 
-                key={conversation.id} 
-                style={styles.conversationItem}
-                onPress={() => handleThreadClick(conversation)}
-              >
-                <Image
-                  source={{
-                    uri: conversation.partnerUser.profilePic || 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg'
-                  }}
-                  style={styles.profilePic}
-                />
-                <View style={styles.conversationInfo}>
-                  <Text style={styles.username}>{conversation.partnerUser.username || conversation.partnerUser.email}</Text>
-                  <Text style={styles.preview}>{conversation.lastMessage.Content}</Text>
-                  <Text style={styles.timestamp}>{formatTimestamp(conversation.lastMessage.Timestamp)}</Text>
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
+            <Text style={styles.sectionHeader}>All Conversations</Text>
+            {isStoreLoading || isServerLoading ? (
+              <SkeletonLoader />
+            ) : error ? (
+              <Text>Error loading conversations</Text>
+            ) : (
+              conversations.map((conversation: Conversation) => (
+                <TouchableOpacity 
+                  key={conversation.id} 
+                  style={styles.conversationItem}
+                  onPress={() => handleThreadClick(conversation)}
+                >
+                  <Image
+                    source={{
+                      uri: conversation.partnerUser.profilePic || 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg'
+                    }}
+                    style={styles.profilePic}
+                  />
+                  <View style={styles.conversationInfo}>
+                    <Text style={styles.username}>{conversation.partnerUser.username || conversation.partnerUser.email}</Text>
+                    <Text style={styles.preview}>{conversation.lastMessage.Content}</Text>
+                    <Text style={styles.timestamp}>{formatTimestamp(conversation.lastMessage.Timestamp)}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
         </ScrollView>
 
         <TouchableOpacity style={styles.newMessageButton} onPress={toggleNewMessageModal}>
@@ -261,7 +240,7 @@ const handleThreadClick = (conversation: Conversation) => {
           onClose={toggleNewMessageModal}
           onSelectUser={handleUserSelect}
           existingConversations={conversations}
-          currentUser={localUser || { 
+          currentUser={user || { 
             email: '', 
             username: '', 
             profilePic: '', 
@@ -274,18 +253,6 @@ const handleThreadClick = (conversation: Conversation) => {
           allUsers={[]}
         />
       </Animated.View>
-      
-      <BottomPanel
-        onHomeClick={() => navigation.navigate('Feed' as never)}
-        handleLike={() => {}}
-        handleDislike={() => {}}
-        likedIndices={new Set()}
-        dislikedIndices={new Set()}
-        likeDislikeCounts={{}}
-        currentMediaIndex={0}
-        toggleCommentFeed={() => {}}
-        user={localUser}
-      />
     </View>
   );
 };

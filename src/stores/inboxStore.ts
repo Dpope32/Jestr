@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchConversations as apiFetchConversations } from '../services/socialService';
-import { Conversation } from '../types/types'; 
+import { Conversation, Message } from '../types/types'; 
 
 interface InboxState {
   conversations: Conversation[];
@@ -12,6 +12,9 @@ interface InboxState {
   fetchConversations: (userEmail: string) => Promise<void>;
   pinConversation: (id: string) => void;
   unpinConversation: (id: string) => void;
+  updateConversationMessages: (conversationId: string, messages: Message[]) => void;
+  getConversationMessages: (conversationId: string) => Message[] | undefined;
+  addMessageToConversation: (conversationId: string, message: Message) => void;
 }
 
 export const useInboxStore = create<InboxState>()(
@@ -23,11 +26,6 @@ export const useInboxStore = create<InboxState>()(
       isLoading: false,
       fetchConversations: async (userEmail: string) => {
         set({ isLoading: true });
-        const { conversations } = get();
-        if (conversations.length > 0) {
-          set({ isLoading: false });
-          return;
-        }
         try {
           const userConversations = await apiFetchConversations(userEmail);
           const formattedConversations: Conversation[] = userConversations.map((conv: any) => ({
@@ -38,7 +36,7 @@ export const useInboxStore = create<InboxState>()(
             profilePicUrl: conv.partnerUser.profilePic,
             lastMessage: conv.lastMessage,
             timestamp: conv.lastMessage.Timestamp,
-            messages: [],
+            messages: conv.messages || [],
             UnreadCount: conv.UnreadCount,
             LastReadMessageID: conv.LastReadMessageID,
             partnerUser: conv.partnerUser
@@ -68,6 +66,31 @@ export const useInboxStore = create<InboxState>()(
             pinnedConversations: pinnedConversations.filter(conv => conv.id !== id)
           });
         }
+      },
+      updateConversationMessages: (conversationId: string, messages: Message[]) => {
+        set(state => ({
+          conversations: state.conversations.map(conv =>
+            conv.id === conversationId ? { ...conv, messages } : conv
+          )
+        }));
+      },
+      getConversationMessages: (conversationId: string) => {
+        const { conversations } = get();
+        const conversation = conversations.find(conv => conv.id === conversationId);
+        return conversation?.messages;
+      },
+      addMessageToConversation: (conversationId: string, message: Message) => {
+        set(state => ({
+          conversations: state.conversations.map(conv =>
+            conv.id === conversationId
+              ? {
+                  ...conv,
+                  messages: [message, ...(conv.messages || [])],
+                  lastMessage: message
+                }
+              : conv
+          )
+        }));
       },
     }),
     {

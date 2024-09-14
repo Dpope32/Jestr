@@ -80,7 +80,7 @@
     };
   
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(API_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -361,7 +361,7 @@
       throw error;
     }
   };
-  
+
   export const getAllUsers = async (): Promise<User[]> => {
     try {
       const response = await fetch(
@@ -770,3 +770,4 @@
       throw error;
     }
   };
+  

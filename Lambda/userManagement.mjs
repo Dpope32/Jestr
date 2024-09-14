@@ -18,7 +18,7 @@ const verifier = CognitoJwtVerifier.create({
 });
 
 const publicOperations = [
-    'getUser', 'submitFeedback', 'updateFeedback', 'getFeedback', 'updateBio', 'updateProfileImage', 'completeProfile', 'updateUserProfile',
+    'getUser', 'submitFeedback', 'updateFeedback', 'getFeedback', 'getAllFeedback', 'updateBio', 'updateProfileImage', 'completeProfile', 'updateUserProfile',
     'getUserGrowthRate', 'getTotalUsers', 'getDAU', 'addFollow', 'removeFollow',
     'getFollowing', 'getFollowers', 'getAllUsers',
     'checkFollowStatus', 'batchCheckStatus'
@@ -283,6 +283,20 @@ const getFeedback = async (requestBody) => {
   }
 };
 
+const getAllFeedback = async () => {
+  try {
+    const params = {
+      TableName: 'UserFeedback',
+    };
+
+    const result = await docClient.send(new ScanCommand(params));
+    return createResponse(200, 'All feedback retrieved successfully', result.Items);
+  } catch (error) {
+    console.error('Error getting all feedback:', error);
+    return createResponse(500, 'Failed to get all feedback');
+  }
+};
+
 // Function to check if one user follows another
 const checkFollowStatus = async (followerId, followeeId) => {
   if (!followerId || !followeeId) {
@@ -424,6 +438,9 @@ export const handler = async (event) => {
                   return createResponse(500, 'Failed to update bio.');
                 }
               }
+
+              case 'getAllFeedback':
+                return await getAllFeedback();
 
             case 'completeProfile': {
                 const { email, username, profilePic, headerPic, displayName, bio } = requestBody;

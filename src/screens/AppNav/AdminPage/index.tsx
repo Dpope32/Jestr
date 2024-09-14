@@ -1,96 +1,137 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Image,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   ActivityIndicator,
+  TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
-import BottomPanel from '../../../components/Panels/BottomPanel';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faArrowLeft, faSync } from '@fortawesome/free-solid-svg-icons';
+import { useNavigation } from '@react-navigation/native';
+import { COLORS, wp } from '../../../theme/theme';
+import { useTheme } from '../../../theme/ThemeContext';
+import AnalyticsBoard from './AnalyticsBoard';
+import Toast from 'react-native-toast-message';
 
-import {COLORS, wp, elevationShadowStyle} from '../../../theme/theme';
-import {TouchableOpacity} from 'react-native';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faArrowLeft, faSync} from '@fortawesome/free-solid-svg-icons';
-import {useTheme} from '../../../theme/ThemeContext';
-import {useNavigation} from '@react-navigation/native';
+interface Meme {
+  MemeURL: string;
+  Caption: string;
+}
+
+interface AdminData {
+  userCount: number;
+  memeCount: number;
+  dailyActiveUsers: number;
+  userGrowthRate: number;
+}
 
 const AdminPage = () => {
   const navigation = useNavigation();
-  // const route = useRoute();
-
+  const { isDarkMode } = useTheme();
   const [error, setError] = useState<string | null>(null);
-  const [userCount, setUserCount] = useState(0);
-  const [memeCount, setMemeCount] = useState(0);
-  const [dailyActiveUsers, setDailyActiveUsers] = useState(0);
-  const [popularMemes, setPopularMemes] = useState<any[]>([]);
-  const [userGrowthRate, setUserGrowthRate] = useState(0);
+  const [adminData, setAdminData] = useState<AdminData>({
+    userCount: 0,
+    memeCount: 0,
+    dailyActiveUsers: 0,
+    userGrowthRate: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
-  const {isDarkMode} = useTheme();
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   useEffect(() => {
-    setIsLoading(true);
-    fetchAdminData()
-      .catch(error => {
-        console.error('Error in fetchAdminData:', error);
-        setError('Failed to fetch admin data: ' + String(error));
-      })
-      .finally(() => setIsLoading(false));
+    loadData();
   }, []);
 
-  const fetchAdminData = async () => {
-    try {
-      const baseUrl =
-        'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/';
-      const operations = [
-        'getTotalUsers',
-        'getTotalMemes',
-        'getDAU',
-        'getPopularMemes',
-        'getUserGrowthRate',
-      ];
-
-      const results = await Promise.all(
-        operations.map(operation => {
-          const url = `${baseUrl}${operation}`;
-          const requestBody = JSON.stringify({operation});
-          return fetch(url, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: requestBody,
-          })
-            .then(response => response.json())
-            .catch(error => {
-              console.error(`Error fetching ${operation}:`, error);
-              return null; // Return null for failed requests
-            });
-        }),
-      );
-
-      const [userData, memeData, dauData, popularData, growthData] = results;
-
-      setUserCount(userData?.data?.totalUsers || 0);
-      setMemeCount(memeData?.data?.totalMemes || 0);
-      setDailyActiveUsers(dauData?.data?.dailyActiveUsers || 0);
-      setPopularMemes(
-        Array.isArray(popularData?.data?.popularMemes)
-          ? popularData.data.popularMemes
-          : [],
-      );
-      setUserGrowthRate(parseFloat(growthData?.data?.userGrowthRate) || 0);
-    } catch (error) {
-      console.error('Error fetching admin data:', error);
-      setError(
-        'Failed to fetch admin data: ' +
-          (error instanceof Error ? error.message : String(error)),
-      );
+  const loadData = async () => {
+    setIsLoading(true);
+    const storedData = await AsyncStorage.getItem('adminData');
+    if (storedData) {
+      setAdminData(JSON.parse(storedData));
+      setIsLoading(false);
+    } else {
+      fetchAdminData();
     }
   };
 
+  const fetchAdminData = async () => {
+    try {
+      const baseUrl = 'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/';
+      const operations = ['getTotalUsers', 'getTotalMemes', 'getDAU', 'getUserGrowthRate'];
+
+      const results = await Promise.all(
+        operations.map((operation) =>
+          fetch(`${baseUrl}${operation}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ operation }),
+          }).then((response) => response.json())
+        )
+      );
+
+      const [userData, memeData, dauData, growthData] = results;
+
+      const newAdminData: AdminData = {
+        userCount: userData?.data?.totalUsers || 0,
+        memeCount: memeData?.data?.totalMemes || 0,
+        dailyActiveUsers: dauData?.data?.dailyActiveUsers || 0,
+        userGrowthRate: parseFloat(growthData?.data?.userGrowthRate) || 0,
+      };
+
+      setAdminData(newAdminData);
+      await AsyncStorage.setItem('adminData', JSON.stringify(newAdminData));
+    } catch (error) {
+      console.error('Error fetching admin data:', error);
+      setError('Failed to fetch admin data: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refreshData = () => {
+    fetchAdminData();
+  };
+
+  const handleOpenAnalytics = () => {
+    setShowAnalytics(true);
+  };
+
+  const handleCloseAnalytics = () => {
+    setShowAnalytics(false);
+  };
+
+  const toggleAnalyticsBoard = () => {
+    setShowAnalytics(!showAnalytics);
+  };
+
+  const renderListHeader = () => (
+    <View style={styles.gridContainer}>
+      <View style={styles.gridItem}>
+        <Text style={styles.statHeader}>Total Users</Text>
+        <Text style={styles.statValue}>{adminData.userCount}</Text>
+      </View>
+      <View style={styles.gridItem}>
+        <Text style={styles.statHeader}>Total Memes</Text>
+        <Text style={styles.statValue}>{adminData.memeCount}</Text>
+      </View>
+      <View style={styles.gridItem}>
+        <Text style={styles.statHeader}>User Growth Rate</Text>
+        <Text style={styles.statValue}>{adminData.userGrowthRate}%</Text>
+      </View>
+      <View style={styles.gridItem}>
+        <Text style={styles.statHeader}>Daily Active Users</Text>
+        <Text style={styles.statValue}>{adminData.dailyActiveUsers}</Text>
+      </View>
+    </View>
+  );
+
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
@@ -98,165 +139,134 @@ const AdminPage = () => {
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        isDarkMode ? {backgroundColor: '#1C1C1C'} : {backgroundColor: '#fff'},
-      ]}>
-      <ScrollView style={styles.scrollView}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}>
-          <FontAwesomeIcon icon={faArrowLeft} size={14} color="#1bd40b" />
-        </TouchableOpacity>
-        <Text style={styles.header}>Admin Dashboard</Text>
+    <SafeAreaView style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+      {showAnalytics ? (
+       <View style={[styles.analyticsContainer, { flex: 1 }]}>
+       <TouchableOpacity onPress={toggleAnalyticsBoard} style={styles.backButton}>
+         <FontAwesomeIcon icon={faArrowLeft} size={20} color={COLORS.primary} />
+       </TouchableOpacity>
+       <View style={{ flex: 1 }}>
+       <AnalyticsBoard onClose={handleCloseAnalytics} />
+       </View>
+     </View>
+     
+      ) : (
+        <>
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Admin Dashboard</Text>
+            <TouchableOpacity onPress={refreshData} style={styles.refreshButton}>
+              <FontAwesomeIcon icon={faSync} size={20} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.statContainer}>
-          <Text style={styles.statHeader}>Total Users</Text>
-          <Text style={styles.statValue}>{userCount}</Text>
-        </View>
+          <FlatList
+            data={[]}
+            renderItem={null}
+            ListHeaderComponent={renderListHeader}
+            keyExtractor={(_, index) => index.toString()}
+            style={styles.flatList} 
+          />
 
-        <View style={styles.statContainer}>
-          <Text style={styles.statHeader}>Total Memes</Text>
-          <Text style={styles.statValue}>{memeCount}</Text>
-        </View>
-
-        <View style={styles.statContainer}>
-          <Text style={styles.statHeader}>User Growth Rate</Text>
-          <Text style={styles.statValue}>{userGrowthRate}%</Text>
-        </View>
-        <View style={styles.statContainer}>
-          <Text style={styles.statHeader}>Daily Active Users</Text>
-          <Text style={styles.statValue}>{dailyActiveUsers}</Text>
-        </View>
-
-        <View style={styles.chartContainer}>
-          <Text style={styles.chartHeader}>Popular Memes</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {popularMemes.map((meme, index) => (
-              <View key={index} style={styles.memeContainer}>
-                <Image source={{uri: meme.MemeURL}} style={styles.memeImage} />
-                <Text style={styles.memeText}>{meme.Caption}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      </ScrollView>
-      {/* <BottomPanel
-        onHomeClick={() => navigation.navigate('Feed')} // Assuming 'Home' is the route name of your home screen
-        handleLike={() => {}}
-        handleDislike={() => {}}
-        likedIndices={new Set()}
-        dislikedIndices={new Set()}
-        likeDislikeCounts={{}}
-        currentMediaIndex={0}
-        toggleCommentFeed={() => {}}
-        user={null} // Adjust accordingly if you need to pass user details
-      /> */}
-    </View>
+          <TouchableOpacity onPress={toggleAnalyticsBoard} style={styles.analyticsButton}>
+            <Text style={styles.analyticsButtonText}>View User Feedback</Text>
+          </TouchableOpacity>
+        </>
+      )}
+      <Toast />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1C1C1C', // Dark theme background
+    paddingHorizontal: 16,
+  },
+  darkContainer: {
+    backgroundColor: '#1C1C1C',
+  },
+  lightContainer: {
+    backgroundColor: '#1C1C1C',
   },
   loadingContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1C1C1C',
   },
   loadingText: {
     color: COLORS.primary,
     marginTop: 10,
-    fontSize: 20,
+    fontSize: 18,
   },
-  scrollView: {
-    padding: 20,
+  flatList: {
+    flexGrow: 0,  // Ensure FlatList doesn't take all available space
+    marginBottom: 20, // Add margin to separate the button
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  headerText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1bd40b', // Highlight color
-    marginBottom: 20,
-    marginTop: 30,
-  },
-  statContainer: {
-    backgroundColor: '#333333', // Darker section background
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    shadowColor: '#000', // Adding shadow
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
-    elevation: 5,
-  },
-  statHeader: {
-    fontSize: 18,
-    color: '#FFF',
-  },
-  activityIndicatorContainer: {
-    ...elevationShadowStyle(5),
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-    borderRadius: wp(10),
-    width: wp(30),
-    height: wp(30),
-    backgroundColor: 'transparent',
+    color: COLORS.primary,
+    paddingTop: 150,
   },
   backButton: {
-    flex: 1,
-    marginTop: 30,
-    padding: 12,
+    padding: 10,
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1bd40b',
+  refreshButton: {
+    padding: 10,
   },
-  chartContainer: {
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  analyticsContainer: {
+    backgroundColor: '#333333',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  gridItem: {
+    width: '48%',
     backgroundColor: '#333333',
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
     elevation: 5,
   },
-  chartHeader: {
+  statHeader: {
+    fontSize: 16,
+    color: '#FFF',
+    marginBottom: 5,
+  },
+  analyticsButton: {
+    backgroundColor: COLORS.primary,
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  analyticsButtonText: {
+    color: '#FFF',
     fontSize: 18,
-    color: '#FFF',
-    marginBottom: 10,
   },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-    marginBottom: 24,
-  },
-  memeContainer: {
-    width: 100,
-    height: 100,
-    marginRight: 10,
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#FFF', // Adding border to images
-  },
-  memeImage: {
-    width: '100%',
-    height: '100%',
-  },
-  memeText: {
-    color: '#FFF',
-    textAlign: 'center',
-    marginTop: 5,
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.primary,
   },
 });
 
