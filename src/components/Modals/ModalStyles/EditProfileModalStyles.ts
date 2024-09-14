@@ -1,4 +1,5 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+const { width: screenWidth } = Dimensions.get('window'); // Get device screen width
 
 export default StyleSheet.create({
   modalContainer: {
@@ -62,12 +63,11 @@ export default StyleSheet.create({
     marginBottom: 25,
   },
   modalHeaderImage: {
-    width: '100%',  // Ensure it takes the full width
-    height: 150,    // Set a proper height to avoid overlap
-    resizeMode: 'contain',  // Maintain aspect ratio while covering the area
-    position: 'relative',  // Relative positioning to avoid layout issues
-    zIndex: 1,  // Ensure it stays below other elements
-    backgroundColor: '#333', // Fallback background color for testing
+    width: screenWidth * 0.8,  // Dynamically set width to 80% of screen width
+    height: 150,
+    backgroundColor: '#333', // Fallback background color
+    resizeMode: 'cover',
+    zIndex: 1,
   },
   profileImageContainer: {
     alignItems: 'center',
