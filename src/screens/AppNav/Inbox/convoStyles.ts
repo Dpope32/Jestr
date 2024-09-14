@@ -1,14 +1,4 @@
-import {StyleSheet, Dimensions} from 'react-native';
-import {
-  COLORS,
-  SPACING,
-  FONT_SIZES,
-  wp,
-  elevationShadowStyle,
-  FONTS,
-} from '../../../theme/theme';
-
-const {width, height} = Dimensions.get('window');
+import { StyleSheet, Dimensions } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
@@ -98,6 +88,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5, // Reduced padding above the keyboard
     borderTopWidth: 1,
     borderTopColor: '#444',
+    zIndex: 1000,
   },
   input: {
     flex: 1,

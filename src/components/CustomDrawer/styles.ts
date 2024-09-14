@@ -1,4 +1,4 @@
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Platform} from 'react-native';
 import {FONTS} from '../../theme/theme';
 
 const styles = StyleSheet.create({
@@ -75,13 +75,15 @@ const styles = StyleSheet.create({
   },
   bottomContainer: {
     position: 'absolute',
+    bottom:  Platform.OS === 'ios' ? 10 : 20,
+    fontFamily: FONTS.regular,
     left: 0,
     right: 0,
-    bottom: 50,
-    fontFamily: FONTS.regular,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 30,
+    
   },
   signoutButton: {
     flexDirection: 'row',
@@ -99,6 +101,8 @@ const styles = StyleSheet.create({
   darkModeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
   },
   darkModeIcon: {
     color: '#1bd40b',

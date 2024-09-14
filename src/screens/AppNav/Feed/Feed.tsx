@@ -11,15 +11,11 @@ import {useUserStore} from '../../../stores/userStore';
 import {getToken} from '../../../stores/secureStore';
 import {logStorageContents} from '../../../utils/debugUtils';
 import {fetchComments} from '../../../services/socialService';
-import {
-  fetchUserDetails,
-  isEmptyUserState,
-} from '../../../services/userService';
+import {fetchUserDetails,} from '../../../services/userService';
 
 import styles from './Feed.styles';
 import {RootStackParamList} from '../../../types/types';
-// import TopPanel from '../../../components/Panels/TopPanel';
-// import BottomPanel from '../../../components/Panels/BottomPanel';
+import {isEmptyUserState} from '../../../stores/userStore';
 import ProfilePanel from '../../../components/Panels/ProfilePanel';
 import CommentFeed from '../../../components/Modals/CommentFeed';
 import MemeList from '../../../components/MediaPlayer/Logic/MemeList';
@@ -76,7 +72,7 @@ const Feed: React.FC = React.memo(() => {
         }
       };
       loadUserData();
-      logStorageContents();
+    //  logStorageContents();
     }, [userStore.email]),
   );
 

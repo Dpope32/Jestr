@@ -120,7 +120,7 @@ export const handleLogin = async (
   navigation: AuthNavProp,
 ) => {
   console.log('Logging in with username:', username);
-  console.log('Logging in with password:', password);
+ // console.log('Logging in with password:', password);
   try {
     await signOut();
     await SecureStore.deleteItemAsync('accessToken');

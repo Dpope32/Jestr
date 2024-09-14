@@ -1,27 +1,17 @@
-import React, {useState} from 'react';
-import {View, Text, Image, TouchableOpacity} from 'react-native';
+import React, {useState, useRef, } from 'react';
+import {View, Text, Image, TouchableOpacity, Animated, Easing} from 'react-native';
 import {Switch} from 'react-native';
-import {
-  DrawerContentScrollView,
-  DrawerItem,
-  DrawerContentComponentProps,
-} from '@react-navigation/drawer';
+import {DrawerContentScrollView,DrawerItem,DrawerContentComponentProps,} from '@react-navigation/drawer';
 import {useNavigation} from '@react-navigation/native';
-import * as SecureStore from 'expo-secure-store';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faMoon, faSignOutAlt, faTimes} from '@fortawesome/free-solid-svg-icons';
-import {faUser, faRibbon, faBell} from '@fortawesome/free-solid-svg-icons';
-import {faHistory, faCog, faHome} from '@fortawesome/free-solid-svg-icons';
+import {faMoon, faCog, faHome, faUser, faBell, faRibbon} from '@fortawesome/free-solid-svg-icons';
 
 import styles from './styles';
 import {AppNavParamList} from '../../navigation/NavTypes/RootNavTypes';
 import {AppNavProp} from '../../navigation/NavTypes/RootNavTypes';
 import {useTheme} from '../../theme/ThemeContext';
-import LogoutModal from '../Modals/LogoutModal';
 import {useUserStore} from '../../stores/userStore';
-import {handleSignOut} from '../../services/authService';
 import {User} from '../../types/types';
-import {FONTS} from '../../theme/theme';
 import Anon1Image from '../../assets/images/Jestr5.jpg';
 
 const drawerItems = [
@@ -33,6 +23,11 @@ const drawerItems = [
   {
     label: 'Profile',
     icon: faUser,
+    navigateTo: 'Profile' as keyof AppNavParamList,
+  },
+  {
+    label: 'Badges',
+    icon: faRibbon,
     navigateTo: 'Profile' as keyof AppNavParamList,
   },
   {
@@ -51,30 +46,24 @@ const CustomDrawer = (props: DrawerContentComponentProps) => {
   const navigation = useNavigation<AppNavProp>();
   const {isDarkMode, toggleDarkMode} = useTheme();
   const user = useUserStore(state => state as User);
-
+  const spinValue = useRef(new Animated.Value(0)).current;
   // console.log('DRAWER props: ', props);
 
-  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-
-  const handleSignOutClick = () => {
-    setLogoutModalVisible(true);
-  };
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
 
   const handleDarkModeToggle = () => {
     toggleDarkMode();
+    Animated.timing(spinValue, {
+      toValue: isDarkMode ? 0 : 1,
+      duration: 300,
+      easing: Easing.linear,
+      useNativeDriver: true
+    }).start();
   };
 
-  const confirmSignOut = async () => {
-    try {
-      await handleSignOut();
-      await SecureStore.deleteItemAsync('accessToken');
-      useUserStore.getState().setUserDetails({});
-    } catch (error) {
-      console.error('Error during sign-out:', error);
-    } finally {
-      setLogoutModalVisible(false);
-    }
-  };
 
   const handleProfileClick = () => {
     navigation.navigate('Profile');
@@ -141,38 +130,29 @@ const CustomDrawer = (props: DrawerContentComponentProps) => {
 
       {/* == BOTTOM CONTENT == */}
       <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          style={styles.signoutButton}
-          onPress={handleSignOutClick}>
-          <FontAwesomeIcon
-            icon={faSignOutAlt}
-            style={styles.signoutIcon}
-            size={24}
-          />
-          <Text style={styles.signoutText}>Sign Out</Text>
-        </TouchableOpacity>
-        <View style={styles.darkModeContainer}>
-          <Switch
-            trackColor={{false: '#767577', true: '#1bd40b'}}
-            thumbColor={isDarkMode ? '#f4f3f4' : '#f4f3f4'}
-            ios_backgroundColor="#b7a1a1"
-            onValueChange={handleDarkModeToggle}
-            value={isDarkMode}
-          />
-          <FontAwesomeIcon
-            icon={faMoon}
-            style={styles.darkModeIcon}
-            size={24}
-          />
+          <View style={styles.darkModeContainer}>
+            <Switch
+              trackColor={{false: '#767577', true: '#1bd40b'}}
+              thumbColor={isDarkMode ? '#f4f3f4' : '#f4f3f4'}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={handleDarkModeToggle}
+              value={isDarkMode}
+            />
+            <Animated.View 
+              style={{ 
+                transform: [{ rotate: spin }],
+                padding: 6,
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faMoon}
+                style={styles.darkModeIcon}
+                color={isDarkMode ? '#1bd40b' : '#ffffff'}
+                size={24}
+              />
+            </Animated.View>
+          </View>
         </View>
-      </View>
-
-      {/* == LOGOUT == */}
-      <LogoutModal
-        visible={logoutModalVisible}
-        onCancel={() => setLogoutModalVisible(false)}
-        onConfirm={confirmSignOut}
-      />
     </View>
   );
 };

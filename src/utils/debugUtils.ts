@@ -7,7 +7,7 @@ import { useNotificationStore } from '../stores/notificationStore';
 import { useSettingsStore } from '../stores/settingsStore';
 
 export const logStorageContents = async () => {
-  console.log('AsyncStorage contents:');
+ // console.log('AsyncStorage contents:');
   const asyncStorageKeys = await AsyncStorage.getAllKeys();
   for (const key of asyncStorageKeys) {
     if (!key.includes('cachedMemes') && !key.includes('@MemoryStorage:CognitoIdentityServiceProvider')) {
@@ -18,12 +18,12 @@ export const logStorageContents = async () => {
 
   console.log('Zustand store contents:');
   logStoreContents('user');
-  logStoreContents('follow');
-  logStoreContents('inbox');
-  logStoreContents('notification');
-  logStoreContents('settings');
+ // logStoreContents('follow');
+ // logStoreContents('inbox');
+ // logStoreContents('notification');
+  //logStoreContents('settings');
 
-  console.log('SecureStore contents:');
+//  console.log('SecureStore contents:');
   const secureStoreKeys = ['accessToken', 'userIdentifier', 'refreshToken', 'idToken'];
   for (const key of secureStoreKeys) {
     const value = await SecureStore.getItemAsync(key);

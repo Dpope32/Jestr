@@ -201,7 +201,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           event.nativeEvent;
         const updateLikePosition = (x: number, y: number) => {
           const xOffset = Platform.OS === 'ios' ? -150 : -150; 
-          const yOffset = Platform.OS === 'ios' ? -300 : -300;
+          const yOffset = Platform.OS === 'ios' ? -160 : -160;
 
           setLikePosition({
             x: x + xOffset,

@@ -86,7 +86,7 @@ const App = () => {
       client={queryClient}
       persistOptions={{persister: asyncStoragePersister}}
       onSuccess={() => {
-        console.log('QueryClient persisted successfully!');
+    //    console.log('QueryClient persisted successfully!');
         queryClient.resumePausedMutations().then(() => {
           queryClient.invalidateQueries();
         });

@@ -1,18 +1,7 @@
 import React, {useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Modal,
-  SafeAreaView,
-} from 'react-native';
+import {View,Text,TouchableOpacity,ScrollView,Modal,SafeAreaView} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faSignOutAlt,
-  faArrowRight,
-  faArrowLeft,
-} from '@fortawesome/free-solid-svg-icons';
+import {faSignOutAlt,faArrowRight,faArrowLeft,} from '@fortawesome/free-solid-svg-icons';
 import {LinearGradient} from 'expo-linear-gradient';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -28,10 +17,7 @@ import LogoutModal from '../../../components/Modals/LogoutModal';
 import {RootStackParamList} from '../../../types/types';
 import {useIsFocused} from '@react-navigation/native';
 
-type SettingsScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'Settings'
->;
+type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList,'Settings'>;
 
 const Settings: React.FC = () => {
   const navigation = useNavigation<SettingsScreenNavigationProp>();
@@ -68,7 +54,7 @@ const Settings: React.FC = () => {
 
   const confirmSignOut = async () => {
     try {
-      await handleSignOut(navigation);
+      await handleSignOut();
       const resetFollowStore = useFollowStore.getState().reset;
       resetFollowStore();
       await SecureStore.deleteItemAsync('accessToken');

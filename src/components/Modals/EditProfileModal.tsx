@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, Image } from 'react-native';
 import { User } from '../../types/types';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTimes, faCamera } from '@fortawesome/free-solid-svg-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { updateProfileImage } from '../../services/userService';
+import Toast from 'react-native-toast-message';
 import styles from './ModalStyles/EditProfileModalStyles';
 
 interface EditProfileModalProps {
@@ -23,6 +24,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isVisible, onClose,
   const [profilePic, setProfilePic] = useState(user?.profilePic || null);
   const [headerPic, setHeaderPic] = useState(user?.headerPic || null);
 
+  console.log('headerPic state value:', headerPic); // Log current headerPic state
+  console.log('profilePic state value:', profilePic); // Log current profilePic state
+
   const handleImagePick = async (type: 'profile' | 'header') => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -33,25 +37,31 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isVisible, onClose,
 
     if (!result.canceled && result.assets && result.assets[0] && user) {
       try {
+        console.log('Selected Image URI:', result.assets[0].uri); // Log selected image URI
         const response = await updateProfileImage(user.email, type, result.assets[0].uri);
         if (type === 'profile') {
           setProfilePic(response.data.profilePic);
+          Toast.show({ type: 'success', text1: 'Profile image updated!' });
         } else {
           setHeaderPic(response.data.headerPic);
+          Toast.show({ type: 'success', text1: 'Header image updated!' });
         }
+        onClose(); // Close the modal after updating
       } catch (error) {
         console.error('Failed to update image:', error);
+        Toast.show({ type: 'error', text1: 'Failed to update image.' });
       }
     }
   };
 
   const handleSave = () => {
     if (user) {
-      const updatedUser = {...user, displayName, Bio: bio, bio, location, website, birthDate,profilePic,headerPic};
+      const updatedUser = { ...user, displayName, bio, location, website, birthDate, profilePic, headerPic };
       onUpdateUser(updatedUser);
       onClose();
     }
   };
+
   return (
     <Modal visible={isVisible} transparent={true} onRequestClose={onClose}>
       <View style={styles.modalContainer}>
@@ -65,16 +75,28 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isVisible, onClose,
           <ScrollView>
             <View style={styles.imageContainer}>
               <TouchableOpacity onPress={() => handleImagePick('header')}>
-                <Image 
-                  source={{ uri: typeof headerPic === 'string' ? headerPic : undefined }} 
-                  style={styles.modalHeaderImage} 
+                <Image
+                  source={{
+                    uri: headerPic && typeof headerPic === 'string' ? headerPic : undefined,
+                  }}
+                  style={styles.modalHeaderImage}
+                  onError={() => console.error('Failed to load header image.')}
+                  onLayout={(event) => {
+                    const { width, height } = event.nativeEvent.layout;
+                    console.log('Header Image Dimensions:', { width, height });
+                  }}
                 />
               </TouchableOpacity>
               <View style={styles.profileImageContainer}>
                 <TouchableOpacity onPress={() => handleImagePick('profile')}>
-                  <Image 
-                    source={{ uri: typeof profilePic === 'string' ? profilePic : undefined }} 
-                    style={styles.modalProfileImage} 
+                  <Image
+                    source={{ uri: typeof profilePic === 'string' ? profilePic : undefined }}
+                    style={styles.modalProfileImage}
+                    onError={() => console.error('Failed to load profile image.')}
+                    onLayout={(event) => {
+                      const { width, height } = event.nativeEvent.layout;
+                      console.log('Profile Image Dimensions:', { width, height });
+                    }}
                   />
                   <View style={styles.cameraIconContainer}>
                     <FontAwesomeIcon icon={faCamera} size={20} color="#FFF" />
@@ -86,13 +108,15 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isVisible, onClose,
             <TextInput
               style={styles.input}
               placeholder="Display Name"
+              placeholderTextColor="#888"
               value={displayName}
               onChangeText={setDisplayName}
             />
             <Text style={styles.label}>Bio</Text>
             <TextInput
-              style={[styles.input]}
-              placeholder="Bio"
+              style={styles.input}
+              placeholder="Add a short bio"
+              placeholderTextColor="#888"
               value={bio}
               onChangeText={setBio}
               multiline
@@ -101,6 +125,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isVisible, onClose,
             <TextInput
               style={styles.input}
               placeholder="Add your location"
+              placeholderTextColor="#888"
               value={location}
               onChangeText={setLocation}
             />
@@ -108,6 +133,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isVisible, onClose,
             <TextInput
               style={styles.input}
               placeholder="Add your website"
+              placeholderTextColor="#888"
               value={website}
               onChangeText={setWebsite}
             />
@@ -115,10 +141,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isVisible, onClose,
             <TextInput
               style={styles.input}
               placeholder="Add your birth date"
+              placeholderTextColor="#888"
               value={birthDate}
               onChangeText={setBirthDate}
             />
-           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
           </ScrollView>
@@ -127,6 +154,5 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isVisible, onClose,
     </Modal>
   );
 };
-
 
 export default EditProfileModal;

@@ -1,5 +1,5 @@
 import {useState, useCallback} from 'react';
-import {Alert} from 'react-native';
+import {Alert, Linking} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import {UserState} from '../../../stores/userStore';
@@ -10,63 +10,57 @@ import {useUserStore} from '../../../stores/userStore';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
-import {
-  deleteMeme,
-  getUserMemes,
-  removeDownloadedMeme,
-} from '../../../services/memeService';
+import {deleteMeme,getUserMemes,removeDownloadedMeme,} from '../../../services/memeService';
 
 export const useProfileHandlers = (
   user: UserState,
   setTabMemes: React.Dispatch<React.SetStateAction<Meme[]>>,
   navigation: any,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  isLoading: boolean,
   setLastEvaluatedKey: React.Dispatch<React.SetStateAction<string | null>>,
   setHasMoreMemes: React.Dispatch<React.SetStateAction<boolean>>,
   setSelectedMeme: React.Dispatch<React.SetStateAction<Meme | null>>,
   setCurrentMemeIndex: React.Dispatch<React.SetStateAction<number>>,
   setIsCommentFeedVisible: React.Dispatch<React.SetStateAction<boolean>>,
+  setFullScreenImage: React.Dispatch<React.SetStateAction<string | null>>,
+  setIsBlurVisible: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsUploading: React.Dispatch<React.SetStateAction<boolean>>,
 ) => {
-  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
-  const [isBlurVisible, setIsBlurVisible] = useState<boolean>(false);
-  const [isLoading, setIsUploading] = useState(false);
+
 
   const handleUpdateImage = async (
     imagePath: string,
     type: 'profile' | 'header',
   ) => {
-    setIsLoading(true);
+    setIsUploading(true);
+    setFullScreenImage(null);
+    setIsBlurVisible(true);
+  
     try {
       const result = await updateProfileImage(user.email, type, imagePath);
-      console.log(
-        'Update profile image result:',
-        JSON.stringify(result, null, 2),
-      );
-
-      // Close the full-screen image view
-      setFullScreenImage(null);
-      setIsBlurVisible(false);
-
+     // console.log('Update profile image result:', JSON.stringify(result, null, 2));
+  
       // Update Zustand store with the new image URL from the server
       useUserStore.getState().setUserDetails({
         [type + 'Pic']: result.data[type + 'Pic'],
       });
-
+  
       Toast.show({
         type: 'success',
-        text1: 'Profile updated successfully!',
+        text1: `${type.charAt(0).toUpperCase() + type.slice(1)} updated successfully!`,
         visibilityTime: 2000,
         autoHide: true,
         topOffset: 30,
         bottomOffset: 40,
       });
     } catch (error: unknown) {
-      console.error('Failed to update image:', error);
+      console.error(`Failed to update ${type} image:`, error);
       if (error instanceof Error) {
         console.error('Error details:', error.message);
         Toast.show({
           type: 'error',
-          text1: `Failed to update profile image: ${error.message}`,
+          text1: `Failed to update ${type} image: ${error.message}`,
           visibilityTime: 3000,
           autoHide: true,
           topOffset: 30,
@@ -76,7 +70,7 @@ export const useProfileHandlers = (
         console.error('Unknown error type:', typeof error);
         Toast.show({
           type: 'error',
-          text1: 'An unknown error occurred while updating the profile image',
+          text1: `An unknown error occurred while updating the ${type} image`,
           visibilityTime: 3000,
           autoHide: true,
           topOffset: 30,
@@ -84,17 +78,34 @@ export const useProfileHandlers = (
         });
       }
     } finally {
-      setIsLoading(false);
+      setIsUploading(false);
+      setIsBlurVisible(false);
     }
   };
-
+  
   const handleEditImagePress = async (type: 'profile' | 'header') => {
-    const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
+   // console.log(`handleEditImagePress called for ${type}`);
+    
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
     if (status !== 'granted') {
-      Alert.alert('Sorry, we need camera roll permissions to make this work!');
+      Alert.alert(
+        'Permission Required',
+        'We need access to your photos to update your profile image. Would you like to open settings and grant permission?',
+        [
+          {
+            text: 'No',
+            style: 'cancel'
+          },
+          {
+            text: 'Yes',
+            onPress: () => Linking.openSettings()
+          }
+        ]
+      );
       return;
     }
-
+  
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -102,7 +113,9 @@ export const useProfileHandlers = (
         aspect: type === 'profile' ? [1, 1] : [16, 9],
         quality: 1,
       });
-
+  
+    //  console.log('ImagePicker result:', JSON.stringify(result, null, 2));
+  
       if (!result.canceled && result.assets && result.assets[0]) {
         const selectedAsset = result.assets[0];
         const manipResult = await ImageManipulator.manipulateAsync(
@@ -117,11 +130,14 @@ export const useProfileHandlers = (
           ],
           {compress: 1, format: ImageManipulator.SaveFormat.JPEG},
         );
-
+  
+      //  console.log('Image manipulated:', JSON.stringify(manipResult, null, 2));
         handleUpdateImage(manipResult.uri, type);
+      } else {
+        console.log('Image selection cancelled or failed');
       }
     } catch (error) {
-      console.log('ImagePicker Error: ', error);
+      console.error('ImagePicker Error: ', error);
     }
   };
 
@@ -167,10 +183,11 @@ export const useProfileHandlers = (
     });
   };
 
+  //need to find caching strategy for profile tab meme fetching
   const fetchTabMemes = useCallback(
     async (tab: TabName, page: number = 1, pageSize: number = 30) => {
       if (!user.email || isLoading) {
-        console.log('Skipping fetch: no user email or already loading');
+      //  console.log('Skipping fetch: no user email or already loading');
         return;
       }
 
@@ -193,7 +210,7 @@ export const useProfileHandlers = (
           default:
             result = {memes: [], lastEvaluatedKey: null};
         }
-        console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
+      //  console.log(`Fetched ${result.memes.length} memes for ${tab} tab`);
         setTabMemes(result.memes);
         setLastEvaluatedKey(result.lastEvaluatedKey);
         setHasMoreMemes(result.memes.length === pageSize);
@@ -306,9 +323,7 @@ export const useProfileHandlers = (
     handleDeleteMeme,
     handleRemoveDownloadedMeme,
     handleSettingsClick,
-    fullScreenImage,
     setFullScreenImage,
-    isBlurVisible,
     setIsBlurVisible,
     handleShareProfile,
   };

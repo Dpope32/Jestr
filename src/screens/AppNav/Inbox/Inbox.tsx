@@ -1,41 +1,32 @@
-import React, {useState, useEffect, useCallback} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  Animated,
-  ScrollView,
-} from 'react-native';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faPlus, faBell} from '@fortawesome/free-solid-svg-icons';
-import {Conversation, User} from '../../../types/types';
-import {useFocusEffect} from '@react-navigation/native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, Image, TextInput, TouchableOpacity, Animated, ScrollView } from 'react-native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faPlus, faBell } from '@fortawesome/free-solid-svg-icons';
+import { Conversation, User } from '../../../types/types'; 
+import { useFocusEffect } from '@react-navigation/native';
 import NewMessageModal from '../../../components/Modals/NewMessageModal';
-import {format, formatDistanceToNow, isToday} from 'date-fns';
+import { format, formatDistanceToNow, isToday } from 'date-fns';
 import styles from './Inbox.styles';
-import {useTheme} from '../../../theme/ThemeContext';
-import {useUserStore} from 'stores/userStore';
-import BottomPanel from '../../../components/Panels/BottomPanel';
-import {useInboxStore} from '../../../stores/inboxStore';
+import { useTheme } from '../../../theme/ThemeContext';
+import { useUserStore } from '../../../stores/userStore';
+import BottomPanel from '../../../components/Panels/BottomPanel'; 
+import { useInboxStore } from '../../../stores/inboxStore';
 
 type InboxProps = {
   navigation: any;
 };
 
-const Inbox: React.FC<InboxProps> = ({navigation}) => {
+const Inbox: React.FC<InboxProps> = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const user = useUserStore(state => state);
   const [localUser, setLocalUser] = useState<User | null>(user || null);
-  const [isNewMessageModalVisible, setIsNewMessageModalVisible] =
-    useState(false);
-  const {conversations, isLoading, fetchConversations} = useInboxStore();
-  const {isDarkMode} = useTheme();
+  const [isNewMessageModalVisible, setIsNewMessageModalVisible] = useState(false);
+  const { conversations, isLoading, fetchConversations } = useInboxStore();
+  const { isDarkMode } = useTheme();
   //const [pinnedConversations, setPinnedConversations] = useState<Conversation[]>([]);
   const [notifications, setNotifications] = useState<string[]>([]);
   const fadeAnim = useState(new Animated.Value(0))[0];
-  const setDarkMode = useUserStore(state => state.setDarkMode);
+  const setDarkMode = useUserStore((state) => state.setDarkMode);
 
   const toggleNewMessageModal = () => {
     setIsNewMessageModalVisible(!isNewMessageModalVisible);
@@ -45,31 +36,31 @@ const Inbox: React.FC<InboxProps> = ({navigation}) => {
     setNotifications(['New follower: @Admin']);
   };
 
-  const handleThreadClick = (conversation: Conversation) => {
-    const currentUser = useUserStore.getState();
-    if (!currentUser.email) {
-      console.error('User is not logged in');
-      return;
-    }
+const handleThreadClick = (conversation: Conversation) => {
+  const currentUser = useUserStore.getState();
+  if (!currentUser.email) {
+    console.error('User is not logged in');
+    return;
+  }
 
-    navigation.navigate('Conversations', {
-      partnerUser: {
-        email: conversation.userEmail,
-        username: conversation.username,
-        profilePic: conversation.profilePicUrl,
-        headerPic: null,
-        displayName: '',
-        CreationDate: '',
-        followersCount: 0,
-        followingCount: 0,
-      },
-      conversation: conversation,
-    });
-  };
+  navigation.navigate('Conversations', {
+        partnerUser: {
+          email: conversation.userEmail,
+          username: conversation.username,
+          profilePic: conversation.profilePicUrl,
+          headerPic: null,
+          displayName: '',
+          CreationDate: '',
+          followersCount: 0,
+          followingCount: 0
+        },
+        conversation: conversation
+      });
+    };
 
   const handleProfileClick = () => {
     if (localUser) {
-      navigation.navigate('Profile', {});
+      navigation.navigate('Profile', { });
     }
   };
 
@@ -81,32 +72,30 @@ const Inbox: React.FC<InboxProps> = ({navigation}) => {
     }).start();
   }, []);
 
-  // const handlePin = (id: string) => {
-  //   const conversationToPin = conversations.find(conv => conv.id === id);
-  //   if (conversationToPin) {
-  //     setPinnedConversations([...pinnedConversations, conversationToPin]);
-  //     setConversations(conversations.filter(conv => conv.id !== id));
-  //   }
-  //  };
+ // const handlePin = (id: string) => {
+ //   const conversationToPin = conversations.find(conv => conv.id === id);
+ //   if (conversationToPin) {
+ //     setPinnedConversations([...pinnedConversations, conversationToPin]);
+ //     setConversations(conversations.filter(conv => conv.id !== id));
+ //   }
+//  };
+
+
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     if (isToday(date)) {
       return format(date, 'h:mm a');
     } else {
-      return formatDistanceToNow(date, {addSuffix: true});
+      return formatDistanceToNow(date, { addSuffix: true });
     }
   };
 
   const generateUniqueId = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
-      /[xy]/g,
-      function (c) {
-        var r = (Math.random() * 16) | 0,
-          v = c == 'x' ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-      },
-    );
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   };
 
   const handleUserSelect = (selectedUser: User) => {
@@ -115,36 +104,33 @@ const Inbox: React.FC<InboxProps> = ({navigation}) => {
       console.error('User is not logged in');
       return;
     }
-
+  
     toggleNewMessageModal();
     const conversationID = generateUniqueId();
     navigation.navigate('Conversations', {
-      partnerUser: selectedUser,
-      conversation: {
-        id: conversationID,
-        ConversationID: conversationID,
-        userEmail: selectedUser.email,
-        username: selectedUser.username,
-        profilePicUrl: selectedUser.profilePic,
-        lastMessage: {
-          Content: '',
-          Timestamp: new Date().toISOString(),
-        },
-        timestamp: new Date().toISOString(),
-        messages: [],
-        UnreadCount: 0,
-        LastReadMessageID: '',
-        partnerUser: {
-          email: selectedUser.email,
+        partnerUser: selectedUser,
+        conversation: {
+          id: conversationID,
+          ConversationID: conversationID,
+          userEmail: selectedUser.email,
           username: selectedUser.username,
-          profilePic:
-            typeof selectedUser.profilePic === 'string'
-              ? selectedUser.profilePic
-              : null,
-        },
-      },
-    });
-  };
+          profilePicUrl: selectedUser.profilePic,
+          lastMessage: {
+            Content: '',
+            Timestamp: new Date().toISOString()
+          },
+          timestamp: new Date().toISOString(),
+          messages: [],
+          UnreadCount: 0,
+          LastReadMessageID: '',
+          partnerUser: {
+            email: selectedUser.email,
+            username: selectedUser.username,
+            profilePic: typeof selectedUser.profilePic === 'string' ? selectedUser.profilePic : null
+          }
+        }
+      });
+    };
 
   const loadConversations = useCallback(async () => {
     if (localUser) {
@@ -160,26 +146,27 @@ const Inbox: React.FC<InboxProps> = ({navigation}) => {
   useFocusEffect(
     useCallback(() => {
       useInboxStore.getState().fetchConversations(user.email);
-    }, [user.email]),
+    }, [user.email])
   );
 
-  //const getMessagePreview = (content: string) => {
-  //   if (typeof content !== 'string') {
-  //     return 'Unable to display message';
-  //   }
-  //   if (content.trim().startsWith('{')) {
-  //     try {
-  //       const parsedContent = JSON.parse(content);
-  //       if (parsedContent.type === 'meme_share') {
-  //         return parsedContent.message || 'Shared a meme';
-  //       }
-  //     } catch (e) {}
-  //   }
-  //   return content.length > 50 ? content.substring(0, 47) + '...' : content;
-  // };
+
+ //const getMessagePreview = (content: string) => {
+ //   if (typeof content !== 'string') {
+ //     return 'Unable to display message';
+ //   }
+ //   if (content.trim().startsWith('{')) {
+ //     try {
+ //       const parsedContent = JSON.parse(content);
+ //       if (parsedContent.type === 'meme_share') {
+ //         return parsedContent.message || 'Shared a meme';
+ //       }
+ //     } catch (e) {}
+ //   }
+ //   return content.length > 50 ? content.substring(0, 47) + '...' : content;
+ // };
 
   const SkeletonLoader = () => {
-    const skeletons = Array.from({length: 5});
+    const skeletons = Array.from({ length: 5 }); 
     return (
       <View>
         {skeletons.map((_, index) => (
@@ -196,12 +183,8 @@ const Inbox: React.FC<InboxProps> = ({navigation}) => {
   };
 
   return (
-    <View style={{flex: 1}}>
-      <Animated.View
-        style={[
-          styles.container,
-          {opacity: fadeAnim, backgroundColor: isDarkMode ? '#000' : '#2E2E2E'},
-        ]}>
+    <View style={{ flex: 1 }}>
+      <Animated.View style={[styles.container, { opacity: fadeAnim, backgroundColor: isDarkMode ? '#000' : '#2E2E2E' }]}>
         <View style={styles.header}>
           <Text style={styles.sectionHeaderIn}>Inbox</Text>
           {localUser && (
@@ -227,61 +210,49 @@ const Inbox: React.FC<InboxProps> = ({navigation}) => {
             onChangeText={setSearchQuery}
             placeholderTextColor="#999"
           />
-
+          
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Notifications</Text>
             {notifications.map((notification, index) => (
-              <TouchableOpacity key={index} style={styles.notificationItem}>
-                <FontAwesomeIcon
-                  icon={faBell}
-                  size={20}
-                  color="#00ff00"
-                  style={styles.notificationIcon}
-                />
+              <TouchableOpacity 
+                key={index} 
+                style={styles.notificationItem}
+              >
+                <FontAwesomeIcon icon={faBell} size={20} color="#00ff00" style={styles.notificationIcon} />
                 <Text style={styles.notificationText}>{notification}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>All Conversations</Text>
-            {isLoading ? (
-              <SkeletonLoader />
-            ) : (
-              conversations.map(conversation => (
-                <TouchableOpacity
-                  key={conversation.id}
-                  style={styles.conversationItem}
-                  onPress={() => handleThreadClick(conversation)}>
-                  <Image
-                    source={{
-                      uri:
-                        conversation.partnerUser.profilePic ||
-                        'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg',
-                    }}
-                    style={styles.profilePic}
-                  />
-                  <View style={styles.conversationInfo}>
-                    <Text style={styles.username}>
-                      {conversation.partnerUser.username ||
-                        conversation.partnerUser.email}
-                    </Text>
-                    <Text style={styles.preview}>
-                      {conversation.lastMessage.Content}
-                    </Text>
-                    <Text style={styles.timestamp}>
-                      {formatTimestamp(conversation.lastMessage.Timestamp)}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))
-            )}
-          </View>
+          <Text style={styles.sectionHeader}>All Conversations</Text>
+          {isLoading ? (
+            <SkeletonLoader />
+          ) : (
+            conversations.map(conversation => (
+              <TouchableOpacity 
+                key={conversation.id} 
+                style={styles.conversationItem}
+                onPress={() => handleThreadClick(conversation)}
+              >
+                <Image
+                  source={{
+                    uri: conversation.partnerUser.profilePic || 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg'
+                  }}
+                  style={styles.profilePic}
+                />
+                <View style={styles.conversationInfo}>
+                  <Text style={styles.username}>{conversation.partnerUser.username || conversation.partnerUser.email}</Text>
+                  <Text style={styles.preview}>{conversation.lastMessage.Content}</Text>
+                  <Text style={styles.timestamp}>{formatTimestamp(conversation.lastMessage.Timestamp)}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
         </ScrollView>
 
-        <TouchableOpacity
-          style={styles.newMessageButton}
-          onPress={toggleNewMessageModal}>
+        <TouchableOpacity style={styles.newMessageButton} onPress={toggleNewMessageModal}>
           <FontAwesomeIcon icon={faPlus} size={20} color="#FFF" />
         </TouchableOpacity>
 
@@ -290,23 +261,21 @@ const Inbox: React.FC<InboxProps> = ({navigation}) => {
           onClose={toggleNewMessageModal}
           onSelectUser={handleUserSelect}
           existingConversations={conversations}
-          currentUser={
-            localUser || {
-              email: '',
-              username: '',
-              profilePic: '',
-              displayName: '',
-              headerPic: '',
-              CreationDate: '',
-              followersCount: 0,
-              followingCount: 0,
-            }
-          }
+          currentUser={localUser || { 
+            email: '', 
+            username: '', 
+            profilePic: '', 
+            displayName: '', 
+            headerPic: '', 
+            CreationDate: '', 
+            followersCount: 0,  
+            followingCount: 0 
+          }}
           allUsers={[]}
         />
       </Animated.View>
-
-      {/* <BottomPanel
+      
+      <BottomPanel
         onHomeClick={() => navigation.navigate('Feed' as never)}
         handleLike={() => {}}
         handleDislike={() => {}}
@@ -316,7 +285,7 @@ const Inbox: React.FC<InboxProps> = ({navigation}) => {
         currentMediaIndex={0}
         toggleCommentFeed={() => {}}
         user={localUser}
-      /> */}
+      />
     </View>
   );
 };

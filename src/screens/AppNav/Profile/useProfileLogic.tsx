@@ -23,9 +23,7 @@ export const useProfileLogic = (
   const [thumbnails, setThumbnails] = useState<{[key: string]: string}>({});
   const [tabMemes, setTabMemes] = useState<Meme[]>([]);
   const [isFollowModalVisible, setIsFollowModalVisible] = useState(false);
-  const [followModalTab, setFollowModalTab] = useState<
-    'followers' | 'following'
-  >('followers');
+  const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
   const [selectedMeme, setSelectedMeme] = useState<Meme | null>(null);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [currentMemeIndex, setCurrentMemeIndex] = useState(0);
@@ -52,6 +50,7 @@ export const useProfileLogic = (
     fetchTabMemes,
     handleMemePress,
     handleDeleteMeme,
+    handleUpdateImage,
     handleShareProfile,
     handleRemoveDownloadedMeme,
   } = useProfileHandlers(
@@ -59,11 +58,15 @@ export const useProfileLogic = (
     setTabMemes,
     navigation,
     setIsLoading,
+    isLoading,
     setLastEvaluatedKey,
     setHasMoreMemes,
     setSelectedMeme,
     setCurrentMemeIndex,
     setIsCommentFeedVisible,
+    setFullScreenImage,
+    setIsBlurVisible,
+    setIsUploading,
   );
 
   // useEffect(() => {
@@ -164,5 +167,6 @@ export const useProfileLogic = (
     setSelectedMeme,
     setIsCommentFeedVisible,
     setCurrentMemeIndex,
+    setIsUploading,
   };
 };

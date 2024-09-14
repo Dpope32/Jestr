@@ -55,6 +55,45 @@ const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
     }
   };
 
+  const updateProfileImage = async (requestBody) => {
+    const { email, imageType, image } = requestBody;
+    if (!email || !imageType || !image) {
+      console.error('Missing required fields for updateProfileImage:', { email, imageType, imageProvided: !!image });
+      return createResponse(400, 'Email, imageType, and image are required for updating profile image.');
+    }
+  
+    try {
+      const bucketName = 'jestr-bucket';
+      const imageKey = `${imageType === 'profile' ? 'ProfilePictures' : 'HeaderPictures'}/${email}-${imageType}Pic-${Date.now()}.jpg`;
+      const newImageUrl = await uploadToS3(image, imageKey, 'image/jpeg', bucketName);
+  
+      const updateProfileParams = {
+        TableName: 'Profiles',
+        Key: { email },
+        UpdateExpression: 'SET #imagePic = :url',
+        ExpressionAttributeNames: {
+          '#imagePic': `${imageType}Pic`
+        },
+        ExpressionAttributeValues: {
+          ':url': newImageUrl
+        },
+        ReturnValues: 'ALL_NEW'
+      };
+  
+      await docClient.send(new UpdateCommand(updateProfileParams));
+  
+      return createResponse(200, 'Profile image updated successfully.', { [imageType + 'Pic']: newImageUrl });
+    } catch (error) {
+      console.error('Error updating profile image:', error);
+      console.error('Stack trace:', error.stack);
+      return createResponse(500, 'Failed to update profile image.', { 
+        error: error.message, 
+        stack: error.stack,
+        details: error.toString() 
+      });
+    }
+  };
+
 const addFollow = async (followerId, followeeId) => {
   if (followerId === followeeId) {
   //  console.log('User attempted to follow themselves');
@@ -328,6 +367,10 @@ export const handler = async (event) => {
                     console.error(`Error getting user details: ${error}`);
                     return createResponse(500, 'Failed to get user details.');
               }
+
+              case 'updateProfileImage':
+                return await updateProfileImage(requestBody);
+              
               case 'submitFeedback':
                   const { email, message } = requestBody;
                   if (!email || !message) {
@@ -379,88 +422,6 @@ export const handler = async (event) => {
                 } catch (error) {
                   console.error('Error updating bio:', error);
                   return createResponse(500, 'Failed to update bio.');
-                }
-              }
-
-              case 'updateProfileImage': {
-                const { email, imageType, image } = requestBody;
-                if (!email || !imageType || !image) {
-                  console.error('Missing required fields for updateProfileImage:', { email, imageType, imageProvided: !!image });
-                  return createResponse(400, 'Email, imageType, and image are required for updating profile image.');
-                }
-                try {
-                //  console.log(`Updating ${imageType} image for ${email}`);
-                  const bucketName = 'jestr-bucket';
-                  let newImageUrl;
-              
-                  if (imageType === 'profile') {
-                    const profilePicKey = `ProfilePictures/${email}-profilePic-${Date.now()}.jpg`;
-                    newImageUrl = await uploadToS3(image, profilePicKey, 'image/jpeg', bucketName);
-                  } else if (imageType === 'header') {
-                    const headerPicKey = `HeaderPictures/${email}-headerPic-${Date.now()}.jpg`;
-                    newImageUrl = await uploadToS3(image, headerPicKey, 'image/jpeg', bucketName);
-                  } else {
-                    throw new Error('Invalid image type');
-                  }
-                  
-                //  console.log('New image URL:', newImageUrl);
-              
-                  const updateProfileParams = {
-                    TableName: 'Profiles',
-                    Key: { email },
-                    UpdateExpression: 'SET #imagePic = :url',
-                    ExpressionAttributeNames: {
-                      '#imagePic': `${imageType}Pic`
-                    },
-                    ExpressionAttributeValues: {
-                      ':url': newImageUrl
-                    },
-                    ReturnValues: 'ALL_NEW'
-                  };
-              
-                //  console.log('Update profile params:', JSON.stringify(updateProfileParams));
-                  const updateProfileResult = await docClient.send(new UpdateCommand(updateProfileParams));
-                //  console.log('Update profile result:', JSON.stringify(updateProfileResult));
-              
-                  if (imageType === 'profile') {
-                    const queryMemesParams = {
-                      TableName: 'Memes',
-                      IndexName: 'Email-UploadTimestamp-index', 
-                      KeyConditionExpression: 'Email = :email',
-                      ExpressionAttributeValues: {
-                        ':email': email
-                      }
-                    };
-                  
-                    const memesResult = await docClient.send(new QueryCommand(queryMemesParams));
-                  //  console.log('Memes query result:', JSON.stringify(memesResult));
-              
-                    for (const meme of memesResult.Items) {
-                      const updateMemeParams = {
-                        TableName: 'Memes',
-                        Key: { MemeID: meme.MemeID },
-                        UpdateExpression: 'SET ProfilePicUrl = :newUrl',
-                        ExpressionAttributeValues: {
-                          ':newUrl': newImageUrl
-                        }
-                      };
-                      await docClient.send(new UpdateCommand(updateMemeParams));
-                    }
-                  }
-              
-                  const getParams = { TableName: 'Profiles', Key: { email } };
-                  const { Item } = await docClient.send(new GetCommand(getParams));
-                //  console.log('Updated user profile:', JSON.stringify(Item));
-              
-                  return createResponse(200, 'Profile image updated successfully.', { [imageType + 'Pic']: newImageUrl });
-                } catch (error) {
-                  console.error('Error updating profile image:', error);
-                  console.error('Stack trace:', error.stack);
-                  return createResponse(500, 'Failed to update profile image.', { 
-                    error: error.message, 
-                    stack: error.stack,
-                    details: error.toString() 
-                  });
                 }
               }
 

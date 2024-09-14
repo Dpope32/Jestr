@@ -1,14 +1,7 @@
 import {StyleSheet, Dimensions, Platform} from 'react-native';
-import {
-  COLORS,
-  SPACING,
-  FONT_SIZES,
-  wp,
-  elevationShadowStyle,
-  FONTS,
-} from '../../../theme/theme';
+import {COLORS,FONT_SIZES,} from '../../../theme/theme';
 
-const {width, height} = Dimensions.get('window');
+const {width,} = Dimensions.get('window');
 const itemSize = width / 3 - 4;
 
 export default StyleSheet.create({
@@ -23,7 +16,7 @@ export default StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     marginLeft: 12,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   statCount: {
     color: '#1bd40b',
@@ -37,6 +30,7 @@ export default StyleSheet.create({
   },
   headerContainer: {
     height: 200,
+    marginTop: 50
   },
   headerImage: {
     width: '100%',
@@ -50,7 +44,7 @@ export default StyleSheet.create({
     position: 'absolute',
     left: '50%',
     bottom: -60,
-    transform: [{translateX: -70}],
+    transform: [{translateX: -75}],
     borderWidth: 4,
     borderColor: '#1bd40b',
     ...Platform.select({
@@ -240,23 +234,34 @@ export default StyleSheet.create({
     fontWeight: 'bold',
   },
   fullScreenContainer: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   fullScreenImage: {
-    width: '90%',
-    height: '70%',
+    width: '100%',
+    height: '100%',
     resizeMode: 'contain',
+    
   },
   closeButton: {
     position: 'absolute',
-    top: 40,
+    top: 140,
     right: 20,
     padding: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 20,
+    zIndex: 2,
+  },
+  editButton: {
+    position: 'absolute',
+    bottom: 40,
+    right: 20,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    zIndex: 2,
   },
   modalContainer: {
     flex: 1,
@@ -294,21 +299,15 @@ export default StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
+    resizeMode: 'cover',
   },
   fullScreenHeaderImage: {
     width: '100%',
-    height: '50%',
+    height: '100%',
+    resizeMode: 'contain', // Keep this consistent to avoid conflicts
   },
   editButtonOverlay: {
     zIndex: 2,
-  },
-  editButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    borderRadius: 25,
-    padding: 10,
   },
   loadingText: {
     color: COLORS.primary,

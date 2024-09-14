@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import InputField from '../shared/Input/InutField';
+import InputField from '../../../components/Input/InputField';
 import styles from './Settings.styles';
-import { submitFeedback, getFeedback } from '../../services/userService';
-import { useUserStore } from '../../stores/userStore';
+import { submitFeedback, getFeedback } from '../../../services/userService';
+import { useUserStore } from '../../../stores/userStore';
 import Toast from 'react-native-toast-message';
 
 

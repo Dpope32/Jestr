@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import InputField from '../shared/Input/InutField';
-import { submitFeedback } from '../../services/userService';
+import InputField from '../../../components/Input/InputField';
+import { submitFeedback } from '../../../services/userService';
 import Toast from 'react-native-toast-message';
-import { useUserStore } from '../../stores/userStore';
-import { faqs } from '../../constants/uiConstants';
-import { COLORS } from '../../theme/theme';
+import { useUserStore } from '../../../stores/userStore';
+import { faqs } from '../../../constants/uiConstants';
+import { COLORS } from '../../../theme/theme';
 
 const SupportHelp = () => {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);

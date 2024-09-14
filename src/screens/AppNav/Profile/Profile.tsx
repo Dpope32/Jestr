@@ -1,54 +1,23 @@
 import React, {useCallback, useMemo} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  Modal,
-  ActivityIndicator,
-  ScrollView,
-  Animated,
-  StyleSheet,
-} from 'react-native';
+import {View,Text,Image,TouchableOpacity,Modal,ActivityIndicator,ScrollView,Animated,StyleSheet,TouchableWithoutFeedback} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faBox,
-  faHistory,
-  faHeart,
-  faUser,
-  faEdit,
-  faTimes,
-  faSadTear,
-  faShare,
-} from '@fortawesome/free-solid-svg-icons';
+import {faBox,faHistory,faHeart,faUser,faEdit,faTimes,faSadTear,faShare,} from '@fortawesome/free-solid-svg-icons';
 import {BlurView} from 'expo-blur';
 import styles from './ProfileStyles';
 import MemeGrid from './MemeGrid';
 import EditableBio from './EditableBio';
 import {useTheme} from '../../../theme/ThemeContext';
 import {COLORS} from '../../../theme/theme';
-// import BottomPanel from '../../../components/Panels/BottomPanel';
 import FollowModal from '../../../components/Modals/FollowModal';
 import MediaPlayer from '../../../components/MediaPlayer/MediaPlayer';
 import EditProfileModal from '../../../components/Modals/EditProfileModal';
 import {useProfileLogic, TabName} from './useProfileLogic';
 import {UserState, useUserStore} from '../../../stores/userStore';
 import {Meme} from '../../../types/types';
-// import {StackNavigationProp} from '@react-navigation/stack';
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
-import {useNavigation, useRoute} from '@react-navigation/native';
-
+import {useNavigation} from '@react-navigation/native';
 import {AppNavProp} from '../../../navigation/NavTypes/RootNavTypes';
-
-// type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'Profile'>;
-// type ProfileScreenNavigationProp = StackNavigationProp<
-//   RootStackParamList,
-//   'Profile'
-// >;
-// type ProfileProps = {
-//   route: ProfileScreenRouteProp;
-//   navigation: ProfileScreenNavigationProp;
-// };
+import LoadingOverlay from './loadingOverlay';
 
 const Profile = React.memo(() => {
   const {isDarkMode} = useTheme();
@@ -99,6 +68,7 @@ const Profile = React.memo(() => {
     outputRange: [200, 0],
     extrapolate: 'clamp',
   });
+  
 
   const renderTabButton = useCallback(
     (tabName: TabName, icon: IconDefinition, label: string) => (
@@ -207,21 +177,14 @@ const Profile = React.memo(() => {
   if (!user) return <ActivityIndicator />;
 
   return (
-    <ScrollView
-      style={[
-        styles.container,
-        {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
-      ]}>
-      {isUploading && <ActivityIndicator size="large" color="#00ff00" />}
+    <View style={[styles.container, {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'}]}>
+      <LoadingOverlay isVisible={isUploading} />
       <ScrollView>
         <Animated.View style={[styles.headerContainer, {height: headerHeight}]}>
           <TouchableOpacity onPress={() => handleImagePress('header')}>
             <Image
               source={{
-                uri:
-                  typeof user.headerPic === 'string'
-                    ? user.headerPic
-                    : undefined,
+                uri: typeof user.headerPic === 'string' ? user.headerPic : undefined,
               }}
               style={styles.headerImage}
             />
@@ -229,10 +192,7 @@ const Profile = React.memo(() => {
           <TouchableOpacity onPress={() => handleImagePress('profile')}>
             <Image
               source={{
-                uri:
-                  typeof user.profilePic === 'string'
-                    ? user.profilePic
-                    : undefined,
+                uri: typeof user.profilePic === 'string' ? user.profilePic : undefined,
               }}
               style={styles.profileImage}
             />
@@ -301,18 +261,6 @@ const Profile = React.memo(() => {
         </View>
         <View style={styles.memeGridContainer}>{renderTabContent}</View>
       </ScrollView>
-
-      {/* <BottomPanel
-        onHomeClick={() => navigation.navigate('Feed' as never)}
-        handleLike={() => {}}
-        handleDislike={() => {}}
-        likedIndices={new Set()}
-        dislikedIndices={new Set()}
-        likeDislikeCounts={{}}
-        currentMediaIndex={0}
-        toggleCommentFeed={() => {}}
-        user={user}
-      /> */}
 
       <FollowModal
         visible={isFollowModalVisible}
@@ -452,7 +400,7 @@ const Profile = React.memo(() => {
           }}
         />
       )}
-      {fullScreenImage && (
+     {fullScreenImage && (
         <Modal
           visible={!!fullScreenImage}
           transparent={true}
@@ -460,45 +408,55 @@ const Profile = React.memo(() => {
           onRequestClose={() => {
             setFullScreenImage(null);
             setIsBlurVisible(false);
-          }}>
+          }}
+        >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setFullScreenImage(null);
+            setIsBlurVisible(false);
+          }}
+        >
           <BlurView
-            intensity={100}
+            intensity={99}
             tint="dark"
-            style={[StyleSheet.absoluteFill, {width: '100%', height: '100%'}]}>
+            style={[StyleSheet.absoluteFillObject, { marginTop: -100 }]}
+          >
             <View style={styles.fullScreenContainer}>
               <Image
-                source={{uri: fullScreenImage}}
+                source={{ uri: fullScreenImage }}
                 style={[
-                  fullScreenImage === (user?.profilePic || '')
+                  styles.fullScreenImage,
+                  fullScreenImage === user?.profilePic
                     ? styles.fullScreenProfileImage
                     : styles.fullScreenHeaderImage,
-                  {zIndex: 1},
                 ]}
               />
-              <TouchableOpacity
-                style={[styles.editButton, styles.editButtonOverlay]}
-                onPress={() =>
-                  handleEditImagePress(
-                    fullScreenImage === (user?.profilePic || '')
-                      ? 'profile'
-                      : 'header',
-                  )
-                }>
-                <FontAwesomeIcon icon={faEdit} size={24} color="#000" />
-              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => {
                   setFullScreenImage(null);
                   setIsBlurVisible(false);
-                }}>
+                }}
+              >
                 <FontAwesomeIcon icon={faTimes} size={24} color="#FFF" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() =>
+                  handleEditImagePress(
+                    fullScreenImage === user?.profilePic ? 'profile' : 'header'
+                  )
+                }
+              >
+                <FontAwesomeIcon icon={faEdit} size={24} color="#FFF" />
               </TouchableOpacity>
             </View>
           </BlurView>
-        </Modal>
-      )}
-    </ScrollView>
+        </TouchableWithoutFeedback>
+      </Modal>
+    )}
+
+    </View>
   );
 });
 

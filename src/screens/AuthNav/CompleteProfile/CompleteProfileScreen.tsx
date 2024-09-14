@@ -108,18 +108,16 @@ const CompleteProfileScreen: React.FC = () => {
   const handleCompleteProfileButton = async () => {
     setIsLoading(true);
     try {
-      const validProfilePic =
-        profilePic && typeof profilePic !== 'string' ? profilePic : null;
-      const validHeaderPic =
-        headerPic && typeof headerPic !== 'string' ? headerPic : null;
-
+      const validProfilePic = profilePic && typeof profilePic !== 'string' ? profilePic : null;
+      const validHeaderPic = headerPic && typeof headerPic !== 'string' ? headerPic : null;
+  
       setDarkMode?.(darkMode);
       updatePrivacySafety({
         likesPublic: privacySafety.likesPublic,
         allowDMsFromEveryone: privacySafety.allowDMsFromEveryone,
       });
-      setNotificationPreferences({pushEnabled});
-
+      setNotificationPreferences({ pushEnabled });
+  
       await handleCompleteProfile(
         email,
         username,
@@ -127,22 +125,20 @@ const CompleteProfileScreen: React.FC = () => {
         validProfilePic,
         validHeaderPic,
         bio,
-        () => {},
-        // navigation,
-        {
-          darkMode,
-          likesPublic: privacySafety.likesPublic,
-          notificationsEnabled: pushEnabled,
-        },
+        () => {}, // This is the setSuccessModalVisible function
+        //navigation, // Make sure you have the navigation prop available
+        { 
+          darkMode, 
+          likesPublic: privacySafety.likesPublic, 
+          notificationsEnabled: pushEnabled 
+        }
       );
-
+  
       setError(null);
     } catch (error: unknown) {
       console.error('Error completing profile:', error);
       if (error instanceof Error) {
-        setError(
-          error.message || 'Failed to complete profile. Please try again.',
-        );
+        setError(error.message || 'Failed to complete profile. Please try again.');
       } else {
         setError('An unknown error occurred. Please try again.');
       }
@@ -150,6 +146,7 @@ const CompleteProfileScreen: React.FC = () => {
       setIsLoading(false);
     }
   };
+
 
   if (isLoading) {
     return (
@@ -268,16 +265,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1C1C1C',
-    // padding: 20,
+    padding: 20,
   },
   preferencesContainer: {
-    width: '100%',
-    justifyContent: 'center',
-    flex: 1,
     marginTop: 10,
     backgroundColor: '#2A2A2A',
     borderRadius: 10,
-    paddingHorizontal: 20,
+    padding: 15,
   },
   preferenceItem: {
     flexDirection: 'row',
@@ -307,23 +301,16 @@ const styles = StyleSheet.create({
   },
   whiteText: {
     color: '#FFF',
-    marginBottom: 10,
+    marginBottom: 0,
   },
   inputsContainer: {
-    flex: 1,
     width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 30,
-    marginBottom: 20,
-
-    // borderWidth: 1,
-    // borderColor: '#ddd',
+    marginTop: 4,
   },
   label: {
     color: '#FFFFFF',
     fontSize: 16,
-    marginBottom: 15,
+    marginBottom: 5,
   },
   errorText: {
     color: 'red',
