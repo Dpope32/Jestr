@@ -20,7 +20,10 @@ import {removeToken, storeUserIdentifier} from '../stores/secureStore';
 import * as SecureStore from 'expo-secure-store';
 import {fetchUserDetails} from './userService';
 //import * as Google from 'expo-auth-session/providers/google';
-import {AuthNavProp} from '../navigation/NavTypes/AuthStackTypes';
+import {
+  AuthNavProp,
+  ChangePasswordNavRouteProp,
+} from '../navigation/NavTypes/AuthStackTypes';
 
 export const checkAuthStatus = async () => {
   try {
@@ -120,7 +123,7 @@ export const handleLogin = async (
   navigation: AuthNavProp,
 ) => {
   console.log('Logging in with username:', username);
- // console.log('Logging in with password:', password);
+  // console.log('Logging in with password:', password);
   try {
     await signOut();
     await SecureStore.deleteItemAsync('accessToken');
@@ -389,7 +392,6 @@ export const handleChangePassword = async (
   username: string,
   oldPassword: string,
   newPassword: string,
-  navigation: StackNavigationProp<RootStackParamList>,
 ) => {
   try {
     const {isSignedIn, nextStep} = await signIn({
@@ -402,7 +404,7 @@ export const handleChangePassword = async (
         const authUser = await getCurrentUser();
         const user = convertAuthUserToUser(authUser);
         useUserStore.getState().setUserDetails(user);
-        navigation.navigate('Feed', {userEmail: user.email});
+        // navigation.navigate('Feed', {userEmail: user.email});
       } else {
         throw new Error('Failed to change password');
       }

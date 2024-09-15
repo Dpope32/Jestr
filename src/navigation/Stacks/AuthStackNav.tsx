@@ -1,6 +1,7 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
+import {useUserStore} from '../../stores/userStore';
 import LandingPage from '../../screens/AuthNav/LandingPage/LandingPage';
 import SignUpScreen from '../../screens/AuthNav/SignUp/SignUpScreen';
 import LoginScreen from '../../screens/AuthNav/Login/LoginScreen';
@@ -10,12 +11,13 @@ import ConfirmSignUpScreen from '../../screens/AuthNav/ConfirmSignUp/ConfirmSign
 import ChangePassword from '../../screens/AuthNav/ChangePassword';
 import CompleteProfileScreen from '../../screens/AuthNav/CompleteProfile/CompleteProfileScreen';
 import OnboardingScreen from '../../screens/AuthNav/Onboarding/OnboardingScreen';
-import {useUserStore} from '../../stores/userStore';
 
 const Stack = createNativeStackNavigator();
 
 const AuthStackNav: React.FC = () => {
   const isFirstLaunch = useUserStore(state => state.isFirstLaunch);
+  console.log('isFirstLaunch in AuthStackNav:', isFirstLaunch);
+
   const screenOptions = {
     headerShown: false,
   };

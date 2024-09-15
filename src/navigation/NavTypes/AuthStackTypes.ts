@@ -21,3 +21,11 @@ export type AuthNavProp = NativeStackNavigationProp<AuthNavParamList>;
 export type AuthNavRouteProp = RouteProp<AuthNavParamList>;
 export type FooterNavRouteProp = RouteProp<AuthNavParamList, 'InfoFooterAuth'>;
 export type ConfirmNavRouteProp = RouteProp<AuthNavParamList, 'ConfirmSignUp'>;
+export type ChangePasswordNavRouteProp = RouteProp<
+  AuthNavParamList,
+  'ChangePassword'
+>;
+export type CompleteProfileNavRouteProp = RouteProp<
+  AuthNavParamList,
+  'CompleteProfile'
+>;

@@ -8,6 +8,9 @@ import {
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
 import {confirmSignUp} from 'aws-amplify/auth';
+import {signIn, fetchAuthSession, SignInInput} from 'aws-amplify/auth';
+import * as SecureStore from 'expo-secure-store';
+
 import {
   COLORS,
   SPACING,
@@ -22,8 +25,6 @@ import {
   ConfirmNavRouteProp,
 } from '../../../navigation/NavTypes/AuthStackTypes';
 import {useUserStore} from '../../../stores/userStore';
-import {signIn, fetchAuthSession, SignInInput} from 'aws-amplify/auth';
-import * as SecureStore from 'expo-secure-store';
 
 const CELL_COUNT = 6;
 
@@ -32,6 +33,7 @@ const ConfirmSignUpScreen = () => {
   const route = useRoute<ConfirmNavRouteProp>();
 
   const email = route.params?.email;
+  console.log('Email in ConfirmSignUpScreen:', email);
 
   const [value, setValue] = useState('');
   const ref = useBlurOnFulfill({value, cellCount: CELL_COUNT});
@@ -43,7 +45,6 @@ const ConfirmSignUpScreen = () => {
   const handleConfirmSignUp = async () => {
     try {
       await confirmSignUp({username: email, confirmationCode: value});
-
       const password = useUserStore.getState().tempPassword;
 
       if (!password) {

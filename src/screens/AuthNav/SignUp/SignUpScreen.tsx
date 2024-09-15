@@ -4,7 +4,6 @@ import {ActivityIndicator} from 'react-native';
 import {useNavigation} from '@react-navigation/core';
 import {BlurView} from 'expo-blur';
 import {LinearGradient} from 'expo-linear-gradient';
-// import {signUp, getCurrentUser, signIn, signOut} from '@aws-amplify/auth';
 
 import {styles} from './componentData';
 import {colorsGradient} from '../LandingPage/componentData';
@@ -23,7 +22,6 @@ const SignUpScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // TO convert to tanstack query
   const handleSignupAction = async () => {
     setIsLoading(true);
     try {

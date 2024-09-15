@@ -1,5 +1,4 @@
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-// import {User} from '../../types/types';
 
 export type AppNavParamList = {
   Home: undefined;

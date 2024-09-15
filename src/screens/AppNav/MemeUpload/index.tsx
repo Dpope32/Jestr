@@ -9,30 +9,35 @@ import {
   TouchableOpacity,
   Easing,
 } from 'react-native';
-import MemeUpload from '../../../components/Meme/MemeUpload';
-import TopPanel from '../../../components/Panels/TopPanel';
-import ProfilePanel from '../../../components/Panels/ProfilePanel';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faArrowLeft} from '@fortawesome/free-solid-svg-icons';
 import {LinearGradient} from 'expo-linear-gradient';
 import LottieView from 'lottie-react-native';
+import {useNavigation} from '@react-navigation/native';
+
+import MemeUpload from '../../../components/Meme/MemeUpload';
 import {FONTS, COLORS} from '../../../theme/theme';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {useTheme} from '../../../theme/ThemeContext';
 import {useUserStore} from '../../../stores/userStore';
+import {BottomNavProp} from '../../../navigation/NavTypes/BottomTabsTypes';
+// import TopPanel from '../../../components/Panels/TopPanel';
+// import ProfilePanel from '../../../components/Panels/ProfilePanel';
 
 type MemeUploadScreenProps = {
   navigation: any;
   route: any;
 };
 
-const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({navigation}) => {
+const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
+  const navigation = useNavigation<BottomNavProp>();
   const {isDarkMode} = useTheme();
+
+  const user = useUserStore(state => state);
+
   const [imageUploaded, setImageUploaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [imageSelected, setImageSelected] = useState(false);
-  const [profilePanelVisible, setProfilePanelVisible] = useState(false);
-
-  const user = useUserStore(state => state);
+  // const [profilePanelVisible, setProfilePanelVisible] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -59,13 +64,13 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({navigation}) => {
     setImageSelected(selected);
   };
 
-  const handleHomeClick = () => {
-    navigation.navigate('Home');
-  };
+  // const handleHomeClick = () => {
+  //   navigation.navigate('Home');
+  // };
 
-  const toggleProfilePanel = () => {
-    setProfilePanelVisible(!profilePanelVisible);
-  };
+  // const toggleProfilePanel = () => {
+  //   setProfilePanelVisible(!profilePanelVisible);
+  // };
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -133,7 +138,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({navigation}) => {
   return (
     <View style={[styles.background, isDarkMode && styles.darkBackground]}>
       <StatusBar barStyle="light-content" />
-      <TopPanel
+      {/* <TopPanel
         onProfileClick={toggleProfilePanel}
         profilePicUrl={user.profilePic}
         username={user.username}
@@ -142,9 +147,9 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({navigation}) => {
         isAdmin={false}
         onAdminClick={console.log}
         isUploading={isUploading}
-      />
-      {profilePanelVisible && <View style={styles.overlay} />}
-      {profilePanelVisible && user && (
+      /> */}
+      {/* {profilePanelVisible && <View style={styles.overlay} />} */}
+      {/* {profilePanelVisible && user && (
         <ProfilePanel
           isVisible={profilePanelVisible}
           onClose={() => setProfilePanelVisible(false)}
@@ -156,7 +161,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({navigation}) => {
           user={user}
           navigation={navigation}
         />
-      )}
+      )} */}
       <Animated.View style={[styles.card, {opacity: cardFadeAnim}]}>
         <View style={styles.titleContainer}>
           <TouchableOpacity
@@ -173,7 +178,6 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = ({navigation}) => {
         <MemeUpload
           userEmail={user.email}
           username={user.username}
-          navigation={navigation}
           onUploadSuccess={handleUploadSuccess}
           onImageSelect={handleImageSelect}
           isDarkMode={isDarkMode}

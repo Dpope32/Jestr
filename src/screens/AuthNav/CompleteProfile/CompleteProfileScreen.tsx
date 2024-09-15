@@ -3,7 +3,7 @@ import {View, Text} from 'react-native';
 import {TouchableOpacity, Keyboard} from 'react-native';
 import {TouchableWithoutFeedback} from 'react-native';
 import {StyleSheet, Alert, Switch} from 'react-native';
-import {useNavigation, useRoute} from '@react-navigation/core';
+import {useRoute} from '@react-navigation/core';
 import {LinearGradient} from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import {BlurView} from 'expo-blur';
@@ -11,10 +11,8 @@ import LottieView from 'lottie-react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faMoon, faHeart, faBell} from '@fortawesome/free-solid-svg-icons';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteProp} from '@react-navigation/core';
 
-import {RootStackParamList, ProfileImage} from '../../../types/types';
+import {ProfileImage} from '../../../types/types';
 import HeaderPicUpload from '../../../components/Upload/HeaderPicUpload';
 import ProfilePicUpload from '../../../components/Upload/ProfilePicUpload';
 import InputField from '../../../components/Input/InputField';
@@ -23,18 +21,20 @@ import {useUserStore} from '../../../stores/userStore';
 import {useTheme} from '../../../theme/ThemeContext';
 import {useNotificationStore} from '../../../stores/notificationStore';
 import {useSettingsStore} from '../../../stores/settingsStore';
-
-// const {width} = Dimensions.get('window');
+import {CompleteProfileNavRouteProp} from '../../../navigation/NavTypes/AuthStackTypes';
 
 const CompleteProfileScreen: React.FC = () => {
-  // const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const route =
-    useRoute<RouteProp<RootStackParamList, 'CompleteProfileScreen'>>();
+  const route = useRoute<CompleteProfileNavRouteProp>();
+
   const {headerPic, profilePic, bio, setBio, setDarkMode} = useUserStore();
   const {privacySafety, updatePrivacySafety} = useSettingsStore();
   const {pushEnabled, setNotificationPreferences} = useNotificationStore();
-  const {email} = route.params;
+
+  const email = route.params?.email;
+  console.log('email in CompleteProfileScreen:', email);
+
   const {isDarkMode, toggleDarkMode} = useTheme();
+
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -108,16 +108,18 @@ const CompleteProfileScreen: React.FC = () => {
   const handleCompleteProfileButton = async () => {
     setIsLoading(true);
     try {
-      const validProfilePic = profilePic && typeof profilePic !== 'string' ? profilePic : null;
-      const validHeaderPic = headerPic && typeof headerPic !== 'string' ? headerPic : null;
-  
+      const validProfilePic =
+        profilePic && typeof profilePic !== 'string' ? profilePic : null;
+      const validHeaderPic =
+        headerPic && typeof headerPic !== 'string' ? headerPic : null;
+
       setDarkMode?.(darkMode);
       updatePrivacySafety({
         likesPublic: privacySafety.likesPublic,
         allowDMsFromEveryone: privacySafety.allowDMsFromEveryone,
       });
-      setNotificationPreferences({ pushEnabled });
-  
+      setNotificationPreferences({pushEnabled});
+
       await handleCompleteProfile(
         email,
         username,
@@ -126,19 +128,20 @@ const CompleteProfileScreen: React.FC = () => {
         validHeaderPic,
         bio,
         () => {}, // This is the setSuccessModalVisible function
-        //navigation, // Make sure you have the navigation prop available
-        { 
-          darkMode, 
-          likesPublic: privacySafety.likesPublic, 
-          notificationsEnabled: pushEnabled 
-        }
+        {
+          darkMode,
+          likesPublic: privacySafety.likesPublic,
+          notificationsEnabled: pushEnabled,
+        },
       );
-  
+
       setError(null);
     } catch (error: unknown) {
       console.error('Error completing profile:', error);
       if (error instanceof Error) {
-        setError(error.message || 'Failed to complete profile. Please try again.');
+        setError(
+          error.message || 'Failed to complete profile. Please try again.',
+        );
       } else {
         setError('An unknown error occurred. Please try again.');
       }
@@ -146,7 +149,6 @@ const CompleteProfileScreen: React.FC = () => {
       setIsLoading(false);
     }
   };
-
 
   if (isLoading) {
     return (
