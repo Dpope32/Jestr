@@ -1,24 +1,10 @@
-import React, {useState, useCallback, useRef, useEffect} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  Animated,
-  StyleSheet,
-} from 'react-native';
+import React, {useState, useCallback, useRef} from 'react';
+import {View,Text,Image,TextInput,TouchableOpacity,KeyboardAvoidingView, Platform,Animated, StyleSheet} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faArrowUp,
-  faArrowLeft,
-  faCheck,
-} from '@fortawesome/free-solid-svg-icons';
+import {faArrowUp,faArrowLeft,faCheck} from '@fortawesome/free-solid-svg-icons';
 import {useRoute, useNavigation} from '@react-navigation/native';
 import {FlashList, ListRenderItem} from '@shopify/flash-list';
-import {format, formatDistanceToNow, isToday} from 'date-fns';
+import {formatTimestamp} from '../../../utils/dateUtils';
 import {useFocusEffect} from '@react-navigation/native';
 import {BlurView} from 'expo-blur';
 import LottieView from 'lottie-react-native';
@@ -39,18 +25,12 @@ export const Conversations = () => {
   const route = useRoute<InboxNavRouteProp>();
   const partnerUser = route.params?.partnerUser as User;
   const conversation = route.params?.conversation as Conversation;
-
   const queryClient = useQueryClient();
   const {isDarkMode} = useTheme();
-
   const currentUser = useUserStore(state => state);
-  const setTabBarVisibility = useTabBarStore(
-    state => state.setTabBarVisibility,
-  );
+  const setTabBarVisibility = useTabBarStore(state => state.setTabBarVisibility);
   const inboxStore = useInboxStore();
-
   const inputRef = useRef<TextInput>(null);
-
   const [sendButtonScale] = useState(new Animated.Value(1));
   const [newMessage, setNewMessage] = useState('');
   const [sendingAnimation] = useState(new Animated.Value(0));
@@ -59,12 +39,7 @@ export const Conversations = () => {
 
   const sendIcon = isSending ? faCheck : faArrowUp;
 
-  const {
-    data: messages = [],
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const {data: messages = [], isLoading, error, refetch} = useQuery({
     queryKey: ['messages', conversation.id],
     queryFn: async () => {
       const storedMessages = inboxStore.getConversationMessages(
@@ -85,15 +60,15 @@ export const Conversations = () => {
     enabled: !!currentUser.email && !!conversation.id,
   });
 
-  useEffect(() => {
-    console.log('Conversations component mounted');
-    console.log('Current user:', currentUser);
-    console.log('Partner user:', partnerUser);
-    console.log('Conversation:', conversation);
-    return () => {
-      console.log('Conversations component unmounted');
-    };
-  }, []);
+  //useEffect(() => {
+    //console.log('Conversations component mounted');
+    //console.log('Current user:', currentUser);
+    //console.log('Partner user:', partnerUser);
+    //console.log('Conversation:', conversation);
+   // return () => {
+      //console.log('Conversations component unmounted');
+  //  };
+  //}, []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -217,15 +192,6 @@ export const Conversations = () => {
       useNativeDriver: true,
     }).start();
   }, [sendButtonScale]);
-
-  const formatTimestamp = useCallback((timestamp: string) => {
-    const date = new Date(timestamp);
-    if (isToday(date)) {
-      return format(date, 'h:mm a');
-    } else {
-      return formatDistanceToNow(date, {addSuffix: true});
-    }
-  }, []);
 
   const renderMessage: ListRenderItem<Message> = useCallback(
     ({item}) => {

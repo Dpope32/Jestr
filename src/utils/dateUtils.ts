@@ -1,3 +1,6 @@
+import {useCallback} from 'react';
+import {format, formatDistanceToNow, isToday} from 'date-fns';
+
 export const getDaysSinceCreation = (creationDate: string) => {
     const startDate = new Date(creationDate);
     const currentDate = new Date();
@@ -6,3 +9,11 @@ export const getDaysSinceCreation = (creationDate: string) => {
     return diffDays;
   };
   
+ export const formatTimestamp = useCallback((timestamp: string) => {
+    const date = new Date(timestamp);
+    if (isToday(date)) {
+      return format(date, 'h:mm a');
+    } else {
+      return formatDistanceToNow(date, {addSuffix: true});
+    }
+  }, []);

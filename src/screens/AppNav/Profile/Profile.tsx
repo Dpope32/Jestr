@@ -1,27 +1,7 @@
 import React, {useCallback, useMemo} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  Modal,
-  ActivityIndicator,
-  ScrollView,
-  Animated,
-  StyleSheet,
-  TouchableWithoutFeedback,
-} from 'react-native';
+import { View,Text,Image,TouchableOpacity, Modal,ActivityIndicator,ScrollView,Animated, StyleSheet, TouchableWithoutFeedback,} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {
-  faBox,
-  faHistory,
-  faHeart,
-  faUser,
-  faEdit,
-  faTimes,
-  faSadTear,
-  faShare,
-} from '@fortawesome/free-solid-svg-icons';
+import {faBox,faHistory,faHeart,faUser,faEdit,faTimes, faSadTear,faShare,} from '@fortawesome/free-solid-svg-icons';
 import {BlurView} from 'expo-blur';
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
 import {useNavigation} from '@react-navigation/native';
@@ -44,80 +24,27 @@ const Profile = React.memo(() => {
   const {isDarkMode} = useTheme();
   const navigation = useNavigation<AppNavProp>();
 
-  const {
-    user,
-    followersCount,
-    followingCount,
-    daysSinceCreation,
-    isLoading,
-    selectedTab,
-    thumbnails,
-    tabMemes,
-    isFollowModalVisible,
-    followModalTab,
-    selectedMeme,
-    currentMemeIndex,
-    isCommentFeedVisible,
-    isEditProfileModalVisible,
-    fullScreenImage,
-    isBlurVisible,
-    isUploading,
-    handleEditImagePress,
-    handleBioUpdate,
-    handleHeightChange,
-    loadMoreMemes,
-    handleMemePress,
-    handleDeleteMeme,
-    handleShareProfile,
-    handleRemoveDownloadedMeme,
-    handleTabSelect,
-    openFollowModal,
-    handleImagePress,
-    convertUserStateToUser,
-    setIsFollowModalVisible,
-    setIsEditProfileModalVisible,
-    setFullScreenImage,
-    setIsBlurVisible,
-    setSelectedMeme,
-    setIsCommentFeedVisible,
-    setCurrentMemeIndex,
+  const { user,followersCount, followingCount, daysSinceCreation, isLoading, selectedTab, thumbnails,
+    tabMemes, isFollowModalVisible, followModalTab, selectedMeme, currentMemeIndex, isCommentFeedVisible,
+    isEditProfileModalVisible, fullScreenImage, isBlurVisible, isUploading,
+    handleEditImagePress,handleBioUpdate,handleHeightChange,loadMoreMemes,handleMemePress,
+    handleDeleteMeme, handleShareProfile, handleRemoveDownloadedMeme, handleTabSelect, openFollowModal, handleImagePress, convertUserStateToUser, 
+    setIsFollowModalVisible, setIsEditProfileModalVisible, setFullScreenImage, setIsBlurVisible,setSelectedMeme, setIsCommentFeedVisible,setCurrentMemeIndex,
   } = useProfileLogic(navigation);
 
   const scrollY = new Animated.Value(0);
-  const headerHeight = scrollY.interpolate({
-    inputRange: [0, 200],
-    outputRange: [200, 0],
-    extrapolate: 'clamp',
-  });
+  const headerHeight = scrollY.interpolate({inputRange: [0, 200],outputRange: [200, 0], extrapolate: 'clamp',});
 
   const renderTabButton = useCallback(
     (tabName: TabName, icon: IconDefinition, label: string) => (
       <TouchableOpacity
-        style={[
-          styles.tabButton,
-          selectedTab === tabName && styles.activeTabButton,
-        ]}
+        style={[styles.tabButton,selectedTab === tabName && styles.activeTabButton,]}
         onPress={() => handleTabSelect(tabName)}>
         <FontAwesomeIcon
-          icon={icon}
-          color={
-            selectedTab === tabName
-              ? styles.activeTabIcon.color
-              : styles.tabIcon.color
-          }
-          size={24}
-        />
-        <Text
-          style={[
-            styles.tabLabel,
-            selectedTab === tabName && styles.activeTabLabel,
-          ]}>
-          {label}
-        </Text>
+          icon={icon} color={selectedTab === tabName ? styles.activeTabIcon.color : styles.tabIcon.color}size={24}/>
+        <Text style={[styles.tabLabel,selectedTab === tabName && styles.activeTabLabel]}>{label}</Text>
       </TouchableOpacity>
-    ),
-    [selectedTab, handleTabSelect],
-  );
+    ),[selectedTab, handleTabSelect]);
 
   const renderTabContent = useMemo(() => {
     if (isLoading) {
@@ -126,24 +53,19 @@ const Profile = React.memo(() => {
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
-      );
-    }
+      );}
 
     if (tabMemes.length === 0) {
       let message = '';
       switch (selectedTab) {
         case 'posts':
-          message = `${user?.username || 'User'} has not posted any memes`;
-          break;
+          message = `${user?.username || 'User'} has not posted any memes`;  break;
         case 'downloaded':
-          message = `${user?.username || 'User'} has not downloaded any memes`;
-          break;
+          message = `${user?.username || 'User'} has not downloaded any memes`; break;
         case 'history':
-          message = `${user?.username || 'User'} has not viewed any memes`;
-          break;
+          message = `${user?.username || 'User'} has not viewed any memes`; break;
         case 'liked':
-          message = `${user?.username || 'User'} has not liked any memes`;
-          break;
+          message = `${user?.username || 'User'} has not liked any memes`; break;
       }
       return (
         <View style={styles.noMemesContainer}>
@@ -154,15 +76,11 @@ const Profile = React.memo(() => {
     }
 
     const renderMeme = (item: Meme, index: number) => {
-      const source =
-        item.mediaType === 'video' && thumbnails[item.memeID]
-          ? {uri: thumbnails[item.memeID]}
-          : {uri: item.url};
+      const source = item.mediaType === 'video' && thumbnails[item.memeID] ? {uri: thumbnails[item.memeID]} : {uri: item.url};
       return (
         <TouchableOpacity
-          key={item.memeID}
-          style={styles.memeContainer}
-          onPress={() => handleMemePress(item, index)}>
+          key={item.memeID}  style={styles.memeContainer}
+           onPress={() => handleMemePress(item, index)}>
           <Image source={source} style={styles.memeImage} resizeMode="cover" />
         </TouchableOpacity>
       );
@@ -181,51 +99,22 @@ const Profile = React.memo(() => {
         itemSize={styles.memeContainer.width}
       />
     );
-  }, [
-    isLoading,
-    tabMemes,
-    selectedTab,
-    user,
-    thumbnails,
-    handleMemePress,
-    loadMoreMemes,
-    handleHeightChange,
-    handleDeleteMeme,
-    handleRemoveDownloadedMeme,
-  ]);
+  }, [ isLoading,tabMemes,selectedTab,user,thumbnails,handleMemePress,loadMoreMemes,handleHeightChange,handleDeleteMeme,handleRemoveDownloadedMeme]);
 
   if (!user) return <ActivityIndicator />;
 
   return (
-    <View
-      style={[
-        styles.container,
-        {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
-      ]}>
+    <View style={[ styles.container, {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},]}>
       <LoadingOverlay isVisible={isUploading} />
       <ScrollView>
         <Animated.View style={[styles.headerContainer, {height: headerHeight}]}>
           <TouchableOpacity onPress={() => handleImagePress('header')}>
-            <Image
-              source={{
-                uri:
-                  typeof user.headerPic === 'string'
-                    ? user.headerPic
-                    : undefined,
-              }}
-              style={styles.headerImage}
-            />
+            <Image source={{ uri:  typeof user.headerPic === 'string' ? user.headerPic   : undefined, }}
+              style={styles.headerImage}/>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => handleImagePress('profile')}>
             <Image
-              source={{
-                uri:
-                  typeof user.profilePic === 'string'
-                    ? user.profilePic
-                    : undefined,
-              }}
-              style={styles.profileImage}
-            />
+              source={{uri:typeof user.profilePic === 'string'  ? user.profilePic : undefined,}}style={styles.profileImage}/>
           </TouchableOpacity>
         </Animated.View>
         <View style={styles.userInfoContainer}>
@@ -242,12 +131,8 @@ const Profile = React.memo(() => {
           </TouchableOpacity>
           <View style={styles.statsContainer}>
             <View style={styles.nameContainer}>
-              <Text style={styles.displayName}>
-                {user?.displayName || 'Anon'}
-              </Text>
-              <Text style={styles.username}>
-                @{user?.username || 'Username'}
-              </Text>
+              <Text style={styles.displayName}>{user?.displayName || 'Anon'}</Text>
+              <Text style={styles.username}> @{user?.username || 'Username'}</Text>
             </View>
             <View style={styles.numContainer}>
               <TouchableOpacity
@@ -257,30 +142,18 @@ const Profile = React.memo(() => {
                 <Text style={styles.statLabel}>Followers</Text>
               </TouchableOpacity>
               <View style={styles.statItem}>
-                <Text style={styles.jestrForDays}>
-                  {daysSinceCreation} days
-                </Text>
+                <Text style={styles.jestrForDays}>{daysSinceCreation} days</Text>
                 <Text style={styles.statLabel}>Jestr for</Text>
               </View>
-              <TouchableOpacity
-                style={styles.statItem}
-                onPress={() => openFollowModal('followers')}>
+              <TouchableOpacity style={styles.statItem} onPress={() => openFollowModal('followers')}>
                 <Text style={styles.statCount}>{followingCount || 0}</Text>
                 <Text style={styles.statLabel}>Following</Text>
               </TouchableOpacity>
             </View>
           </View>
-          <View
-            style={[
-              styles.bioWrapper,
-              {alignItems: 'center', justifyContent: 'center'},
-            ]}>
-            <EditableBio
-              initialBio={user?.bio || 'No bio available'}
-              userEmail={user?.email || ''}
-              onBioUpdate={handleBioUpdate}
-              editable={false}
-            />
+          <View style= {[styles.bioWrapper,{alignItems: 'center', justifyContent: 'center'}]}>
+            <EditableBio initialBio={user?.bio || 'No bio available'}
+              userEmail={user?.email || ''} onBioUpdate={handleBioUpdate} editable={false} />
           </View>
         </View>
         <View style={styles.tabContainer}>
@@ -305,70 +178,24 @@ const Profile = React.memo(() => {
           onRequestClose={() => setSelectedMeme(null)}>
           <View style={styles.modalContainer}>
             <MediaPlayer
-              memeUser={{
-                email: selectedMeme.email,
-                username: selectedMeme.username,
-                profilePic: selectedMeme.profilePicUrl,
-                displayName: selectedMeme.username,
-              }}
+              memeUser={{email: selectedMeme.email,  username: selectedMeme.username,  profilePic: selectedMeme.profilePicUrl, displayName: selectedMeme.username}}
               mediaType={selectedMeme.mediaType}
               currentMedia={selectedMeme.url}
-              prevMedia={
-                currentMemeIndex > 0 ? tabMemes[currentMemeIndex - 1].url : null
-              }
-              nextMedia={
-                currentMemeIndex < tabMemes.length - 1
-                  ? tabMemes[currentMemeIndex + 1].url
-                  : null
-              }
+              prevMedia={currentMemeIndex > 0 ? tabMemes[currentMemeIndex - 1].url : null}
+              nextMedia={currentMemeIndex < tabMemes.length - 1 ? tabMemes[currentMemeIndex + 1].url : null }
               username={selectedMeme.username}
               caption={selectedMeme.caption}
               uploadTimestamp={selectedMeme.uploadTimestamp}
               handleLike={() => {}}
               handleDownload={() => {}}
-              toggleCommentFeed={() =>
-                setIsCommentFeedVisible(!isCommentFeedVisible)
-              }
-              goToPrevMedia={() => {
-                if (currentMemeIndex > 0) {
-                  setCurrentMemeIndex(currentMemeIndex - 1);
-                  setSelectedMeme(tabMemes[currentMemeIndex - 1]);
-                }
-              }}
-              goToNextMedia={() => {
-                if (currentMemeIndex < tabMemes.length - 1) {
-                  setCurrentMemeIndex(currentMemeIndex + 1);
-                  setSelectedMeme(tabMemes[currentMemeIndex + 1]);
-                }
-              }}
+              toggleCommentFeed={() =>setIsCommentFeedVisible(!isCommentFeedVisible)}
+              goToPrevMedia={() => {if (currentMemeIndex > 0) {setCurrentMemeIndex(currentMemeIndex - 1);setSelectedMeme(tabMemes[currentMemeIndex - 1])}}}
+              goToNextMedia={() => {if (currentMemeIndex < tabMemes.length - 1) {setCurrentMemeIndex(currentMemeIndex + 1);setSelectedMeme(tabMemes[currentMemeIndex + 1]); }}}
               memes={tabMemes}
-              likedIndices={
-                new Set(
-                  tabMemes
-                    .filter(meme => meme.liked)
-                    .map(meme => tabMemes.indexOf(meme)),
-                )
-              }
-              doubleLikedIndices={
-                new Set(
-                  tabMemes
-                    .filter(meme => meme.doubleLiked)
-                    .map(meme => tabMemes.indexOf(meme)),
-                )
-              }
-              downloadedIndices={
-                new Set(
-                  tabMemes
-                    .filter(meme => meme.downloaded)
-                    .map(meme => tabMemes.indexOf(meme)),
-                )
-              }
-              likeDislikeCounts={{
-                [currentMemeIndex]: {
-                  likeCount: selectedMeme.likeCount,
-                  dislikeCount: 0,
-                },
-              }}
+              likedIndices={ new Set(  tabMemes.filter(meme => meme.liked).map(meme => tabMemes.indexOf(meme)))}
+              doubleLikedIndices={new Set(tabMemes .filter(meme => meme.doubleLiked) .map(meme => tabMemes.indexOf(meme)),)}
+              downloadedIndices={new Set(tabMemes.filter(meme => meme.downloaded) .map(meme => tabMemes.indexOf(meme)),)}
+              likeDislikeCounts={{[currentMemeIndex]: {likeCount: selectedMeme.likeCount,dislikeCount: 0,}}}
               currentMediaIndex={currentMemeIndex}
               user={convertUserStateToUser(user)}
               likeCount={selectedMeme.likeCount}
@@ -380,10 +207,7 @@ const Profile = React.memo(() => {
               index={currentMemeIndex}
               currentIndex={currentMemeIndex}
               setCurrentIndex={setCurrentMemeIndex}
-              initialLikeStatus={{
-                liked: selectedMeme.liked || false,
-                doubleLiked: selectedMeme.doubleLiked || false,
-              }}
+              initialLikeStatus={{ liked: selectedMeme.liked || false, doubleLiked: selectedMeme.doubleLiked || false, }}
               onLikeStatusChange={(memeID, status, newLikeCount) => {}}
               liked={selectedMeme.liked || false}
               doubleLiked={selectedMeme.doubleLiked || false}
@@ -400,18 +224,13 @@ const Profile = React.memo(() => {
             </TouchableOpacity>
             {selectedTab === 'posts' && (
               <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteMeme(selectedMeme.memeID)}>
+                style={styles.deleteButton} onPress={() => handleDeleteMeme(selectedMeme.memeID)}>
                 <Text style={styles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-            )}
+              </TouchableOpacity>)}
             {selectedTab === 'downloaded' && (
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => handleRemoveDownloadedMeme(selectedMeme.memeID)}>
+              <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveDownloadedMeme(selectedMeme.memeID)}>
                 <Text style={styles.removeButtonText}>Remove</Text>
-              </TouchableOpacity>
-            )}
+              </TouchableOpacity>)}
           </View>
         </Modal>
       )}
@@ -421,60 +240,30 @@ const Profile = React.memo(() => {
           onClose={() => setIsEditProfileModalVisible(false)}
           user={convertUserStateToUser(user)}
           onUpdateUser={updatedUser => {
-            const updatedUserState: Partial<UserState> = {
-              ...updatedUser,
-              profilePic: updatedUser.profilePic || null,
-              headerPic: updatedUser.headerPic || null,
-            };
-            useUserStore.getState().setUserDetails(updatedUserState);
-          }}
-        />
-      )}
+            const updatedUserState: Partial<UserState> = {...updatedUser, profilePic: updatedUser.profilePic || null, headerPic: updatedUser.headerPic || null};
+            useUserStore.getState().setUserDetails(updatedUserState);}} />)}
       {fullScreenImage && (
         <Modal
           visible={!!fullScreenImage}
           transparent={true}
           animationType="fade"
-          onRequestClose={() => {
-            setFullScreenImage(null);
-            setIsBlurVisible(false);
-          }}>
+          onRequestClose={() => {setFullScreenImage(null);setIsBlurVisible(false); }}>
           <TouchableWithoutFeedback
-            onPress={() => {
-              setFullScreenImage(null);
-              setIsBlurVisible(false);
-            }}>
+            onPress={() => {setFullScreenImage(null);setIsBlurVisible(false);}}>
             <BlurView
-              intensity={99}
-              tint="dark"
-              style={[StyleSheet.absoluteFillObject, {marginTop: -100}]}>
+              intensity={99} tint="dark" style={[StyleSheet.absoluteFillObject, {marginTop: -100}]}>
               <View style={styles.fullScreenContainer}>
                 <Image
                   source={{uri: fullScreenImage}}
-                  style={[
-                    styles.fullScreenImage,
-                    fullScreenImage === user?.profilePic
-                      ? styles.fullScreenProfileImage
-                      : styles.fullScreenHeaderImage,
-                  ]}
-                />
+                  style={[ styles.fullScreenImage, fullScreenImage === user?.profilePic  ? styles.fullScreenProfileImage  : styles.fullScreenHeaderImage]}/>
                 <TouchableOpacity
                   style={styles.closeButton}
-                  onPress={() => {
-                    setFullScreenImage(null);
-                    setIsBlurVisible(false);
-                  }}>
+                  onPress={() => {setFullScreenImage(null); setIsBlurVisible(false);}}>
                   <FontAwesomeIcon icon={faTimes} size={24} color="#FFF" />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.editButton}
-                  onPress={() =>
-                    handleEditImagePress(
-                      fullScreenImage === user?.profilePic
-                        ? 'profile'
-                        : 'header',
-                    )
-                  }>
+                  onPress={() =>handleEditImagePress( fullScreenImage === user?.profilePic ? 'profile' : 'header') }>
                   <FontAwesomeIcon icon={faEdit} size={24} color="#FFF" />
                 </TouchableOpacity>
               </View>
