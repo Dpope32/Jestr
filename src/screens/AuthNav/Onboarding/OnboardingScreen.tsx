@@ -55,7 +55,6 @@ const OnboardingScreen = () => {
       });
     } else {
       // has completed the onboarding slides
-      // TODO: make isFirstLaunch to FALSE
       setIsFirstLaunch(false);
       navigation.navigate('LandingPage');
     }

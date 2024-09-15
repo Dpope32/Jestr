@@ -22,7 +22,6 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // TO convert to tanstack query
   const handleLoginAction = async () => {
     setIsLoading(true);
     try {

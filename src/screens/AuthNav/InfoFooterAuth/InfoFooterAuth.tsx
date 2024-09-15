@@ -7,8 +7,6 @@ import {privacyPolicyTxt, termsServiceTxt} from './componentData';
 
 const InfoFooterAuth = () => {
   const route = useRoute<FooterNavRouteProp>();
-  //   console.log(route);
-
   const content = route.params?.content;
 
   const renderContent = () => {

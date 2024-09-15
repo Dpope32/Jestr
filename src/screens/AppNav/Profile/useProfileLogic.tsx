@@ -8,10 +8,7 @@ import {AppNavProp} from '../../../navigation/NavTypes/RootNavTypes';
 
 export type TabName = 'posts' | 'liked' | 'history' | 'downloaded';
 
-export const useProfileLogic = (
-  // route: ProfileScreenRouteProp,
-  navigation: AppNavProp,
-) => {
+export const useProfileLogic = (navigation: AppNavProp) => {
   const user = useUserStore(state => state);
   const followersCount = useUserStore(state => state.followersCount);
   const followingCount = useUserStore(state => state.followingCount);
@@ -23,7 +20,9 @@ export const useProfileLogic = (
   const [thumbnails, setThumbnails] = useState<{[key: string]: string}>({});
   const [tabMemes, setTabMemes] = useState<Meme[]>([]);
   const [isFollowModalVisible, setIsFollowModalVisible] = useState(false);
-  const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
+  const [followModalTab, setFollowModalTab] = useState<
+    'followers' | 'following'
+  >('followers');
   const [selectedMeme, setSelectedMeme] = useState<Meme | null>(null);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [currentMemeIndex, setCurrentMemeIndex] = useState(0);

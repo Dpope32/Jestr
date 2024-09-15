@@ -1,4 +1,3 @@
-// src/screens/ChangePassword/ChangePassword.tsx
 import React, {useState} from 'react';
 import {
   View,
@@ -9,23 +8,18 @@ import {
   Alert,
 } from 'react-native';
 import {handleChangePassword} from '../../../services/authService';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {useNavigation, useRoute, RouteProp} from '@react-navigation/core';
-import {RootStackParamList} from '../../../types/types';
-type ChangePasswordRouteProp = RouteProp<RootStackParamList, 'ChangePassword'>;
-type ChangePasswordNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'ChangePassword'
->;
+import {useRoute} from '@react-navigation/core';
+
+import {ChangePasswordNavRouteProp} from '../../../navigation/NavTypes/AuthStackTypes';
 
 const ChangePassword = () => {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const navigation = useNavigation<ChangePasswordNavigationProp>();
-  const route = useRoute<ChangePasswordRouteProp>();
+  const route = useRoute<ChangePasswordNavRouteProp>();
   const {username, nextStep} = route.params;
 
-  const handleSubmit = () => {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const handleSubmit = async () => {
     if (newPassword !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
@@ -35,8 +29,17 @@ const ChangePassword = () => {
       Alert.alert('Error', 'Unexpected authentication step');
       return;
     }
-
-    handleChangePassword(username, '', newPassword, navigation);
+    try {
+      await handleChangePassword(username as string, '', newPassword);
+      // !!! AFTER changing password, in theory, with setting a new user in AuthStack
+      // !!! this action happens in handleChangePassword in authService.ts
+      // !!! the app should navigate to the Feed screen automatically
+      //  navigation.navigate('Feed', {userEmail: user.email});
+      //  navigation.navigate('Feed');
+    } catch (error: any) {
+      console.log('Error changing password:', error);
+      Alert.alert('Error', error?.message || 'An error occurred');
+    }
   };
 
   return (

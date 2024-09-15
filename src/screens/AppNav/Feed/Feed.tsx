@@ -1,31 +1,28 @@
 import React, {useState, useCallback, useMemo, useRef, useEffect} from 'react';
 import {View, Text} from 'react-native';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
+import {useFocusEffect} from '@react-navigation/native';
 import {debounce} from 'lodash';
-import * as Haptics from 'expo-haptics';
+// import * as Haptics from 'expo-haptics';
 
 import {useTheme} from '../../../theme/ThemeContext';
 import {useMemes} from './useMemes';
 import {useUserStore} from '../../../stores/userStore';
 import {getToken} from '../../../stores/secureStore';
-import {logStorageContents} from '../../../utils/debugUtils';
 import {fetchComments} from '../../../services/socialService';
-import {fetchUserDetails,} from '../../../services/userService';
+import {fetchUserDetails} from '../../../services/userService';
 
 import styles from './Feed.styles';
-import {RootStackParamList} from '../../../types/types';
 import {isEmptyUserState} from '../../../stores/userStore';
-import ProfilePanel from '../../../components/Panels/ProfilePanel';
 import CommentFeed from '../../../components/Modals/CommentFeed';
 import MemeList from '../../../components/MediaPlayer/Logic/MemeList';
+// import ProfilePanel from '../../../components/Panels/ProfilePanel';
+// import {logStorageContents} from '../../../utils/debugUtils';
 
 const Feed: React.FC = React.memo(() => {
   const userStore = useUserStore();
   const {isDarkMode} = useTheme();
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [profilePanelVisible, setProfilePanelVisible] = useState(false);
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const {memes, isLoading, error, fetchMoreMemes, fetchInitialMemes} = useMemes(
     userStore,
@@ -33,6 +30,9 @@ const Feed: React.FC = React.memo(() => {
   );
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [currCommentsLength, setCurrCommentsLength] = useState(0);
+
+  // !!! profilePanelVisible to be removed, replaced by Drawer Navigation
+  const [profilePanelVisible, setProfilePanelVisible] = useState(false);
 
   // console.log('Feed - User:', userStore);
   // console.log('Feed - Memes:', memes);
@@ -72,7 +72,7 @@ const Feed: React.FC = React.memo(() => {
         }
       };
       loadUserData();
-    //  logStorageContents();
+      //  logStorageContents();
     }, [userStore.email]),
   );
 
@@ -175,7 +175,6 @@ const Feed: React.FC = React.memo(() => {
     updateLikeStatus,
     currentMediaIndex,
     isCommentFeedVisible,
-    profilePanelVisible,
     isLoading,
     currCommentsLength,
   ]);
@@ -218,7 +217,7 @@ const Feed: React.FC = React.memo(() => {
 
       {memoizedMemeList}
       {/* {memoizedBottomPanel} */}
-      {profilePanelVisible && (
+      {/* {profilePanelVisible && (
         <ProfilePanel
           isVisible={profilePanelVisible}
           onClose={() => setProfilePanelVisible(false)}
@@ -230,7 +229,7 @@ const Feed: React.FC = React.memo(() => {
           user={userStore}
           navigation={navigation ? navigation : undefined}
         />
-      )}
+      )} */}
       {isCommentFeedVisible && memes[currentMediaIndex] && (
         <CommentFeed
           memeID={memes[currentMediaIndex].memeID}

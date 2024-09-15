@@ -1,36 +1,59 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, Animated, ScrollView } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faPlus, faBell } from '@fortawesome/free-solid-svg-icons';
-import { Conversation, User } from '../../../types/types';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, {useState, useCallback, useEffect, useRef} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  Animated,
+  ScrollView,
+} from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faPlus, faBell} from '@fortawesome/free-solid-svg-icons';
+import {Conversation, User} from '../../../types/types';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import NewMessageModal from '../../../components/Modals/NewMessageModal';
-import { format, formatDistanceToNow, isToday } from 'date-fns';
+import {format, formatDistanceToNow, isToday} from 'date-fns';
 import styles from './Inbox.styles';
-import { useTheme } from '../../../theme/ThemeContext';
-import { useUserStore } from '../../../stores/userStore';
-import { useInboxStore } from '../../../stores/inboxStore';
-import BottomPanel from '../../../components/Panels/BottomPanel';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchConversations as apiFetchConversations } from '../../../services/socialService';
+import {useTheme} from '../../../theme/ThemeContext';
+import {useUserStore} from '../../../stores/userStore';
+import {useInboxStore} from '../../../stores/inboxStore';
+// import BottomPanel from '../../../components/Panels/BottomPanel';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
+import {fetchConversations as apiFetchConversations} from '../../../services/socialService';
+import {InboxNavProp} from '../../../navigation/NavTypes/InboxStackTypes';
+import {AppNavProp} from '../../../navigation/NavTypes/RootNavTypes';
 
 type InboxProps = {
   navigation: any;
 };
 
-const Inbox: React.FC<InboxProps> = ({ navigation }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const Inbox: React.FC<InboxProps> = () => {
+  const navigation = useNavigation<InboxNavProp>();
+  const drawerNavigation = useNavigation<AppNavProp>();
+
+  const {isDarkMode} = useTheme();
   const user = useUserStore(state => state);
-  const [isNewMessageModalVisible, setIsNewMessageModalVisible] = useState(false);
-  const { isDarkMode } = useTheme();
-  const [notifications] = useState<string[]>(['New follower: @Admin']);
-  const fadeAnim = useState(new Animated.Value(0))[0];
-  const queryClient = useQueryClient();
+
   const isInitialMount = useRef(true);
 
-  const { conversations, isLoading: isStoreLoading, fetchConversations } = useInboxStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const [isNewMessageModalVisible, setIsNewMessageModalVisible] =
+    useState(false);
+  const [notifications] = useState<string[]>(['New follower: @Admin']);
 
-  const { refetch: refetchConversations, isLoading: isServerLoading, error } = useQuery({
+  const {
+    conversations,
+    isLoading: isStoreLoading,
+    fetchConversations,
+  } = useInboxStore();
+
+  const {
+    refetch: refetchConversations,
+    isLoading: isServerLoading,
+    error,
+  } = useQuery({
     queryKey: ['conversations', user.email],
     queryFn: () => apiFetchConversations(user.email),
     enabled: false, // Disable automatic fetching
@@ -49,7 +72,7 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
       if (user.email) {
         if (isInitialMount.current) {
           // Fetch from server on initial mount
-          refetchConversations().then((result) => {
+          refetchConversations().then(result => {
             if (result.data) {
               fetchConversations(user.email);
               console.log('Fetched fresh data from server on initial load');
@@ -58,10 +81,18 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
           isInitialMount.current = false;
         } else {
           // Use data from InboxStore for subsequent accesses
-          console.log('Using conversations from InboxStore:', conversations.length);
+          console.log(
+            'Using conversations from InboxStore:',
+            conversations.length,
+          );
         }
       }
-    }, [user.email, refetchConversations, fetchConversations, conversations.length])
+    }, [
+      user.email,
+      refetchConversations,
+      fetchConversations,
+      conversations.length,
+    ]),
   );
 
   const toggleNewMessageModal = () => {
@@ -83,14 +114,18 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
         displayName: '',
         CreationDate: '',
         followersCount: 0,
-        followingCount: 0
+        followingCount: 0,
       },
-      conversation: conversation
+      conversation: conversation,
     });
   };
 
   const handleProfileClick = () => {
-    navigation.navigate('Profile', {});
+    try {
+      drawerNavigation.navigate('Profile');
+    } catch (error) {
+      console.error('Error navigating to Profile from INBOX:', error);
+    }
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -98,15 +133,19 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
     if (isToday(date)) {
       return format(date, 'h:mm a');
     } else {
-      return formatDistanceToNow(date, { addSuffix: true });
+      return formatDistanceToNow(date, {addSuffix: true});
     }
   };
 
   const generateUniqueId = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+      /[xy]/g,
+      function (c) {
+        var r = (Math.random() * 16) | 0,
+          v = c == 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      },
+    );
   };
 
   const handleUserSelect = (selectedUser: User) => {
@@ -114,7 +153,7 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
       console.error('User is not logged in');
       return;
     }
-  
+
     toggleNewMessageModal();
     const conversationID = generateUniqueId();
     navigation.navigate('Conversations', {
@@ -127,7 +166,7 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
         profilePicUrl: selectedUser.profilePic,
         lastMessage: {
           Content: '',
-          Timestamp: new Date().toISOString()
+          Timestamp: new Date().toISOString(),
         },
         timestamp: new Date().toISOString(),
         messages: [],
@@ -136,14 +175,17 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
         partnerUser: {
           email: selectedUser.email,
           username: selectedUser.username,
-          profilePic: typeof selectedUser.profilePic === 'string' ? selectedUser.profilePic : null
-        }
-      }
+          profilePic:
+            typeof selectedUser.profilePic === 'string'
+              ? selectedUser.profilePic
+              : null,
+        },
+      },
     });
   };
 
   const SkeletonLoader = () => {
-    const skeletons = Array.from({ length: 5 }); 
+    const skeletons = Array.from({length: 5});
     return (
       <View>
         {skeletons.map((_, index) => (
@@ -160,8 +202,12 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <Animated.View style={[styles.container, { opacity: fadeAnim, backgroundColor: isDarkMode ? '#000' : '#2E2E2E' }]}>
+    <View style={{flex: 1}}>
+      <Animated.View
+        style={[
+          styles.container,
+          {opacity: fadeAnim, backgroundColor: isDarkMode ? '#000' : '#2E2E2E'},
+        ]}>
         <View style={styles.header}>
           <Text style={styles.sectionHeaderIn}>Inbox</Text>
           {user && (
@@ -187,15 +233,17 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
             onChangeText={setSearchQuery}
             placeholderTextColor="#999"
           />
-          
+
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Notifications</Text>
             {notifications.map((notification, index) => (
-              <TouchableOpacity 
-                key={index} 
-                style={styles.notificationItem}
-              >
-                <FontAwesomeIcon icon={faBell} size={20} color="#00ff00" style={styles.notificationIcon} />
+              <TouchableOpacity key={index} style={styles.notificationItem}>
+                <FontAwesomeIcon
+                  icon={faBell}
+                  size={20}
+                  color="#00ff00"
+                  style={styles.notificationIcon}
+                />
                 <Text style={styles.notificationText}>{notification}</Text>
               </TouchableOpacity>
             ))}
@@ -209,21 +257,29 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
               <Text>Error loading conversations</Text>
             ) : (
               conversations.map((conversation: Conversation) => (
-                <TouchableOpacity 
-                  key={conversation.id} 
+                <TouchableOpacity
+                  key={conversation.id}
                   style={styles.conversationItem}
-                  onPress={() => handleThreadClick(conversation)}
-                >
+                  onPress={() => handleThreadClick(conversation)}>
                   <Image
                     source={{
-                      uri: conversation.partnerUser.profilePic || 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg'
+                      uri:
+                        conversation.partnerUser.profilePic ||
+                        'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg',
                     }}
                     style={styles.profilePic}
                   />
                   <View style={styles.conversationInfo}>
-                    <Text style={styles.username}>{conversation.partnerUser.username || conversation.partnerUser.email}</Text>
-                    <Text style={styles.preview}>{conversation.lastMessage.Content}</Text>
-                    <Text style={styles.timestamp}>{formatTimestamp(conversation.lastMessage.Timestamp)}</Text>
+                    <Text style={styles.username}>
+                      {conversation.partnerUser.username ||
+                        conversation.partnerUser.email}
+                    </Text>
+                    <Text style={styles.preview}>
+                      {conversation.lastMessage.Content}
+                    </Text>
+                    <Text style={styles.timestamp}>
+                      {formatTimestamp(conversation.lastMessage.Timestamp)}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               ))
@@ -231,7 +287,9 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
           </View>
         </ScrollView>
 
-        <TouchableOpacity style={styles.newMessageButton} onPress={toggleNewMessageModal}>
+        <TouchableOpacity
+          style={styles.newMessageButton}
+          onPress={toggleNewMessageModal}>
           <FontAwesomeIcon icon={faPlus} size={20} color="#FFF" />
         </TouchableOpacity>
 
@@ -240,16 +298,18 @@ const Inbox: React.FC<InboxProps> = ({ navigation }) => {
           onClose={toggleNewMessageModal}
           onSelectUser={handleUserSelect}
           existingConversations={conversations}
-          currentUser={user || { 
-            email: '', 
-            username: '', 
-            profilePic: '', 
-            displayName: '', 
-            headerPic: '', 
-            CreationDate: '', 
-            followersCount: 0,  
-            followingCount: 0 
-          }}
+          currentUser={
+            user || {
+              email: '',
+              username: '',
+              profilePic: '',
+              displayName: '',
+              headerPic: '',
+              CreationDate: '',
+              followersCount: 0,
+              followingCount: 0,
+            }
+          }
           allUsers={[]}
         />
       </Animated.View>

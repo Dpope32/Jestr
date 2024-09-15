@@ -1,8 +1,31 @@
 import React, {useCallback, useMemo} from 'react';
-import {View,Text,Image,TouchableOpacity,Modal,ActivityIndicator,ScrollView,Animated,StyleSheet,TouchableWithoutFeedback} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  Modal,
+  ActivityIndicator,
+  ScrollView,
+  Animated,
+  StyleSheet,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faBox,faHistory,faHeart,faUser,faEdit,faTimes,faSadTear,faShare,} from '@fortawesome/free-solid-svg-icons';
+import {
+  faBox,
+  faHistory,
+  faHeart,
+  faUser,
+  faEdit,
+  faTimes,
+  faSadTear,
+  faShare,
+} from '@fortawesome/free-solid-svg-icons';
 import {BlurView} from 'expo-blur';
+import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
+import {useNavigation} from '@react-navigation/native';
+
 import styles from './ProfileStyles';
 import MemeGrid from './MemeGrid';
 import EditableBio from './EditableBio';
@@ -14,8 +37,6 @@ import EditProfileModal from '../../../components/Modals/EditProfileModal';
 import {useProfileLogic, TabName} from './useProfileLogic';
 import {UserState, useUserStore} from '../../../stores/userStore';
 import {Meme} from '../../../types/types';
-import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
-import {useNavigation} from '@react-navigation/native';
 import {AppNavProp} from '../../../navigation/NavTypes/RootNavTypes';
 import LoadingOverlay from './loadingOverlay';
 
@@ -68,7 +89,6 @@ const Profile = React.memo(() => {
     outputRange: [200, 0],
     extrapolate: 'clamp',
   });
-  
 
   const renderTabButton = useCallback(
     (tabName: TabName, icon: IconDefinition, label: string) => (
@@ -177,14 +197,21 @@ const Profile = React.memo(() => {
   if (!user) return <ActivityIndicator />;
 
   return (
-    <View style={[styles.container, {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'}]}>
+    <View
+      style={[
+        styles.container,
+        {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
+      ]}>
       <LoadingOverlay isVisible={isUploading} />
       <ScrollView>
         <Animated.View style={[styles.headerContainer, {height: headerHeight}]}>
           <TouchableOpacity onPress={() => handleImagePress('header')}>
             <Image
               source={{
-                uri: typeof user.headerPic === 'string' ? user.headerPic : undefined,
+                uri:
+                  typeof user.headerPic === 'string'
+                    ? user.headerPic
+                    : undefined,
               }}
               style={styles.headerImage}
             />
@@ -192,7 +219,10 @@ const Profile = React.memo(() => {
           <TouchableOpacity onPress={() => handleImagePress('profile')}>
             <Image
               source={{
-                uri: typeof user.profilePic === 'string' ? user.profilePic : undefined,
+                uri:
+                  typeof user.profilePic === 'string'
+                    ? user.profilePic
+                    : undefined,
               }}
               style={styles.profileImage}
             />
@@ -400,7 +430,7 @@ const Profile = React.memo(() => {
           }}
         />
       )}
-     {fullScreenImage && (
+      {fullScreenImage && (
         <Modal
           visible={!!fullScreenImage}
           transparent={true}
@@ -408,54 +438,50 @@ const Profile = React.memo(() => {
           onRequestClose={() => {
             setFullScreenImage(null);
             setIsBlurVisible(false);
-          }}
-        >
-        <TouchableWithoutFeedback
-          onPress={() => {
-            setFullScreenImage(null);
-            setIsBlurVisible(false);
-          }}
-        >
-          <BlurView
-            intensity={99}
-            tint="dark"
-            style={[StyleSheet.absoluteFillObject, { marginTop: -100 }]}
-          >
-            <View style={styles.fullScreenContainer}>
-              <Image
-                source={{ uri: fullScreenImage }}
-                style={[
-                  styles.fullScreenImage,
-                  fullScreenImage === user?.profilePic
-                    ? styles.fullScreenProfileImage
-                    : styles.fullScreenHeaderImage,
-                ]}
-              />
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => {
-                  setFullScreenImage(null);
-                  setIsBlurVisible(false);
-                }}
-              >
-                <FontAwesomeIcon icon={faTimes} size={24} color="#FFF" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() =>
-                  handleEditImagePress(
-                    fullScreenImage === user?.profilePic ? 'profile' : 'header'
-                  )
-                }
-              >
-                <FontAwesomeIcon icon={faEdit} size={24} color="#FFF" />
-              </TouchableOpacity>
-            </View>
-          </BlurView>
-        </TouchableWithoutFeedback>
-      </Modal>
-    )}
-
+          }}>
+          <TouchableWithoutFeedback
+            onPress={() => {
+              setFullScreenImage(null);
+              setIsBlurVisible(false);
+            }}>
+            <BlurView
+              intensity={99}
+              tint="dark"
+              style={[StyleSheet.absoluteFillObject, {marginTop: -100}]}>
+              <View style={styles.fullScreenContainer}>
+                <Image
+                  source={{uri: fullScreenImage}}
+                  style={[
+                    styles.fullScreenImage,
+                    fullScreenImage === user?.profilePic
+                      ? styles.fullScreenProfileImage
+                      : styles.fullScreenHeaderImage,
+                  ]}
+                />
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => {
+                    setFullScreenImage(null);
+                    setIsBlurVisible(false);
+                  }}>
+                  <FontAwesomeIcon icon={faTimes} size={24} color="#FFF" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() =>
+                    handleEditImagePress(
+                      fullScreenImage === user?.profilePic
+                        ? 'profile'
+                        : 'header',
+                    )
+                  }>
+                  <FontAwesomeIcon icon={faEdit} size={24} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+            </BlurView>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
     </View>
   );
 });

@@ -1,32 +1,40 @@
 import React, {useState, useEffect} from 'react';
-import {View,Text,TouchableOpacity,ScrollView,Modal,SafeAreaView} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+  SafeAreaView,
+} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faSignOutAlt,faArrowRight,faArrowLeft,} from '@fortawesome/free-solid-svg-icons';
+import {
+  faSignOutAlt,
+  faArrowRight,
+  faArrowLeft,
+} from '@fortawesome/free-solid-svg-icons';
 import {LinearGradient} from 'expo-linear-gradient';
 import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
 import {BlurView} from 'expo-blur';
+import * as SecureStore from 'expo-secure-store';
+import {useIsFocused} from '@react-navigation/native';
+
 import {SettingOption, settingsOptions} from './settingsOptions';
 import styles from './Settings.styles';
 import {handleSignOut} from '../../../services/authService';
 import {useFollowStore} from '../../../stores/followStore';
 import {useUserStore} from '../../../stores/userStore';
-import * as SecureStore from 'expo-secure-store';
-import {CommonActions} from '@react-navigation/native';
 import LogoutModal from '../../../components/Modals/LogoutModal';
-import {RootStackParamList} from '../../../types/types';
-import {useIsFocused} from '@react-navigation/native';
-
-type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList,'Settings'>;
+import {AppNavProp} from '../../../navigation/NavTypes/RootNavTypes';
 
 const Settings: React.FC = () => {
-  const navigation = useNavigation<SettingsScreenNavigationProp>();
+  const navigation = useNavigation<AppNavProp>();
+
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedSetting, setSelectedSetting] = useState<SettingOption | null>(
     null,
   );
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-  const resetFollowStore = useFollowStore(state => state.reset);
   const isFocused = useIsFocused();
 
   useEffect(() => {
@@ -59,12 +67,6 @@ const Settings: React.FC = () => {
       resetFollowStore();
       await SecureStore.deleteItemAsync('accessToken');
       useUserStore.getState().setUserDetails({});
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{name: 'LandingPage'}],
-        }),
-      );
     } catch (error) {
       console.error('Error during sign-out:', error);
     } finally {

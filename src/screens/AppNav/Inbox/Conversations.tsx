@@ -1,51 +1,83 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import {View,Text,Image,TextInput,TouchableOpacity,KeyboardAvoidingView,Platform,Animated,StyleSheet} from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowUp, faArrowLeft, faCheck } from '@fortawesome/free-solid-svg-icons';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { FlashList, ListRenderItem } from '@shopify/flash-list';
-import { format, formatDistanceToNow, isToday } from 'date-fns';
-import { useTheme } from '../../../theme/ThemeContext';
-import styles from './convoStyles';
-import { useUserStore } from '../../../stores/userStore';
-import { Message, Conversation, User } from '../../../types/types';
-import { useInboxStore } from '../../../stores/inboxStore';
-import Toast from 'react-native-toast-message';
-import { InboxNavRouteProp } from '../../../navigation/NavTypes/InboxStackTypes';
-import { useFocusEffect } from '@react-navigation/native';
-import { useTabBarStore } from '../../../stores/tabBarStore';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchMessages, sendMessage } from '../../../services/socialService';
-import { BlurView } from 'expo-blur';
+import React, {useState, useCallback, useRef, useEffect} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
+  StyleSheet,
+} from 'react-native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faArrowUp,
+  faArrowLeft,
+  faCheck,
+} from '@fortawesome/free-solid-svg-icons';
+import {useRoute, useNavigation} from '@react-navigation/native';
+import {FlashList, ListRenderItem} from '@shopify/flash-list';
+import {format, formatDistanceToNow, isToday} from 'date-fns';
+import {useFocusEffect} from '@react-navigation/native';
+import {BlurView} from 'expo-blur';
 import LottieView from 'lottie-react-native';
+import Toast from 'react-native-toast-message';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+
+import {useTheme} from '../../../theme/ThemeContext';
+import styles from './convoStyles';
+import {useUserStore} from '../../../stores/userStore';
+import {Message, Conversation, User} from '../../../types/types';
+import {useInboxStore} from '../../../stores/inboxStore';
+import {InboxNavRouteProp} from '../../../navigation/NavTypes/InboxStackTypes';
+import {useTabBarStore} from '../../../stores/tabBarStore';
+import {fetchMessages, sendMessage} from '../../../services/socialService';
 
 export const Conversations = () => {
+  const navigation = useNavigation();
   const route = useRoute<InboxNavRouteProp>();
-  const inputRef = useRef<TextInput>(null);
   const partnerUser = route.params?.partnerUser as User;
   const conversation = route.params?.conversation as Conversation;
+
+  const queryClient = useQueryClient();
+  const {isDarkMode} = useTheme();
+
+  const currentUser = useUserStore(state => state);
+  const setTabBarVisibility = useTabBarStore(
+    state => state.setTabBarVisibility,
+  );
+  const inboxStore = useInboxStore();
+
+  const inputRef = useRef<TextInput>(null);
+
   const [sendButtonScale] = useState(new Animated.Value(1));
   const [newMessage, setNewMessage] = useState('');
-  const navigation = useNavigation();
-  const { isDarkMode } = useTheme();
-  const currentUser = useUserStore(state => state);
   const [sendingAnimation] = useState(new Animated.Value(0));
   const [messageOpacity] = useState(new Animated.Value(1));
   const [isSending, setIsSending] = useState(false);
-  const sendIcon = isSending ? faCheck : faArrowUp;
-  const setTabBarVisibility = useTabBarStore(state => state.setTabBarVisibility);
-  const queryClient = useQueryClient();
-  const inboxStore = useInboxStore();
 
-  const { data: messages = [], isLoading, error, refetch } = useQuery({
+  const sendIcon = isSending ? faCheck : faArrowUp;
+
+  const {
+    data: messages = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['messages', conversation.id],
     queryFn: async () => {
-      const storedMessages = inboxStore.getConversationMessages(conversation.id);
+      const storedMessages = inboxStore.getConversationMessages(
+        conversation.id,
+      );
       if (storedMessages && storedMessages.length > 0) {
         console.log('Using messages from InboxStore:', storedMessages.length);
         return storedMessages;
       }
-      const fetchedMessages = await fetchMessages(currentUser.email, conversation.id);
+      const fetchedMessages = await fetchMessages(
+        currentUser.email,
+        conversation.id,
+      );
       console.log('Messages fetched from server:', fetchedMessages.length);
       inboxStore.updateConversationMessages(conversation.id, fetchedMessages);
       return fetchedMessages;
@@ -71,12 +103,19 @@ export const Conversations = () => {
         setTabBarVisibility(true);
         console.log('Conversation screen unfocused');
       };
-    }, [setTabBarVisibility])
+    }, [setTabBarVisibility]),
   );
 
   const sendMessageMutation = useMutation({
-    mutationFn: ({ senderEmail, receiverEmail, content }: { senderEmail: string, receiverEmail: string, content: string }) => 
-      sendMessage(senderEmail, receiverEmail, content),
+    mutationFn: ({
+      senderEmail,
+      receiverEmail,
+      content,
+    }: {
+      senderEmail: string;
+      receiverEmail: string;
+      content: string;
+    }) => sendMessage(senderEmail, receiverEmail, content),
     onSuccess: (data, variables) => {
       const newMsg: Message = {
         MessageID: Date.now().toString(),
@@ -90,8 +129,9 @@ export const Conversations = () => {
       };
 
       // Update React Query cache
-      queryClient.setQueryData(['messages', conversation.id], (old: Message[] | undefined) => 
-        [newMsg, ...(old || [])]
+      queryClient.setQueryData(
+        ['messages', conversation.id],
+        (old: Message[] | undefined) => [newMsg, ...(old || [])],
       );
 
       // Update InboxStore
@@ -105,7 +145,7 @@ export const Conversations = () => {
         visibilityTime: 2000,
       });
     },
-    onError: (error) => {
+    onError: error => {
       console.error('Failed to send message:', error);
       Toast.show({
         type: 'error',
@@ -162,7 +202,6 @@ export const Conversations = () => {
     }).start();
   };
 
-
   const handlePressIn = useCallback(() => {
     Animated.spring(sendButtonScale, {
       toValue: 0.9,
@@ -184,12 +223,12 @@ export const Conversations = () => {
     if (isToday(date)) {
       return format(date, 'h:mm a');
     } else {
-      return formatDistanceToNow(date, { addSuffix: true });
+      return formatDistanceToNow(date, {addSuffix: true});
     }
   }, []);
 
   const renderMessage: ListRenderItem<Message> = useCallback(
-    ({ item }) => {
+    ({item}) => {
       let content = item.Content;
       let isMemeShare = false;
       let memeUrl = '';
@@ -217,19 +256,20 @@ export const Conversations = () => {
           ]}>
           {isMemeShare && (
             <Image
-              source={{ uri: `https://jestr-bucket.s3.amazonaws.com/${memeUrl}` }}
+              source={{uri: `https://jestr-bucket.s3.amazonaws.com/${memeUrl}`}}
               style={styles.sharedMemeImage}
               resizeMode="contain"
             />
           )}
           <Text style={styles.messageText}>{content}</Text>
-          <Text style={styles.timestamp}>{formatTimestamp(item.Timestamp)}</Text>
+          <Text style={styles.timestamp}>
+            {formatTimestamp(item.Timestamp)}
+          </Text>
         </View>
       );
     },
-    [currentUser.email, formatTimestamp]
+    [currentUser.email, formatTimestamp],
   );
-
 
   if (isLoading) {
     return (
@@ -255,11 +295,11 @@ export const Conversations = () => {
     <KeyboardAvoidingView
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-      style={{ flex: 1 }}>
+      style={{flex: 1}}>
       <View
         style={[
           styles.container,
-          { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' },
+          {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
         ]}>
         <View style={styles.header}>
           <TouchableOpacity
@@ -300,7 +340,7 @@ export const Conversations = () => {
             style={styles.sendButton}
             onPress={handleSendMessage}
             disabled={isSending}>
-            <Animated.View style={{ transform: [{ scale: sendButtonScale }] }}>
+            <Animated.View style={{transform: [{scale: sendButtonScale}]}}>
               <FontAwesomeIcon icon={sendIcon} size={24} color="white" />
             </Animated.View>
           </TouchableOpacity>

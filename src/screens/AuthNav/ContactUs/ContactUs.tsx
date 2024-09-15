@@ -9,6 +9,7 @@ const ContactUs = () => {
 
   const submitHandler = () => {
     console.log('Submitting contact form');
+    // !!! setIsFirstLaunch here was just for testing purposes
     // setIsFirstLaunch(true);
   };
 
