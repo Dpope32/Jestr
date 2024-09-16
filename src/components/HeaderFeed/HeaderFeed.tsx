@@ -6,10 +6,7 @@ import {useNavigation} from '@react-navigation/native';
 import {DrawerActions} from '@react-navigation/native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faSearch, faCog} from '@fortawesome/free-solid-svg-icons';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {widthPercentageToDP as wp,heightPercentageToDP as hp,} from 'react-native-responsive-screen';
 
 import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
 // import {useTheme} from '../../theme/ThemeContext';
@@ -151,12 +148,6 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: wp('5%'),
     width: '100%',
-    // flexDirection: 'row',
-    // justifyContent: 'space-between',
-    // paddingVertical: 5,
-
-    // borderWidth: 1,
-    // borderColor: 'red',
   },
   firstRow: {
     flexDirection: 'row',
@@ -164,9 +155,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     height: hp('7%'),
-
-    // borderWidth: 1,
-    // borderColor: 'red',
   },
   txt: {
     color: 'white',
@@ -199,7 +187,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   searchInput: {
-    // height: hp('4%'),
     height: '100%',
     flex: 1,
     backgroundColor: '#1C1C1C',
@@ -233,13 +220,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     alignItems: 'center',
     paddingTop: 10,
-    // paddingTop: hp('7%'),
-    // borderWidth: 1,
-    // borderColor: 'red',
   },
   tab: {
-    // borderWidth: 1,
-    // borderColor: 'red',
   },
   activeTab: {
     borderBottomWidth: 2,

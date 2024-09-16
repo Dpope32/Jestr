@@ -12,20 +12,12 @@ const AuthFooterLinks = () => {
   return (
     <View style={[styles.footer, {bottom: insets.bottom}]}>
       <TouchableOpacity
-        onPress={() =>
-          navigation.navigate('InfoFooterAuth', {
-            content: 'privacyPolicy',
-          })
-        }>
+        onPress={() => navigation.navigate('InfoFooterAuth', {content: 'privacyPolicy'})}>
         <Text style={styles.footerLink}>Privacy Policy</Text>
       </TouchableOpacity>
       <Text style={styles.footerDivider}> | </Text>
       <TouchableOpacity
-        onPress={() =>
-          navigation.navigate('InfoFooterAuth', {
-            content: 'termsService',
-          })
-        }>
+        onPress={() => navigation.navigate('InfoFooterAuth', {content: 'termsService'})}>
         <Text style={styles.footerLink}>Terms of Service</Text>
       </TouchableOpacity>
       <Text style={styles.footerDivider}> | </Text>

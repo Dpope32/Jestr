@@ -1,4 +1,4 @@
-import React, {useState, useRef, } from 'react';
+import React, { useRef, } from 'react';
 import {View, Text, Image, TouchableOpacity, Animated, Easing} from 'react-native';
 import {Switch} from 'react-native';
 import {DrawerContentScrollView,DrawerItem,DrawerContentComponentProps,} from '@react-navigation/drawer';
@@ -47,7 +47,6 @@ const CustomDrawer = (props: DrawerContentComponentProps) => {
   const {isDarkMode, toggleDarkMode} = useTheme();
   const user = useUserStore(state => state as User);
   const spinValue = useRef(new Animated.Value(0)).current;
-  // console.log('DRAWER props: ', props);
 
   const spin = spinValue.interpolate({
     inputRange: [0, 1],

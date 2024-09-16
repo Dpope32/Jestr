@@ -1,4 +1,5 @@
 import {Dimensions} from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export const windowWidth = Dimensions.get('window').width;
 export const windowHeight = Dimensions.get('window').height;
@@ -13,4 +14,15 @@ export const generateUniqueId = () => {
         return v.toString(16);
       },
     );
+  };
+
+  export const showToast = (type: string, text1: string, text2: string) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+      visibilityTime: 3000,
+      topOffset: 50,
+      position: 'top'
+    });
   };

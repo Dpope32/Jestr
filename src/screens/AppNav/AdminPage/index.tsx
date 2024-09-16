@@ -181,6 +181,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
+    
   },
   darkContainer: {
     backgroundColor: '#1C1C1C',

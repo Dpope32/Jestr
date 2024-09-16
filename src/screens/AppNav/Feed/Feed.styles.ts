@@ -38,6 +38,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.md,
   },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centerText: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
   errorText: {
     color: 'red',
     fontSize: 16,

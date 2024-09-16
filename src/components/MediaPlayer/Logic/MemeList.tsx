@@ -1,26 +1,11 @@
 import React, {useCallback, useRef, useEffect} from 'react';
 import {Dimensions, ViewToken, FlatList, ActivityIndicator} from 'react-native';
 import MediaPlayer from '../MediaPlayer';
-import {Meme, User} from '../../../types/types';
+import {Meme,MemeListProps} from '../../../types/types';
 const {height} = Dimensions.get('window');
 
 const viewabilityConfig = {itemVisiblePercentThreshold: 50};
 
-type MemeListProps = {
-  memes: Meme[];
-  user: User | null;
-  isDarkMode: boolean;
-  onEndReached: () => void;
-  toggleCommentFeed: () => void;
-  updateLikeStatus: (memeID: string, status: any, newLikeCount: number) => void;
-  currentMediaIndex: number;
-  setCurrentMediaIndex: (index: number) => void;
-  currentUserId: string | undefined;
-  isCommentFeedVisible: boolean;
-  isProfilePanelVisible: boolean;
-  isLoadingMore: boolean;
-  numOfComments: number;
-};
 
 const MemeList: React.FC<MemeListProps> = React.memo(
   ({
@@ -35,19 +20,17 @@ const MemeList: React.FC<MemeListProps> = React.memo(
     currentUserId,
     isLoadingMore,
     isCommentFeedVisible,
-    isProfilePanelVisible,
     numOfComments,
+    handleMemeViewed,
   }) => {
     const flatListRef = useRef<FlatList>(null);
     const memesRef = useRef(memes);
 
     useEffect(() => {
-      // console.log('MemeList - Received memes:', memes.length);
       memesRef.current = memes;
     }, [memes]);
 
     useEffect(() => {
-      //   console.log('MemeList - Current media index changed:', currentMediaIndex);
       if (
         flatListRef.current &&
         currentMediaIndex >= 0 &&
@@ -64,9 +47,10 @@ const MemeList: React.FC<MemeListProps> = React.memo(
       (index: number) => {
         if (index >= 0 && index < memesRef.current.length) {
           setCurrentMediaIndex(index);
+          handleMemeViewed(memesRef.current[index].memeID);
         }
       },
-      [setCurrentMediaIndex],
+      [setCurrentMediaIndex, handleMemeViewed],
     );
 
     const goToNextMedia = useCallback(() => {
@@ -82,7 +66,6 @@ const MemeList: React.FC<MemeListProps> = React.memo(
     const renderItem = useCallback(
       ({item, index}: {item: Meme | undefined; index: number}) => {
         if (!item || !item.url) {
-          //   console.log(`Meme at index ${index} is undefined or missing url`);
           return null;
         }
 
@@ -118,12 +101,12 @@ const MemeList: React.FC<MemeListProps> = React.memo(
             onLongPressEnd={() => {}}
             currentUserId={currentUserId}
             isCommentFeedVisible={isCommentFeedVisible}
-            isProfilePanelVisible={isProfilePanelVisible}
             memes={memesRef.current}
             index={index}
             currentIndex={currentMediaIndex}
             setCurrentIndex={setCurrentMediaIndex}
             numOfComments={numOfComments}
+            onMemeViewed={() => handleMemeViewed(item.memeID)}
           />
         );
       },
@@ -134,12 +117,12 @@ const MemeList: React.FC<MemeListProps> = React.memo(
         currentMediaIndex,
         currentUserId,
         isCommentFeedVisible,
-        isProfilePanelVisible,
         setCurrentMediaIndex,
         goToPrevMedia,
         goToNextMedia,
         toggleCommentFeed,
         updateLikeStatus,
+        handleMemeViewed,
       ],
     );
 
@@ -149,7 +132,6 @@ const MemeList: React.FC<MemeListProps> = React.memo(
           viewableItems.length > 0 &&
           typeof viewableItems[0].index === 'number'
         ) {
-          //  console.log('MemeList - Viewable item changed:', viewableItems[0].index);
           setCurrentMediaIndexCallback(viewableItems[0].index);
         }
       },
@@ -175,8 +157,6 @@ const MemeList: React.FC<MemeListProps> = React.memo(
       <FlatList
         ref={flatListRef}
         data={memes}
-        // style={{flex: 1}}
-        // contentContainerStyle={{borderWidth: 1, borderColor: '#FFF'}}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         onEndReached={onEndReached}

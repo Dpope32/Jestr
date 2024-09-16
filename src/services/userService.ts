@@ -2,10 +2,9 @@ import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 import {API_URL, API_ENDPOINT} from './config';
 import Toast from 'react-native-toast-message';
-import {StackNavigationProp} from '@react-navigation/stack';
 import {User, Meme, FetchMemesResult} from '../types/types';
 import {fetchAuthSession} from '@aws-amplify/auth';
-import {RootStackParamList, ProfileImage} from '../types/types';
+import {FeedbackItem, ProfileImage} from '../types/types';
 import * as FileSystem from 'expo-file-system';
 import {v4 as uuidv4} from 'uuid';
 import {useUserStore, UserState, isEmptyUserState} from '../stores/userStore';
@@ -16,6 +15,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import {getUserMemes} from './memeService';
 import {useSettingsStore} from '../stores/settingsStore';
 import {useNotificationStore} from '../stores/notificationStore';
+
 
 export const getUser = async (userEmail: string): Promise<User | null> => {
   console.log('getUser called with userEmail:', userEmail);
@@ -772,6 +772,40 @@ export const getFeedback = async (email: string) => {
     return await response.json();
   } catch (error) {
     console.error('Error in getFeedback:', error);
+    throw error;
+  }
+};
+
+export const getAllFeedback = async (): Promise<FeedbackItem[]> => {
+  try {
+    const response = await fetch(`https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getAllFeedback`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ operation: 'getAllFeedback' }),
+    });
+
+    console.log('API Response Status:', response.status);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch feedback. Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Fetched Data:', data);
+
+    if (!data || !data.data) {
+      throw new Error('Invalid data format returned from API');
+    }
+
+    // Filter out feedback items with status "Closed"
+    const filteredFeedback = data.data.filter((item: FeedbackItem) => item.Status !== 'Closed');
+
+    console.log('Filtered Feedback:', filteredFeedback);
+    return filteredFeedback;
+  } catch (error) {
+    console.error('Error in getAllFeedback:', error);
     throw error;
   }
 };

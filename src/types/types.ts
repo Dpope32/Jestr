@@ -174,8 +174,8 @@ export type MediaPlayerProps = {
   onLongPressStart: () => void;
   onLongPressEnd: () => void;
   isCommentFeedVisible: boolean;
-  isProfilePanelVisible: boolean;
   numOfComments?: number;
+  onMemeViewed: () => void;
 };
 
 export type ProfilePanelProps = {
@@ -255,3 +255,28 @@ export interface Conversation {
     profilePic: string | null;
   };
 }
+
+export interface FeedbackItem {
+  FeedbackID: string;
+  Email: string;
+  Message: string;
+  Status: string;
+  Timestamp: string;
+}
+
+export type MemeListProps = {
+    memes: Meme[];
+    user: User | null;
+    isDarkMode: boolean;
+    onEndReached: () => void;
+    toggleCommentFeed: () => void;
+    updateLikeStatus: (memeID: string, status: any, newLikeCount: number) => void;
+    currentMediaIndex: number;
+    setCurrentMediaIndex: (index: number) => void;
+    currentUserId: string | undefined;
+    isCommentFeedVisible: boolean;
+    isLoadingMore: boolean;
+    numOfComments: number;
+    handleMemeViewed: (memeId: string) => Promise<void>;
+  };
+  

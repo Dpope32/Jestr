@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { COLORS } from '../../../theme/theme';
-import { getFeedback, updateFeedback } from '../../../services/userService';
+import { getAllFeedback, updateFeedback } from '../../../services/userService';
 import { useTabBarStore } from '../../../stores/tabBarStore';
 import Toast from 'react-native-toast-message';
+import { FeedbackItem } from '../../../types/types';
 
 // Utility function to format the timestamp
 const formatDate = (timestamp: string) => {
@@ -11,13 +12,6 @@ const formatDate = (timestamp: string) => {
   return date.toLocaleString(); // Formats the date to a readable format
 };
 
-interface FeedbackItem {
-  FeedbackID: string;
-  Email: string;
-  Message: string;
-  Status: string;
-  Timestamp: string;
-}
 
 interface AnalyticsBoardProps {
   onClose: () => void;  // Prop to handle closing action
@@ -30,11 +24,11 @@ const AnalyticsBoard: React.FC<AnalyticsBoardProps> = ({ onClose }) => {
   const { setTabBarVisibility } = useTabBarStore();
 
   useEffect(() => {
-    setTabBarVisibility(false); // Hide tab bar when AnalyticsBoard is opened
+    setTabBarVisibility(false);
     fetchAllFeedback();
 
     return () => {
-      setTabBarVisibility(true); // Show tab bar when AnalyticsBoard is closed
+      setTabBarVisibility(true);
     };
   }, []);
 
@@ -42,32 +36,9 @@ const AnalyticsBoard: React.FC<AnalyticsBoardProps> = ({ onClose }) => {
     setIsLoading(true);
     console.log('Fetching all feedback...');
     try {
-      const response = await fetch(`https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getAllFeedback`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ operation: 'getAllFeedback' }),
-      });
-
-      console.log('API Response Status:', response.status);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch feedback. Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Fetched Data:', data);
-
-      if (!data || !data.data) {
-        throw new Error('Invalid data format returned from API');
-      }
-
-      // Filter out feedback items with status "Closed"
-      const filteredFeedback = data.data.filter((item: FeedbackItem) => item.Status !== 'Closed');
-
-      setFeedbackItems(filteredFeedback);
-      console.log('Feedback items set:', filteredFeedback);
+      const fetchedFeedback = await getAllFeedback();
+      setFeedbackItems(fetchedFeedback);
+      console.log('Feedback items set:', fetchedFeedback);
     } catch (err) {
       setError('Failed to fetch feedback items');
       console.error('Error fetching feedback:', err);
@@ -115,11 +86,9 @@ const AnalyticsBoard: React.FC<AnalyticsBoardProps> = ({ onClose }) => {
                 key={status}
                 style={[
                   styles.statusButton,
-                  item.Status === status && styles.activeStatusButton
-                ]}
-                onPress={() => handleUpdateStatus(item.FeedbackID, status)}
-              >
-                <Text style={styles.statusButtonText}>{status}</Text>
+                  item.Status === status && styles.activeStatusButton]}
+                onPress={() => handleUpdateStatus(item.FeedbackID, status)} >
+                <Text style={[styles.statusButtonText, item.Status === status && styles.activeStatusButtonText]}>{status}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -179,12 +148,14 @@ const styles = StyleSheet.create({
   },
   feedbackEmail: {
     color: COLORS.primary,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
   },
   feedbackMessage: {
     color: '#FFF',
     marginBottom: 5,
+    fontSize: 14,
   },
   feedbackTimestamp: {
     color: '#AAA',
@@ -208,6 +179,11 @@ const styles = StyleSheet.create({
   },
   activeStatusButton: {
     backgroundColor: COLORS.primary,
+  },
+  activeStatusButtonText: {
+    color: '#000000',
+    fontWeight: 'bold',
+    fontSize: 12,
   },
   statusButtonText: {
     color: '#FFF',

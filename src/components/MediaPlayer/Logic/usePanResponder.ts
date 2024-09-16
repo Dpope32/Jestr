@@ -16,7 +16,6 @@ interface PanResponderProps {
   iconAreaRef: RefObject<View>;
   isSwiping: RefObject<boolean>;
   isCommentFeedVisible: boolean;
-  isProfilePanelVisible: boolean;
 }
 
 export const usePanResponder = ({
@@ -25,9 +24,7 @@ export const usePanResponder = ({
   handleTap,
   handleLongPress,
   handleDoubleTap,
-  iconAreaRef,
   isCommentFeedVisible,
-  isProfilePanelVisible,
 }: PanResponderProps) => {
   const translateY = useRef(new Animated.Value(0)).current;
   const animatedBlurIntensity = useRef(new Animated.Value(0)).current;
@@ -80,10 +77,10 @@ export const usePanResponder = ({
       PanResponder.create({
         onStartShouldSetPanResponder: () => {
        //   console.log('PanResponder start should set');
-          return !isCommentFeedVisible && !isProfilePanelVisible;
+          return !isCommentFeedVisible;
         },
         onMoveShouldSetPanResponder: (_, gestureState) => {
-          const shouldSet = Math.abs(gestureState.dy) > 5 && !isCommentFeedVisible && !isProfilePanelVisible;
+          const shouldSet = Math.abs(gestureState.dy) > 5 && !isCommentFeedVisible;
       //    console.log('PanResponder move should set:', shouldSet);
           return shouldSet;
         },
@@ -200,7 +197,6 @@ export const usePanResponder = ({
       handleDoubleTap,
       handleSwipe,
       isCommentFeedVisible,
-      isProfilePanelVisible,
     ]
   );
 

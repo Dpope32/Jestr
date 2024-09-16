@@ -7,10 +7,13 @@ import * as FileSystem from 'expo-file-system';
 import {getToken} from '../stores/secureStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { debounce } from 'lodash';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { Meme, User } from '../types/types';
 
 const COOLDOWN_PERIOD = 5000; // 5 seconds in milliseconds
 const CACHE_KEY_PREFIX = 'memes_cache_';
 const LOCK_KEY = 'fetch_memes_lock';
+const LAST_VIEWED_MEME_KEY = 'lastViewedMemeId';
 
 let isLocked = false;
 let requestQueue: (() => void)[] = [];
@@ -539,4 +542,35 @@ export const updateMemeReaction = async (
   }
 
   // console.log('Meme reaction updated successfully:', data);
+};
+
+export const useMemes = (user: User | null, accessToken: string | null) => {
+  const result = useInfiniteQuery<FetchMemesResult, Error>({
+    queryKey: ['memes', user?.email, accessToken],
+    queryFn: async ({ pageParam }) => {
+      console.log('Fetching memes with pageParam:', pageParam);
+      if (!user?.email || !accessToken) throw new Error('User or token not available');
+      const result = await fetchMemes(pageParam as string | null, user.email, 10, accessToken);
+      console.log('Fetched memes:', result.memes.length);
+      return result;
+    },
+    getNextPageParam: (lastPage) => lastPage.lastEvaluatedKey || undefined,
+    enabled: !!user?.email && !!accessToken,
+    initialPageParam: null as string | null,
+  });
+
+  const memes = result.data?.pages.flatMap(page => page.memes) || [];
+
+  const handleMemeViewed = async (memeId: string) => {
+    if (user?.email) {
+      await AsyncStorage.setItem(LAST_VIEWED_MEME_KEY, memeId);
+      await recordMemeViews([{ email: user.email, memeID: memeId }]);
+    }
+  };
+
+  return {
+    ...result,
+    memes,
+    handleMemeViewed,
+  };
 };

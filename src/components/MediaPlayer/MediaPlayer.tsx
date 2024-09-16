@@ -49,6 +49,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     commentCount: initialCommentCount,
     onLikeStatusChange,
     numOfComments,
+    onMemeViewed,
   }) => {
     const {isDarkMode} = useTheme();
 
@@ -253,7 +254,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       iconAreaRef,
       isSwiping,
       isCommentFeedVisible: false,
-      isProfilePanelVisible: false,
     });
 
     const renderMedia = useMemo(() => {

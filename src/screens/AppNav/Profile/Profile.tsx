@@ -215,7 +215,6 @@ const Profile = React.memo(() => {
               onLongPressStart={() => {}}
               onLongPressEnd={() => {}}
               isCommentFeedVisible={isCommentFeedVisible}
-              isProfilePanelVisible={false}
             />
             <TouchableOpacity
               style={styles.closeButton}

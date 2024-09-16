@@ -7,7 +7,7 @@ import { useUserStore } from '../../../stores/userStore';
 import Toast from 'react-native-toast-message';
 
 
-interface FeedbackItem {
+export interface FeedbackItem {
   Message: string;
   Timestamp: string;
   Status: string;
@@ -71,7 +71,7 @@ const FeedbackForm = () => {
   
     setIsSubmitting(true);
     try {
-      await submitFeedback(email, message, 'New'); // Add 'New' status
+      await submitFeedback(email, message, 'New'); 
       setFormVisible(false);
       showToast('success', 'Success', 'Thank you for your feedback!');
       setMessage('');

@@ -1,99 +1,159 @@
-import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Keyboard, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import InputField from '../../../components/Input/InputField';
-
-// import {useUserStore} from '../../../stores/userStore';
+import { submitFeedback } from '../../../services/userService';
+import { showToast } from '../../../utils/helpers';
 
 const ContactUs = () => {
-  // const setIsFirstLaunch = useUserStore(state => state.setIsFirstLaunch);
+  const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const MAX_CHARS = 500;
 
-  const submitHandler = () => {
-    console.log('Submitting contact form');
-    // !!! setIsFirstLaunch here was just for testing purposes
-    // setIsFirstLaunch(true);
+  const submitHandler = async () => {
+    if (!email || !message) {
+      showToast('error', 'Error', 'Please fill in all fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await submitFeedback(email, message, 'New');
+      navigation.goBack();
+      setTimeout(() => {
+        showToast('success', 'Success', 'Thank you for your feedback!');
+      }, 300);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      showToast('error', 'Error', 'Failed to submit feedback. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
   };
 
   return (
-    <View style={styles.modalContent}>
-      <Text style={[styles.modalHeader]}>Contact Us</Text>
-      <Text style={[styles.modalText]}>Please fill out the form below:</Text>
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+      <View style={styles.modalContent}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.modalHeader}>Contact Us</Text>
+        </View>
+        <Text style={styles.modalText}>Please fill out the form below:</Text>
 
-      <InputField
-        label="Your Email"
-        placeholder="Enter your email"
-        placeholderTextColor="#FFF"
-        value=""
-        onChangeText={() => {}}
-        labelStyle={styles.label}
-        inputStyle={{color: '#FFF'}}
-      />
-
-      <InputField
-        label="Your Message"
-        placeholder="Enter your message"
-        placeholderTextColor="#FFF"
-        value=""
-        onChangeText={() => {}}
-        multiline
-        numberOfLines={6}
-        labelStyle={styles.label}
-        inputStyle={{color: '#FFF'}}
-      />
-
-      {/* TODO: implement feature */}
-      <TouchableOpacity style={styles.submitButton} onPress={submitHandler}>
-        <Text style={styles.submitButtonText}>Send</Text>
-      </TouchableOpacity>
-    </View>
+        <InputField
+          label=""
+          placeholder="Enter your email"
+          value={email}
+          onChangeText={(text) => setEmail(text)}
+          style={styles.inputField}
+        />
+        <View style={styles.messageContainer}>
+          <InputField
+            label=""
+            placeholder="Enter your message"
+            value={message}
+            onChangeText={(text) => setMessage(text)}
+            multiline
+            numberOfLines={4}
+            style={styles.messageInput}
+            maxLength={MAX_CHARS}
+          />
+          <Text style={styles.charCount}>
+            {`${message.length}/${MAX_CHARS}`}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+          onPress={submitHandler}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.submitButtonText}>Send</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
-    backgroundColor: '#ecdede',
+    backgroundColor: '#121212',
     padding: 20,
     justifyContent: 'center',
   },
-  modalHeader: {
-    fontSize: 26,
-    fontWeight: 'bold',
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
-    color: '#846f6f',
-    textAlign: 'center',
+  },
+  backButton: {
+    padding: 10,
+    marginRight: 15,
+  },
+  modalHeader: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    flex: 1,
   },
   modalText: {
     fontSize: 16,
-    color: '#5b3e3e',
-    marginBottom: 20,
-    lineHeight: 24,
+    color: '#BBBBBB',
+    marginBottom: 30,
     textAlign: 'center',
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#5b3e3e',
-    fontWeight: '600',
+  charCount: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    fontSize: 12,
+    color: '#AAAAAA',
   },
-  input: {
-    color: '#FFF',
-    borderColor: '#555',
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
+  messageContainer: {
+    marginBottom: 20,
+    position: 'relative',
+  },
+  inputField: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    padding: 12,
     marginBottom: 15,
+    color: '#FFFFFF',
+  },
+  messageInput: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    padding: 12,
+    height: 100,
+    color: '#FFFFFF',
   },
   submitButton: {
-    marginTop: 25,
-    backgroundColor: '#00cc44',
-    paddingVertical: 12,
+    backgroundColor: '#00ff00',
+    paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#4CAF50AA',
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 18,
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 
