@@ -30,6 +30,7 @@ export interface User {
   likesPublic?: boolean;
   notificationsEnabled?: boolean;
   isFollowed?: boolean;
+  newEmail?: string; // Add this line
 }
 
 export interface ServerError extends Error {

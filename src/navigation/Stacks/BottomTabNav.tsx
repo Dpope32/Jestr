@@ -20,26 +20,19 @@ const Tab = createBottomTabNavigator();
 type TabNavigationProp = BottomTabNavigationProp<ParamListBase> | StackNavigationProp<ParamListBase>;
 
 const BottomTabNav = () => {
-  useEffect(() => {
-    console.log('BottomTabNav component mounted');
-  }, []);
-
   const isTabBarVisible = useTabBarStore(state => state.isTabBarVisible);
 
   const customIcons = { home: faHome, upload: faPlus, inbox: faEnvelope };
   const iconSize = () => Math.floor(Dimensions.get('window').width * 0.07);
 
   const handleTabPress = () => {
-    console.log('Tab pressed, triggering haptic feedback');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      .then(() => console.log('Haptic feedback triggered successfully'))
       .catch(error => console.error('Error triggering haptic feedback:', error));
   };
 
   const getTabNavigatorOptions = (
     route: RouteProp<ParamListBase, string>,
   ): BottomTabNavigationOptions => {
-    console.log('Getting tab navigator options for route:', route.name);
     return {
       tabBarShowLabel: false,
       tabBarStyle: {
@@ -54,7 +47,7 @@ const BottomTabNav = () => {
   const createTabOptions = (icon: any, headerComponent?: React.FC) => {
     return {
       tabBarIcon: () => {
-        console.log('Rendering tab icon for:', icon.iconName);
+       // console.log('Rendering tab icon for:', icon.iconName);
         return (
           <FontAwesomeIcon
             icon={icon}
@@ -68,7 +61,6 @@ const BottomTabNav = () => {
         route: RouteProp<ParamListBase, string>;
         options: BottomTabNavigationOptions;
       }) => {
-        console.log('Rendering header for route:', route.name);
         if (!isTabBarVisible) return null;
         return <HeaderFeed />;
       } : undefined,
@@ -77,7 +69,6 @@ const BottomTabNav = () => {
         <TouchableOpacity
           {...props}
           onPress={(e) => {
-            console.log('Tab button pressed');
             handleTabPress();
             if (props.onPress) {
               props.onPress(e);
@@ -93,7 +84,6 @@ const BottomTabNav = () => {
       initialRouteName="FeedStackNav"
       screenOptions={({ route }) => getTabNavigatorOptions(route)}
       tabBar={(props) => {
-        console.log('Rendering tab bar, isTabBarVisible:', isTabBarVisible);
         if (!isTabBarVisible) return null;
         return (
           <View style={styles.tabBarPropStyle}>

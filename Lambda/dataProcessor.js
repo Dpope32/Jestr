@@ -1,8 +1,8 @@
 const {DynamoDBDocumentClient,GetCommand,DeleteCommand,BatchWriteCommand,PutCommand,UpdateCommand,ScanCommand,QueryCommand} = require('@aws-sdk/lib-dynamodb');
 const { DynamoDBClient, BatchGetItemCommand } = require('@aws-sdk/client-dynamodb');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { CognitoJwtVerifier } = require('aws-jwt-verify');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 
 // Initialize AWS clients
 const ddbClient = new DynamoDBClient({});
@@ -79,6 +79,58 @@ const batchCheckFollowStatus = async (followerId, followeeIDs) => {
   }
 };
 
+async function getUserMemes(email, lastEvaluatedKey, limit = 20) {
+  if (!email) {
+    throw new Error('Email is required to fetch user memes.');
+  }
+
+  const queryParams = {
+    TableName: 'Memes',
+    IndexName: 'Email-UploadTimestamp-index',
+    KeyConditionExpression: 'Email = :email',
+    ExpressionAttributeValues: {
+      ':email': email
+    },
+    ScanIndexForward: false,
+    Limit: limit,
+    ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
+  };
+
+  try {
+    const result = await docClient.send(new QueryCommand(queryParams));
+
+    const userMemes = result.Items ? result.Items.map(item => ({
+      memeID: item.MemeID,
+      email: item.Email,
+      url: item.MemeURL,
+      caption: item.Caption,
+      uploadTimestamp: item.UploadTimestamp,
+      likeCount: item.LikeCount || 0,
+      downloadCount: item.DownloadsCount || 0,
+      commentCount: item.CommentCount || 0,
+      shareCount: item.ShareCount || 0,
+      username: item.Username,
+      profilePicUrl: item.ProfilePicUrl || '',
+      mediaType: item.mediaType || 'image',
+      liked: item.Liked || false,
+      doubleLiked: item.DoubleLiked || false,
+      memeUser: {
+        email: item.Email,
+        username: item.Username,
+        profilePic: item.ProfilePicUrl || '',
+      },
+    })) : [];
+
+    return {
+      memes: userMemes,
+      lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
+    };
+  } catch (error) {
+    console.error('Error fetching user memes:', error);
+    throw new Error('Failed to fetch user memes.');
+  }
+}
+
 
 async function recordMemeViews(userEmail, memeIDs) {
   const now = new Date();
@@ -128,6 +180,7 @@ async function recordMemeViews(userEmail, memeIDs) {
   }
 }
 
+
 exports.handler = async (event) => {
  //   console.log('Received event:', JSON.stringify(event, null, 2));
  // console.log('Headers:', JSON.stringify(event.headers, null, 2));
@@ -150,7 +203,7 @@ exports.handler = async (event) => {
   // List of operations that don't require authentication
   const publicOperations = [
     'fetchMemes','uploadMeme','getPresignedUrl','getLikeStatus','getUserMemes', 'signin', 'signup',
-    'updateMemeReaction','recordMemeView','deleteMeme','removeDownloadedMeme','getPopularMemes','getTotalMemes',
+    'updateMemeReaction','recordMemeView','deleteMeme','removeDownloadedMeme','getPopularMemes','getTotalMemes', 'requestDataArchive'
   ];
 
   let verifiedUser = null;
@@ -175,136 +228,240 @@ exports.handler = async (event) => {
 
   switch (operation) {
 
-    case 'fetchMemes': {
-      const { lastViewedMemeId, userEmail, limit = 5 } = requestBody;
-      if (!userEmail) {
-        return createResponse(400, 'userEmail is required.');
+    case 'requestDataArchive': {
+      const { email } = requestBody;
+      if (!email) {
+        return createResponse(400, 'Email is required to request data archive.');
       }
-      
+    
       try {
-        // Check cache for existing viewedMemes
-        let viewedMemeIDs = cachedViewedMemes[userEmail];
+        // Fetch user's memes
+        const userMemesResult = await getUserMemes(email);
     
-        if (viewedMemeIDs) {
-          console.log(`Cache hit for user: ${userEmail}. Using cached viewedMemeIDs.`);
-        } else {
-          console.log(`Cache miss for user: ${userEmail}. Fetching from DynamoDB.`);
-          
-          // Fetch user's entire view history from DynamoDB if not in cache
-          const viewHistoryCommand = new QueryCommand({
-            TableName: 'UserMemeViews',
-            KeyConditionExpression: 'email = :email',
-            ExpressionAttributeValues: { ':email': userEmail }
-          });
-    
-          const viewHistoryResponse = await docClient.send(viewHistoryCommand);
-    
-          // Extract all viewed meme IDs and cache them
-          viewedMemeIDs = new Set(
-            viewHistoryResponse.Items.flatMap(item =>
-              (item.viewedMemes || []).map(meme => typeof meme === 'string' ? meme : meme.S)
-            )
-          );
-    
-          // Cache viewedMemeIDs
-          cachedViewedMemes[userEmail] = viewedMemeIDs;
-    
-          console.log(`Cached viewedMemeIDs for user: ${userEmail}.`);
-        }
-    
-        // Fetch memes using the new GSI
-        let queryParams = {
-          TableName: 'Memes',
-          IndexName: 'ByStatusAndTimestamp',
-          KeyConditionExpression: '#status = :status',
-          ExpressionAttributeNames: {
-            '#status': 'Status'
-          },
-          ExpressionAttributeValues: {
-            ':status': 'active'
-          },
-          ScanIndexForward: false, // To get the most recent memes first
-          Limit: 100 // We'll filter out viewed memes, so we fetch more than needed
+        // Prepare data for archive
+        const userData = {
+          email: email,
+          memes: userMemesResult.memes,
+          // Add any other user data you want to include in the archive
         };
     
-        if (lastViewedMemeId) {
-          // Fetch the last viewed meme to get its timestamp
-          const lastViewedMemeCommand = new GetCommand({
-            TableName: 'Memes',
-            Key: { MemeID: lastViewedMemeId }
-          });
-          const lastViewedMeme = await docClient.send(lastViewedMemeCommand);
+        // Convert data to JSON string
+        const dataString = JSON.stringify(userData, null, 2);
     
-          if (lastViewedMeme.Item) {
-            queryParams.ExclusiveStartKey = { 
-              Status: 'active',
-              UploadTimestamp: lastViewedMeme.Item.UploadTimestamp,
-              MemeID: lastViewedMemeId
-            };
-          }
-        }
+        // Generate a unique filename for the archive
+        const fileName = `${email}_data_archive_${Date.now()}.json`;
     
-        let unseenMemes = [];
-        while (unseenMemes.length < limit) {
-          const queryCommand = new QueryCommand(queryParams);
-          const result = await docClient.send(queryCommand);
+        // Upload to S3
+        const uploadParams = {
+          Bucket: BUCKET_NAME,
+          Key: fileName,
+          Body: dataString,
+          ContentType: 'application/json'
+        };
+        await s3Client.send(new PutObjectCommand(uploadParams));
     
-          const newUnseenMemes = result.Items.filter(meme => !viewedMemeIDs.has(meme.MemeID));
-          unseenMemes = [...unseenMemes, ...newUnseenMemes];
+        // Generate a pre-signed URL for the uploaded file
+        const url = await getSignedUrl(s3Client, new GetObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: fileName
+        }), { expiresIn: 604800 }); // URL expires in 1 week
     
-          if (!result.LastEvaluatedKey || unseenMemes.length >= limit) break;
-          queryParams.ExclusiveStartKey = result.LastEvaluatedKey;
-        }
+        // Return the URL in the response
+        return createResponse(200, 'Data archive created successfully', {
+          message: 'Your data archive has been created.',
+          downloadUrl: url,
+          expiresIn: '7 days'
+        });
+      } catch (error) {
+        console.error('Error processing data archive request:', error);
+        return createResponse(500, 'Failed to process data archive request', { error: error.message });
+      }
+    }
     
-        // Process memes and attach follow status (rest of your existing code)
-        const followeeIDs = [...new Set(unseenMemes.slice(0, limit).map(item => item.Email).filter(email => email !== userEmail))];
-    
-        let followStatuses = {};
-        if (followeeIDs.length > 0) {
-          followStatuses = await batchCheckFollowStatus(userEmail, followeeIDs);
-        } else {
-          console.log('No followee IDs provided. Returning empty follow statuses.');
-        }
-    
-        const memes = unseenMemes.slice(0, limit).map(item => ({
-          memeID: item.MemeID,
-          email: item.Email,
-          url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
-          uploadTimestamp: item.UploadTimestamp,
-          username: item.Username,
-          caption: item.Caption,
-          likeCount: item.LikeCount || 0,
-          downloadCount: item.DownloadsCount || 0,
-          commentCount: item.CommentCount || 0,
-          shareCount: item.ShareCount || 0,
-          profilePicUrl: item.ProfilePicUrl || '',
-          mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
-          memeUser: {
-            email: item.Email,
-            username: item.Username,
-            profilePic: item.ProfilePicUrl || '',
-            displayName: item.Username,
-            headerPic: '',
-            creationDate: item.UploadTimestamp
-          },
-          isFollowed: item.Email !== userEmail ? followStatuses[item.Email] || false : null
-        }));
-    // Update the cache with new views
-    memes.forEach(meme => viewedMemeIDs.add(meme.memeID));
 
-    // Record meme views in DynamoDB
-    await recordMemeViews(userEmail, memes.map(meme => meme.memeID));
-
-    return createResponse(200, 'Memes retrieved successfully.', {
-      memes,
-      lastEvaluatedKey: queryParams.ExclusiveStartKey ? JSON.stringify(queryParams.ExclusiveStartKey) : null
-    });
-  } catch (error) {
-    console.error('Error fetching memes:', error);
-    return createResponse(500, 'Internal Server Error', { error: error.message, stack: error.stack });
+case 'getUserMemes': {
+  const { email, lastEvaluatedKey, limit = 20 } = requestBody;
+  if (!email) {
+  return createResponse(400, 'Email is required to fetch user memes.');
   }
-}
+
+  const queryParams = {
+  TableName: 'Memes',
+  IndexName: 'Email-UploadTimestamp-index',
+  KeyConditionExpression: 'Email = :email',
+  ExpressionAttributeValues: {
+    ':email': email
+  },
+  ScanIndexForward: false,
+  Limit: limit,
+  ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
+  };
+
+  try {
+  const result = await docClient.send(new QueryCommand(queryParams));
+
+  const userMemes = result.Items ? result.Items.map(item => ({
+    memeID: item.MemeID,
+    email: item.Email,
+    url: item.MemeURL,
+    caption: item.Caption,
+    uploadTimestamp: item.UploadTimestamp,
+    likeCount: item.LikeCount || 0,
+    downloadCount: item.DownloadsCount || 0,
+    commentCount: item.CommentCount || 0,
+    shareCount: item.ShareCount || 0,
+    username: item.Username,
+    profilePicUrl: item.ProfilePicUrl || '',
+    mediaType: item.mediaType || 'image',
+    liked: item.Liked || false,
+    doubleLiked: item.DoubleLiked || false,
+    memeUser: {
+      email: item.Email,
+      username: item.Username,
+      profilePic: item.ProfilePicUrl || '',
+    },
+  })) : [];
+
+  return createResponse(200, 'User memes retrieved successfully.', {
+    memes: userMemes,
+    lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
+  });
+  } catch (error) {
+  console.error('Error fetching user memes:', error);
+  return createResponse(500, 'Failed to fetch user memes.', { memes: [], lastEvaluatedKey: null });
+  }
+  }
+
+  case 'fetchMemes': {
+    const { lastViewedMemeId, userEmail, limit = 5 } = requestBody;
+    if (!userEmail) {
+      return createResponse(400, 'userEmail is required.');
+    }
     
+    try {
+      // Check cache for existing viewedMemes
+      let viewedMemeIDs = cachedViewedMemes[userEmail];
+  
+      if (viewedMemeIDs) {
+        console.log(`Cache hit for user: ${userEmail}. Using cached viewedMemeIDs.`);
+      } else {
+        console.log(`Cache miss for user: ${userEmail}. Fetching from DynamoDB.`);
+        
+        // Fetch user's entire view history from DynamoDB if not in cache
+        const viewHistoryCommand = new QueryCommand({
+          TableName: 'UserMemeViews',
+          KeyConditionExpression: 'email = :email',
+          ExpressionAttributeValues: { ':email': userEmail }
+        });
+  
+        const viewHistoryResponse = await docClient.send(viewHistoryCommand);
+  
+        // Extract all viewed meme IDs and cache them
+        viewedMemeIDs = new Set(
+          viewHistoryResponse.Items.flatMap(item =>
+            (item.viewedMemes || []).map(meme => typeof meme === 'string' ? meme : meme.S)
+          )
+        );
+  
+        // Cache viewedMemeIDs
+        cachedViewedMemes[userEmail] = viewedMemeIDs;
+  
+        console.log(`Cached viewedMemeIDs for user: ${userEmail}.`);
+      }
+  
+      // Fetch memes using the new GSI
+      let queryParams = {
+        TableName: 'Memes',
+        IndexName: 'ByStatusAndTimestamp',
+        KeyConditionExpression: '#status = :status',
+        ExpressionAttributeNames: {
+          '#status': 'Status'
+        },
+        ExpressionAttributeValues: {
+          ':status': 'active'
+        },
+        ScanIndexForward: false, // To get the most recent memes first
+        Limit: 100 // We'll filter out viewed memes, so we fetch more than needed
+      };
+  
+      if (lastViewedMemeId) {
+        // Fetch the last viewed meme to get its timestamp
+        const lastViewedMemeCommand = new GetCommand({
+          TableName: 'Memes',
+          Key: { MemeID: lastViewedMemeId }
+        });
+        const lastViewedMeme = await docClient.send(lastViewedMemeCommand);
+  
+        if (lastViewedMeme.Item) {
+          queryParams.ExclusiveStartKey = { 
+            Status: 'active',
+            UploadTimestamp: lastViewedMeme.Item.UploadTimestamp,
+            MemeID: lastViewedMemeId
+          };
+        }
+      }
+  
+      let unseenMemes = [];
+      while (unseenMemes.length < limit) {
+        const queryCommand = new QueryCommand(queryParams);
+        const result = await docClient.send(queryCommand);
+  
+        const newUnseenMemes = result.Items.filter(meme => !viewedMemeIDs.has(meme.MemeID));
+        unseenMemes = [...unseenMemes, ...newUnseenMemes];
+  
+        if (!result.LastEvaluatedKey || unseenMemes.length >= limit) break;
+        queryParams.ExclusiveStartKey = result.LastEvaluatedKey;
+      }
+  
+      // Process memes and attach follow status (rest of your existing code)
+      const followeeIDs = [...new Set(unseenMemes.slice(0, limit).map(item => item.Email).filter(email => email !== userEmail))];
+  
+      let followStatuses = {};
+      if (followeeIDs.length > 0) {
+        followStatuses = await batchCheckFollowStatus(userEmail, followeeIDs);
+      } else {
+        console.log('No followee IDs provided. Returning empty follow statuses.');
+      }
+  
+      const memes = unseenMemes.slice(0, limit).map(item => ({
+        memeID: item.MemeID,
+        email: item.Email,
+        url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
+        uploadTimestamp: item.UploadTimestamp,
+        username: item.Username,
+        caption: item.Caption,
+        likeCount: item.LikeCount || 0,
+        downloadCount: item.DownloadsCount || 0,
+        commentCount: item.CommentCount || 0,
+        shareCount: item.ShareCount || 0,
+        profilePicUrl: item.ProfilePicUrl || '',
+        mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
+        memeUser: {
+          email: item.Email,
+          username: item.Username,
+          profilePic: item.ProfilePicUrl || '',
+          displayName: item.Username,
+          headerPic: '',
+          creationDate: item.UploadTimestamp
+        },
+        isFollowed: item.Email !== userEmail ? followStatuses[item.Email] || false : null
+      }));
+  // Update the cache with new views
+  memes.forEach(meme => viewedMemeIDs.add(meme.memeID));
+
+  // Record meme views in DynamoDB
+  await recordMemeViews(userEmail, memes.map(meme => meme.memeID));
+
+  return createResponse(200, 'Memes retrieved successfully.', {
+    memes,
+    lastEvaluatedKey: queryParams.ExclusiveStartKey ? JSON.stringify(queryParams.ExclusiveStartKey) : null
+  });
+} catch (error) {
+  console.error('Error fetching memes:', error);
+  return createResponse(500, 'Internal Server Error', { error: error.message, stack: error.stack });
+}
+}
+
 
       case 'uploadMeme': {
     //    console.log('Processing operation:', event.operation);
@@ -528,59 +685,6 @@ exports.handler = async (event) => {
       } catch (error) {
       console.error(`Error getting meme info and like status: ${error}`);
       return createResponse(500, 'Failed to get meme info and like status.', { error: error.message });
-      }
-      }
-
-      case 'getUserMemes': {
-      const { email, lastEvaluatedKey, limit = 20 } = requestBody;
-      if (!email) {
-      return createResponse(400, 'Email is required to fetch user memes.');
-      }
-
-      const queryParams = {
-      TableName: 'Memes',
-      IndexName: 'Email-UploadTimestamp-index',
-      KeyConditionExpression: 'Email = :email',
-      ExpressionAttributeValues: {
-        ':email': email
-      },
-      ScanIndexForward: false,
-      Limit: limit,
-      ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
-      };
-
-      try {
-      const result = await docClient.send(new QueryCommand(queryParams));
-
-      const userMemes = result.Items ? result.Items.map(item => ({
-        memeID: item.MemeID,
-        email: item.Email,
-        url: item.MemeURL,
-        caption: item.Caption,
-        uploadTimestamp: item.UploadTimestamp,
-        likeCount: item.LikeCount || 0,
-        downloadCount: item.DownloadsCount || 0,
-        commentCount: item.CommentCount || 0,
-        shareCount: item.ShareCount || 0,
-        username: item.Username,
-        profilePicUrl: item.ProfilePicUrl || '',
-        mediaType: item.mediaType || 'image',
-        liked: item.Liked || false,
-        doubleLiked: item.DoubleLiked || false,
-        memeUser: {
-          email: item.Email,
-          username: item.Username,
-          profilePic: item.ProfilePicUrl || '',
-        },
-      })) : [];
-
-      return createResponse(200, 'User memes retrieved successfully.', {
-        memes: userMemes,
-        lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
-      });
-      } catch (error) {
-      console.error('Error fetching user memes:', error);
-      return createResponse(500, 'Failed to fetch user memes.', { memes: [], lastEvaluatedKey: null });
       }
       }
 

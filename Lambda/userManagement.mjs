@@ -1,10 +1,10 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { DynamoDBDocumentClient, GetCommand, DeleteCommand, BatchWriteCommand, PutCommand, UpdateCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand,DeleteCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
-
+import * as accountServices from './accountServices.mjs';
 
 // Initialize AWS clients
 const ddbClient = new DynamoDBClient({});
@@ -18,19 +18,20 @@ const verifier = CognitoJwtVerifier.create({
 });
 
 const publicOperations = [
-    'getUser', 'submitFeedback', 'updateFeedback', 'getFeedback', 'getAllFeedback', 'updateBio', 'updateProfileImage', 'completeProfile', 'updateUserProfile',
+    'getUser', 'updatePassword', 'resendConfirmationCode', 'forgotPassword', 'confirmForgotPassword', 
+    'submitFeedback', 'updateFeedback', 'getFeedback', 'getAllFeedback', 
+    'updateBio', 'updateProfileImage', 'completeProfile', 'updateUserProfile',
     'getUserGrowthRate', 'getTotalUsers', 'getDAU', 'addFollow', 'removeFollow',
-    'getFollowing', 'getFollowers', 'getAllUsers',
-    'checkFollowStatus', 'batchCheckStatus'
+    'getFollowing', 'getFollowers', 'getAllUsers','checkFollowStatus', 'batchCheckStatus', 'deleteAccount'
 ];
 
 function generateAccessToken() {
     return crypto.randomBytes(32).toString('hex');
   }
   
-//**********************************************************************////////
+//**********************************************************************************************************
 // HELPER FUNCTIONS //
-//**********************************************************************************//////
+//**********************************************************************************************************
 
 const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
     if (typeof key !== 'string') {
@@ -55,44 +56,6 @@ const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
     }
   };
 
-  const updateProfileImage = async (requestBody) => {
-    const { email, imageType, image } = requestBody;
-    if (!email || !imageType || !image) {
-      console.error('Missing required fields for updateProfileImage:', { email, imageType, imageProvided: !!image });
-      return createResponse(400, 'Email, imageType, and image are required for updating profile image.');
-    }
-  
-    try {
-      const bucketName = 'jestr-bucket';
-      const imageKey = `${imageType === 'profile' ? 'ProfilePictures' : 'HeaderPictures'}/${email}-${imageType}Pic-${Date.now()}.jpg`;
-      const newImageUrl = await uploadToS3(image, imageKey, 'image/jpeg', bucketName);
-  
-      const updateProfileParams = {
-        TableName: 'Profiles',
-        Key: { email },
-        UpdateExpression: 'SET #imagePic = :url',
-        ExpressionAttributeNames: {
-          '#imagePic': `${imageType}Pic`
-        },
-        ExpressionAttributeValues: {
-          ':url': newImageUrl
-        },
-        ReturnValues: 'ALL_NEW'
-      };
-  
-      await docClient.send(new UpdateCommand(updateProfileParams));
-  
-      return createResponse(200, 'Profile image updated successfully.', { [imageType + 'Pic']: newImageUrl });
-    } catch (error) {
-      console.error('Error updating profile image:', error);
-      console.error('Stack trace:', error.stack);
-      return createResponse(500, 'Failed to update profile image.', { 
-        error: error.message, 
-        stack: error.stack,
-        details: error.toString() 
-      });
-    }
-  };
 
 const addFollow = async (followerId, followeeId) => {
   if (followerId === followeeId) {
@@ -227,76 +190,6 @@ const getFollowing = async (userId) => {
   }
 };
 
-const updateFeedback = async (requestBody) => {
-  const { feedbackId, status } = requestBody;
-  if (!feedbackId || !status) {
-    return createResponse(400, 'FeedbackID and status are required for updating feedback.');
-  }
-
-  const validStatuses = ['New', 'In Progress', 'Resolved', 'Closed'];
-  if (!validStatuses.includes(status)) {
-    return createResponse(400, 'Invalid status. Must be one of: New, In Progress, Resolved, Closed');
-  }
-
-  try {
-    const params = {
-      TableName: 'UserFeedback',
-      Key: { FeedbackID: feedbackId },
-      UpdateExpression: 'SET #status = :status',
-      ExpressionAttributeNames: { '#status': 'Status' },
-      ExpressionAttributeValues: { ':status': status },
-      ReturnValues: 'ALL_NEW'
-    };
-
-    const result = await docClient.send(new UpdateCommand(params));
-    return createResponse(200, 'Feedback updated successfully', result.Attributes);
-  } catch (error) {
-    console.error('Error updating feedback:', error);
-    return createResponse(500, 'Failed to update feedback');
-  }
-};
-
-const getFeedback = async (requestBody) => {
-  const { email } = requestBody;
-  if (!email) {
-    return createResponse(400, 'Email is required for getting feedback.');
-  }
-
-  try {
-    const params = {
-      TableName: 'UserFeedback',
-      IndexName: 'EmailIndex',
-      KeyConditionExpression: 'Email = :email',
-      FilterExpression: '#status <> :closedStatus',
-      ExpressionAttributeNames: { '#status': 'Status' },
-      ExpressionAttributeValues: {
-        ':email': email,
-        ':closedStatus': 'Closed'
-      }
-    };
-
-    const result = await docClient.send(new QueryCommand(params));
-    return createResponse(200, 'Feedback retrieved successfully', result.Items);
-  } catch (error) {
-    console.error('Error getting feedback:', error);
-    return createResponse(500, 'Failed to get feedback');
-  }
-};
-
-const getAllFeedback = async () => {
-  try {
-    const params = {
-      TableName: 'UserFeedback',
-    };
-
-    const result = await docClient.send(new ScanCommand(params));
-    return createResponse(200, 'All feedback retrieved successfully', result.Items);
-  } catch (error) {
-    console.error('Error getting all feedback:', error);
-    return createResponse(500, 'Failed to get all feedback');
-  }
-};
-
 // Function to check if one user follows another
 const checkFollowStatus = async (followerId, followeeId) => {
   if (!followerId || !followeeId) {
@@ -328,7 +221,6 @@ const checkFollowStatus = async (followerId, followeeId) => {
     return { isFollowing: false, canFollow: true };
   }
 };
-
 
 export const handler = async (event) => {
     console.log('Received event:', JSON.stringify(event, null, 2));
@@ -382,38 +274,39 @@ export const handler = async (event) => {
                     return createResponse(500, 'Failed to get user details.');
               }
 
-              case 'updateProfileImage':
-                return await updateProfileImage(requestBody);
-              
-              case 'submitFeedback':
-                  const { email, message } = requestBody;
-                  if (!email || !message) {
-                    return createResponse(400, 'Email and message are required for submitting feedback.');
-                  }
-                  try {
-                    const feedbackId = uuidv4();
-                    const params = {
-                      TableName: 'UserFeedback',
-                      Item: {
-                        FeedbackID: feedbackId,
-                        Email: email,
-                        Message: message,
-                        Timestamp: new Date().toISOString(),
-                        Status: 'New'
-                      }
-                    };
-                    await docClient.send(new PutCommand(params));
-                    return createResponse(200, 'Feedback submitted successfully', { feedbackId });
-                  } catch (error) {
-                    console.error('Error submitting feedback:', error);
-                    return createResponse(500, 'Failed to submit feedback');
-              }
+              case 'deleteAccount':
+                if (!requestBody.email) {
+                    return createResponse(400, 'Email is required for deleting an account.');
+                }
+                return await accountServices.deleteAccount(requestBody.email);
 
+              case 'updateUserProfile':
+                return await accountServices.updateUserProfile(requestBody);
+              
+              case 'updatePassword':
+                return await accountServices.updatePassword(requestBody.username, requestBody.newPassword);
+              
+              case 'resendConfirmationCode':
+                return await accountServices.resendConfirmationCode(requestBody.username);
+              
+              case 'forgotPassword':
+                return await accountServices.forgotPassword(requestBody.username);
+              
+              case 'updateProfileImage':
+                return await accountServices.updateProfileImage(requestBody);
+              
+              case 'confirmForgotPassword':
+                return await accountServices.confirmForgotPassword(requestBody.username, requestBody.confirmationCode, requestBody.newPassword);
+              
               case 'updateFeedback':
-                return await updateFeedback(requestBody);
-            
+                return await accountServices.updateFeedback(requestBody);
+              
               case 'getFeedback':
-                return await getFeedback(requestBody);
+                return await accountServices.getFeedback(requestBody);
+              
+              case 'getAllFeedback':
+                return await accountServices.getAllFeedback();
+                
 
             case 'updateBio': {
                 const { email, bio } = requestBody;              
@@ -438,9 +331,6 @@ export const handler = async (event) => {
                   return createResponse(500, 'Failed to update bio.');
                 }
               }
-
-              case 'getAllFeedback':
-                return await getAllFeedback();
 
             case 'completeProfile': {
                 const { email, username, profilePic, headerPic, displayName, bio } = requestBody;

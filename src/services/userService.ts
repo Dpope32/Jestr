@@ -1,5 +1,6 @@
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
+import {Alert} from 'react-native';
 import {API_URL, API_ENDPOINT} from './config';
 import Toast from 'react-native-toast-message';
 import {User, Meme, FetchMemesResult} from '../types/types';
@@ -438,23 +439,46 @@ export const updateBio = async (
   }
 };
 
-export const updateUserProfile = async (user: User): Promise<User> => {
-  const response = await fetch(
-    'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updateUserProfile',
-    {
+export const updateUserProfile = async (updatedFields: Partial<User>): Promise<User> => {
+  try {
+    console.log('Sending request to update user profile:', updatedFields);
+    
+    const response = await fetch(`${API_URL}/updateUserProfile`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(user),
-    },
-  );
+      body: JSON.stringify({
+        operation: 'updateUserProfile',
+        ...updatedFields,
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error('Failed to update user profile');
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+
+    const responseText = await response.text();
+    console.log('Response text:', responseText);
+
+    if (!response.ok) {
+      throw new Error(`Failed to update user profile: ${response.status} ${responseText}`);
+    }
+
+    const updatedUser = JSON.parse(responseText);
+    console.log('Parsed updated user:', updatedUser);
+
+    if (updatedFields.newEmail) {
+      Alert.alert(
+        'Email Update',
+        'Your email update request has been submitted. Please check your new email for a verification link.'
+      );
+    }
+
+    return updatedUser;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
   }
-
-  return response.json();
 };
 
 export const getTotalUsers = async (): Promise<number> => {

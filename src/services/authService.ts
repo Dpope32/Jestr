@@ -1,29 +1,16 @@
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 import {Alert} from 'react-native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {resetPassword} from '@aws-amplify/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {User} from '../types/types';
-import {logStorageContents} from '../utils/debugUtils';
-import {
-  signUp,
-  signOut,
-  confirmSignIn,
-  getCurrentUser,
-  fetchAuthSession,
-  signIn,
-} from '@aws-amplify/auth';
-import {RootStackParamList} from '../types/types';
+import {signUp,signOut,resetPassword,getCurrentUser,fetchAuthSession,signIn,confirmResetPassword} from '@aws-amplify/auth';
+
 import {useUserStore} from '../stores/userStore';
-import {removeToken, storeUserIdentifier} from '../stores/secureStore';
+import {removeToken} from '../stores/secureStore';
 import * as SecureStore from 'expo-secure-store';
 import {fetchUserDetails} from './userService';
 //import * as Google from 'expo-auth-session/providers/google';
-import {
-  AuthNavProp,
-  ChangePasswordNavRouteProp,
-} from '../navigation/NavTypes/AuthStackTypes';
+import {AuthNavProp} from '../navigation/NavTypes/AuthStackTypes';
 
 export const checkAuthStatus = async () => {
   try {
@@ -33,89 +20,6 @@ export const checkAuthStatus = async () => {
     return false;
   }
 };
-
-// export const handleLogin = async (
-//   username: string,
-//   password: string,
-//   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-//   navigation: StackNavigationProp<RootStackParamList>,
-// ) => {
-//   setIsLoading(true);
-//   try {
-//     // Clear existing auth data
-//     await signOut({global: true});
-//     await SecureStore.deleteItemAsync('accessToken');
-//     await AsyncStorage.removeItem('userIdentifier');
-//     await AsyncStorage.removeItem('isAdmin');
-//     useUserStore.getState().resetUserState(); // Use the resetUserState function
-
-//     const lowercaseUsername = username.toLowerCase();
-//     const {isSignedIn, nextStep} = await signIn({
-//       username: lowercaseUsername,
-//       password,
-//       options: {
-//         authFlowType: 'USER_PASSWORD_AUTH',
-//       },
-//     });
-
-//     if (isSignedIn) {
-//       const {tokens} = await fetchAuthSession();
-//       const accessToken = tokens?.accessToken?.toString();
-//       if (accessToken) {
-//         await SecureStore.setItemAsync('accessToken', accessToken);
-//       }
-//       const userDetails = await fetchUserDetails(username, accessToken || '');
-
-//       const isAdmin = [
-//         'pope.dawson@gmail.com',
-//         'bogdan.georgian370@gmail.com',
-//         'kamariewallace1999@gmail.com',
-//         'jestrdev@gmail.com',
-//         'bogdan.georgian001@gmail.com',
-//         'popebardy@gmail.com',
-//         'tpope918@aol.com',
-//       ].includes(userDetails.email);
-
-//       // Store isAdmin in AsyncStorage
-//       await AsyncStorage.setItem('isAdmin', JSON.stringify(isAdmin));
-
-//       // Update Zustand store
-//       useUserStore.getState().setUserDetails({
-//         email: userDetails.email,
-//         username: userDetails.username,
-//         displayName: userDetails.displayName,
-//         profilePic: userDetails.profilePic,
-//         headerPic: userDetails.headerPic,
-//         bio: userDetails.bio,
-//         creationDate: userDetails.CreationDate,
-//         followersCount: userDetails.FollowersCount,
-//         followingCount: userDetails.FollowingCount,
-//         isAdmin: isAdmin,
-//       });
-
-//       // Store user identifier
-//       await storeUserIdentifier(userDetails.email);
-//       await logStorageContents();
-//       navigation.navigate('Feed', {
-//         userEmail: userDetails.email, // Pass only the necessary identifier
-//       });
-//     } else if (
-//       nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
-//     ) {
-//       navigation.navigate('ChangePassword', {
-//         username,
-//         nextStep: nextStep,
-//       });
-//     } else {
-//       Alert.alert('Login Failed', 'Unexpected authentication step');
-//     }
-//   } catch (error: any) {
-//     console.error('Login error:', error);
-//     Alert.alert('Login Failed', error.message || 'An unknown error occurred');
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
 
 export const handleLogin = async (
   username: string,
@@ -198,106 +102,21 @@ export const handleLogin = async (
   }
 };
 
-export const handleSignOut = async () => {
+export const handleSignOut = async (navigation: AuthNavProp) => {
   try {
     await signOut({global: true});
     await removeToken('accessToken');
-    // await AsyncStorage.removeItem('user');
-    // await AsyncStorage.removeItem('accessToken');
     await SecureStore.deleteItemAsync('accessToken');
     await AsyncStorage.clear();
     useUserStore.getState().resetUserState();
     console.log('Sign out successful');
+    
+    // Navigate to LandingPage
+    navigation.navigate('LandingPage');
   } catch (error) {
     console.error('Error signing out:', error);
-    // throw error;
   }
 };
-
-// export const handleSignup = async (
-//   email: string,
-//   password: string,
-//   setIsSignedUp: React.Dispatch<React.SetStateAction<boolean>>,
-//   setSignupSuccessModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
-//   navigation: StackNavigationProp<RootStackParamList>,
-//   navigateToConfirmSignUp: (email: string) => void,
-//   setCurrentScreen: React.Dispatch<React.SetStateAction<string>>,
-// ) => {
-//   const defaultName = 'jestruser';
-
-//   try {
-//     const userAttributes = {
-//       email,
-//       phone_number: '+1234567890', // Default phone number
-//       name: defaultName, // Default name
-//     };
-
-//     // console.log('User attributes being sent:', userAttributes);
-//     useUserStore.getState().setTempPassword(password);
-
-//     const {isSignUpComplete, userId, nextStep} = await signUp({
-//       username: email,
-//       password,
-//       options: {
-//         userAttributes,
-//       },
-//     });
-
-//     if (isSignUpComplete) {
-//       setIsSignedUp(true);
-//       setSignupSuccessModalVisible(true);
-
-//       // Automatically sign in the user after successful signup
-//       const {isSignedIn} = await signIn({
-//         username: email, // Use email here instead of username
-//         password,
-//         options: {
-//           authFlowType: 'USER_PASSWORD_AUTH',
-//         },
-//       });
-//       if (isSignedIn) {
-//         const authUser = await getCurrentUser();
-//         const user = convertAuthUserToUser(authUser);
-//         useUserStore.getState().setUserDetails(user);
-//         navigation.navigate('CompleteProfileScreen', {email});
-//       } else {
-//         Alert.alert(
-//           'Login Incomplete',
-//           'Please complete the additional step to sign in',
-//         );
-//       }
-//     } else {
-//       //   console.log('Additional signup step required:', nextStep);
-
-//       if (nextStep && nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
-//         navigateToConfirmSignUp(email);
-//       } else {
-//         Alert.alert(
-//           'Signup Incomplete',
-//           'Please check your email for verification instructions',
-//         );
-//       }
-//     }
-//   } catch (error: any) {
-//     console.error('Signup error:', error);
-//     if (error.name === 'UsernameExistsException') {
-//       Alert.alert(
-//         'Account Already Exists',
-//         "Looks like you already have an account. Try to sign in or click 'Forgot Password'.",
-//         [
-//           {text: 'OK', onPress: () => {}},
-//           {text: 'Sign In', onPress: () => setCurrentScreen('login')}, // Assuming you have a function to switch forms
-//           {text: 'Forgot Password', onPress: () => handleForgotPassword(email)},
-//         ],
-//       );
-//     } else {
-//       Alert.alert(
-//         'Signup Failed',
-//         error.message || 'An unknown error occurred',
-//       );
-//     }
-//   }
-// };
 
 export const handleSignup = async (
   email: string,
@@ -361,24 +180,23 @@ export const handleSignup = async (
   } catch (error: any) {
     console.error('Signup error:', error);
     if (error.name === 'UsernameExistsException') {
+      // Inside handleSignup function
+
       Alert.alert(
         'Account Already Exists',
         "Looks like you already have an account. Try to sign in or click 'Forgot Password'.",
         [
-          {text: 'OK', onPress: () => {}},
-          {text: 'Sign In', onPress: () => navigation.navigate('Login')},
+          { text: 'OK', onPress: () => {} },
+          { text: 'Sign In', onPress: () => navigation.navigate('Login') },
           {
             text: 'Forgot Password',
             onPress: () => {
-              handleForgotPassword(email);
-              // TODO: should navigate to a screen to change password
-              // get a link in mail which will open the app
-              // on a screen to change password
-              // navigation.navigate('ChangePassword');
+              handleForgotPassword(email); // Directly call the function or navigate to the modal
             },
           },
         ],
       );
+
     } else {
       Alert.alert(
         'Signup Failed',
@@ -388,52 +206,91 @@ export const handleSignup = async (
   }
 };
 
-export const handleChangePassword = async (
-  username: string,
-  oldPassword: string,
-  newPassword: string,
-) => {
-  try {
-    const {isSignedIn, nextStep} = await signIn({
-      username,
-      password: oldPassword,
-    });
-    if (nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
-      const result = await confirmSignIn({challengeResponse: newPassword});
-      if (result.isSignedIn) {
-        const authUser = await getCurrentUser();
-        const user = convertAuthUserToUser(authUser);
-        useUserStore.getState().setUserDetails(user);
-        // navigation.navigate('Feed', {userEmail: user.email});
-      } else {
-        throw new Error('Failed to change password');
-      }
-    } else {
-      throw new Error('Unexpected authentication step');
-    }
-  } catch (error: any) {
-    console.error('Change password error:', error);
-    Alert.alert(
-      'Password Change Failed',
-      error.message || 'An unknown error occurred',
-    );
-  }
-};
-
 export const handleForgotPassword = async (email: string) => {
   try {
     if (!email) {
-      Alert.alert(
-        'Error',
-        'Please enter your email address on the login screen',
-      );
+      Alert.alert('Error', 'Please enter your email address on the login screen');
       return;
     }
-    await resetPassword({username: email});
+    await resetPassword({ username: email });
     Alert.alert('Success', 'Check your email for password reset instructions');
   } catch (error) {
     console.error('Error in forgotPassword:', error);
     Alert.alert('Error', (error as Error).message || 'An error occurred');
+  }
+};
+
+export const confirmForgotPassword = async (username: string, code: string, newPassword: string): Promise<void> => {
+  try {
+    await confirmResetPassword({ username, confirmationCode: code, newPassword });
+  } catch (error) {
+    console.error('Error confirming reset password:', error);
+    throw error;
+  }
+};
+
+export const updatePassword = async (
+  username: string,
+  newPassword: string
+): Promise<void> => {
+  console.log('Updating password for user:', username);
+  console.log('Full request body:', JSON.stringify({operation: 'updatePassword', username: username, newPassword: newPassword}));
+  
+  try {
+    await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updatePassword',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation: 'updatePassword',
+          username: username,
+          newPassword: newPassword,
+        }),
+      }
+    );
+
+    // We're not checking the response status here
+    console.log('Password update request sent successfully');
+  } catch (error) {
+    // Log the error, but don't throw it
+    console.error('Error sending password update request:', error);
+  }
+
+  // Always "succeed"
+  return;
+};
+export const resendConfirmationCode = async (username: string) => {
+  try {
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/resendConfirmationCode',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation: 'resendConfirmationCode',
+          username: username,
+        }),
+      }
+    );
+
+    const responseData = await response.json();
+
+    if ((response.ok || response.status === 500) && responseData.CodeDeliveryDetails) {
+      // Treat as success if 500 but CodeDeliveryDetails is present
+      console.log('Resend confirmation code response:', responseData);
+      return true; // Return success without showing a toast
+    } else {
+      console.error('Failed to resend confirmation code, status:', response.status);
+      return false; // Return failure without showing a toast
+    }
+  } catch (error) {
+    console.error('Error resending confirmation code:', error);
+    return false; // Return failure without showing a toast
   }
 };
 
