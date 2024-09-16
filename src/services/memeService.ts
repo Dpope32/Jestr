@@ -564,7 +564,6 @@ export const useMemes = (user: User | null, accessToken: string | null) => {
   const handleMemeViewed = async (memeId: string) => {
     if (user?.email) {
       await AsyncStorage.setItem(LAST_VIEWED_MEME_KEY, memeId);
-      await recordMemeViews([{ email: user.email, memeID: memeId }]);
     }
   };
 
