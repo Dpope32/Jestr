@@ -71,6 +71,13 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     const [showLikeAnimation, setShowLikeAnimation] = useState(false);
     const [viewedMemes, setViewedMemes] = useState<Set<string>>(new Set());
 
+    useEffect(() => {
+      console.log('MediaPlayer mounted');
+      return () => {
+        console.log('MediaPlayer unmounted');
+      };
+    }, []);
+
     const handleMediaError = useCallback(() => {
       setMediaLoadError(true);
       goToNextMedia();
@@ -118,7 +125,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         duration: 100,
         useNativeDriver: true,
       }).start();
-    }, [currentMedia, mediaType, handleMediaError, fadeAnim]);
+    }, [currentMedia, mediaType, handleMediaError]);
   
 
     useEffect(() => {

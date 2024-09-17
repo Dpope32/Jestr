@@ -228,110 +228,6 @@ exports.handler = async (event) => {
 
   switch (operation) {
 
-    case 'requestDataArchive': {
-      const { email } = requestBody;
-      if (!email) {
-        return createResponse(400, 'Email is required to request data archive.');
-      }
-    
-      try {
-        // Fetch user's memes
-        const userMemesResult = await getUserMemes(email);
-    
-        // Prepare data for archive
-        const userData = {
-          email: email,
-          memes: userMemesResult.memes,
-          // Add any other user data you want to include in the archive
-        };
-    
-        // Convert data to JSON string
-        const dataString = JSON.stringify(userData, null, 2);
-    
-        // Generate a unique filename for the archive
-        const fileName = `${email}_data_archive_${Date.now()}.json`;
-    
-        // Upload to S3
-        const uploadParams = {
-          Bucket: BUCKET_NAME,
-          Key: fileName,
-          Body: dataString,
-          ContentType: 'application/json'
-        };
-        await s3Client.send(new PutObjectCommand(uploadParams));
-    
-        // Generate a pre-signed URL for the uploaded file
-        const url = await getSignedUrl(s3Client, new GetObjectCommand({
-          Bucket: BUCKET_NAME,
-          Key: fileName
-        }), { expiresIn: 604800 }); // URL expires in 1 week
-    
-        // Return the URL in the response
-        return createResponse(200, 'Data archive created successfully', {
-          message: 'Your data archive has been created.',
-          downloadUrl: url,
-          expiresIn: '7 days'
-        });
-      } catch (error) {
-        console.error('Error processing data archive request:', error);
-        return createResponse(500, 'Failed to process data archive request', { error: error.message });
-      }
-    }
-    
-
-case 'getUserMemes': {
-  const { email, lastEvaluatedKey, limit = 20 } = requestBody;
-  if (!email) {
-  return createResponse(400, 'Email is required to fetch user memes.');
-  }
-
-  const queryParams = {
-  TableName: 'Memes',
-  IndexName: 'Email-UploadTimestamp-index',
-  KeyConditionExpression: 'Email = :email',
-  ExpressionAttributeValues: {
-    ':email': email
-  },
-  ScanIndexForward: false,
-  Limit: limit,
-  ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
-  };
-
-  try {
-  const result = await docClient.send(new QueryCommand(queryParams));
-
-  const userMemes = result.Items ? result.Items.map(item => ({
-    memeID: item.MemeID,
-    email: item.Email,
-    url: item.MemeURL,
-    caption: item.Caption,
-    uploadTimestamp: item.UploadTimestamp,
-    likeCount: item.LikeCount || 0,
-    downloadCount: item.DownloadsCount || 0,
-    commentCount: item.CommentCount || 0,
-    shareCount: item.ShareCount || 0,
-    username: item.Username,
-    profilePicUrl: item.ProfilePicUrl || '',
-    mediaType: item.mediaType || 'image',
-    liked: item.Liked || false,
-    doubleLiked: item.DoubleLiked || false,
-    memeUser: {
-      email: item.Email,
-      username: item.Username,
-      profilePic: item.ProfilePicUrl || '',
-    },
-  })) : [];
-
-  return createResponse(200, 'User memes retrieved successfully.', {
-    memes: userMemes,
-    lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
-  });
-  } catch (error) {
-  console.error('Error fetching user memes:', error);
-  return createResponse(500, 'Failed to fetch user memes.', { memes: [], lastEvaluatedKey: null });
-  }
-  }
-
   case 'fetchMemes': {
     const { lastViewedMemeId, userEmail, limit = 5 } = requestBody;
     if (!userEmail) {
@@ -461,6 +357,112 @@ case 'getUserMemes': {
   return createResponse(500, 'Internal Server Error', { error: error.message, stack: error.stack });
 }
 }
+
+
+    case 'requestDataArchive': {
+      const { email } = requestBody;
+      if (!email) {
+        return createResponse(400, 'Email is required to request data archive.');
+      }
+    
+      try {
+        // Fetch user's memes
+        const userMemesResult = await getUserMemes(email);
+    
+        // Prepare data for archive
+        const userData = {
+          email: email,
+          memes: userMemesResult.memes,
+          // Add any other user data you want to include in the archive
+        };
+    
+        // Convert data to JSON string
+        const dataString = JSON.stringify(userData, null, 2);
+    
+        // Generate a unique filename for the archive
+        const fileName = `${email}_data_archive_${Date.now()}.json`;
+    
+        // Upload to S3
+        const uploadParams = {
+          Bucket: BUCKET_NAME,
+          Key: fileName,
+          Body: dataString,
+          ContentType: 'application/json'
+        };
+        await s3Client.send(new PutObjectCommand(uploadParams));
+    
+        // Generate a pre-signed URL for the uploaded file
+        const url = await getSignedUrl(s3Client, new GetObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: fileName
+        }), { expiresIn: 604800 }); // URL expires in 1 week
+    
+        // Return the URL in the response
+        return createResponse(200, 'Data archive created successfully', {
+          message: 'Your data archive has been created.',
+          downloadUrl: url,
+          expiresIn: '7 days'
+        });
+      } catch (error) {
+        console.error('Error processing data archive request:', error);
+        return createResponse(500, 'Failed to process data archive request', { error: error.message });
+      }
+    }
+    
+
+case 'getUserMemes': {
+  const { email, lastEvaluatedKey, limit = 20 } = requestBody;
+  if (!email) {
+  return createResponse(400, 'Email is required to fetch user memes.');
+  }
+
+  const queryParams = {
+  TableName: 'Memes',
+  IndexName: 'Email-UploadTimestamp-index',
+  KeyConditionExpression: 'Email = :email',
+  ExpressionAttributeValues: {
+    ':email': email
+  },
+  ScanIndexForward: false,
+  Limit: limit,
+  ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
+  };
+
+  try {
+  const result = await docClient.send(new QueryCommand(queryParams));
+
+  const userMemes = result.Items ? result.Items.map(item => ({
+    memeID: item.MemeID,
+    email: item.Email,
+    url: item.MemeURL,
+    caption: item.Caption,
+    uploadTimestamp: item.UploadTimestamp,
+    likeCount: item.LikeCount || 0,
+    downloadCount: item.DownloadsCount || 0,
+    commentCount: item.CommentCount || 0,
+    shareCount: item.ShareCount || 0,
+    username: item.Username,
+    profilePicUrl: item.ProfilePicUrl || '',
+    mediaType: item.mediaType || 'image',
+    liked: item.Liked || false,
+    doubleLiked: item.DoubleLiked || false,
+    memeUser: {
+      email: item.Email,
+      username: item.Username,
+      profilePic: item.ProfilePicUrl || '',
+    },
+  })) : [];
+
+  return createResponse(200, 'User memes retrieved successfully.', {
+    memes: userMemes,
+    lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
+  });
+  } catch (error) {
+  console.error('Error fetching user memes:', error);
+  return createResponse(500, 'Failed to fetch user memes.', { memes: [], lastEvaluatedKey: null });
+  }
+  }
+
 
 
       case 'uploadMeme': {

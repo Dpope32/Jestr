@@ -99,24 +99,6 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
     onClose();
   };
 
-  // const downloadImage = async (url: string): Promise<string | null> => {
-  //   try {
-  //     const directoryUri = `${FileSystem.cacheDirectory}`;
-  //     const fileUri = `${directoryUri}${meme.id}.jpg`;
-  //     await FileSystem.makeDirectoryAsync(directoryUri, {intermediates: true});
-  //     const {uri} = await FileSystem.downloadAsync(url, fileUri);
-  //     return uri;
-  //   } catch (error) {
-  //     console.error('Error downloading image:', error);
-  //     Toast.show({
-  //       type: 'error',
-  //       text1: 'Download Failed',
-  //       text2: 'Failed to download image.',
-  //     });
-  //     return null;
-  //   }
-  // };
-
   const downloadImage = async (url: string): Promise<string | null> => {
     try {
       const fileType = url.substring(url.lastIndexOf('.') + 1);

@@ -141,11 +141,11 @@ export type MediaPlayerProps = {
   toggleCommentFeed: () => void;
   goToPrevMedia: () => void;
   goToNextMedia: () => void;
-  memes: Meme[];
-  likedIndices: Set<number>;
-  doubleLikedIndices: Set<number>;
-  downloadedIndices: Set<number>;
-  likeDislikeCounts: Record<number, { likeCount: number; dislikeCount: number }>;
+  memes?: Meme[];
+  likedIndices?: Set<number>;
+  doubleLikedIndices?: Set<number>;
+  downloadedIndices?: Set<number>;
+  likeDislikeCounts?: Record<number, { likeCount: number; dislikeCount: number }>;
   currentMediaIndex: number;
   user: User | null;
   likeCount: number;
@@ -170,14 +170,13 @@ export type MediaPlayerProps = {
   ) => void;
   liked: boolean;
   doubleLiked: boolean;
-  isDarkMode: boolean;
   setIsDarkMode?: React.Dispatch<React.SetStateAction<boolean>>;
   onLongPressStart: () => void;
   onLongPressEnd: () => void;
   isCommentFeedVisible: boolean;
   numOfComments?: number;
-  onMemeViewed: () => void;
-};
+  onMemeViewed: (memeID: string) => void;
+}
 
 export type ProfilePanelProps = {
   isVisible: boolean;
@@ -268,7 +267,6 @@ export interface FeedbackItem {
 export type MemeListProps = {
     memes: Meme[];
     user: User | null;
-    isDarkMode: boolean;
     onEndReached: () => void;
     toggleCommentFeed: () => void;
     updateLikeStatus: (memeID: string, status: any, newLikeCount: number) => void;
