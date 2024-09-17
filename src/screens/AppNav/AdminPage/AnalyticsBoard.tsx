@@ -57,7 +57,6 @@ const AnalyticsBoard: React.FC<AnalyticsBoardProps> = ({ onClose }) => {
         type: 'success',
         text1: 'Status Updated',
         text2: `Feedback status updated to ${newStatus}`,
-        props: { style: { backgroundColor: '#1C1C1C' } },  // Custom background color
       });
 
       // Update the local state and filter out "Closed" items

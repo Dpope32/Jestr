@@ -110,7 +110,7 @@ const SupportHelp = () => {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
+              style={[styles.button1, styles.cancelButton1]}
               onPress={() => setShowFeedbackForm(false)}
             >
               <Text style={styles.buttonText}>Cancel</Text>
@@ -177,21 +177,33 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 5,
   },
+  button1: {
+    flexDirection: 'row',
+    borderColor: '#1bd40b',
+    borderWidth: 2,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+  },
   contactButton: {
-    backgroundColor: '#00ff00',
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
-    width: '100%',
+    width: '95%',
+    borderColor: '#1bd40b',
+    borderWidth: 2,
+    backgroundColor: 'transparent',
   },
   faqButton: {
-    backgroundColor: COLORS.buttonStart, // This is the dark green color
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
-    width: '100%',
+    width: '95%',
     marginTop: 20,
+    borderColor: COLORS.accent,
+    borderWidth: 2,
+    backgroundColor: 'transparent',
   },
   icon: {
     marginRight: 10,
@@ -202,7 +214,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   formContainer: {
-    backgroundColor: '#2c2c2e',
     borderRadius: 15,
     padding: 20,
     marginBottom: 20,
@@ -224,20 +235,24 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   submitButton: {
-    backgroundColor: '#00ff00',
-    flex: 1,
-    marginRight: 5,
+    borderColor: '#00ff00',
+    borderWidth: 2,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
   },
-  cancelButton: {
-    backgroundColor: '#ff3b30',
-    flex: 1,
-    marginLeft: 5,
+  cancelButton1: {
+    flexDirection: 'row',
+    borderColor: '#red',
+    borderWidth: 2,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
   },
   faqContainer: {
     backgroundColor: '#2c2c2e',
     borderRadius: 15,
     padding: 20,
-    marginBottom: 20,
   },
   faqTitle: {
     fontSize: 24,

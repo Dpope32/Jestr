@@ -1,15 +1,14 @@
-import React, {useEffect} from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Image, TouchableWithoutFeedback, Alert, Linking} from 'react-native';
-import {BlurView} from 'expo-blur';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faLink,faSave,faShare,faFlag,faUser} from '@fortawesome/free-solid-svg-icons';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Image, TouchableWithoutFeedback, Alert, Linking } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faLink, faSave, faShare, faFlag, faUser } from '@fortawesome/free-solid-svg-icons';
 import Toast from 'react-native-toast-message';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system';
 import { styles } from './LongPress.styles';
-
 
 interface LongPressModalProps {
   isVisible: boolean;
@@ -46,8 +45,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
 }) => {
   const scale = React.useRef(new Animated.Value(0)).current;
 
-  const [mediaLibraryPermission, requestMediaLibraryPermission] =
-    MediaLibrary.usePermissions();
+  const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions();
 
   const ensurePermission = async () => {
     if (mediaLibraryPermission?.status !== 'granted') {
@@ -57,8 +55,8 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
           'Permission Required',
           'This app needs access to your media library to save images. Please grant permission in your device settings.',
           [
-            {text: 'Cancel', style: 'cancel'},
-            {text: 'Open Settings', onPress: () => Linking.openSettings()},
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
           ],
         );
         return false;
@@ -101,16 +99,24 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
 
   const downloadImage = async (url: string): Promise<string | null> => {
     try {
-      const fileType = url.substring(url.lastIndexOf('.') + 1);
-      //console.log('File type:', fileType);
-      const directoryUri = `${FileSystem.cacheDirectory}`;
-      //console.log('Directory URI:', directoryUri);
-      // const fileUri = `${directoryUri}${meme.id}.${fileType}`;
-      const fileUri = `${directoryUri}${meme.id}`;
-      //console.log('File URI:', fileUri);
-
-      await FileSystem.makeDirectoryAsync(directoryUri, {intermediates: true});
-      const {uri} = await FileSystem.downloadAsync(url, fileUri);
+      const fileName = url.substring(url.lastIndexOf('/') + 1);
+   //   console.log('fileName:', fileName);
+      // Set the directory to include the 'Memes' subdirectory
+      const directoryUri = `${FileSystem.cacheDirectory}Memes/`;
+   //   console.log('directoryUri:', directoryUri);
+  
+      // Check if the directory exists
+      const dirInfo = await FileSystem.getInfoAsync(directoryUri);
+      if (!dirInfo.exists) {
+        // Create the directory if it doesn't exist
+        await FileSystem.makeDirectoryAsync(directoryUri, { intermediates: true });
+      }
+  
+      // Construct the file URI
+      const fileUri = `${directoryUri}${fileName}`;
+  //    console.log('fileUri:', fileUri);
+      // Proceed with downloading the image
+      const { uri } = await FileSystem.downloadAsync(url, fileUri);
       return uri;
     } catch (error) {
       console.error('Error downloading file:', error);
@@ -122,36 +128,34 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
       return null;
     }
   };
+  
 
   const saveToGallery = async () => {
     try {
       const hasPermission = await ensurePermission();
-      console.log('Permission:', hasPermission);
+   //   console.log('Permission:', hasPermission);
       if (!hasPermission) {
         return;
       }
-
+  
       const localUri = await downloadImage(meme.url);
-      console.log('Local URI:', localUri);
+   //   console.log('Local URI:', localUri);
       if (localUri) {
         const asset = await MediaLibrary.createAssetAsync(localUri);
-
-        // createAlbumAsync might not work in Expo Go. If it fails, the image is still saved to the gallery.
-        // a warning is logged to the console.
+  
+        // Attempt to create an album named 'Jestr' and add the asset to it
         try {
-          await MediaLibrary.createAlbumAsync('Jestr', asset);
+          await MediaLibrary.createAlbumAsync('Jestr', asset, false);
         } catch (albumError) {
-          console.warn(
-            'Could not create album, but image was saved:',
-            albumError,
-          );
+          console.warn('Could not create album, but image was saved:', albumError);
         }
-
+  
         Toast.show({
           type: 'success',
           text1: 'Image Saved',
           text2: 'Successfully saved image to gallery!',
         });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
         console.log('Local URI is not OK:');
       }
@@ -166,6 +170,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
       onClose();
     }
   };
+  
 
   const handleSaveToProfile = () => {
     try {
@@ -226,7 +231,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
         key={index}
         style={styles.option}
         onPress={option.onPress}>
-        <View style={[styles.iconContainer, {backgroundColor: option.color}]}>
+        <View style={[styles.iconContainer, { backgroundColor: option.color }]}>
           <FontAwesomeIcon icon={option.icon} size={24} color="#fff" />
         </View>
         <Text style={styles.optionText}>{option.text}</Text>
@@ -241,11 +246,11 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={styles.container}>
             <Animated.View
-              style={[styles.modalContainer, {transform: [{scale}]}]}>
+              style={[styles.modalContainer, { transform: [{ scale }] }]}>
               <TouchableWithoutFeedback onPress={onClose}>
                 <View style={styles.memePreview}>
                   <Image
-                    source={{uri: meme.url}}
+                    source={{ uri: meme.url }}
                     style={styles.memeImage}
                     resizeMode="contain"
                   />

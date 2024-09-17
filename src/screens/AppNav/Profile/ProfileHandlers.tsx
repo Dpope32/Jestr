@@ -23,6 +23,7 @@ export const useProfileHandlers = (
   setSelectedMeme: React.Dispatch<React.SetStateAction<Meme | null>>,
   setCurrentMemeIndex: React.Dispatch<React.SetStateAction<number>>,
   setIsCommentFeedVisible: React.Dispatch<React.SetStateAction<boolean>>,
+  
   setFullScreenImage: React.Dispatch<React.SetStateAction<string | null>>,
   setIsBlurVisible: React.Dispatch<React.SetStateAction<boolean>>,
   setIsUploading: React.Dispatch<React.SetStateAction<boolean>>,
@@ -279,32 +280,56 @@ export const useProfileHandlers = (
     ]);
   };
 
-  const handleRemoveDownloadedMeme = async (memeID: string) => {
-    try {
-      await removeDownloadedMeme(user.email, memeID);
-      setTabMemes(prevMemes =>
-        prevMemes.filter(meme => meme.memeID !== memeID),
-      );
-      Toast.show({
-        type: 'success',
-        text1: 'Meme removed from gallery!',
-        visibilityTime: 2000,
-        autoHide: true,
-        topOffset: 30,
-        bottomOffset: 40,
-      });
-    } catch (error) {
-      console.error('Failed to remove downloaded meme:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to remove meme from gallery',
-        visibilityTime: 2000,
-        autoHide: true,
-        topOffset: 30,
-        bottomOffset: 40,
-      });
-    }
-  };
+// In useProfileHandlers.ts
+const handleRemoveDownloadedMeme = async (memeID: string): Promise<void> => {
+  const confirmed = await new Promise<boolean>((resolve) => {
+    Alert.alert(
+      'Remove Meme',
+      'Are you sure you want to remove this meme from your gallery?',
+      [
+        { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+        {
+          text: 'Remove',
+          onPress: () => resolve(true),
+        },
+      ],
+      { cancelable: true },
+    );
+  });
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await removeDownloadedMeme(user.email, memeID);
+    setTabMemes((prevMemes) =>
+      prevMemes.filter((meme) => meme.memeID !== memeID),
+    );
+    setSelectedMeme(null);
+    Toast.show({
+      type: 'success',
+      text1: 'Meme removed from gallery!',
+      visibilityTime: 2000,
+      autoHide: true,
+      topOffset: 30,
+      bottomOffset: 40,
+    });
+  } catch (error) {
+    console.error('Failed to remove downloaded meme:', error);
+    Toast.show({
+      type: 'error',
+      text1: 'Failed to remove meme from gallery',
+      visibilityTime: 2000,
+      autoHide: true,
+      topOffset: 30,
+      bottomOffset: 40,
+    });
+  }
+};
+
+  
+  
 
   const handleSettingsClick = () => {
     navigation.navigate('Settings');

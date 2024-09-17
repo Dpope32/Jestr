@@ -211,10 +211,12 @@ const Profile = React.memo(() => {
               onLikeStatusChange={(memeID, status, newLikeCount) => {}}
               liked={selectedMeme.liked || false}
               doubleLiked={selectedMeme.doubleLiked || false}
-              isDarkMode={isDarkMode}
               onLongPressStart={() => {}}
               onLongPressEnd={() => {}}
               isCommentFeedVisible={isCommentFeedVisible}
+              onMemeViewed={() => {
+                // Implement the function or leave it empty if not needed
+              }}
             />
             <TouchableOpacity
               style={styles.closeButton}

@@ -14,7 +14,10 @@ interface PrivacySafetySettings {
 interface AccessibilitySettings {
   fontSize: number;
   language: string;
+  highContrastMode: boolean;
+  reduceMotion: boolean;
 }
+
 interface SettingsStore {
   privacySafety: PrivacySafetySettings;
   accessibility: AccessibilitySettings;
@@ -40,6 +43,8 @@ const DEFAULT_SETTINGS: {
     accessibility: {
       fontSize: 1,
       language: 'en',
+      highContrastMode: false,
+      reduceMotion: false,
     },
   };
 
@@ -62,8 +67,8 @@ export const useSettingsStore = create<SettingsStore>()(
         console.log('Updating Accessibility Settings...');
         set((state) => {
           const newSettings = { ...state.accessibility, ...settings };
-       //   console.log('Old Accessibility:', state.accessibility);
-       //   console.log('New Accessibility:', newSettings);
+        console.log('Old Accessibility:', state.accessibility);
+         console.log('New Accessibility:', newSettings);
           return { accessibility: newSettings };
         });
       },

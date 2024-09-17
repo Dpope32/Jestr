@@ -1,16 +1,13 @@
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { faUser, faKey, faUserSlash, faUserCircle, faDownload, faBell, faShieldAlt, faFileAlt, faHandsHelping, faCommentDots, faUniversalAccess } from '@fortawesome/free-solid-svg-icons';
-import styles from './Settings.styles';
 import PrivacySafetySettings from './PrivacySafetySettings';
 import AccessibilitySettings from './AccessibilitySettings';
 import AccountInformation from './AccountInformation';
 import { ReactNode } from 'react';
 import NotiSettings from './NotiSettings';
-import { TERMS_OF_SERVICE, PRIVACY_POLICY } from '../../../constants/uiConstants'; 
 import FeedbackForm from './feedbackForm';
 import SupportHelp from './supportHelp';
 import ChangePassword from './changePassword';
-import DeactivateAccount from './DeactivateAccount'; // Import your DeactivateAccount component
+import DeactivateAccount from './DeactivateAccount'; 
 import DownloadDataArchive from './DownloadDataArchive';
 
 export interface SettingOption {
@@ -67,28 +64,6 @@ export const settingsOptions: SettingOption[] = [
       label: 'Privacy & Safety',
       description: 'Adjust privacy and safety settings',
       content: <PrivacySafetySettings />,
-      subOptions: [
-        {
-          icon: faFileAlt,
-          label: 'Privacy Policy',
-          description: 'Read our privacy policy',
-          content: (
-            <ScrollView>
-              <Text style={styles.legalText}>{PRIVACY_POLICY}</Text>
-            </ScrollView>
-          ),
-        },
-        {
-          icon: faFileAlt,
-          label: 'Terms and Conditions',
-          description: 'Read our terms and conditions',
-          content: (
-            <ScrollView>
-              <Text style={styles.legalText}>{TERMS_OF_SERVICE}</Text>
-            </ScrollView>
-          ),
-        },
-      ],
     },
     {
       icon: faHandsHelping,

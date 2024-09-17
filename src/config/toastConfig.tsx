@@ -1,19 +1,19 @@
 // src/config/toastConfig.tsx
+
 import React from 'react';
-import Toast, {
-    BaseToast,
-    BaseToastProps,
-    ErrorToast,
-  } from 'react-native-toast-message';
+import {
+  BaseToast,
+  BaseToastProps,
+  ErrorToast,
+} from 'react-native-toast-message';
 
 export const toastConfig = {
   success: (props: BaseToastProps) => (
     <BaseToast
       {...props}
       style={{
-        borderWidth: 1,
-        borderColor: 'green',
-        backgroundColor: '#2E2E2E',
+        borderLeftColor: 'green',
+        backgroundColor: '#1C1C1C',
         borderRadius: 5,
         marginTop: 80,
       }}
@@ -33,8 +33,7 @@ export const toastConfig = {
     <ErrorToast
       {...props}
       style={{
-        borderWidth: 1,
-        borderColor: 'red',
+        borderLeftColor: 'red',
         backgroundColor: '#2E2E2E',
         borderRadius: 5,
         marginTop: 40,

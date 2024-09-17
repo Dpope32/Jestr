@@ -1,11 +1,11 @@
 import { StyleSheet, Dimensions, Platform } from 'react-native';
-import { COLORS } from '../../../theme/theme';
 const { width, height } = Dimensions.get('window');
 
 export default StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1C1C1C',
+    
   },
   gradient: {
     flex: 1,
@@ -16,6 +16,7 @@ export default StyleSheet.create({
   },
   formContainer: {
     padding: 20,
+    backgroundColor: 'transparent'
   },
   header: {
     flexDirection: 'row',
@@ -42,7 +43,7 @@ export default StyleSheet.create({
     zIndex: 999,
   },
   backButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.0)',
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -51,7 +52,40 @@ export default StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
+  },
+  languageItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#444',
+  },
+  languageItemText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  languageItemIcon: {
+    color: '#1bd40b',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  modalCloseButton: {
+    backgroundColor: '#1bd40b',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 80,
+    alignSelf: 'flex-start',
+  },
+  modalCloseButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   subOptionsContainer: {
     marginTop: 20,
@@ -86,11 +120,20 @@ export default StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  button1: {
+    flexDirection: 'row',
+    borderColor: '#1bd40b',
+    borderWidth: 2,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+  },
   button: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
+    borderWidth: 1,
+    padding: 10,
     borderRadius: 12,
+    backgroundColor: 'transparent',
   },
   icon: {
     marginRight: 16,
@@ -117,8 +160,10 @@ export default StyleSheet.create({
     color: '#1bd40b',
   },
   logoutButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
+    borderColor: '#FF0000',  // Changed to pure red
+    borderWidth: 2,  // Added border width
     alignItems: 'center',
     padding: 12,
     borderRadius: 12,
@@ -129,44 +174,42 @@ export default StyleSheet.create({
     width: 100,
   },
   logoutText: {
-    color: '#FFFFFF',
+    color: '#FF0000',
     fontWeight: 'bold',
     marginLeft: 10,
     fontSize: 14,
   },
   logoutIcon: {
-    color: '#FFFFFF',
+    color: '#FF0000',
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingTop: 200
   },
   modalContent: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: '#2a2a2a',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    padding: 30,
-    paddingTop: 40,
-    alignItems: 'stretch',  // Changed from 'flex-start' to 'stretch' to allow proper alignment
+    paddingVertical: 20,
+    paddingHorizontal: 14,
+    alignItems: 'flex-start',  // Changed from 'flex-start' to 'stretch' to allow proper alignment
     justifyContent: 'flex-start',  // Ensure items start from the top
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -3,
-    },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 10,
-    minHeight: height * 0.7,
+    minHeight: height * .9,
     width: '100%',
+    paddingTop: 60,
+    paddingLeft: 40,
   },
   modalBackButton: {
     position: 'absolute',
     top: 10,
     left: 20,
     zIndex: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.0)',
     padding: 10,
     borderRadius: 20,
   },
@@ -201,13 +244,30 @@ export default StyleSheet.create({
     marginRight: 5,
   },
   submitButton: {
-    backgroundColor: '#00ff00',
-    padding: 15,
+    padding: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
     width: '30%',
+    borderColor: '#1bd40b',
+    borderWidth: 2,
+    backgroundColor: 'transparent',
   },
+  submitButton1: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+    width: '30%',
+    borderColor: '#1bd40b',
+    borderWidth: 2,
+    backgroundColor: 'transparent',
+  },
+container1: {
+  flex: 1,
+  padding: 12,
+  justifyContent: 'space-between', // This will spread out the content vertically
+},
   feedbackIndex: {
     color: '#FFFFFF',
     fontSize: 16,
@@ -262,12 +322,15 @@ export default StyleSheet.create({
     marginBottom: 20,
   },
   changeButton: {
-    backgroundColor: '#1bd40b',
     padding: 15,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 20,
-    width: '100%',
+    marginTop: 10,
+    width: '30%',
+    borderColor: '#1bd40b',
+    borderWidth: 2,
+    backgroundColor: 'transparent',
   },
   changeButtonText: {
     color: '#FFFFFF',
@@ -284,28 +347,34 @@ export default StyleSheet.create({
    settingSection: {
     marginBottom: 30,
   },
+  settingSection1: {
+    marginBottom: 10,
+    borderColor: '#1bd40b',
+    borderWidth: 2,
+    padding: 20,
+    borderRadius: 12
+  },
+  sectionTitle1: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1bd40b',
+    marginBottom: 15,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#1bd40b',
     marginBottom: 15,
   },
-  settingItem: {
+  settingItem1: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 15,
   },
-  settingLabel: {
+  settingLabel1: {
     fontSize: 16,
     color: '#FFFFFF',
-  },
-  languageButton: {
-    backgroundColor: '#1bd40b',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -318,10 +387,11 @@ export default StyleSheet.create({
   tab: {
     alignItems: 'center',
     padding: 10,
-    borderRadius: 5,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   activeTab: {
-    backgroundColor: '#1bd40b',
+    borderBottomColor: '#1bd40b',
   },
   tabIcon: {
     color: '#FFFFFF',
@@ -331,20 +401,21 @@ export default StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
   },
-  languageButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   noBlockedAccounts: {
     color: '#BBBBBB',
     fontSize: 16,
     fontStyle: 'italic',
   },
   unblockButton: {
-    color: '#1bd40b',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderColor: '#1bd40b',
+    borderWidth: 2,
+    backgroundColor: 'transparent',
   },
   feedbackListContainer: {
     marginTop: 20,
@@ -397,5 +468,132 @@ export default StyleSheet.create({
     right: 10, 
     fontSize: 12,
     color: '#999',
+  },
+  addBlockedAccountContainer: {
+    marginTop: 10,
+  },
+  addBlockedAccountInput: {
+    height: 40,
+    borderColor: '#555',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    color: '#fff',
+    marginBottom: 10,
+  },
+  addBlockedAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#1bd40b',
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    backgroundColor: 'transparent',
+  },
+  addBlockedAccountButtonText: {
+    color: '#1bd40b',
+    fontWeight: 'bold',
+    marginLeft: 5,
+  },
+  addBlockedAccountIcon: {
+    color: '#1bd40b',
+  },
+  blockButton: {
+    backgroundColor: '#1bd40b',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  blockButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  policyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  policyIcon: {
+    color: '#1bd40b',
+    marginRight: 10,
+  },
+  policyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  policyContainer: {
+    flex: 1,
+    position: 'relative', // Add this to allow absolute positioning of the back button
+  },
+  policyBackButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  policyBackIcon: {
+    color: '#1bd40b',
+    fontSize: 20,
+  },
+  policyContent: {
+    flex: 1,
+    paddingTop: 50, // Add some top padding to ensure content is not hidden behind the back button
+  },
+  policyText: {
+    color: '#fff',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  sectionTitleContainer1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  sectionIcon: {
+    marginRight: 10,
+    color: '#1bd40b',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  fontSizeLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  fontSizeLabel: {
+    fontSize: 12,
+    color: '#BBBBBB',
+  },
+  activeFontSizeLabel: {
+    color: '#1bd40b',
+    fontWeight: 'bold',
+  },
+  languageSection: {
+    marginTop: 'auto',
+  },
+  languageButton: {
+    borderColor: '#1bd40b',
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: 'transparent',
+  },
+  languageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -12,7 +12,7 @@ import {AppNavProp} from '../../navigation/NavTypes/RootNavTypes';
 import {useTheme} from '../../theme/ThemeContext';
 import {useUserStore} from '../../stores/userStore';
 import {User} from '../../types/types';
-import Anon1Image from '../../assets/images/Jestr5.jpg';
+import Anon1Image from '../../assets/images/Jestr.jpg';
 
 const drawerItems = [
   {

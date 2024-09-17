@@ -236,7 +236,7 @@ export const removeDownloadedMeme = async (
     const response = await fetch(
       'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/removeDownloadedMeme',
       {
-        method: 'DELETE',
+        method: 'POST', // Changed from DELETE to POST
         headers: {
           'Content-Type': 'application/json',
         },
@@ -258,6 +258,7 @@ export const removeDownloadedMeme = async (
     throw error;
   }
 };
+
 
 export const handleShareMeme = async (
   memeID: string,

@@ -62,7 +62,7 @@ const Settings: React.FC = () => {
 
   const confirmSignOut = async () => {
     try {
-      await handleSignOut();
+      await handleSignOut(navigation as never);
       const resetFollowStore = useFollowStore.getState().reset;
       resetFollowStore();
       await SecureStore.deleteItemAsync('accessToken');
