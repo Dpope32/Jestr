@@ -1,125 +1,93 @@
 // memeService.tsx
-
+import * as FileSystem from 'expo-file-system';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 import { API_URL } from './config';
 import { FetchMemesResult } from '../types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system';
-import { debounce } from 'lodash';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, InfiniteData } from '@tanstack/react-query';
 import { User } from '../types/types';
 import Toast from 'react-native-toast-message';
-
-
-const COOLDOWN_PERIOD = 5000;
+const COOLDOWN_PERIOD = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 const CACHE_KEY_PREFIX = 'memes_cache_';
 const LAST_VIEWED_MEME_KEY = 'lastViewedMemeId';
 
-const debouncedFetchMemes = debounce(
-  async (
-    lastEvaluatedKey: string | null,
-    userEmail: string,
-    limit: number,
-    accessToken: string,
-    resolve: (result: FetchMemesResult) => void,
-    reject: (error: any) => void
-  ) => {
-    console.log(
-      `Debounced fetchMemes called for user: ${userEmail}, lastEvaluatedKey: ${lastEvaluatedKey}`
-    );
-
-    try {
-      const cacheKey = `${CACHE_KEY_PREFIX}${userEmail}`;
-      const now = Date.now();
-
-      // Only use cache if it's an initial load (lastEvaluatedKey is null)
-      if (!lastEvaluatedKey) {
-        const lastFetchTime = await AsyncStorage.getItem(
-          `${cacheKey}_time`
-        );
-        if (lastFetchTime && now - parseInt(lastFetchTime) < COOLDOWN_PERIOD) {
-          console.log('Using cached data for initial load');
-          const cachedData = await AsyncStorage.getItem(cacheKey);
-          if (cachedData) {
-            resolve(JSON.parse(cachedData));
-            return;
-          }
-        }
-      }
-
-      console.log('Fetching new data from API');
-      const response = await fetch(`${API_URL}/fetchMemes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          operation: 'fetchMemes',
-          lastEvaluatedKey,
-          userEmail,
-          limit,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const result = {
-        memes: data.data.memes.map((meme: { isFollowed: boolean }) => ({
-          ...meme,
-          isFollowed: meme.isFollowed || false,
-        })),
-        lastEvaluatedKey: data.data.lastEvaluatedKey,
-      };
-
-      // Only cache the result if it's an initial load
-      if (!lastEvaluatedKey) {
-        await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
-        await AsyncStorage.setItem(`${cacheKey}_time`, now.toString());
-      }
-
-      console.log(
-        `Fetched ${result.memes.length} memes, new lastEvaluatedKey: ${result.lastEvaluatedKey}`
-      );
-      resolve(result);
-    } catch (error) {
-      console.error('Fetch memes failed:', error);
-      reject(error);
-    }
-  },
-  100
-);
-
-export const fetchMemes = (
+export const fetchMemes = async (
   lastEvaluatedKey: string | null = null,
   userEmail: string,
   limit: number = 10,
   accessToken: string
 ): Promise<FetchMemesResult> => {
-  return new Promise((resolve, reject) => {
-    debouncedFetchMemes(
+  console.log(
+    `fetchMemes called for user: ${userEmail}, lastEvaluatedKey: ${lastEvaluatedKey}`
+  );
+
+  const cacheKey = `${CACHE_KEY_PREFIX}${userEmail}`;
+  const now = Date.now();
+
+  // Only use cache if it's an initial load (lastEvaluatedKey is null)
+  if (!lastEvaluatedKey) {
+    const lastFetchTime = await AsyncStorage.getItem(`${cacheKey}_time`);
+    if (lastFetchTime && now - parseInt(lastFetchTime) < COOLDOWN_PERIOD) {
+      console.log('Using cached data for initial load');
+      const cachedData = await AsyncStorage.getItem(cacheKey);
+      if (cachedData) {
+        return JSON.parse(cachedData);
+      }
+    }
+  }
+
+  console.log('Fetching new data from API');
+  const response = await fetch(`${API_URL}/fetchMemes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      operation: 'fetchMemes',
       lastEvaluatedKey,
       userEmail,
       limit,
-      accessToken,
-      resolve,
-      reject
-    );
+    }),
   });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const result = {
+    memes: data.data.memes.map((meme: { isFollowed: boolean }) => ({
+      ...meme,
+      isFollowed: meme.isFollowed || false,
+    })),
+    lastEvaluatedKey: data.data.lastEvaluatedKey,
+  };
+
+  // Only cache the result if it's an initial load
+  if (!lastEvaluatedKey) {
+    await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
+    await AsyncStorage.setItem(`${cacheKey}_time`, now.toString());
+  }
+
+  console.log(
+    `Fetched ${result.memes.length} memes, new lastEvaluatedKey: ${result.lastEvaluatedKey}`
+  );
+  return result;
 };
 
-
-export const useMemes = (user: User | null, accessToken: string | null) => {
+export const useMemes = (
+  user: User | null,
+  accessToken: string | null,
+  initialData?: InfiniteData<FetchMemesResult>,
+  enabled: boolean = true
+) => {
   const userEmail = user?.email;
 
   const result = useInfiniteQuery<FetchMemesResult, Error>({
     queryKey: ['memes', userEmail],
     queryFn: async ({ pageParam }) => {
-      console.log('Fetching memes with pageParam:', pageParam);
       if (!userEmail || !accessToken)
         throw new Error('User or token not available');
       const result = await fetchMemes(
@@ -128,16 +96,19 @@ export const useMemes = (user: User | null, accessToken: string | null) => {
         10,
         accessToken
       );
-      console.log('Fetched memes:', result.memes.length);
       return result;
     },
-    getNextPageParam: (lastPage) =>
-      lastPage.lastEvaluatedKey || undefined,
-    enabled: !!userEmail && !!accessToken, // Only enable when both are available
+    getNextPageParam: (lastPage) => lastPage.lastEvaluatedKey || undefined,
+    enabled: !!userEmail && !!accessToken && enabled,
     initialPageParam: null,
+    initialData,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
-  const memes = result.data?.pages.flatMap((page) => page.memes) || [];
+  const memes =
+    result.data?.pages.flatMap((page: FetchMemesResult) => page.memes) || [];
 
   const handleMemeViewed = async (memeId: string) => {
     if (user?.email) {
@@ -151,6 +122,7 @@ export const useMemes = (user: User | null, accessToken: string | null) => {
     handleMemeViewed,
   };
 };
+
 
 export const getUserMemes = async (
   email: string,

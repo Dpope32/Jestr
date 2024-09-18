@@ -15,6 +15,9 @@ interface InboxState {
   updateConversationMessages: (conversationId: string, messages: Message[]) => void;
   getConversationMessages: (conversationId: string) => Message[] | undefined;
   addMessageToConversation: (conversationId: string, message: Message) => void;
+  addConversation: (conversation: Conversation) => void; // <-- Add this line
+  deleteConversation: (id: string) => void;
+  resetUnreadCount: (conversationId: string) => void;
 }
 
 export const useInboxStore = create<InboxState>()(
@@ -48,14 +51,32 @@ export const useInboxStore = create<InboxState>()(
         }
       },
       pinConversation: (id: string) => {
-        const { conversations, pinnedConversations } = get();
-        const conversationToPin = conversations.find(conv => conv.id === id);
-        if (conversationToPin) {
-          set({
-            pinnedConversations: [...pinnedConversations, conversationToPin],
-            conversations: conversations.filter(conv => conv.id !== id)
-          });
-        }
+        set((state) => {
+          const conversationToPin = state.conversations.find((conv) => conv.id === id);
+          if (conversationToPin) {
+            return {
+              pinnedConversations: [...state.pinnedConversations, conversationToPin],
+              conversations: state.conversations.filter((conv) => conv.id !== id),
+            };
+          }
+          return state;
+        });
+      },
+      // In your InboxStore
+      addConversation: (conversation: Conversation) => {
+        set(state => ({
+          conversations: [...state.conversations, conversation],
+        }));
+      },
+      resetUnreadCount: (conversationId: string) => {
+        set((state) => ({
+          conversations: state.conversations.map((conv) =>
+            conv.id === conversationId ? { ...conv, UnreadCount: 0 } : conv
+          ),
+          pinnedConversations: state.pinnedConversations.map((conv) =>
+            conv.id === conversationId ? { ...conv, UnreadCount: 0 } : conv
+          ),
+        }));
       },
       unpinConversation: (id: string) => {
         const { conversations, pinnedConversations } = get();
@@ -72,6 +93,12 @@ export const useInboxStore = create<InboxState>()(
           conversations: state.conversations.map(conv =>
             conv.id === conversationId ? { ...conv, messages } : conv
           )
+        }));
+      },
+      deleteConversation: (id: string) => {
+        set((state) => ({
+          conversations: state.conversations.filter((conv) => conv.id !== id),
+          pinnedConversations: state.pinnedConversations.filter((conv) => conv.id !== id),
         }));
       },
       getConversationMessages: (conversationId: string) => {

@@ -1,7 +1,6 @@
-// Feed.tsx
-
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { fetchComments } from '../../../services/socialService';
 import styles from './Feed.styles';
@@ -11,59 +10,55 @@ import { getToken } from '../../../stores/secureStore';
 import { useUserStore, isEmptyUserState } from '../../../stores/userStore';
 import { fetchUserDetails } from '../../../services/userService';
 import { useMemes } from '../../../services/memeService';
+import { InfiniteData } from '@tanstack/react-query';
+import { FetchMemesResult } from '../../../types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LAST_VIEWED_MEME_INDEX_KEY = 'lastViewedMemeIndex';
-const LAST_VIEWED_MEME_KEY = 'lastViewedMemeId';
+const CACHE_KEY_PREFIX = 'memes_cache_';
 
-const Feed: React.FC = () => {
+const Feed: React.FC = React.memo(() => {
   const userStore = useUserStore();
   const { isDarkMode } = useTheme();
   const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [currCommentsLength, setCurrCommentsLength] = useState(0);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [initialMemesData, setInitialMemesData] = useState<
+    InfiniteData<FetchMemesResult> | undefined
+  >(undefined);
+  const [isCacheLoaded, setIsCacheLoaded] = useState(false);
   const userEmail = userStore.email;
-  // Load last viewed meme index on mount
-  useEffect(() => {
-    const loadLastViewedIndex = async () => {
-      const savedIndex = await AsyncStorage.getItem(LAST_VIEWED_MEME_INDEX_KEY);
-      if (savedIndex !== null) {
-        setCurrentMediaIndex(Number(savedIndex));
-      }
-    };
-    loadLastViewedIndex();
-  }, []);
 
-  // Handle meme viewed to save current position
-  const handleMemeViewed = useCallback(
-    async (memeId: string) => {
-      if (userStore.email) {
-        await AsyncStorage.setItem(LAST_VIEWED_MEME_KEY, memeId);
-        await AsyncStorage.setItem(
-          LAST_VIEWED_MEME_INDEX_KEY,
-          currentMediaIndex.toString()
-        );
-      }
-    },
-    [userStore.email, currentMediaIndex]
+  useFocusEffect(
+    useCallback(() => {
+      const loadUserData = async () => {
+        const token = await getToken('accessToken');
+        console.log('Loaded token:', token);
+        setAccessToken(token);
+        if (token && userStore.email && isEmptyUserState(userStore)) {
+          const userDetails = await fetchUserDetails(userStore.email, token);
+          useUserStore.getState().setUserDetails(userDetails);
+        }
+
+        // Load cached memes
+        if (userStore.email) {
+          const cacheKey = `${CACHE_KEY_PREFIX}${userStore.email}`;
+          const cachedDataString = await AsyncStorage.getItem(cacheKey);
+          if (cachedDataString) {
+            const cachedData: FetchMemesResult = JSON.parse(cachedDataString);
+            const infiniteData: InfiniteData<FetchMemesResult> = {
+              pages: [cachedData],
+              pageParams: [null], // pageParams is an array of unknowns
+            };
+            setInitialMemesData(infiniteData);
+          }
+        }
+        setIsCacheLoaded(true);
+      };
+      loadUserData();
+    }, [userEmail])
   );
 
-  // Load user data and access token
-  useEffect(() => {
-    const loadUserData = async () => {
-      const token = await getToken('accessToken');
-      console.log('Loaded token:', token);
-      setAccessToken(token);
-      if (token && userEmail && isEmptyUserState(userStore)) {
-        const userDetails = await fetchUserDetails(userEmail, token);
-        useUserStore.getState().setUserDetails(userDetails);
-      }
-    };
-    loadUserData();
-  }, [userEmail]);
-
-  // Use the useMemes hook only when userEmail and accessToken are available
   const {
     memes,
     isLoading,
@@ -71,7 +66,14 @@ const Feed: React.FC = () => {
     error,
     fetchNextPage,
     hasNextPage,
-  } = useMemes(userStore, accessToken);
+    handleMemeViewed,
+  } = useMemes(
+    userStore,
+    accessToken,
+    initialMemesData,
+    isCacheLoaded // Enable the query only after cache is loaded
+  );
+
 
   const updateCommentCount = useCallback(async (memeID: string) => {
     const updatedComments = await fetchComments(memeID);
@@ -96,7 +98,41 @@ const Feed: React.FC = () => {
     []
   );
 
-  if (isLoading && memes.length === 0) {
+  const memoizedMemeList = useMemo(() => {
+    if (memes.length === 0) return null;
+
+    const memeListProps = {
+      memes,
+      user: userStore,
+      isDarkMode,
+      onEndReached: handleEndReached,
+      toggleCommentFeed,
+      updateLikeStatus,
+      currentMediaIndex,
+      setCurrentMediaIndex,
+      currentUserId: userStore.email,
+      isCommentFeedVisible,
+      isLoadingMore: isLoading,
+      numOfComments: currCommentsLength,
+      handleMemeViewed,
+    };
+
+    return <MemeList {...memeListProps} />;
+  }, [
+    memes,
+    userStore,
+    isDarkMode,
+    handleEndReached,
+    toggleCommentFeed,
+    updateLikeStatus,
+    currentMediaIndex,
+    isCommentFeedVisible,
+    isLoading,
+    currCommentsLength,
+    handleMemeViewed,
+  ]);
+
+  if ((isLoading && memes.length === 0) || !isCacheLoaded) {
     return (
       <View
         style={[
@@ -148,20 +184,7 @@ const Feed: React.FC = () => {
         { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' },
       ]}
     >
-      <MemeList
-        memes={memes}
-        user={userStore}
-        onEndReached={handleEndReached}
-        toggleCommentFeed={toggleCommentFeed}
-        updateLikeStatus={updateLikeStatus}
-        currentMediaIndex={currentMediaIndex}
-        setCurrentMediaIndex={setCurrentMediaIndex}
-        currentUserId={userStore.email}
-        isCommentFeedVisible={isCommentFeedVisible}
-        isLoadingMore={isLoading}
-        numOfComments={currCommentsLength}
-        handleMemeViewed={handleMemeViewed}
-      />
+      {memoizedMemeList}
       {isCommentFeedVisible && memes[currentMediaIndex] && (
         <CommentFeed
           memeID={memes[currentMediaIndex].memeID}
@@ -175,6 +198,6 @@ const Feed: React.FC = () => {
       )}
     </View>
   );
-};
+});
 
 export default Feed;

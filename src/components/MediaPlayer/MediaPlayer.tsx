@@ -49,7 +49,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     commentCount: initialCommentCount,
     onLikeStatusChange,
     numOfComments,
-    onMemeViewed,
   }) => {
     const {isDarkMode} = useTheme();
 
@@ -70,13 +69,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     const [likePosition, setLikePosition] = useState({x: 0, y: 0});
     const [showLikeAnimation, setShowLikeAnimation] = useState(false);
     const [viewedMemes, setViewedMemes] = useState<Set<string>>(new Set());
-
-    useEffect(() => {
-      console.log('MediaPlayer mounted');
-      return () => {
-        console.log('MediaPlayer unmounted');
-      };
-    }, []);
 
     const handleMediaError = useCallback(() => {
       setMediaLoadError(true);
@@ -125,7 +117,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         duration: 100,
         useNativeDriver: true,
       }).start();
-    }, [currentMedia, mediaType, handleMediaError]);
+    }, [currentMedia, mediaType, handleMediaError, fadeAnim]);
   
 
     useEffect(() => {

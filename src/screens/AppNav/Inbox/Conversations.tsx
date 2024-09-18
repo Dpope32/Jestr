@@ -60,26 +60,40 @@ export const Conversations = () => {
     enabled: !!currentUser.email && !!conversation.id,
   });
 
-  //useEffect(() => {
-    //console.log('Conversations component mounted');
-    //console.log('Current user:', currentUser);
-    //console.log('Partner user:', partnerUser);
-    //console.log('Conversation:', conversation);
-   // return () => {
-      //console.log('Conversations component unmounted');
-  //  };
-  //}, []);
 
   useFocusEffect(
     React.useCallback(() => {
       setTabBarVisibility(false);
       console.log('Conversation screen focused');
+  
+      // Reset UnreadCount in the store
+      inboxStore.resetUnreadCount(conversation.id);
+  
+      // Update UnreadCount in DynamoDB
+     // updateUnreadCountAPI(conversation.id, currentUser.email);
+  
       return () => {
         setTabBarVisibility(true);
         console.log('Conversation screen unfocused');
       };
     }, [setTabBarVisibility]),
   );
+  
+ // const updateUnreadCountAPI = async (conversationId: string, userEmail: string) => {
+   // try {
+   //   console.log('Updating UnreadCount for conversation:', conversationId, 'user:', userEmail);
+    //  const response = await fetch('https://aws need to implement this/updateUnreadCount', {
+    //    method: 'POST',
+    //    headers: { 'Content-Type': 'application/json' },
+    //    body: JSON.stringify({ conversationId, userEmail }),
+    //  });
+    //  const data = await response.json();
+    //  console.log('Update UnreadCount response:', data);
+   // } catch (error) {
+   //   console.error('Error updating UnreadCount:', error);
+   // }
+  //};
+  
 
   const sendMessageMutation = useMutation({
     mutationFn: ({
@@ -102,16 +116,38 @@ export const Conversations = () => {
         ConversationID: conversation.id,
         sentByMe: true,
       };
-
+    
       // Update React Query cache
       queryClient.setQueryData(
         ['messages', conversation.id],
         (old: Message[] | undefined) => [newMsg, ...(old || [])],
       );
-
+    
       // Update InboxStore
-      inboxStore.addMessageToConversation(conversation.id, newMsg);
-
+      const existingConversation = inboxStore.conversations.find(
+        conv => conv.id === conversation.id
+      );
+    
+      if (existingConversation) {
+        inboxStore.addMessageToConversation(conversation.id, newMsg);
+      } else {
+        // Create new conversation and add to InboxStore
+        const newConversation: Conversation = {
+          id: conversation.id,
+          ConversationID: conversation.ConversationID,
+          userEmail: conversation.userEmail,
+          username: conversation.username,
+          profilePicUrl: conversation.profilePicUrl,
+          lastMessage: newMsg,
+          timestamp: newMsg.Timestamp,
+          messages: [newMsg],
+          UnreadCount: 0,
+          LastReadMessageID: newMsg.MessageID,
+          partnerUser: conversation.partnerUser,
+        };
+        inboxStore.addConversation(newConversation);
+      }
+    
       Toast.show({
         type: 'success',
         text1: 'Message sent successfully',
@@ -120,6 +156,7 @@ export const Conversations = () => {
         visibilityTime: 2000,
       });
     },
+    
     onError: error => {
       console.error('Failed to send message:', error);
       Toast.show({
@@ -222,7 +259,7 @@ export const Conversations = () => {
           ]}>
           {isMemeShare && (
             <Image
-              source={{uri: `https://jestr-bucket.s3.amazonaws.com/${memeUrl}`}}
+            source={{ uri: `https://jestr-bucket.s3.amazonaws.com/${memeUrl}` }}
               style={styles.sharedMemeImage}
               resizeMode="contain"
             />
@@ -239,7 +276,7 @@ export const Conversations = () => {
 
   if (isLoading) {
     return (
-      <BlurView intensity={95} tint="dark" style={StyleSheet.absoluteFill}>
+      <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill}>
         <View style={styles.loadingContainer}>
           <LottieView
             source={require('../../../assets/animations/loading-animation.json')}
@@ -247,7 +284,7 @@ export const Conversations = () => {
             loop
             style={styles.lottieAnimation}
           />
-          <Text style={styles.loadingText}>Creating Account...</Text>
+          <Text style={styles.loadingText}>Loading</Text>
         </View>
       </BlurView>
     );
@@ -288,7 +325,6 @@ export const Conversations = () => {
           renderItem={renderMessage}
           keyExtractor={item => item.MessageID}
           inverted
-          contentContainerStyle={styles.messagesContainer}
           estimatedItemSize={79}
         />
         <View style={styles.inputContainer}>

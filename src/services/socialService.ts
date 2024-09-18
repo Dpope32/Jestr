@@ -212,7 +212,7 @@ import {API_URL} from './config';
   };
 
   export const fetchConversations = async (userEmail: string) => {
-    //console.log('Fetching conversations for:', userEmail);
+    console.log('Fetching conversations for:', userEmail);
     try {
       const response = await fetch(
         'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getConversations',
@@ -233,7 +233,7 @@ import {API_URL} from './config';
       }
   
       const responseData = await response.json();
-      //  console.log('Full API Response:', responseData);
+      console.log('Full API Response:', responseData);
       if (responseData.data && Array.isArray(responseData.data.conversations)) {
         return responseData.data.conversations;
       } else {

@@ -49,10 +49,10 @@ export type ProfileImage = {
   fileSize?: number;
 };
 
-export type FetchMemesResult = {
-  memes: Meme[];
+export interface FetchMemesResult {
+  memes: Meme[]; // Ensure this property exists
   lastEvaluatedKey: string | null;
-};
+}
 
 export type ShareType =
   | 'copy'
