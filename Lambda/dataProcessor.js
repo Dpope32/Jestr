@@ -1,8 +1,27 @@
-const {DynamoDBDocumentClient,GetCommand,DeleteCommand,BatchWriteCommand,PutCommand,UpdateCommand,ScanCommand,QueryCommand} = require('@aws-sdk/lib-dynamodb');
+const {DynamoDBDocumentClient,GetCommand,BatchWriteCommand,PutCommand,QueryCommand} = require('@aws-sdk/lib-dynamodb');
 const { DynamoDBClient, BatchGetItemCommand } = require('@aws-sdk/client-dynamodb');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { CognitoJwtVerifier } = require('aws-jwt-verify');
-const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const Redis = require('ioredis');
+
+// Initialize Redis client
+const redis = new Redis({
+  host: process.env.REDIS_HOST,
+  port: 6379,
+  tls: {},
+  connectTimeout: 5000, // 5 seconds timeout
+  maxRetriesPerRequest: 1
+});
+
+const VIEWED_MEMES_EXPIRATION = 86400; // 24 hours
+const MEME_METADATA_EXPIRATION = 3600; // 1 hour
+const FOLLOW_STATUS_EXPIRATION = 3600; // 1 hour
+
+// Handle Redis connection errors
+redis.on('error', (error) => {
+  console.error('Redis connection error:', error);
+});
 
 // Initialize AWS clients
 const ddbClient = new DynamoDBClient({});
@@ -17,16 +36,22 @@ const verifier = CognitoJwtVerifier.create({
   clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
 });
 
-const createResponse = (statusCode, message, data = null) => ({
-  statusCode,
-  headers: {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  },
-  body: JSON.stringify({ message, data }),
-});
+async function testRedisConnection() {
+  try {
+    console.log('Starting Redis test');
+    await Promise.race([
+      redis.set('test_key', 'test_value'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Redis operation timed out')), 5000))
+    ]);
+    console.log('Redis set operation completed');
+    const value = await redis.get('test_key');
+    console.log('Redis test successful. Value:', value);
+    return value === 'test_value';
+  } catch (error) {
+    console.error('Redis test failed:', error);
+    return false;
+  }
+}
 
 // Function to send a message
 const batchCheckFollowStatus = async (followerId, followeeIDs) => {
@@ -79,58 +104,6 @@ const batchCheckFollowStatus = async (followerId, followeeIDs) => {
   }
 };
 
-async function getUserMemes(email, lastEvaluatedKey, limit = 20) {
-  if (!email) {
-    throw new Error('Email is required to fetch user memes.');
-  }
-
-  const queryParams = {
-    TableName: 'Memes',
-    IndexName: 'Email-UploadTimestamp-index',
-    KeyConditionExpression: 'Email = :email',
-    ExpressionAttributeValues: {
-      ':email': email
-    },
-    ScanIndexForward: false,
-    Limit: limit,
-    ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
-  };
-
-  try {
-    const result = await docClient.send(new QueryCommand(queryParams));
-
-    const userMemes = result.Items ? result.Items.map(item => ({
-      memeID: item.MemeID,
-      email: item.Email,
-      url: item.MemeURL,
-      caption: item.Caption,
-      uploadTimestamp: item.UploadTimestamp,
-      likeCount: item.LikeCount || 0,
-      downloadCount: item.DownloadsCount || 0,
-      commentCount: item.CommentCount || 0,
-      shareCount: item.ShareCount || 0,
-      username: item.Username,
-      profilePicUrl: item.ProfilePicUrl || '',
-      mediaType: item.mediaType || 'image',
-      liked: item.Liked || false,
-      doubleLiked: item.DoubleLiked || false,
-      memeUser: {
-        email: item.Email,
-        username: item.Username,
-        profilePic: item.ProfilePicUrl || '',
-      },
-    })) : [];
-
-    return {
-      memes: userMemes,
-      lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
-    };
-  } catch (error) {
-    console.error('Error fetching user memes:', error);
-    throw new Error('Failed to fetch user memes.');
-  }
-}
-
 
 async function recordMemeViews(userEmail, memeIDs) {
   const now = new Date();
@@ -180,13 +153,63 @@ async function recordMemeViews(userEmail, memeIDs) {
   }
 }
 
+async function getCachedMemeData(memeID) {
+  const memeKey = `meme:${memeID}`;
+  let memeData = await redis.hgetall(memeKey);
+  if (Object.keys(memeData).length === 0) {
+    const memeParams = {
+      TableName: 'Memes',
+      Key: { MemeID: memeID }
+    };
+    const { Item } = await docClient.send(new GetCommand(memeParams));
+    if (Item) {
+      memeData = {
+        memeID: Item.MemeID,
+        email: Item.Email,
+        url: `https://${BUCKET_NAME}.s3.amazonaws.com/${Item.MemeID}`,
+        uploadTimestamp: Item.UploadTimestamp,
+        username: Item.Username,
+        caption: Item.Caption,
+        likeCount: Item.LikeCount || 0,
+        downloadCount: Item.DownloadsCount || 0,
+        commentCount: Item.CommentCount || 0,
+        shareCount: Item.ShareCount || 0,
+        profilePicUrl: Item.ProfilePicUrl || '',
+        mediaType: Item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image'
+      };
+      await redis.hmset(memeKey, memeData);
+      await redis.expire(memeKey, MEME_METADATA_EXPIRATION);
+    }
+  }
+  return memeData;
+}
+
+async function getCachedFollowStatus(userEmail, followeeID) {
+  const followStatusKey = `followStatus:${userEmail}:${followeeID}`;
+  let status = await redis.get(followStatusKey);
+  if (status === null) {
+    const followStatus = await batchCheckFollowStatus(userEmail, [followeeID]);
+    status = followStatus[followeeID];
+    await redis.set(followStatusKey, status ? '1' : '0');
+    await redis.expire(followStatusKey, FOLLOW_STATUS_EXPIRATION);
+  }
+  return status === '1';
+}
 
 exports.handler = async (event) => {
  //   console.log('Received event:', JSON.stringify(event, null, 2));
  // console.log('Headers:', JSON.stringify(event.headers, null, 2));
  //console.log('Processing operation:', event.operation);
 //console.log('Request body:', JSON.stringify(event.body));
+    console.log('Handler started');
     try {
+      console.log('Testing Redis connection');
+      const redisConnected = await testRedisConnection();
+      console.log('Redis connection test result:', redisConnected);
+      if (!redisConnected) {
+        console.error('Redis connection failed');
+        return createResponse(500, 'Internal Server Error - Redis connection failed');
+      }
       let requestBody;
       if (event.body) {
         requestBody = JSON.parse(event.body);
@@ -201,10 +224,7 @@ exports.handler = async (event) => {
    //   console.log('Parsed request body:', JSON.stringify(requestBody, null, 2));
 
   // List of operations that don't require authentication
-  const publicOperations = [
-    'fetchMemes','uploadMeme','getPresignedUrl','getLikeStatus','getUserMemes', 'signin', 'signup',
-    'updateMemeReaction','recordMemeView','deleteMeme','removeDownloadedMeme','getPopularMemes','getTotalMemes', 'requestDataArchive'
-  ];
+  const publicOperations = ['fetchMemes','requestDataArchive','getLikeStatus','recordMemeView'];
 
   let verifiedUser = null;
 
@@ -228,397 +248,80 @@ exports.handler = async (event) => {
 
   switch (operation) {
 
-  case 'fetchMemes': {
-    const { lastViewedMemeId, userEmail, limit = 5 } = requestBody;
-    if (!userEmail) {
-      return createResponse(400, 'userEmail is required.');
-    }
     
-    try {
-      // Check cache for existing viewedMemes
-      let viewedMemeIDs = cachedViewedMemes[userEmail];
-  
-      if (viewedMemeIDs) {
-        console.log(`Cache hit for user: ${userEmail}. Using cached viewedMemeIDs.`);
-      } else {
-        console.log(`Cache miss for user: ${userEmail}. Fetching from DynamoDB.`);
-        
-        // Fetch user's entire view history from DynamoDB if not in cache
-        const viewHistoryCommand = new QueryCommand({
-          TableName: 'UserMemeViews',
-          KeyConditionExpression: 'email = :email',
-          ExpressionAttributeValues: { ':email': userEmail }
-        });
-  
-        const viewHistoryResponse = await docClient.send(viewHistoryCommand);
-  
-        // Extract all viewed meme IDs and cache them
-        viewedMemeIDs = new Set(
-          viewHistoryResponse.Items.flatMap(item =>
-            (item.viewedMemes || []).map(meme => typeof meme === 'string' ? meme : meme.S)
-          )
-        );
-  
-        // Cache viewedMemeIDs
-        cachedViewedMemes[userEmail] = viewedMemeIDs;
-  
-        console.log(`Cached viewedMemeIDs for user: ${userEmail}.`);
+    case 'fetchMemes': {
+      const { lastViewedMemeId, userEmail, limit = 5 } = requestBody;
+      if (!userEmail) {
+        return createResponse(400, 'userEmail is required.');
       }
-  
-      // Fetch memes using the new GSI
-      let queryParams = {
-        TableName: 'Memes',
-        IndexName: 'ByStatusAndTimestamp',
-        KeyConditionExpression: '#status = :status',
-        ExpressionAttributeNames: {
-          '#status': 'Status'
-        },
-        ExpressionAttributeValues: {
-          ':status': 'active'
-        },
-        ScanIndexForward: false, // To get the most recent memes first
-        Limit: 100 // We'll filter out viewed memes, so we fetch more than needed
-      };
-  
-      if (lastViewedMemeId) {
-        // Fetch the last viewed meme to get its timestamp
-        const lastViewedMemeCommand = new GetCommand({
-          TableName: 'Memes',
-          Key: { MemeID: lastViewedMemeId }
-        });
-        const lastViewedMeme = await docClient.send(lastViewedMemeCommand);
-  
-        if (lastViewedMeme.Item) {
-          queryParams.ExclusiveStartKey = { 
-            Status: 'active',
-            UploadTimestamp: lastViewedMeme.Item.UploadTimestamp,
-            MemeID: lastViewedMemeId
-          };
-        }
-      }
-  
-      let unseenMemes = [];
-      while (unseenMemes.length < limit) {
-        const queryCommand = new QueryCommand(queryParams);
-        const result = await docClient.send(queryCommand);
-  
-        const newUnseenMemes = result.Items.filter(meme => !viewedMemeIDs.has(meme.MemeID));
-        unseenMemes = [...unseenMemes, ...newUnseenMemes];
-  
-        if (!result.LastEvaluatedKey || unseenMemes.length >= limit) break;
-        queryParams.ExclusiveStartKey = result.LastEvaluatedKey;
-      }
-  
-      // Process memes and attach follow status (rest of your existing code)
-      const followeeIDs = [...new Set(unseenMemes.slice(0, limit).map(item => item.Email).filter(email => email !== userEmail))];
-  
-      let followStatuses = {};
-      if (followeeIDs.length > 0) {
-        followStatuses = await batchCheckFollowStatus(userEmail, followeeIDs);
-      } else {
-        console.log('No followee IDs provided. Returning empty follow statuses.');
-      }
-  
-      const memes = unseenMemes.slice(0, limit).map(item => ({
-        memeID: item.MemeID,
-        email: item.Email,
-        url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
-        uploadTimestamp: item.UploadTimestamp,
-        username: item.Username,
-        caption: item.Caption,
-        likeCount: item.LikeCount || 0,
-        downloadCount: item.DownloadsCount || 0,
-        commentCount: item.CommentCount || 0,
-        shareCount: item.ShareCount || 0,
-        profilePicUrl: item.ProfilePicUrl || '',
-        mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
-        memeUser: {
-          email: item.Email,
-          username: item.Username,
-          profilePic: item.ProfilePicUrl || '',
-          displayName: item.Username,
-          headerPic: '',
-          creationDate: item.UploadTimestamp
-        },
-        isFollowed: item.Email !== userEmail ? followStatuses[item.Email] || false : null
-      }));
-  // Update the cache with new views
-  memes.forEach(meme => viewedMemeIDs.add(meme.memeID));
-
-  // Record meme views in DynamoDB
-  await recordMemeViews(userEmail, memes.map(meme => meme.memeID));
-
-  return createResponse(200, 'Memes retrieved successfully.', {
-    memes,
-    lastEvaluatedKey: queryParams.ExclusiveStartKey ? JSON.stringify(queryParams.ExclusiveStartKey) : null
-  });
-} catch (error) {
-  console.error('Error fetching memes:', error);
-  return createResponse(500, 'Internal Server Error', { error: error.message, stack: error.stack });
-}
-}
-
-
-    case 'requestDataArchive': {
-      const { email } = requestBody;
-      if (!email) {
-        return createResponse(400, 'Email is required to request data archive.');
-      }
-    
+      console.time('fetchMemes');
       try {
-        // Fetch user's memes
-        const userMemesResult = await getUserMemes(email);
-    
-        // Prepare data for archive
-        const userData = {
-          email: email,
-          memes: userMemesResult.memes,
-          // Add any other user data you want to include in the archive
+        const redisKey = `viewedMemes:${userEmail}`;
+        let viewedMemeIDs = new Set(await redis.smembers(redisKey));
+
+        if (viewedMemeIDs.size === 0) {
+          console.log('Cache miss: Fetching viewed memes from DynamoDB');
+        } else {
+          console.log(`Cache hit: Found ${viewedMemeIDs.size} viewed memes in Redis`);
+        }
+        
+        let queryParams = {
+          TableName: 'Memes',
+          IndexName: 'ByStatusAndTimestamp',
+          KeyConditionExpression: '#status = :status',
+          ExpressionAttributeNames: { '#status': 'Status' },
+          ExpressionAttributeValues: { ':status': 'active' },
+          ScanIndexForward: false,
+          Limit: 100
         };
     
-        // Convert data to JSON string
-        const dataString = JSON.stringify(userData, null, 2);
+        if (lastViewedMemeId) {
+          const lastViewedMeme = await getCachedMemeData(lastViewedMemeId);
+          if (lastViewedMeme) {
+            queryParams.ExclusiveStartKey = { 
+              Status: 'active',
+              UploadTimestamp: lastViewedMeme.uploadTimestamp,
+              MemeID: lastViewedMemeId
+            };
+          }
+        }
     
-        // Generate a unique filename for the archive
-        const fileName = `${email}_data_archive_${Date.now()}.json`;
+        let unseenMemes = [];
+        while (unseenMemes.length < limit) {
+          const result = await docClient.send(new QueryCommand(queryParams));
+          const newUnseenMemes = result.Items.filter(meme => !viewedMemeIDs.has(meme.MemeID));
+          unseenMemes = [...unseenMemes, ...newUnseenMemes];
+          if (!result.LastEvaluatedKey || unseenMemes.length >= limit) break;
+          queryParams.ExclusiveStartKey = result.LastEvaluatedKey;
+        }
     
-        // Upload to S3
-        const uploadParams = {
-          Bucket: BUCKET_NAME,
-          Key: fileName,
-          Body: dataString,
-          ContentType: 'application/json'
-        };
-        await s3Client.send(new PutObjectCommand(uploadParams));
+        const memes = await Promise.all(unseenMemes.slice(0, limit).map(async (item) => {
+          const memeData = await getCachedMemeData(item.MemeID);
+          const isFollowed = item.Email !== userEmail ? await getCachedFollowStatus(userEmail, item.Email) : null;
+          return { ...memeData, isFollowed };
+        }));
     
-        // Generate a pre-signed URL for the uploaded file
-        const url = await getSignedUrl(s3Client, new GetObjectCommand({
-          Bucket: BUCKET_NAME,
-          Key: fileName
-        }), { expiresIn: 604800 }); // URL expires in 1 week
+        // Update viewed memes in Redis
+        await redis.sadd(redisKey, ...memes.map(meme => meme.memeID));
+        await redis.expire(redisKey, VIEWED_MEMES_EXPIRATION);
     
-        // Return the URL in the response
-        return createResponse(200, 'Data archive created successfully', {
-          message: 'Your data archive has been created.',
-          downloadUrl: url,
-          expiresIn: '7 days'
+        // Record meme views in DynamoDB
+        await recordMemeViews(userEmail, memes.map(meme => meme.memeID));
+        console.timeEnd('fetchMemes');
+        return createResponse(200, 'Memes retrieved successfully.', {
+          memes,
+          lastEvaluatedKey: queryParams.ExclusiveStartKey ? JSON.stringify(queryParams.ExclusiveStartKey) : null
         });
       } catch (error) {
-        console.error('Error processing data archive request:', error);
-        return createResponse(500, 'Failed to process data archive request', { error: error.message });
+        console.error('Error fetching memes:', error);
+        return createResponse(500, 'Internal Server Error', { error: error.message, stack: error.stack });
       }
     }
-    
 
-case 'getUserMemes': {
-  const { email, lastEvaluatedKey, limit = 20 } = requestBody;
-  if (!email) {
-  return createResponse(400, 'Email is required to fetch user memes.');
-  }
-
-  const queryParams = {
-  TableName: 'Memes',
-  IndexName: 'Email-UploadTimestamp-index',
-  KeyConditionExpression: 'Email = :email',
-  ExpressionAttributeValues: {
-    ':email': email
-  },
-  ScanIndexForward: false,
-  Limit: limit,
-  ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
-  };
-
-  try {
-  const result = await docClient.send(new QueryCommand(queryParams));
-
-  const userMemes = result.Items ? result.Items.map(item => ({
-    memeID: item.MemeID,
-    email: item.Email,
-    url: item.MemeURL,
-    caption: item.Caption,
-    uploadTimestamp: item.UploadTimestamp,
-    likeCount: item.LikeCount || 0,
-    downloadCount: item.DownloadsCount || 0,
-    commentCount: item.CommentCount || 0,
-    shareCount: item.ShareCount || 0,
-    username: item.Username,
-    profilePicUrl: item.ProfilePicUrl || '',
-    mediaType: item.mediaType || 'image',
-    liked: item.Liked || false,
-    doubleLiked: item.DoubleLiked || false,
-    memeUser: {
-      email: item.Email,
-      username: item.Username,
-      profilePic: item.ProfilePicUrl || '',
-    },
-  })) : [];
-
-  return createResponse(200, 'User memes retrieved successfully.', {
-    memes: userMemes,
-    lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
-  });
-  } catch (error) {
-  console.error('Error fetching user memes:', error);
-  return createResponse(500, 'Failed to fetch user memes.', { memes: [], lastEvaluatedKey: null });
-  }
-  }
-
-
-
-      case 'uploadMeme': {
-    //    console.log('Processing operation:', event.operation);
-        const { email, username, caption, tags, mediaType, memeKey } = requestBody;
-        if (!email || !username || !mediaType || !memeKey) {
-          return createResponse(400, 'Email, username, media type, and meme key are required.');
-        }
-
-        try {
-          // First, fetch the user's profile to get the ProfilePicUrl
-          const userProfileParams = {
-            TableName: 'Profiles',
-            Key: { email: email }
-          };
-
-          const userProfileResult = await docClient.send(new GetCommand(userProfileParams));
-          const userProfile = userProfileResult.Item;
-
-          if (!userProfile) {
-            return createResponse(404, 'User profile not found');
-          }
-
-          const profilePicUrl = userProfile.profilePic || ''; // Assuming 'profilePic' is the correct attribute name
-
-          const memeMetadataParams = {
-            TableName: 'Memes',
-            Item: {
-              MemeID: memeKey,
-              Email: email,
-              UploadTimestamp: new Date().toISOString(),
-              MemeURL: `https://${BUCKET_NAME}.s3.amazonaws.com/${memeKey}`,
-              Username: username,
-              Caption: caption || '',
-              Tags: tags || [],
-              LikeCount: 0,
-              DownloadsCount: 0,
-              CommentCount: 0,
-              mediaType: mediaType,
-              ProfilePicUrl: profilePicUrl // Add this line to include the ProfilePicUrl
-            },
-          };
-
-          await docClient.send(new PutCommand(memeMetadataParams));
-      //    console.log('Meme metadata stored successfully in DynamoDB');
-
-          return createResponse(200, 'Meme metadata processed successfully.', { 
-            url: `https://${BUCKET_NAME}.s3.amazonaws.com/${memeKey}`,
-            profilePicUrl: profilePicUrl // Include this in the response
-          });
-        } catch (error) {
-          console.error('Error storing meme metadata in DynamoDB:', error);
-          return createResponse(500, `Failed to store meme metadata: ${error.message}`);
-        }
-      }
-
-      case 'getPresignedUrl': {
-     //   console.log('Processing operation:', event.operation);
-      //    console.log('Entering getPresignedUrl case');
-        const { fileName, fileType } = requestBody;
-      //    console.log('Received request for:', { fileName, fileType });
-        
-        const fileKey = `Memes/${fileName}`;
-        
-        const command = new PutObjectCommand({
-          Bucket: BUCKET_NAME,
-          Key: fileKey,
-          ContentType: fileType
-        });
-
-        try {
-      //     console.log('Generating presigned URL with params:', { Bucket: BUCKET_NAME, Key: fileKey, ContentType: fileType });
-          const uploadURL = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-      //     console.log('Generated presigned URL:', uploadURL);
-          return createResponse(200, 'Presigned URL generated successfully', { uploadURL, fileKey });
-        } catch (error) {
-      //     console.error('Error generating presigned URL:', error);
-          return createResponse(500, 'Failed to generate presigned URL', { error: error.message });
-        }
-      }
-
-      case 'deleteMeme': {
-        const { memeID, userEmail } = requestBody;
-   //     console.log(`Attempting to delete meme. MemeID: ${memeID}, UserEmail: ${userEmail}`);
-
-        if (!memeID || !userEmail) {
-        console.log('Missing required fields for deleting a meme');
-          return createResponse(400, 'MemeID and userEmail are required for deleting a meme.');
-        }
-
-        try {
-          // First, check if the meme exists
-          const getMemeParams = {
-            TableName: 'Memes',
-            Key: { MemeID: memeID },
-          };
-
-       //   console.log('Fetching meme data:', JSON.stringify(getMemeParams));
-          const memeData = await docClient.send(new GetCommand(getMemeParams));
-        //  console.log('Meme data fetched:', JSON.stringify(memeData.Item));
-
-          if (!memeData.Item) {
-            console.log(`Meme not found. MemeID: ${memeID}`);
-            return createResponse(404, 'Meme not found');
-          }
-
-          if (memeData.Item.Email !== userEmail) {
-            console.log(`Unauthorized delete attempt. Meme owner: ${memeData.Item.Email}, Requester: ${userEmail}`);
-            return createResponse(403, 'You are not authorized to delete this meme');
-          }
-
-          // If the meme exists and the user is the owner, proceed with deletion
-          const deleteParams = {
-            TableName: 'Memes',
-            Key: { MemeID: memeID },
-          };
-
-       //   console.log('Deleting meme:', JSON.stringify(deleteParams));
-          await docClient.send(new DeleteCommand(deleteParams));
-        //  console.log('Meme deleted successfully');
-
-          return createResponse(200, 'Meme deleted successfully');
-        } catch (error) {
-          console.error('Error deleting meme:', error);
-          return createResponse(500, 'Error deleting meme', { error: error.message });
-        }
-      }
-
-      case 'removeDownloadedMeme': {
-        const { userEmail, memeID } = requestBody;
-        //console.log(`Attempting to remove downloaded meme. MemeID: ${memeID}, UserEmail: ${userEmail}`);
-
-        if (!userEmail || !memeID) {
-          return createResponse(400, 'UserEmail and memeID are required for removing a downloaded meme.');
-        }
-
-        try {
-          const params = {
-            TableName: 'UserDownloads',
-            Key: {
-              email: userEmail,
-              MemeID: memeID,
-            },
-          };
-
-          await docClient.send(new DeleteCommand(params));
-          console.log('Downloaded meme removed successfully');
-          return createResponse(200, 'Downloaded meme removed successfully');
-        } catch (error) {
-          console.error('Error removing downloaded meme:', error);
-          return createResponse(500, 'Error removing downloaded meme', { error: error.message });
-        }
-      }
-
-      case 'getLikeStatus': {
+    case 'getLikeStatus': {
+      console.log('Entering getLikeStatus case');
       const { memeID, userEmail } = requestBody;
+      console.log('memeID:', memeID, 'userEmail:', userEmail);
       if (!memeID || !userEmail) {
       console.error('Invalid request parameters:', { memeID, userEmail });
       return createResponse(400, 'memeID and userEmail are required.');
@@ -634,7 +337,9 @@ case 'getUserMemes': {
         }
       };
 
-      let { Item: memeItem } = await docClient.send(new GetCommand(memeParams));
+      console.log('Fetching meme from cache or DynamoDB');
+      let memeItem = await getCachedMemeData(memeID);
+      console.log('Meme item fetched:', memeItem ? 'Found' : 'Not Found');
 
       if (!memeItem) {
         // Meme doesn't exist in DynamoDB, let's create it
@@ -690,167 +395,52 @@ case 'getUserMemes': {
       }
       }
 
-      case 'getTotalMemes':
-      try {
-      const params = {
-        TableName: 'Memes',
-        Select: 'COUNT'
-      };
-      const result = await docClient.send(new ScanCommand(params));
-      return createResponse(200, 'Total memes retrieved successfully.', { totalMemes: result.Count });
-      } catch (error) {
-      console.error('Error getting total memes:', error);
-      return createResponse(500, 'Failed to get total memes');
-      }
-
-      case 'getPopularMemes':
-      try {
-      // console.log('Attempting to get popular memes');
-      const params = {
-        TableName: 'Memes',
-        IndexName: 'LikeCount-index',
-        Limit: 100,  // Increase this if necessary to ensure we get enough items to sort
-        ScanIndexForward: false
-      };
-      // console.log('Scan params:', JSON.stringify(params));
-      const result = await docClient.send(new ScanCommand(params));
-      //  console.log('Scan result:', JSON.stringify(result));
-
-      // Sort the results by LikeCount in descending order and take the top 5
-      const sortedMemes = result.Items.sort((a, b) => (b.LikeCount || 0) - (a.LikeCount || 0)).slice(0, 5);
-
-      return createResponse(200, 'Popular memes retrieved successfully.', { popularMemes: sortedMemes });
-      } catch (error) {
-      console.error('Error getting popular memes:', error);
-      return createResponse(500, 'Failed to get popular memes', { error: error.message });
-      }
-
-      case 'updateMemeReaction': {
-        const { memeID, incrementLikes, doubleLike, incrementDownloads, email } = requestBody;
-
-        const userLikeKey = { email: email, MemeID: memeID };
-        const getUserLike = {
-          TableName: 'UserLikes',
-          Key: userLikeKey
-        };
-
-        const userLikeStatus = await docClient.send(new GetCommand(getUserLike));
-
-        // If user has a record, check their like status
-        if (userLikeStatus.Item) {
-          let shouldUpdate = false;
-          let updateExpression = 'SET ';
-          let expressionAttributeNames = {};
-          let expressionAttributeValues = {};
-
-          // Determine if the user is toggling the like or double-like state
-          if (doubleLike) {
-            shouldUpdate = true;
-            updateExpression += '#LC = #LC + :val';
-            expressionAttributeNames['#LC'] = 'LikeCount';
-            expressionAttributeValues[':val'] = userLikeStatus.Item.DoubleLiked ? -2 : 2;
-            // Update the double-liked status
-            const updateDoubleLike = {
-              TableName: 'UserLikes',
-              Key: userLikeKey,
-              UpdateExpression: 'set DoubleLiked = :newState, Liked = :likeState',
-              ExpressionAttributeValues: {
-                ':newState': !userLikeStatus.Item.DoubleLiked,
-                ':likeState': false
-              }
-            };
-            await docClient.send(new UpdateCommand(updateDoubleLike));
-          } else if (incrementLikes && !userLikeStatus.Item.DoubleLiked) {
-            shouldUpdate = true;
-            updateExpression += '#LC = #LC + :val';
-            expressionAttributeNames['#LC'] = 'LikeCount';
-            expressionAttributeValues[':val'] = userLikeStatus.Item.Liked ? -1 : 1;
-            // Update the liked status
-            const updateLike = {
-              TableName: 'UserLikes',
-              Key: userLikeKey,
-              UpdateExpression: 'set Liked = :newState',
-              ExpressionAttributeValues: {
-                ':newState': !userLikeStatus.Item.Liked
-              }
-            };
-            await docClient.send(new UpdateCommand(updateLike));
-          }
-
-          if (shouldUpdate) {
-            const updateMeme = {
-              TableName: 'Memes',
-              Key: { MemeID: memeID },
-              UpdateExpression: updateExpression,
-              ExpressionAttributeNames: expressionAttributeNames,
-              ExpressionAttributeValues: expressionAttributeValues
-            };
-            await docClient.send(new UpdateCommand(updateMeme));
-          }
-        } else {
-          // User has not interacted with this meme before, insert new like or double-like record
-          const putUserLike = {
-            TableName: 'UserLikes',
-            Item: {
-              email: email,
-              MemeID: memeID,
-              Liked: !doubleLike && incrementLikes,
-              DoubleLiked: doubleLike,
-              Timestamp: new Date().toISOString()
-            }
-          };
-          await docClient.send(new PutCommand(putUserLike));
-          // Also update the meme count
-          const initialLikeUpdate = {
-            TableName: 'Memes',
-            Key: { MemeID: memeID },
-            UpdateExpression: 'SET LikeCount = if_not_exists(LikeCount, :zero) + :inc',
-            ExpressionAttributeValues: {
-              ':zero': 0,
-              ':inc': doubleLike ? 2 : (incrementLikes ? 1 : 0)
-            }
-          };
-          await docClient.send(new UpdateCommand(initialLikeUpdate));
+      case 'requestDataArchive': {
+        const { email } = requestBody;
+        if (!email) {
+          return createResponse(400, 'Email is required to request data archive.');
         }
-      if (incrementDownloads) {
-      // Update UserDownloads table
-      const userDownloadKey = { email: email, MemeID: memeID };
-      const getUserDownload = {
-        TableName: 'UserDownloads',
-        Key: userDownloadKey
-      };
-      const userDownloadStatus = await docClient.send(new GetCommand(getUserDownload));
-
-      if (!userDownloadStatus.Item) {
-        // User hasn't downloaded this meme before, add a new record
-        const putUserDownload = {
-          TableName: 'UserDownloads',
-          Item: {
+      
+        try {
+          // Fetch user's memes
+          const userMemesResult = await getUserMemes(email);
+      
+          // Prepare data for archive
+          const userData = {
             email: email,
-            MemeID: memeID,
-            Timestamp: new Date().toISOString()
-          }
-        };
-        await docClient.send(new PutCommand(putUserDownload));
+            memes: userMemesResult.memes,
 
-        // Update the download count in the Memes table
-        const updateMemeDownloads = {
-          TableName: 'Memes',
-          Key: { MemeID: memeID },
-          UpdateExpression: 'SET DownloadCount = if_not_exists(DownloadCount, :zero) + :inc',
-          ExpressionAttributeValues: {
-            ':zero': 0,
-            ':inc': 1
-          }
-        };
-        await docClient.send(new UpdateCommand(updateMemeDownloads));
-      }
-      // If the user has already downloaded the meme, we don't need to do anything
-      }
+          };
+          const dataString = JSON.stringify(userData, null, 2);
 
-      return createResponse(200, 'Meme reaction updated successfully.');
-      }
+          const fileName = `${email}_data_archive_${Date.now()}.json`;
 
+          const uploadParams = {
+            Bucket: BUCKET_NAME,
+            Key: fileName,
+            Body: dataString,
+            ContentType: 'application/json'
+          };
+          await s3Client.send(new PutObjectCommand(uploadParams));
+      
+          // Generate a pre-signed URL for the uploaded file
+          const url = await getSignedUrl(s3Client, new GetObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: fileName
+          }), { expiresIn: 604800 }); // URL expires in 1 week
+      
+          // Return the URL in the response
+          return createResponse(200, 'Data archive created successfully', {
+            message: 'Your data archive has been created.',
+            downloadUrl: url,
+            expiresIn: '7 days'
+          });
+        } catch (error) {
+          console.error('Error processing data archive request:', error);
+          return createResponse(500, 'Failed to process data archive request', { error: error.message });
+        }
+      }
+      
       case 'recordMemeView':
       try {
       const { memeViews } = requestBody;
@@ -894,3 +484,14 @@ case 'getUserMemes': {
     return createResponse(500, 'Internal Server Error', { error: error.message });
   }
 };
+
+const createResponse = (statusCode, message, data = null) => ({
+  statusCode,
+  headers: {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  },
+  body: JSON.stringify({ message, data }),
+});
