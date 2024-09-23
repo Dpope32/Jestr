@@ -1,3 +1,5 @@
+//New implementation 09/22/2024 that uses new Redis refactoring and not serverless redis and 0 replicas to save money
+
 const { 
   DynamoDBDocumentClient, 
   GetCommand, 
@@ -14,18 +16,28 @@ const Redis = require('ioredis');
 // Initialize Redis client
 const redis = new Redis({
   host: process.env.REDIS_HOST,
-  port: 6379,
-  tls: {},
+  port: 6379, // This is the default Redis port
   connectTimeout: 5000,
   maxRetriesPerRequest: 1
 });
 
+//  error logging
+//redis.on('error', (error) => {
+  //console.error('Redis connection error:', error);
+//});
+
+// successful connection logging
+//redis.on('connect', () => {
+ // console.log('Successfully connected to Redis');
+//});
+//console.log('Redis Host:', process.env.REDIS_HOST);
+
 const VIEWED_MEMES_EXPIRATION = 86400; // 24 hours
-const MEME_METADATA_EXPIRATION = 3600; // 1 hour
-const FOLLOW_STATUS_EXPIRATION = 3600; // 1 hour
+const MEME_METADATA_EXPIRATION = 43200; // 12 hours
+const ALL_MEMES_CACHE_EXPIRATION = 10800; // 3 hours
 const BUCKET_NAME = 'jestr-meme-uploads';
 const ALL_MEMES_CACHE_KEY = 'allMemeIDs';
-const ALL_MEMES_CACHE_EXPIRATION = 3600; // 1 hour
+
 
 // Initialize AWS clients
 const ddbClient = new DynamoDBClient({});
@@ -36,6 +48,13 @@ const verifier = CognitoJwtVerifier.create({
   userPoolId: "us-east-2_ifrUnY9b1",
   tokenUse: "access",
   clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
+});
+
+// Helper functions for encoding and decoding likeStatus
+const encodeLikeStatus = (liked, doubleLiked) => `${liked ? '1' : '0'}${doubleLiked ? '1' : '0'}`;
+const decodeLikeStatus = (status) => ({
+  liked: status[0] === '1',
+  doubleLiked: status[1] === '1',
 });
 
 // Function to get all meme IDs from cache or DynamoDB
@@ -97,10 +116,10 @@ async function getAllMemeIDs() {
 
       // Log the results of the pipeline
       successfullyCachedMemeIDs.forEach((memeID, index) => {
-        console.log(`Cached memeID ${memeID} with score ${uploadTimestamps[index]}`);
+    //    console.log(`Cached memeID ${memeID} with score ${uploadTimestamps[index]}`);
       });
 
-      console.log(`Cached a total of ${successfullyCachedMemeIDs.length} meme IDs in Redis.`);
+    //  console.log(`Cached a total of ${successfullyCachedMemeIDs.length} meme IDs in Redis.`);
     }
   } else {
     console.log(`Cache hit: Retrieved ${allMemeIDs.length} meme IDs from cache.`);
@@ -149,18 +168,19 @@ async function getCachedMemesData(memeIDs) {
         response.Responses.Memes.forEach(item => {
           if (item && item.MemeID) {
             const memeData = {
+              //took out these 2 to reduce Redis memory. No need to store the actual meme objects themselves, just meta data is plenty.
+              // mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image'
+              //url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
               memeID: item.MemeID,
               email: item.Email || '',
-              url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
               uploadTimestamp: item.UploadTimestamp || '',
               username: item.Username || '',
               caption: item.Caption || '',
-              likeCount: item.LikeCount || '0',
-              downloadCount: item.DownloadsCount || '0',
-              commentCount: item.CommentCount || '0',
-              shareCount: item.ShareCount || '0',
-              profilePicUrl: item.ProfilePicUrl || '',
-              mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image'
+              likeCount: item.LikeCount || 0,
+              downloadCount: item.DownloadsCount || 0,
+              commentCount: item.CommentCount || 0,
+              shareCount: item.ShareCount || 0,
+              profilePicUrl: item.ProfilePicUrl || ''
             };
             cachedMemes.push(memeData);
             pipeline.hmset(`meme:${item.MemeID}`, memeData);
@@ -168,7 +188,7 @@ async function getCachedMemesData(memeIDs) {
           }
         });
         await pipeline.exec();
-        console.log(`Cached ${response.Responses.Memes.length} uncached meme IDs in Redis.`);
+      //  console.log(`Cached ${response.Responses.Memes.length} uncached meme IDs in Redis.`);
       }
     } catch (error) {
       console.error('Error fetching uncached meme data:', error);
@@ -177,6 +197,7 @@ async function getCachedMemesData(memeIDs) {
 
   return cachedMemes;
 }
+
 
 // Function to record meme views
 async function recordMemeViews(userEmail, memeIDs) {
@@ -215,7 +236,7 @@ async function recordMemeViews(userEmail, memeIDs) {
       await docClient.send(putCommand);
       await redis.set(`lastWriteTime:${userEmail}`, currentTime);
       await redis.set(`viewCount:${userEmail}`, 0);
-      console.log(`Recorded meme views for user ${userEmail} in DynamoDB.`);
+    //  console.log(`Recorded meme views for user ${userEmail} in DynamoDB.`);
     } catch (error) {
       console.error('Error recording meme views in DynamoDB:', error);
     }
@@ -250,7 +271,7 @@ async function getCachedMemeData(memeID) {
         };
         await redis.hmset(memeKey, memeData);
         await redis.expire(memeKey, MEME_METADATA_EXPIRATION);
-        console.log(`Cached memeID ${memeID} in Redis.`);
+      //  console.log(`Cached memeID ${memeID} in Redis.`);
       }
     } catch (error) {
       console.error('Error fetching meme data from DynamoDB:', error);
@@ -260,6 +281,10 @@ async function getCachedMemeData(memeID) {
 }
 
 exports.handler = async (event) => {
+//console.log('Received event in dataProcessor:', JSON.stringify(event, null, 2));
+ //console.log('Headers:', JSON.stringify(event.headers, null, 2));
+ //console.log('Processing operation:', event.operation);
+ //console.log('Request body:', JSON.stringify(event.body));
   try {
     let requestBody;
     if (event.body) {
@@ -295,11 +320,11 @@ exports.handler = async (event) => {
     switch (operation) {
       case 'fetchMemes': {
         // Start timing with a unique label
-        const timeLabel = `fetchMemes-${Date.now()}-${Math.random()}`;
-        console.time(timeLabel);
+       // const timeLabel = `fetchMemes-${Date.now()}-${Math.random()}`;
+      //  console.time(timeLabel);
         const { lastViewedMemeId, userEmail, limit = 5 } = requestBody;
         if (!userEmail) {
-          console.timeEnd(timeLabel);
+      //    console.timeEnd(timeLabel);
           return createResponse(400, 'userEmail is required.');
         }
       
@@ -327,22 +352,22 @@ exports.handler = async (event) => {
           // Filter out viewed memes and limit the result
           const unseenMemeIDs = slicedMemeIDs.filter(memeID => !viewedMemeIDs.has(memeID)).slice(0, limit);
       
-          console.log(`Retrieved ${unseenMemeIDs.length} unseen meme IDs for user ${userEmail}`);
+        //  console.log(`Retrieved ${unseenMemeIDs.length} unseen meme IDs for user ${userEmail}`);
       
           const memes = await getCachedMemesData(unseenMemeIDs);
       
-          console.log(`Retrieved ${memes.length} unseen memes for user ${userEmail}`);
+        //  console.log(`Retrieved ${memes.length} unseen memes for user ${userEmail}`);
       
           if (unseenMemeIDs.length > 0) {
             await redis.sadd(redisKey, ...unseenMemeIDs);
             await redis.expire(redisKey, VIEWED_MEMES_EXPIRATION);
-            console.log(`Added ${unseenMemeIDs.length} new meme IDs to Redis for user ${userEmail}`);
+          //  console.log(`Added ${unseenMemeIDs.length} new meme IDs to Redis for user ${userEmail}`);
           }
       
           await recordMemeViews(userEmail, unseenMemeIDs);
       
           // End timing
-          console.timeEnd(timeLabel);
+        //  console.timeEnd(timeLabel);
           return createResponse(200, 'Memes retrieved successfully.', {
             memes,
             lastViewedMemeId: memes.length > 0 ? memes[memes.length - 1].memeID : lastViewedMemeId
@@ -354,70 +379,70 @@ exports.handler = async (event) => {
         }
       }
 
-      case 'getLikeStatus': {
-        const { memeID, userEmail } = requestBody;
-        if (!memeID || !userEmail) {
-          return createResponse(400, 'memeID and userEmail are required.');
+// Refactored 'getLikeStatus' operation
+case 'getLikeStatus': {
+  const { memeID, userEmail } = requestBody;
+  if (!memeID || !userEmail) {
+    return createResponse(400, 'memeID and userEmail are required.');
+  }
+  try {
+    let memeItem = await getCachedMemeData(memeID);
+
+    if (!memeItem) {
+      const newMemeParams = {
+        TableName: 'Memes',
+        Item: {
+          MemeID: memeID,
+          Email: 'pope.dawson@gmail.com',
+          UploadTimestamp: new Date().toISOString(),
+          LikeCount: 0,
+          ShareCount: 0,
+          CommentCount: 0,
+          DownloadsCount: 0,
+          Username: 'Admin',
+          ProfilePicUrl: 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/pope.dawson@gmail.com-profilePic-1719862276108.jpg',
+          mediaType: memeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
+          MemeURL: `https://jestr-bucket.s3.amazonaws.com/${memeID}`
         }
-        try {
-          let memeItem = await getCachedMemeData(memeID);
+      };
+      await docClient.send(new PutCommand(newMemeParams));
+      memeItem = newMemeParams.Item;
+    //  console.log(`Created new meme entry for memeID ${memeID}.`);
+    }
 
-          if (!memeItem) {
-            const newMemeParams = {
-              TableName: 'Memes',
-              Item: {
-                MemeID: memeID,
-                Email: 'pope.dawson@gmail.com',
-                UploadTimestamp: new Date().toISOString(),
-                LikeCount: 0,
-                ShareCount: 0,
-                CommentCount: 0,
-                DownloadsCount: 0,
-                Username: 'Admin',
-                ProfilePicUrl: 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/pope.dawson@gmail.com-profilePic-1719862276108.jpg',
-                mediaType: memeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
-                MemeURL: `https://jestr-bucket.s3.amazonaws.com/${memeID}`
-              }
-            };
-            await docClient.send(new PutCommand(newMemeParams));
-            memeItem = newMemeParams.Item;
-            console.log(`Created new meme entry for memeID ${memeID}.`);
-          }
-          const likeStatusKey = `likeStatus:${userEmail}:${memeID}`;
-          let likeStatus = await redis.hgetall(likeStatusKey);
+    const likeStatusKey = `likeStatus:${userEmail}:${memeID}`;
+    let likeStatus = await redis.get(likeStatusKey);
 
-          if (Object.keys(likeStatus).length === 0) {
-            const userLikeParams = {
-              TableName: 'UserLikes',
-              Key: {
-                email: userEmail,
-                MemeID: memeID
-              }
-            };
-
-            const { Item: userLikeItem } = await docClient.send(new GetCommand(userLikeParams));
-
-            likeStatus = {
-              liked: userLikeItem ? userLikeItem.Liked : false,
-              doubleLiked: userLikeItem ? userLikeItem.DoubleLiked : false,
-            };
-
-            await redis.hmset(likeStatusKey, likeStatus);
-            await redis.expire(likeStatusKey, MEME_METADATA_EXPIRATION);
-            console.log(`Cached like status for user ${userEmail} and memeID ${memeID}.`);
-          }
-
-          const response = {
-            ...memeItem,
-            ...likeStatus
-          };
-
-          return createResponse(200, 'Meme info and like status retrieved successfully.', response);
-        } catch (error) {
-          console.error(`Error getting meme info and like status: ${error}`);
-          return createResponse(500, 'Failed to get meme info and like status.', { error: error.message });
+    if (!likeStatus) {
+      const userLikeParams = {
+        TableName: 'UserLikes',
+        Key: {
+          email: userEmail,
+          MemeID: memeID
         }
-      }
+      };
+
+      const { Item: userLikeItem } = await docClient.send(new GetCommand(userLikeParams));
+
+      likeStatus = encodeLikeStatus(userLikeItem ? userLikeItem.Liked : false, userLikeItem ? userLikeItem.DoubleLiked : false);
+
+      await redis.set(likeStatusKey, likeStatus, 'EX', MEME_METADATA_EXPIRATION);
+      //console.log(`Cached like status for user ${userEmail} and memeID ${memeID}.`);
+    } else {
+      likeStatus = decodeLikeStatus(likeStatus);
+    }
+
+    const response = {
+      ...memeItem,
+      ...likeStatus
+    };
+
+    return createResponse(200, 'Meme info and like status retrieved successfully.', response);
+  } catch (error) {
+    console.error(`Error getting meme info and like status: ${error}`);
+    return createResponse(500, 'Failed to get meme info and like status.', { error: error.message });
+  }
+}
 
       case 'requestDataArchive': {
         const { email } = requestBody;
@@ -479,7 +504,7 @@ exports.handler = async (event) => {
           });
           await pipeline.exec();
 
-          console.log('Recorded meme views successfully.');
+        //  console.log('Recorded meme views successfully.');
           return createResponse(200, 'Meme views recorded successfully.');
         } catch (error) {
           console.error('Error recording meme views:', error);

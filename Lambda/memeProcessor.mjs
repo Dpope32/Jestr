@@ -3,7 +3,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-
+import { v4 as uuidv4 } from "uuid";
 // Initialize AWS clients
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -14,6 +14,9 @@ const verifier = CognitoJwtVerifier.create({
   tokenUse: "access",
   clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
 });
+
+const BUCKET_NAME = 'jestr-meme-uploads';
+const publicOperations = ['shareMeme','getPresignedUrl','uploadMeme', 'getUserMemes'];
 
 const recordShare = async (memeID, userEmail, shareType, username, catchUser, message) => {
     const shareID = uuidv4();
@@ -80,11 +83,93 @@ const recordShare = async (memeID, userEmail, shareType, username, catchUser, me
     }
   };
 
-exports.handler = async (event) => {
+  const sendMessage = async (senderID, receiverID, content) => {
+    const messageID = uuidv4();
+    const timestamp = new Date().toISOString();
+    const conversationID = [senderID, receiverID].sort().join('#');
+    try {
+      // 1. Insert message into Messages table
+      const messageParams = {
+        TableName: 'Messages',
+        Item: {
+          MessageID: messageID,
+          SenderID: senderID,
+          ReceiverID: receiverID,
+          Content: content,
+          Timestamp: timestamp,
+          Status: 'sent',
+          ConversationID: conversationID
+        },
+      };
+      await docClient.send(new PutCommand(messageParams));
+  
+      // 2. Update or create Conversations table entry
+      const conversationParams = {
+        TableName: 'Conversations',
+        Key: { ConversationID: conversationID },
+        UpdateExpression: 'SET LastMessageID = :messageID, LastUpdated = :timestamp',
+        ExpressionAttributeValues: {
+          ':messageID': messageID,
+          ':timestamp': timestamp
+        },
+        ReturnValues: 'ALL_NEW'
+      };
+      await docClient.send(new UpdateCommand(conversationParams));
+  
+      // 3. Update or create UserConversations table entry for sender
+      const updateSenderConversationParams = {
+        TableName: 'UserConversations',
+        Key: {
+          UserID: senderID
+        },
+        UpdateExpression: 'SET LastReadMessageID = :messageID, UnreadCount = :unreadCount, ConversationID = :conversationID',
+        ExpressionAttributeValues: {
+          ':messageID': messageID,
+          ':unreadCount': 0,
+          ':conversationID': conversationID
+        },
+        ReturnValues: 'ALL_NEW'
+      };
+      await docClient.send(new UpdateCommand(updateSenderConversationParams));
+  
+      // 4. Update or create UserConversations table entry for receiver
+      const updateReceiverConversationParams = {
+        TableName: 'UserConversations',
+        Key: {
+          UserID: receiverID
+        },
+        UpdateExpression: 'SET UnreadCount = if_not_exists(UnreadCount, :zero) + :inc, LastReadMessageID = if_not_exists(LastReadMessageID, :nullValue), ConversationID = :conversationID',
+        ExpressionAttributeValues: {
+          ':zero': 0,
+          ':inc': 1,
+          ':nullValue': null,
+          ':conversationID': conversationID
+        },
+        ReturnValues: 'ALL_NEW'
+      };
+      await docClient.send(new UpdateCommand(updateReceiverConversationParams));
+  
+    //  console.log('Message sent successfully');
+      return { success: true, messageID: messageID, conversationID: conversationID };
+    } catch (error) {
+      console.error('Error sending message:', error);
+      if (error.code === 'ResourceNotFoundException') {
+        console.error('One or more required tables do not exist.');
+      } else if (error.code === 'AccessDeniedException') {
+        console.error('Insufficient permissions to perform the operation.');
+      } else {
+        console.error('An unexpected error occurred:', error);
+      }
+      throw error;
+    }
+  };
+  
+
+export const handler = async (event) => {
 //console.log('Received event:', JSON.stringify(event, null, 2));
 //console.log('Headers:', JSON.stringify(event.headers, null, 2));
 //console.log('Processing operation:', event.operation);
-//console.log('Request body:', JSON.stringify(event.body));
+//console.log('Request body:', JSON.stringify(event.body));R
     try {
         let requestBody;
         if (event.body) {
@@ -100,7 +185,6 @@ exports.handler = async (event) => {
    //   console.log('Parsed request body:', JSON.stringify(requestBody, null, 2));
 
   // List of operations that don't require authentication
-  const publicOperations = ['shareMeme','getPresignedUrl','uploadMeme','updateMemeReaction', 'getUserMemes'];
 
   let verifiedUser = null;
 
@@ -216,132 +300,6 @@ exports.handler = async (event) => {
                 console.error('Error storing meme metadata in DynamoDB:', error);
                 return createResponse(500, `Failed to store meme metadata: ${error.message}`);
                 }
-        }
-        
-        case 'updateMemeReaction': {
-        const { memeID, incrementLikes, doubleLike, incrementDownloads, email } = requestBody;
-
-        const userLikeKey = { email: email, MemeID: memeID };
-        const getUserLike = {
-            TableName: 'UserLikes',
-            Key: userLikeKey
-        };
-
-        const userLikeStatus = await docClient.send(new GetCommand(getUserLike));
-
-        // If user has a record, check their like status
-        if (userLikeStatus.Item) {
-            let shouldUpdate = false;
-            let updateExpression = 'SET ';
-            let expressionAttributeNames = {};
-            let expressionAttributeValues = {};
-
-            // Determine if the user is toggling the like or double-like state
-            if (doubleLike) {
-            shouldUpdate = true;
-            updateExpression += '#LC = #LC + :val';
-            expressionAttributeNames['#LC'] = 'LikeCount';
-            expressionAttributeValues[':val'] = userLikeStatus.Item.DoubleLiked ? -2 : 2;
-            // Update the double-liked status
-            const updateDoubleLike = {
-                TableName: 'UserLikes',
-                Key: userLikeKey,
-                UpdateExpression: 'set DoubleLiked = :newState, Liked = :likeState',
-                ExpressionAttributeValues: {
-                ':newState': !userLikeStatus.Item.DoubleLiked,
-                ':likeState': false
-                }
-            };
-            await docClient.send(new UpdateCommand(updateDoubleLike));
-            } else if (incrementLikes && !userLikeStatus.Item.DoubleLiked) {
-            shouldUpdate = true;
-            updateExpression += '#LC = #LC + :val';
-            expressionAttributeNames['#LC'] = 'LikeCount';
-            expressionAttributeValues[':val'] = userLikeStatus.Item.Liked ? -1 : 1;
-            // Update the liked status
-            const updateLike = {
-                TableName: 'UserLikes',
-                Key: userLikeKey,
-                UpdateExpression: 'set Liked = :newState',
-                ExpressionAttributeValues: {
-                ':newState': !userLikeStatus.Item.Liked
-                }
-            };
-            await docClient.send(new UpdateCommand(updateLike));
-            }
-
-            if (shouldUpdate) {
-            const updateMeme = {
-                TableName: 'Memes',
-                Key: { MemeID: memeID },
-                UpdateExpression: updateExpression,
-                ExpressionAttributeNames: expressionAttributeNames,
-                ExpressionAttributeValues: expressionAttributeValues
-            };
-            await docClient.send(new UpdateCommand(updateMeme));
-            }
-        } else {
-            // User has not interacted with this meme before
-            const putUserLike = {
-            TableName: 'UserLikes',
-            Item: {
-                email: email,
-                MemeID: memeID,
-                Liked: !doubleLike && incrementLikes,
-                DoubleLiked: doubleLike,
-                Timestamp: new Date().toISOString()
-            }
-            };
-            await docClient.send(new PutCommand(putUserLike));
-            // Also update the meme count
-            const initialLikeUpdate = {
-            TableName: 'Memes',
-            Key: { MemeID: memeID },
-            UpdateExpression: 'SET LikeCount = if_not_exists(LikeCount, :zero) + :inc',
-            ExpressionAttributeValues: {
-                ':zero': 0,
-                ':inc': doubleLike ? 2 : (incrementLikes ? 1 : 0)
-            }
-            };
-            await docClient.send(new UpdateCommand(initialLikeUpdate));
-        }
-        if (incrementDownloads) {
-        // Update UserDownloads table
-        const userDownloadKey = { email: email, MemeID: memeID };
-        const getUserDownload = {
-        TableName: 'UserDownloads',
-        Key: userDownloadKey
-        };
-        const userDownloadStatus = await docClient.send(new GetCommand(getUserDownload));
-
-        if (!userDownloadStatus.Item) {
-        // User hasn't downloaded this meme before, add a new record
-        const putUserDownload = {
-            TableName: 'UserDownloads',
-            Item: {
-            email: email,
-            MemeID: memeID,
-            Timestamp: new Date().toISOString()
-            }
-        };
-        await docClient.send(new PutCommand(putUserDownload));
-
-        // Update the download count in the Memes table
-        const updateMemeDownloads = {
-            TableName: 'Memes',
-            Key: { MemeID: memeID },
-            UpdateExpression: 'SET DownloadCount = if_not_exists(DownloadCount, :zero) + :inc',
-            ExpressionAttributeValues: {
-            ':zero': 0,
-            ':inc': 1
-            }
-        };
-        await docClient.send(new UpdateCommand(updateMemeDownloads));
-        }
-        // If the user has already downloaded the meme, we don't need to do anything
-        }
-
-        return createResponse(200, 'Meme reaction updated successfully.');
         }
 
         case 'getUserMemes': {
