@@ -1,7 +1,10 @@
+// dynamoManagement.mjs
+// fetchLikedMemes, fetchDownloadedMemes, fetchViewHistory, getAllUsers
+// must be zipped with node_modules, package.json, and package-lock.json when uploading to AWS
+
 import { DynamoDBDocumentClient, GetCommand, BatchGetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { CognitoJwtVerifier } from "aws-jwt-verify";
-
 
 // Initialize AWS clients
 const ddbClient = new DynamoDBClient({});
@@ -17,8 +20,7 @@ const verifier = CognitoJwtVerifier.create({
 const publicOperations = ['fetchLikedMemes', 'fetchDownloadedMemes', 'fetchViewHistory','getAllUsers'];
 
 export const handler = async (event) => {
-    console.log('Received event:', JSON.stringify(event, null, 2));
-
+   //console.log('Received event:', JSON.stringify(event, null, 2));
     try {
         let requestBody;
         if (event.body) {
@@ -121,26 +123,27 @@ export const handler = async (event) => {
 
         case 'fetchDownloadedMemes': {
             const { email, lastEvaluatedKey, limit = 10 } = requestBody;
+            //console.log('Fetching downloaded memes for email:', email);
             if (!email) {
-            return createResponse(400, 'Email is required to fetch downloaded memes.');
+                return createResponse(400, 'Email is required to fetch downloaded memes.');
             }
+
             const queryParams = {
-            TableName: 'UserDownloads',
-            IndexName: 'email-Timestamp-index',
-            KeyConditionExpression: 'email = :email',
-            ExpressionAttributeValues: {
-            ':email': email
-            },
-            ScanIndexForward: false,
-            Limit: limit,
-            ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
+                TableName: 'UserDownloads',
+                IndexName: 'email-Timestamp-index',
+                KeyConditionExpression: 'email = :email',
+                ExpressionAttributeValues: {':email': email},
+                ScanIndexForward: false,
+                Limit: limit,
+                ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
             };
             try {
-            const result = await docClient.send(new QueryCommand(queryParams));
-            if (!result.Items || result.Items.length === 0) {
-            return createResponse(200, 'No downloaded memes found.', { data: { memes: [], lastEvaluatedKey: null } });
-            }
-            // Fetch additional meme details
+                const result = await docClient.send(new QueryCommand(queryParams));
+                if (!result.Items || result.Items.length === 0) {
+                    return createResponse(200, 'No downloaded memes found.', { data: { memes: [], lastEvaluatedKey: null } });
+                }
+
+            // Fetch the actual memes from the Memes table
             const memeDetails = await Promise.all(result.Items.map(async (item) => {
                 const memeParams = {
                     TableName: 'Memes',
@@ -169,51 +172,53 @@ export const handler = async (event) => {
                     return null;
                 }
             }));
+            // Filter out null values from memeDetails
             const validMemeDetails = memeDetails.filter(meme => meme !== null);
             return createResponse(200, 'Downloaded memes retrieved successfully.', {
             data: {
                 memes: validMemeDetails,
                 lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
-            }
+                }
             });
             } catch (error) {
-            console.error('Error fetching downloaded memes:', error);
+                console.error('Error fetching downloaded memes:', error);
             return createResponse(500, 'Failed to fetch downloaded memes.');
             }
         }
 
         case 'fetchViewHistory': {
-            const { email, lastEvaluatedKey, limit = 50 } = requestBody;
+            const { email, lastEvaluatedKey, limit = 25 } = requestBody;
+
             if (!email) {
-            console.error('Email is required to fetch view history.');
+                console.error('Email is required to fetch view history.');
             return createResponse(400, 'Email is required to fetch view history.');
             }
             
             const viewHistoryCommand = new QueryCommand({
-            TableName: 'UserMemeViews',
-            KeyConditionExpression: 'email = :email',
-            ExpressionAttributeValues: { ':email': email }, 
-            ScanIndexForward: false, 
-            Limit: limit,
-            ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
+                TableName: 'UserMemeViews',
+                KeyConditionExpression: 'email = :email',
+                ExpressionAttributeValues: { ':email': email }, 
+                ScanIndexForward: false, 
+                Limit: limit,
+                ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
             });
             
             try {
-            console.log('Querying UserMemeViews with params:', viewHistoryCommand);
+            //console.log('Querying UserMemeViews with params:', viewHistoryCommand);
             const viewHistoryResponse = await docClient.send(viewHistoryCommand);
-            console.log('UserMemeViews query result:', viewHistoryResponse);
+            //console.log('UserMemeViews query result:', viewHistoryResponse);
             
             if (!viewHistoryResponse.Items || viewHistoryResponse.Items.length === 0) {
-            return createResponse(200, 'No view history found.', { data: { memes: [], lastEvaluatedKey: null } });
+                return createResponse(200, 'No view history found.', { data: { memes: [], lastEvaluatedKey: null } });
             }
             
+            // map out the results from viewHistoryResponse
             const viewedMemeIDs = viewHistoryResponse.Items
-            .flatMap(item => item.viewedMemes || [])
-            .slice(0, limit)
-            .map(meme => typeof meme === 'string' ? meme : meme.S);
+                .flatMap(item => item.viewedMemes || [])    
+                .slice(0, limit)
+                .map(meme => typeof meme === 'string' ? meme : meme.S);
             
             const batchGetParams = {RequestItems: {'Memes': {Keys: viewedMemeIDs.map(memeID => ({ MemeID: memeID }))}}};
-            
             const batchGetCommand = new BatchGetCommand(batchGetParams);
             const batchGetResponse = await docClient.send(batchGetCommand);
             
@@ -222,6 +227,7 @@ export const handler = async (event) => {
             // Prepare the final meme details
             const memeDetails = viewedMemeIDs.map(memeID => {
             const memeItem = memeDetailsMap.get(memeID);
+
             if (!memeItem) {
                 console.warn(`Meme not found for MemeID: ${memeID}`);
                 return null;
@@ -242,32 +248,32 @@ export const handler = async (event) => {
             }
             });
             } catch (error) {
-            console.error('Error fetching view history:', error);
+                console.error('Error fetching view history:', error);
             return createResponse(500, 'Failed to fetch view history.', { error: error.message });
             }
         }
 
         case 'getAllUsers': {
             const params = {
-            TableName: 'Profiles',
-            ProjectionExpression: 'email, username, profilePic'
+                TableName: 'Profiles',
+                ProjectionExpression: 'email, username, profilePic'
             };
             
             try {
-            const { Items } = await docClient.send(new ScanCommand(params));
-            const users = Items.map(item => ({
-              email: item.email,
-              username: item.username,
-              profilePic: item.profilePic
-            }));
+                const { Items } = await docClient.send(new ScanCommand(params));
+                const users = Items.map(item => ({
+                    email: item.email,
+                    username: item.username,
+                    profilePic: item.profilePic
+                }));
             return createResponse(200, 'Users retrieved successfully.', users);
-            } catch (error) {
-            console.error('Error fetching users:', error);
+            } 
+            catch (error) {
+                console.error('Error fetching users:', error);
             return createResponse(500, 'Failed to fetch users.');
             }
         }
-
-      default:
+        default:
         return createResponse(400, `Unsupported operation: ${operation}`);
       }
       } catch (error) {

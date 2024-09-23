@@ -1,4 +1,6 @@
 // adminServices.mjs
+// getTotalMemes, getPopularMemes, deleteMeme, removeDownloadedMeme, getTotalUsers, getUserGrowthRate, getDAU
+// must be zipped with node_modules, package.json, and package-lock.json when uploading to AWS
 
 import { DynamoDBDocumentClient, GetCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -14,7 +16,6 @@ const verifier = CognitoJwtVerifier.create({
     clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
 });
 
-  
   export const handler = async (event) => {
     try {
       let requestBody;
@@ -140,7 +141,7 @@ const verifier = CognitoJwtVerifier.create({
             };
   
             await docClient.send(new DeleteCommand(params));
-            console.log('Downloaded meme removed successfully');
+          //  console.log('Downloaded meme removed successfully');
             return createResponse(200, 'Downloaded meme removed successfully');
           } catch (error) {
             console.error('Error removing downloaded meme:', error);

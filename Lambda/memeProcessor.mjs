@@ -1,3 +1,7 @@
+// memeProcessor.mjs
+// shareMeme, getPresignedUrl, uploadMeme, getUserMemes
+// must be zipped with node_modules, package.json, and package-lock.json when uploading to AWS
+
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
@@ -16,6 +20,7 @@ const verifier = CognitoJwtVerifier.create({
 });
 
 const BUCKET_NAME = 'jestr-meme-uploads';
+  // List of operations that don't require authentication
 const publicOperations = ['shareMeme','getPresignedUrl','uploadMeme', 'getUserMemes'];
 
 const recordShare = async (memeID, userEmail, shareType, username, catchUser, message) => {
@@ -81,88 +86,89 @@ const recordShare = async (memeID, userEmail, shareType, username, catchUser, me
       console.error('Error recording share, updating share count, Notis, or sending message:', error);
       throw error;
     }
-  };
+};
 
-  const sendMessage = async (senderID, receiverID, content) => {
-    const messageID = uuidv4();
-    const timestamp = new Date().toISOString();
-    const conversationID = [senderID, receiverID].sort().join('#');
-    try {
-      // 1. Insert message into Messages table
-      const messageParams = {
-        TableName: 'Messages',
-        Item: {
-          MessageID: messageID,
-          SenderID: senderID,
-          ReceiverID: receiverID,
-          Content: content,
-          Timestamp: timestamp,
-          Status: 'sent',
-          ConversationID: conversationID
-        },
-      };
-      await docClient.send(new PutCommand(messageParams));
-  
-      // 2. Update or create Conversations table entry
-      const conversationParams = {
-        TableName: 'Conversations',
-        Key: { ConversationID: conversationID },
-        UpdateExpression: 'SET LastMessageID = :messageID, LastUpdated = :timestamp',
-        ExpressionAttributeValues: {
-          ':messageID': messageID,
-          ':timestamp': timestamp
-        },
-        ReturnValues: 'ALL_NEW'
-      };
-      await docClient.send(new UpdateCommand(conversationParams));
-  
-      // 3. Update or create UserConversations table entry for sender
-      const updateSenderConversationParams = {
-        TableName: 'UserConversations',
-        Key: {
-          UserID: senderID
-        },
-        UpdateExpression: 'SET LastReadMessageID = :messageID, UnreadCount = :unreadCount, ConversationID = :conversationID',
-        ExpressionAttributeValues: {
-          ':messageID': messageID,
-          ':unreadCount': 0,
-          ':conversationID': conversationID
-        },
-        ReturnValues: 'ALL_NEW'
-      };
-      await docClient.send(new UpdateCommand(updateSenderConversationParams));
-  
-      // 4. Update or create UserConversations table entry for receiver
-      const updateReceiverConversationParams = {
-        TableName: 'UserConversations',
-        Key: {
-          UserID: receiverID
-        },
-        UpdateExpression: 'SET UnreadCount = if_not_exists(UnreadCount, :zero) + :inc, LastReadMessageID = if_not_exists(LastReadMessageID, :nullValue), ConversationID = :conversationID',
-        ExpressionAttributeValues: {
-          ':zero': 0,
-          ':inc': 1,
-          ':nullValue': null,
-          ':conversationID': conversationID
-        },
-        ReturnValues: 'ALL_NEW'
-      };
-      await docClient.send(new UpdateCommand(updateReceiverConversationParams));
-  
-    //  console.log('Message sent successfully');
-      return { success: true, messageID: messageID, conversationID: conversationID };
-    } catch (error) {
-      console.error('Error sending message:', error);
-      if (error.code === 'ResourceNotFoundException') {
-        console.error('One or more required tables do not exist.');
-      } else if (error.code === 'AccessDeniedException') {
-        console.error('Insufficient permissions to perform the operation.');
-      } else {
-        console.error('An unexpected error occurred:', error);
-      }
-      throw error;
+// Brought in helper function to send message when user shares meme 
+const sendMessage = async (senderID, receiverID, content) => {
+  const messageID = uuidv4();
+  const timestamp = new Date().toISOString();
+  const conversationID = [senderID, receiverID].sort().join('#');
+  try {
+    // 1. Insert message into Messages table
+    const messageParams = {
+      TableName: 'Messages',
+      Item: {
+        MessageID: messageID,
+        SenderID: senderID,
+        ReceiverID: receiverID,
+        Content: content,
+        Timestamp: timestamp,
+        Status: 'sent',
+        ConversationID: conversationID
+      },
+    };
+    await docClient.send(new PutCommand(messageParams));
+
+    // 2. Update or create Conversations table entry
+    const conversationParams = {
+      TableName: 'Conversations',
+      Key: { ConversationID: conversationID },
+      UpdateExpression: 'SET LastMessageID = :messageID, LastUpdated = :timestamp',
+      ExpressionAttributeValues: {
+        ':messageID': messageID,
+        ':timestamp': timestamp
+      },
+      ReturnValues: 'ALL_NEW'
+    };
+    await docClient.send(new UpdateCommand(conversationParams));
+
+    // 3. Update or create UserConversations table entry for sender
+    const updateSenderConversationParams = {
+      TableName: 'UserConversations',
+      Key: {
+        UserID: senderID
+      },
+      UpdateExpression: 'SET LastReadMessageID = :messageID, UnreadCount = :unreadCount, ConversationID = :conversationID',
+      ExpressionAttributeValues: {
+        ':messageID': messageID,
+        ':unreadCount': 0,
+        ':conversationID': conversationID
+      },
+      ReturnValues: 'ALL_NEW'
+    };
+    await docClient.send(new UpdateCommand(updateSenderConversationParams));
+
+    // 4. Update or create UserConversations table entry for receiver
+    const updateReceiverConversationParams = {
+      TableName: 'UserConversations',
+      Key: {
+        UserID: receiverID
+      },
+      UpdateExpression: 'SET UnreadCount = if_not_exists(UnreadCount, :zero) + :inc, LastReadMessageID = if_not_exists(LastReadMessageID, :nullValue), ConversationID = :conversationID',
+      ExpressionAttributeValues: {
+        ':zero': 0,
+        ':inc': 1,
+        ':nullValue': null,
+        ':conversationID': conversationID
+      },
+      ReturnValues: 'ALL_NEW'
+    };
+    await docClient.send(new UpdateCommand(updateReceiverConversationParams));
+
+  //  console.log('Message sent successfully');
+    return { success: true, messageID: messageID, conversationID: conversationID };
+  } catch (error) {
+    console.error('Error sending message:', error);
+    if (error.code === 'ResourceNotFoundException') {
+      console.error('One or more required tables do not exist.');
+    } else if (error.code === 'AccessDeniedException') {
+      console.error('Insufficient permissions to perform the operation.');
+    } else {
+      console.error('An unexpected error occurred:', error);
     }
-  };
+    throw error;
+  }
+};
   
 
 export const handler = async (event) => {
@@ -181,10 +187,8 @@ export const handler = async (event) => {
         }
   
       const { operation } = requestBody;
-    //  console.log('Received event:', JSON.stringify(event, null, 2));
-   //   console.log('Parsed request body:', JSON.stringify(requestBody, null, 2));
-
-  // List of operations that don't require authentication
+    //console.log('Received event:', JSON.stringify(event, null, 2));
+   //console.log('Parsed request body:', JSON.stringify(requestBody, null, 2));
 
   let verifiedUser = null;
 
@@ -209,26 +213,24 @@ export const handler = async (event) => {
     switch (operation) {
 
         case 'shareMeme': {
-        const { memeID, email, username, catchUser, message } = requestBody;
-        if (!memeID || !email || !username || !catchUser) {
-        return createResponse(400, 'MemeID, email, username, and catchUser are required for sharing a meme.');
-        }
-        try {
-        const shareType = 'general';
-        await recordShare(memeID, email, shareType, username, catchUser, message);
-        return createResponse(200, 'Meme shared successfully and message sent.');
-        } catch (error) {
-        console.error(`Error sharing meme: ${error}`);
-        return createResponse(500, 'Failed to share meme or send message.');
-        }
+          const { memeID, email, username, catchUser, message } = requestBody;
+            if (!memeID || !email || !username || !catchUser) {
+              return createResponse(400, 'MemeID, email, username, and catchUser are required for sharing a meme.');
+            }
+            try {
+              const shareType = 'general';
+                await recordShare(memeID, email, shareType, username, catchUser, message);
+                return createResponse(200, 'Meme shared successfully and message sent.');
+            } catch (error) {
+            console.error(`Error sharing meme: ${error}`);
+          return createResponse(500, 'Failed to share meme or send message.');
+          }
         }
 
+        // Case to assist S3 upload
         case 'getPresignedUrl': {
-            //   console.log('Processing operation:', event.operation);
-            //    console.log('Entering getPresignedUrl case');
             const { fileName, fileType } = requestBody;
-            //    console.log('Received request for:', { fileName, fileType });
-            
+            //console.log('Received request for:', { fileName, fileType });
             const fileKey = `Memes/${fileName}`;
             
             const command = new PutObjectCommand({
@@ -238,25 +240,23 @@ export const handler = async (event) => {
             });
     
             try {
-            //     console.log('Generating presigned URL with params:', { Bucket: BUCKET_NAME, Key: fileKey, ContentType: fileType });
+            //console.log('Generating presigned URL with params:', { Bucket: BUCKET_NAME, Key: fileKey, ContentType: fileType });
                 const uploadURL = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-            //     console.log('Generated presigned URL:', uploadURL);
+            //console.log('Generated presigned URL:', uploadURL);
                 return createResponse(200, 'Presigned URL generated successfully', { uploadURL, fileKey });
             } catch (error) {
-            //     console.error('Error generating presigned URL:', error);
-                return createResponse(500, 'Failed to generate presigned URL', { error: error.message });
+                console.error('Error generating presigned URL:', error);
+              return createResponse(500, 'Failed to generate presigned URL', { error: error.message });
             }
         }
 
         case 'uploadMeme': {
-            //    console.log('Processing operation:', event.operation);
-                const { email, username, caption, tags, mediaType, memeKey } = requestBody;
-                if (!email || !username || !mediaType || !memeKey) {
+            const { email, username, caption, tags, mediaType, memeKey } = requestBody;
+              if (!email || !username || !mediaType || !memeKey) {
                 return createResponse(400, 'Email, username, media type, and meme key are required.');
-                }
-        
-                try {
-                // First, fetch the user's profile to get the ProfilePicUrl
+              }
+              try {
+                // First, fetch the user's profile to get the latest ProfilePicUrl
                 const userProfileParams = {
                     TableName: 'Profiles',
                     Key: { email: email }
@@ -269,7 +269,7 @@ export const handler = async (event) => {
                     return createResponse(404, 'User profile not found');
                 }
         
-                const profilePicUrl = userProfile.profilePic || ''; // Assuming 'profilePic' is the correct attribute name
+                const profilePicUrl = userProfile.profilePic || ''; 
         
                 const memeMetadataParams = {
                     TableName: 'Memes',
@@ -285,74 +285,70 @@ export const handler = async (event) => {
                     DownloadsCount: 0,
                     CommentCount: 0,
                     mediaType: mediaType,
-                    ProfilePicUrl: profilePicUrl // Add this line to include the ProfilePicUrl
+                    ProfilePicUrl: profilePicUrl 
                     },
                 };
         
                 await docClient.send(new PutCommand(memeMetadataParams));
-            //    console.log('Meme metadata stored successfully in DynamoDB');
         
                 return createResponse(200, 'Meme metadata processed successfully.', { 
                     url: `https://${BUCKET_NAME}.s3.amazonaws.com/${memeKey}`,
-                    profilePicUrl: profilePicUrl // Include this in the response
+                    profilePicUrl: profilePicUrl 
                 });
                 } catch (error) {
-                console.error('Error storing meme metadata in DynamoDB:', error);
+                    console.error('Error storing meme metadata in DynamoDB:', error);
                 return createResponse(500, `Failed to store meme metadata: ${error.message}`);
                 }
         }
 
         case 'getUserMemes': {
-        const { email, lastEvaluatedKey, limit = 20 } = requestBody;
-        if (!email) {
-        return createResponse(400, 'Email is required to fetch user memes.');
-        }
+            const { email, lastEvaluatedKey, limit = 20 } = requestBody;
+            if (!email) {
+              return createResponse(400, 'Email is required to fetch user memes.');
+            }
 
-        const queryParams = {
-        TableName: 'Memes',
-        IndexName: 'Email-UploadTimestamp-index',
-        KeyConditionExpression: 'Email = :email',
-        ExpressionAttributeValues: {
-            ':email': email
-        },
-        ScanIndexForward: false,
-        Limit: limit,
-        ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
-        };
+            const queryParams = {
+              TableName: 'Memes',
+              IndexName: 'Email-UploadTimestamp-index',
+              KeyConditionExpression: 'Email = :email',
+              ExpressionAttributeValues: {':email': email},
+              ScanIndexForward: false,
+              Limit: limit,
+              ExclusiveStartKey: lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : undefined
+              };
 
-        try {
-        const result = await docClient.send(new QueryCommand(queryParams));
+          try {
+            const result = await docClient.send(new QueryCommand(queryParams));
 
-        const userMemes = result.Items ? result.Items.map(item => ({
-            memeID: item.MemeID,
-            email: item.Email,
-            url: item.MemeURL,
-            caption: item.Caption,
-            uploadTimestamp: item.UploadTimestamp,
-            likeCount: item.LikeCount || 0,
-            downloadCount: item.DownloadsCount || 0,
-            commentCount: item.CommentCount || 0,
-            shareCount: item.ShareCount || 0,
-            username: item.Username,
-            profilePicUrl: item.ProfilePicUrl || '',
-            mediaType: item.mediaType || 'image',
-            liked: item.Liked || false,
-            doubleLiked: item.DoubleLiked || false,
-            memeUser: {
-            email: item.Email,
-            username: item.Username,
-            profilePic: item.ProfilePicUrl || '',
-            },
-        })) : [];
-
-        return createResponse(200, 'User memes retrieved successfully.', {
-            memes: userMemes,
-            lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
-        });
-        } catch (error) {
-        console.error('Error fetching user memes:', error);
-        return createResponse(500, 'Failed to fetch user memes.', { memes: [], lastEvaluatedKey: null });
-        }
+          const userMemes = result.Items ? result.Items.map(item => ({
+              memeID: item.MemeID,
+              email: item.Email,
+              url: item.MemeURL,
+              caption: item.Caption,
+              uploadTimestamp: item.UploadTimestamp,
+              likeCount: item.LikeCount || 0,
+              downloadCount: item.DownloadsCount || 0,
+              commentCount: item.CommentCount || 0,
+              shareCount: item.ShareCount || 0,
+              username: item.Username,
+              profilePicUrl: item.ProfilePicUrl || '',
+              mediaType: item.mediaType || 'image',
+              liked: item.Liked || false,
+              doubleLiked: item.DoubleLiked || false,
+              memeUser: {
+              email: item.Email,
+              username: item.Username,
+              profilePic: item.ProfilePicUrl || '',
+              },
+            })) : [];
+          return createResponse(200, 'User memes retrieved successfully.', {
+              memes: userMemes,
+              lastEvaluatedKey: result.LastEvaluatedKey ? JSON.stringify(result.LastEvaluatedKey) : null
+          });
+          } catch (error) {
+            console.error('Error fetching user memes:', error);
+          return createResponse(500, 'Failed to fetch user memes.', { memes: [], lastEvaluatedKey: null });
+          }
         }
 
       default:

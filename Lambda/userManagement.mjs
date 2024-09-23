@@ -1,3 +1,7 @@
+// userManagement.mjs
+// deleteAccount, updateUserProfile, updatePassword, resendConfirmationCode, forgotPassword, confirmForgotPassword, updateProfileImage, updateFeedback, getFeedback, getAllFeedback
+// must be zipped with the accountServices.mjs file when uploading to AWS, along with node_modules, and the package.json files  
+
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import * as accountServices from './accountServices.mjs';
 
@@ -9,8 +13,7 @@ const verifier = CognitoJwtVerifier.create({
 
 const publicOperations = [
    'deleteAccount', 'updateUserProfile', 'updatePassword','resendConfirmationCode', 'forgotPassword', 
-   'updateProfileImage', 'confirmForgotPassword', 
-   'submitFeedback', 'updateFeedback', 'getFeedback', 'getAllFeedback', 
+   'updateProfileImage', 'confirmForgotPassword', 'submitFeedback', 'updateFeedback', 'getFeedback', 'getAllFeedback', 
 ];
 
 
