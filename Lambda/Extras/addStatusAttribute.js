@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 
 // Set the AWS region
-AWS.config.update({region: 'us-east-2'}); // Replace with your actual region if different
+AWS.config.update({region: 'us-east-2'}); 
 
 const docClient = new AWS.DynamoDB.DocumentClient();
 
@@ -11,7 +11,7 @@ async function addStatusToMemes() {
   do {
     const params = {
       TableName: 'Memes',
-      Limit: 25 // Process in batches to avoid timeout
+      Limit: 25 
     };
 
     if (lastEvaluatedKey) {

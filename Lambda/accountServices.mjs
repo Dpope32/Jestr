@@ -1,3 +1,7 @@
+// Part of the userManagement.mjs 
+// updateUserProfile, deleteAccount, uploadToS3, resendConfirmationCode, forgotPassword, confirmForgotPassword, updateProfileImage, updateFeedback, getFeedback, getAllFeedback, updatePassword
+// must be zipped with the userManagement.mjs file when uploading to AWS, along with node_modules, and the package.json files
+
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, ScanCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
@@ -35,7 +39,7 @@ export const deleteAccount = async (email) => {
       Username: cognitoUsername,
     }));
 
-    // Delete user profile from DynamoDB
+    // Also delete user profile from DynamoDB
     await ddbClient.send(new DeleteCommand({
       TableName: 'Profiles',
       Key: { email: email }
@@ -49,7 +53,6 @@ export const deleteAccount = async (email) => {
     return createResponse(500, 'Failed to delete user account.', { error: error.message });
   }
 };
-
 
 export const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
     if (typeof key !== 'string') {
@@ -72,7 +75,7 @@ export const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
       console.error('Error in uploadToS3:', error);
       throw new Error(`S3 upload failed: ${error.message}`);
     }
-  };
+};
   
 export async function updateUserProfile(requestBody) {
   const { email, username, displayName, likesPublic, notificationsEnabled, newEmail } = requestBody;
@@ -181,11 +184,11 @@ export async function updateUserProfile(requestBody) {
       errorStack: error.stack
     });
   }
-}
+};
 
 export async function resendConfirmationCode(username) {
     const params = {
-      ClientId: process.env.COGNITO_CLIENT_ID, // Ensure COGNITO_CLIENT_ID is set in environment variables
+      ClientId: process.env.COGNITO_CLIENT_ID,
       Username: username,
     };
   
@@ -203,8 +206,6 @@ export async function resendConfirmationCode(username) {
       };
     } catch (error) {
       console.error('Error resending confirmation code:', error);
-  
-      // Return a proper error response with a 500 status code if an error occurs
       return {
         statusCode: 500,
         body: JSON.stringify({
@@ -213,7 +214,7 @@ export async function resendConfirmationCode(username) {
         }),
       };
     }
-  }
+};
 
 export async function forgotPassword(username) {
   const params = {
@@ -222,7 +223,7 @@ export async function forgotPassword(username) {
   };
   const command = new ForgotPasswordCommand(params);
   return cognitoClient.send(command);
-}
+};
 
 export async function confirmForgotPassword(username, confirmationCode, newPassword) {
   const params = {
@@ -233,7 +234,7 @@ export async function confirmForgotPassword(username, confirmationCode, newPassw
   };
   const command = new ConfirmForgotPasswordCommand(params);
   return cognitoClient.send(command);
-}
+};
 
 export async function updateProfileImage(requestBody) {
     const { email, imageType, image } = requestBody;
@@ -272,8 +273,7 @@ export async function updateProfileImage(requestBody) {
         details: error.toString() 
       });
     }
-  };
-
+};
 
 export async function updateFeedback(requestBody) {
   const { feedbackId, status } = requestBody;
@@ -345,7 +345,6 @@ export async function getAllFeedback() {
   }
 };
 
-
 export async function updatePassword(username, newPassword) {
     const params = {
       UserPoolId: USER_POOL_ID,
@@ -355,11 +354,8 @@ export async function updatePassword(username, newPassword) {
     };
     const command = new AdminSetUserPasswordCommand(params);
     return cognitoClient.send(command);
-  }
+};
   
-  
-
-// Helper function for creating responses
 export function createResponse(statusCode, message, data = null) {
   return {
     statusCode,
@@ -371,4 +367,4 @@ export function createResponse(statusCode, message, data = null) {
     },
     body: JSON.stringify({ message, data }),
   };
-}
+};

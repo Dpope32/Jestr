@@ -1,10 +1,14 @@
+// userDetails.mjs
+// updateBio, completeProfile, getUser
+// must be zipped with node_modules, package.json, and package-lock.json when uploading to AWS
+
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
-// Initialize AWS clients
+
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({ region: "us-east-2" });
@@ -17,10 +21,6 @@ const verifier = CognitoJwtVerifier.create({
 
 
 const publicOperations = ['updateBio', 'completeProfile', 'getUser'];
-
-//**********************************************************************************************************
-// HELPER FUNCTIONS //
-//**********************************************************************************************************
 
 const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
   if (typeof key !== 'string') {
