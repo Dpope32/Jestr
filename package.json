@@ -88,7 +88,8 @@
     "react-native-vector-icons": "^10.1.0",
     "uuid": "^10.0.0",
     "web-streams-polyfill": "^4.0.0",
-    "zustand": "^4.5.4"
+    "zustand": "^4.5.4",
+    "expo-video-thumbnails": "~8.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

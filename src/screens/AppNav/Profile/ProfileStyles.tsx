@@ -30,7 +30,7 @@ export default StyleSheet.create({
   },
   headerContainer: {
     height: 200,
-    marginTop: 50
+    marginTop: 0
   },
   headerImage: {
     width: '100%',

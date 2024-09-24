@@ -31,7 +31,6 @@ const CompleteProfileScreen: React.FC = () => {
   const {pushEnabled, setNotificationPreferences} = useNotificationStore();
 
   const email = route.params?.email;
-  console.log('email in CompleteProfileScreen:', email);
 
   const {isDarkMode, toggleDarkMode} = useTheme();
 

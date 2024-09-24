@@ -18,9 +18,7 @@ export const fetchMemes = async (
   limit: number = 10,
   accessToken: string
 ): Promise<FetchMemesResult> => {
-  console.log(
-    `fetchMemes called for user: ${userEmail}, lastEvaluatedKey: ${lastEvaluatedKey}`
-  );
+  console.log(`fetchMemes called for user: ${userEmail}, lastEvaluatedKey: ${lastEvaluatedKey}`);
 
   const cacheKey = `${CACHE_KEY_PREFIX}${userEmail}`;
   const now = Date.now();
@@ -71,9 +69,7 @@ export const fetchMemes = async (
     await AsyncStorage.setItem(`${cacheKey}_time`, now.toString());
   }
 
-  console.log(
-    `Fetched ${result.memes.length} memes, new lastEvaluatedKey: ${result.lastEvaluatedKey}`
-  );
+  console.log(`Fetched ${result.memes.length} memes, new lastEvaluatedKey: ${result.lastEvaluatedKey}`);
   return result;
 };
 

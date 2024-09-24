@@ -1,14 +1,5 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  Alert,
-  Animated,
-  TouchableOpacity,
-  Easing,
-} from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Alert, Animated, TouchableOpacity, Easing,} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faArrowLeft} from '@fortawesome/free-solid-svg-icons';
 import {LinearGradient} from 'expo-linear-gradient';
@@ -20,24 +11,17 @@ import {FONTS, COLORS} from '../../../theme/theme';
 import {useTheme} from '../../../theme/ThemeContext';
 import {useUserStore} from '../../../stores/userStore';
 import {BottomNavProp} from '../../../navigation/NavTypes/BottomTabsTypes';
-// import TopPanel from '../../../components/Panels/TopPanel';
-// import ProfilePanel from '../../../components/Panels/ProfilePanel';
 
-type MemeUploadScreenProps = {
-  navigation: any;
-  route: any;
-};
+type MemeUploadScreenProps = {navigation: any;route: any;};
 
 const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
   const navigation = useNavigation<BottomNavProp>();
   const {isDarkMode} = useTheme();
-
   const user = useUserStore(state => state);
 
   const [imageUploaded, setImageUploaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [imageSelected, setImageSelected] = useState(false);
-  // const [profilePanelVisible, setProfilePanelVisible] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -63,14 +47,6 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
   const handleImageSelect = (selected: boolean) => {
     setImageSelected(selected);
   };
-
-  // const handleHomeClick = () => {
-  //   navigation.navigate('Home');
-  // };
-
-  // const toggleProfilePanel = () => {
-  //   setProfilePanelVisible(!profilePanelVisible);
-  // };
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -138,30 +114,6 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
   return (
     <View style={[styles.background, isDarkMode && styles.darkBackground]}>
       <StatusBar barStyle="light-content" />
-      {/* <TopPanel
-        onProfileClick={toggleProfilePanel}
-        profilePicUrl={user.profilePic}
-        username={user.username}
-        enableDropdown={true}
-        showLogo={true}
-        isAdmin={false}
-        onAdminClick={console.log}
-        isUploading={isUploading}
-      /> */}
-      {/* {profilePanelVisible && <View style={styles.overlay} />} */}
-      {/* {profilePanelVisible && user && (
-        <ProfilePanel
-          isVisible={profilePanelVisible}
-          onClose={() => setProfilePanelVisible(false)}
-          profilePicUrl={user.profilePic}
-          username={user.username}
-          displayName={user.displayName || 'N/A'}
-          followersCount={user.followersCount}
-          followingCount={user.followingCount}
-          user={user}
-          navigation={navigation}
-        />
-      )} */}
       <Animated.View style={[styles.card, {opacity: cardFadeAnim}]}>
         <View style={styles.titleContainer}>
           <TouchableOpacity

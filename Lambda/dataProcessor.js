@@ -1,12 +1,8 @@
 //New implementation 09/22/2024 that uses new Redis refactoring and not serverless redis and 0 replicas to save money
+//dataProcessor.js
+//fetchMemes, requestDataArchive, getLikeStatus, recordMemeView
 
-const { 
-  DynamoDBDocumentClient, 
-  GetCommand, 
-  PutCommand, 
-  QueryCommand, 
-  BatchGetCommand 
-} = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, BatchGetCommand } = require('@aws-sdk/lib-dynamodb');
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
@@ -37,7 +33,7 @@ const MEME_METADATA_EXPIRATION = 43200; // 12 hours
 const ALL_MEMES_CACHE_EXPIRATION = 10800; // 3 hours
 const BUCKET_NAME = 'jestr-meme-uploads';
 const ALL_MEMES_CACHE_KEY = 'allMemeIDs';
-
+const publicOperations = ['fetchMemes', 'requestDataArchive', 'getLikeStatus', 'recordMemeView'];
 
 // Initialize AWS clients
 const ddbClient = new DynamoDBClient({});
@@ -168,9 +164,8 @@ async function getCachedMemesData(memeIDs) {
         response.Responses.Memes.forEach(item => {
           if (item && item.MemeID) {
             const memeData = {
-              //took out these 2 to reduce Redis memory. No need to store the actual meme objects themselves, just meta data is plenty.
-              // mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image'
-              //url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
+              mediaType: item.MemeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
+              url: `https://${BUCKET_NAME}.s3.amazonaws.com/${item.MemeID}`,
               memeID: item.MemeID,
               email: item.Email || '',
               uploadTimestamp: item.UploadTimestamp || '',
@@ -197,7 +192,6 @@ async function getCachedMemesData(memeIDs) {
 
   return cachedMemes;
 }
-
 
 // Function to record meme views
 async function recordMemeViews(userEmail, memeIDs) {
@@ -258,7 +252,7 @@ async function getCachedMemeData(memeID) {
         memeData = {
           memeID: Item.MemeID,
           email: Item.Email || '',
-          url: `https://${BUCKET_NAME}.s3.amazonaws.com/${Item.MemeID}`,
+          url: `https://jestr-meme-uploads.s3.amazonaws.com/${Item.MemeID}`,
           uploadTimestamp: Item.UploadTimestamp || '',
           username: Item.Username || '',
           caption: Item.Caption || '',
@@ -294,13 +288,8 @@ exports.handler = async (event) => {
     } else {
       return createResponse(400, 'No valid request body or operation found');
     }
-
     const { operation } = requestBody;
-
-    const publicOperations = ['fetchMemes', 'requestDataArchive', 'getLikeStatus', 'recordMemeView'];
-
     let verifiedUser = null;
-
     if (!publicOperations.includes(operation)) {
       const token = event.headers?.Authorization?.split(' ')[1] || event.headers?.authorization?.split(' ')[1];
 
@@ -402,7 +391,7 @@ case 'getLikeStatus': {
           Username: 'Admin',
           ProfilePicUrl: 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/pope.dawson@gmail.com-profilePic-1719862276108.jpg',
           mediaType: memeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
-          MemeURL: `https://jestr-bucket.s3.amazonaws.com/${memeID}`
+          MemeURL: `https://jestr-meme-uploads.s3.amazonaws.com/${memeID}`
         }
       };
       await docClient.send(new PutCommand(newMemeParams));
