@@ -1,31 +1,9 @@
 import React, { useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  Animated,
-  Dimensions,
-  TouchableOpacity,
-  FlatList,
-  ImageBackground,
-} from 'react-native';
+import {  View,  Text,  Animated,  Dimensions,  TouchableOpacity, FlatList,  ImageBackground} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import {
-  faTrophy,
-  faArrowLeft,
-  faStar,
-  faBolt,
-  faCrown,
-  faHandshake,
-  faGem,
-  faChartLine,
-  faLightbulb,
-  faUserShield,
-  faBullhorn,
-  faMedal,
-  faLock,
-} from '@fortawesome/free-solid-svg-icons';
+import { faTrophy, faArrowLeft, faStar, faBolt, faCrown, faChartLine, faUserShield, faLock } from '@fortawesome/free-solid-svg-icons';
 import Svg, { Path } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -49,11 +27,9 @@ type BadgeType =
 | 'legendaryMemer';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const NUM_COLUMNS = 3; // Increased number of columns to reduce badge size
+const NUM_COLUMNS = 3; 
 const CARD_MARGIN = 10;
-const CARD_WIDTH =
-  (SCREEN_WIDTH - (NUM_COLUMNS + 1) * CARD_MARGIN) / NUM_COLUMNS;
-
+const CARD_WIDTH = (SCREEN_WIDTH - (NUM_COLUMNS + 1) * CARD_MARGIN) / NUM_COLUMNS;
 
 
 const badgeIcons: { [key in BadgeType]: (color: string) => React.ReactElement } = {
@@ -103,18 +79,15 @@ const badgeIcons: { [key in BadgeType]: (color: string) => React.ReactElement } 
     engagementGuru: (color: string) => (
       <FontAwesomeIcon icon={faChartLine} size={24} color={color} />
     ),
-
     legendaryMemer: (color: string) => (
       <FontAwesomeIcon icon={faCrown} size={24} color={color} />
     ),
-
     iconicCreator: (color: string) => (
       <FontAwesomeIcon icon={faStar} size={24} color={color} />
     ),
     contentChampion: (color: string) => (
       <FontAwesomeIcon icon={faUserShield} size={24} color={color} />
     ),
-
   };
 
   const Badges: React.FC = () => {

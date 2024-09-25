@@ -1,15 +1,18 @@
-import { StyleSheet, Dimensions, Platform } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+import { COLORS } from '../../theme/theme';
 
-const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
   mediaContainer: {
     width: '100%',
-    height: Dimensions.get('window').height * 0.5, // 50% of screen height
+    height: Dimensions.get('window').height * 0.5,
     backgroundColor: '#2a2a2a',
     borderRadius: 20,
     alignItems: 'center',
@@ -17,14 +20,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#1bd40b',
     position: 'relative',
+    overflow: 'hidden',
   },
   media: {
     width: '100%',
-    height: height * 0.5, // Increased height to take up more screen
+    height: '100%',
     borderRadius: 10,
-    marginBottom: 20,
     overflow: 'hidden',
   },
+  
   uploadPrompt: {
     flex: 1,
     justifyContent: 'center',
@@ -39,31 +43,44 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#2a2a2a',
     borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-    fontSize: 16,
+    padding: 20,
+    fontSize: 18,
     color: '#fff',
     width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderColor: COLORS.primary
   },
   uploadButton: {
-    backgroundColor: '#1bd40b',
+    backgroundColor: 'rgba(0,0,0,0.0)',
+    borderWidth: 2,
+    borderColor: COLORS.primary,
     borderRadius: 10,
     padding: 15,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
+    marginTop: 30,
   },
   uploadButtonDisabled: {
-    backgroundColor: '#0f7206',
+    backgroundColor: 'rgba(0,0,0,0.0)',
+    borderWidth: 0,
+    color: 'rgba(0,0,0,0.0)',
   },
   buttonIcon: {
     marginRight: 10,
+    color: COLORS.primary,
   },
   buttonText: {
-    color: '#fff',
+    color: COLORS.primary,
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  buttonTextDisabled : {
+    backgroundColor: 'rgba(0,0,0,0.0)',
+    color: 'rgba(0,0,0,0.0)',
   },
   clearButton: {
     position: 'absolute',
@@ -72,10 +89,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#1bd40b',
     borderRadius: 20,
     padding: 5,
+    zIndex: 10,
   },
   overlayText: {
     position: 'absolute',
     fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

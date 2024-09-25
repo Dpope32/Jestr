@@ -1,11 +1,24 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, TextInput,Alert, Animated} from 'react-native';
-import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  TextInput,
+  Alert,
+  Animated,
+  KeyboardAvoidingView,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+} from 'react-native';
+import { Video, ResizeMode } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faUpload, faCheck, faTimes} from '@fortawesome/free-solid-svg-icons';
-import * as MediaLibrary from 'expo-media-library'
+import { faUpload, faTimes } from '@fortawesome/free-solid-svg-icons';
+import * as MediaLibrary from 'expo-media-library';
 
 import styles from './MemeUpload.styles';
 import MediaEditor from './MediaEditor';
@@ -18,6 +31,7 @@ interface MemeUploadProps {
   onImageSelect: (selected: boolean) => void;
   isDarkMode: boolean;
   creationDate: string;
+  setIsUploading: (isUploading: boolean) => void;
 }
 
 interface MediaState {
@@ -32,6 +46,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
   onImageSelect,
   isDarkMode,
   creationDate,
+  setIsUploading,
 }) => {
   const [media, setMedia] = useState<MediaState | null>(null);
   const [caption, setCaption] = useState('');
@@ -60,53 +75,56 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
     }, [])
   );
 
+  const requestPermissions = async () => {
+    const { status: mediaLibraryStatus } = await MediaLibrary.requestPermissionsAsync();
+    const { status: cameraRollStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-// Add this function to your component
-const requestPermissions = async () => {
-  const { status: mediaLibraryStatus } = await MediaLibrary.requestPermissionsAsync();
-  const { status: cameraRollStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-  if (mediaLibraryStatus !== 'granted' || cameraRollStatus !== 'granted') {
-    Alert.alert('Permission required', 'Please allow access to your media library to use this feature.');
-    return false;
-  }
-  return true;
-};
-
-const pickMedia = useCallback(async () => {
-  const hasPermission = await requestPermissions();
-  if (!hasPermission) return;
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.All,
-    allowsEditing: true, // Enable editing (video trimming)
-    videoMaxDuration: 120,
-    quality: 1,
-  });
-
-  if (!result.canceled && result.assets && result.assets[0]) {
-    const asset = result.assets[0];
-
-    if (asset.type === 'video') {
-      const durationInSeconds = asset.duration ? asset.duration / 1000 : 0;
-
-      if (durationInSeconds > 90) {
-        Alert.alert('Error', 'Videos cannot be longer than 90 seconds.');
-        return;
-      }
+    if (mediaLibraryStatus !== 'granted' || cameraRollStatus !== 'granted') {
+      Alert.alert('Permission required', 'Please allow access to your media library to use this feature.');
+      return false;
     }
+    return true;
+  };
 
-    setMedia({
-      uri: asset.uri,
-      type: asset.type === 'video' ? 'video' : 'image',
+  const pickMedia = useCallback(async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      videoMaxDuration: 120,
+      quality: 1,
     });
-    onImageSelect(true);
-    setIsEditing(true);
-  }
-}, [onImageSelect]);
 
+    console.log('Image picker result:', JSON.stringify(result, null, 2));
 
-  
-  
+    if (!result.canceled && result.assets && result.assets[0]) {
+      const asset = result.assets[0];
+      console.log('Selected asset:', JSON.stringify(asset, null, 2));
+
+      if (asset.type === 'video') {
+        const durationInMilliseconds = asset.duration ? asset.duration : 0;
+        console.log('Video duration (milliseconds):', durationInMilliseconds);
+
+        if (durationInMilliseconds > 120000) {
+          console.log('Video duration exceeds limit');
+          Alert.alert('Error', 'Videos cannot be longer than 120 seconds.');
+          return;
+        } else {
+          console.log('Video duration within limit');
+        }
+      }
+
+      setMedia({
+        uri: asset.uri,
+        type: asset.type === 'video' ? 'video' : 'image',
+      });
+      onImageSelect(true);
+      setIsEditing(true);
+    } else {
+      console.log('Media selection cancelled or failed');
+    }
+  }, [onImageSelect]);
 
   const handleUpload = async () => {
     if (!media) {
@@ -115,6 +133,7 @@ const pickMedia = useCallback(async () => {
     }
 
     try {
+      setIsUploading(true); // Show loading indicator
       const result = await uploadMeme(
         media.uri,
         userEmail,
@@ -123,8 +142,10 @@ const pickMedia = useCallback(async () => {
         [],
         media.type
       );
+      setIsUploading(false); // Hide loading indicator
       onUploadSuccess(result.url);
     } catch (error) {
+      setIsUploading(false); // Hide loading indicator
       console.error('Upload failed:', error);
       Alert.alert('Upload Failed', 'Please try again later.');
     }
@@ -132,31 +153,13 @@ const pickMedia = useCallback(async () => {
 
   const renderMediaPreview = () => {
     if (!media) return null;
-  
+    console.log('Rendering media preview:', media);
+
     switch (media.type) {
       case 'image':
         return (
-          <View>
-            <Image source={{ uri: media.uri }} style={styles.media} />
-            {/* No need to render overlayText here since it's part of the image */}
-          </View>
-        );
-      case 'video':
-        return (
-          <TouchableOpacity
-            onPress={() => {
-              setShouldPlay((prev) => !prev);
-            }}
-          >
-            <Video
-              ref={videoRef}
-              source={{ uri: media.uri }}
-              style={styles.media}
-              resizeMode={ResizeMode.CONTAIN}
-              isLooping
-              shouldPlay={shouldPlay}
-              isMuted={false}
-            />
+          <View style={styles.mediaContainer}>
+            <Image source={{ uri: media.uri }} style={styles.media} resizeMode="contain" />
             {overlayText !== '' && (
               <Animated.Text
                 style={[
@@ -172,13 +175,70 @@ const pickMedia = useCallback(async () => {
                 {overlayText}
               </Animated.Text>
             )}
-          </TouchableOpacity>
+          </View>
+        );
+      case 'video':
+        return (
+          <View style={styles.mediaContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                setShouldPlay((prev) => !prev);
+              }}
+              style={styles.media}
+            >
+              <Video
+                ref={videoRef}
+                source={{ uri: media.uri }}
+                style={styles.media}
+                resizeMode={ResizeMode.CONTAIN}
+                isLooping
+                shouldPlay={shouldPlay}
+                isMuted={false}
+              />
+              {overlayText !== '' && (
+                <Animated.Text
+                  style={[
+                    styles.overlayText,
+                    {
+                      color: textColor,
+                      fontSize: textSize,
+                      top: textPosition.y,
+                      left: textPosition.x,
+                    },
+                  ]}
+                >
+                  {overlayText}
+                </Animated.Text>
+              )}
+            </TouchableOpacity>
+          </View>
         );
       default:
         return null;
     }
   };
-  
+
+  const handleMediaEditorComplete = (
+    editedUri: string,
+    text: string,
+    position: { x: number; y: number },
+    scale: number,
+    color: string
+  ) => {
+    console.log('onComplete called with:', {
+      editedUri,
+      text,
+      position,
+      scale,
+      color,
+    });
+    setMedia({ ...media!, uri: editedUri });
+    setOverlayText(text);
+    setTextPosition(position);
+    setTextSize(24 * scale); // Multiply the base size (24) by the scale
+    setTextColor(color);
+    setIsEditing(false);
+  };
 
   const clearMedia = () => {
     setMedia(null);
@@ -191,64 +251,58 @@ const pickMedia = useCallback(async () => {
   };
 
   return (
-    <View style={styles.container}>
-      {isEditing && media ? (
-        <MediaEditor
-          media={media}
-          onComplete={(
-            editedUri: string,
-            text: string,
-            position: { x: number; y: number },
-            size: number,
-            color: string
-          ) => {
-            setMedia({ ...media, uri: editedUri });
-            setOverlayText(text);
-            setTextPosition(position);
-            setTextSize(size);
-            setTextColor(color);
-            setIsEditing(false);
-          }}
-        />
-
-      ) : (
-        <>
-          <TouchableOpacity style={styles.mediaContainer} onPress={pickMedia}>
-            {media ? (
-              <>
-                {renderMediaPreview()}
-                <TouchableOpacity style={styles.clearButton} onPress={clearMedia}>
-                  <FontAwesomeIcon icon={faTimes} size={20} color="#fff" />
-                </TouchableOpacity>
-              </>
-            ) : (
-              <View style={styles.uploadPrompt}>
-                <FontAwesomeIcon icon={faUpload} size={50} color="#1bd40b" />
-                <Text style={styles.uploadText}>Upload media to get started</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {isEditing && media ? (
+            <MediaEditor media={media} onComplete={handleMediaEditorComplete} />
+          ) : (
+            <>
+              <View style={styles.mediaContainer}>
+                {media ? (
+                  <>
+                    {renderMediaPreview()}
+                    <TouchableOpacity style={styles.clearButton} onPress={clearMedia}>
+                      <FontAwesomeIcon icon={faTimes} size={20} color="#fff" />
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <TouchableOpacity onPress={pickMedia} style={styles.uploadPrompt}>
+                    <FontAwesomeIcon icon={faUpload} size={50} color="#1bd40b" />
+                    <Text style={styles.uploadText}>Upload media to get started</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-            )}
-          </TouchableOpacity>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Add a caption..."
-            placeholderTextColor="#999"
-            value={caption}
-            onChangeText={setCaption}
-            multiline
-          />
+              <TextInput
+                style={styles.input}
+                placeholder="Add a caption..."
+                placeholderTextColor="#999"
+                value={caption}
+                onChangeText={setCaption}
+                multiline
+                blurOnSubmit={true}
+                onSubmitEditing={Keyboard.dismiss}
+              />
 
-          <TouchableOpacity
-            style={[styles.uploadButton, !media && styles.uploadButtonDisabled]}
-            onPress={handleUpload}
-            disabled={!media}
-          >
-            <FontAwesomeIcon icon={faCheck} size={20} color="#fff" style={styles.buttonIcon} />
-            <Text style={styles.buttonText}>Upload Meme</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </View>
+              <TouchableOpacity
+                style={[styles.uploadButton, !media && styles.uploadButtonDisabled]}
+                onPress={handleUpload}
+                disabled={!media}
+              >
+                <Text style={[styles.buttonText, !media && styles.buttonTextDisabled]}>
+                  Upload Meme
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 

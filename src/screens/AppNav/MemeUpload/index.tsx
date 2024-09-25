@@ -1,5 +1,17 @@
+// src/screens/MemeUploadScreen.tsx
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, StatusBar, Alert, Animated, TouchableOpacity, Easing, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Alert,
+  Animated,
+  TouchableOpacity,
+  Easing,
+} from 'react-native';
+import Toast from 'react-native-toast-message'; // Import Toast
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -42,13 +54,19 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
   const handleUploadSuccess = (url: string) => {
     console.log('Meme uploaded successfully:', url);
     setImageUploaded(true);
+    // Show the toast
+    Toast.show({
+      type: 'success',
+      text1: 'Meme uploaded successfully',
+      visibilityTime: 3000, // Toast will be visible for 3 seconds
+      position: 'top', // Position is handled in the toastConfig, but you can adjust here if needed
+    });
     navigation.goBack();
   };
 
   const handleImageSelect = useCallback((selected: boolean) => {
     setImageSelected(selected);
   }, []);
-  
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -116,21 +134,30 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
             <FontAwesomeIcon icon={faArrowLeft} size={24} color="#1bd40b" />
           </TouchableOpacity>
           <Text style={styles.title}>This </Text>
-          <Animated.Text style={[styles.title, styles.better, animatedStyle]}>BETTER</Animated.Text>
+          <Animated.Text style={[styles.title, styles.better, animatedStyle]}>
+            BETTER
+          </Animated.Text>
           <Text style={styles.title}> be funny!</Text>
         </View>
-        <MemeUpload
-          userEmail={user.email}
-          username={user.username}
-          onUploadSuccess={handleUploadSuccess}
-          onImageSelect={handleImageSelect}
-          isDarkMode={isDarkMode}
-          creationDate={user.creationDate}
-        />
+        {/* Wrap MemeUpload in a View with flex: 1 */}
+        <View style={{ flex: 1 }}>
+          <MemeUpload
+            userEmail={user.email}
+            username={user.username}
+            onUploadSuccess={handleUploadSuccess}
+            onImageSelect={handleImageSelect}
+            isDarkMode={isDarkMode}
+            creationDate={user.creationDate}
+            setIsUploading={setIsUploading}
+          />
+        </View>
       </Animated.View>
       {isUploading && (
         <View style={styles.fullScreenOverlay}>
-          <LinearGradient colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.7)']} style={styles.gradientBackground}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.7)']}
+            style={styles.gradientBackground}
+          >
             <View style={styles.uploadingContainer}>
               <LottieView
                 source={require('../../../assets/animations/loading-animation.json')}
@@ -151,12 +178,10 @@ const styles = StyleSheet.create({
   darkBackground: {
     flex: 1,
     backgroundColor: '#1C1C1C',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
   },
   background: {
     flex: 1,
     backgroundColor: '#1C1C1C',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
   },
   container: {
     flex: 1,
@@ -169,7 +194,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 40
+    paddingBottom: 40,
   },
   overlay: {
     position: 'absolute',
@@ -217,41 +242,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
-    overflow: 'hidden',
     paddingVertical: 30,
     marginTop: 10,
-  },
-  profilePanel: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    zIndex: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontFamily: FONTS.regular,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 20,
-    padding: 10,
-    zIndex: 11,
-  },
-  closeButtonText: {
-    color: '#000',
-    fontWeight: 'bold',
-    fontSize: 16,
-    fontFamily: FONTS.regular,
-  },
-  profileContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontFamily: FONTS.regular,
   },
   profileText: {
     color: '#fff',
@@ -277,7 +269,6 @@ const styles = StyleSheet.create({
   },
   lottieAnimation: {
     width: 200,
-    fontFamily: FONTS.regular,
     height: 200,
   },
   uploadingText: {
