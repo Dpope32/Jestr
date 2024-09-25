@@ -1,86 +1,29 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
+
+const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  fullScreenOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  topPanelBlur: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 100, // Adjust height as needed
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-  },
-  uploadingContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lottieAnimation: {
-    width: 200,
-    height: 200,
-  },
-  uploadingText: {
-    color: '#fff',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  title: {
-    fontSize: 18,
-    fontStyle: 'italic',
-    color: '#fff',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  tagsInput: {
-    flex: 1,
-    marginBottom: 0,
-  },
-  generateTagsButton: {
-    padding: 10,
-    marginLeft: 10,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: 20,
   },
   mediaContainer: {
-    aspectRatio: 1,
+    width: '100%',
+    height: Dimensions.get('window').height * 0.5, // 50% of screen height
     backgroundColor: '#2a2a2a',
     borderRadius: 20,
-    overflow: 'hidden',
     alignItems: 'center',
-    marginBottom: 20,
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#1bd40b',
-    marginTop: -24,
+    position: 'relative',
   },
   media: {
     width: '100%',
-    height: '100%',
+    height: height * 0.5, // Increased height to take up more screen
+    borderRadius: 10,
+    marginBottom: 20,
+    overflow: 'hidden',
   },
   uploadPrompt: {
     flex: 1,
@@ -122,7 +65,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  clearButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#1bd40b',
+    borderRadius: 20,
+    padding: 5,
+  },
+  overlayText: {
+    position: 'absolute',
+    fontWeight: 'bold',
+  },
 });
 
-
-    export default styles;
+export default styles;

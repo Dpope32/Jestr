@@ -10,6 +10,7 @@ import BottomTabNav from './Stacks/BottomTabNav';
 
 import CustomDrawer from '../components/CustomDrawer/CustomDrawer';
 import Profile from '../screens/AppNav/Profile/Profile';
+import Badges from '../screens/AppNav/Badges/Badges'
 import Settings from '../screens/AppNav/Settings/Settings';
 import Notifications from '../screens/AppNav/Notifications';
 // import {getToken} from '../stores/secureStore';
@@ -42,6 +43,7 @@ const AppNavigator = () => {
       screenOptions={screenOptions}>
       <Drawer.Screen name="Home" component={BottomTabNav} />
       <Drawer.Screen name="Profile" component={Profile} />
+      <Drawer.Screen name="Badges" component={Badges} />
       <Drawer.Screen name="Settings" component={Settings} />
       <Drawer.Screen name="Notifications" component={Notifications} />
     </Drawer.Navigator>

@@ -28,7 +28,7 @@ const drawerItems = [
   {
     label: 'Badges',
     icon: faRibbon,
-    navigateTo: 'Profile' as keyof AppNavParamList,
+    navigateTo: 'Badges' as keyof AppNavParamList,
   },
   {
     label: 'Settings',

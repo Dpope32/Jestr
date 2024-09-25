@@ -1,19 +1,19 @@
-import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import {ActivityIndicator} from 'react-native';
-import {useNavigation} from '@react-navigation/core';
-import {BlurView} from 'expo-blur';
-import {LinearGradient} from 'expo-linear-gradient';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/core';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import {styles} from './componentData';
-import {colorsGradient} from '../LandingPage/componentData';
-import {AuthNavProp} from '../../../navigation/NavTypes/AuthStackTypes';
+import { styles } from './componentData';
+import { colorsGradient } from '../LandingPage/componentData';
+import { AuthNavProp } from '../../../navigation/NavTypes/AuthStackTypes';
 import InputField from '../../../components/Input/InputField';
 import AuthFooterLinks from '../../../components/AuthFooterLinks/AuthFooterLinks';
 import RainEffect from '../../../components/RainEffect/RainEffect';
 import SocialLoginBtns from '../../../components/SocialLoginBtns/SocialLoginBtns';
 import SocialBtnsRow from '../../../components/SocialLoginBtns/SocialBtnsRow';
-import {handleLogin, handleForgotPassword} from '../../../services/authService';
+import { handleLogin } from '../../../services/authService';
 import ForgotPasswordModal from '../../../components/Modals/ForgotPasswordModal';
 
 const LoginScreen = () => {

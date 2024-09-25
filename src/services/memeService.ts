@@ -304,7 +304,7 @@ export const uploadMeme = async (
   username: string,
   caption: string = '',
   tags: string[] = [],
-  mediaType: 'image' | 'video',
+  mediaType: 'image' | 'video'
 ) => {
   try {
     const fileName = `${userEmail}-meme-${Date.now()}.${
@@ -312,11 +312,9 @@ export const uploadMeme = async (
     }`;
     const contentType = mediaType === 'video' ? 'video/mp4' : 'image/jpeg';
 
-    // console.log('Requesting presigned URL for:', fileName);
-
     const presignedUrlResponse = await fetch(`${API_URL}/getPresignedUrl`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         operation: 'getPresignedUrl',
         fileName,
@@ -328,27 +326,21 @@ export const uploadMeme = async (
       const errorText = await presignedUrlResponse.text();
       console.error('Presigned URL error response:', errorText);
       throw new Error(
-        `Failed to get presigned URL: ${presignedUrlResponse.status} ${presignedUrlResponse.statusText}`,
+        `Failed to get presigned URL: ${presignedUrlResponse.status} ${presignedUrlResponse.statusText}`
       );
     }
 
     const presignedData = await presignedUrlResponse.json();
-    // console.log('Presigned URL data:', presignedData);
-
-    const {uploadURL, fileKey} = presignedData.data;
+    const { uploadURL, fileKey } = presignedData.data;
 
     if (!uploadURL) {
       throw new Error('Received null or undefined uploadURL');
     }
 
-    // console.log('Uploading file to:', uploadURL);
-
     const uploadResult = await FileSystem.uploadAsync(uploadURL, mediaUri, {
       httpMethod: 'PUT',
-      headers: {'Content-Type': contentType},
+      headers: { 'Content-Type': contentType },
     });
-
-    // console.log('Upload result:', uploadResult);
 
     if (uploadResult.status !== 200) {
       throw new Error(`Failed to upload file to S3: ${uploadResult.status}`);
@@ -356,7 +348,7 @@ export const uploadMeme = async (
 
     const metadataResponse = await fetch(`${API_URL}/uploadMeme`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         operation: 'uploadMeme',
         email: userEmail,
@@ -372,12 +364,12 @@ export const uploadMeme = async (
       const errorText = await metadataResponse.text();
       console.error('Metadata response:', errorText);
       throw new Error(
-        `Failed to process metadata: ${metadataResponse.status} ${metadataResponse.statusText}`,
+        `Failed to process metadata: ${metadataResponse.status} ${metadataResponse.statusText}`
       );
     }
 
     const data = await metadataResponse.json();
-    return {url: data.data.url};
+    return { url: data.data.url };
   } catch (error) {
     console.error('Error uploading meme:', error);
     throw error;

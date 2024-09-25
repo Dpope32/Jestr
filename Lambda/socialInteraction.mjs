@@ -1,5 +1,5 @@
 // socialInteraction.mjs
-// sendMessage, getMessages, getConversations
+// sendMessage, getMessages, getConversations, checkAndAwardBadge, getUserBadges
 // must be zipped with node_modules, package.json, and package-lock.json when uploading to AWS
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
@@ -18,9 +18,62 @@ const verifier = CognitoJwtVerifier.create({
   clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
 });
 
-const publicOperations = ['sendMessage', 'getMessages', 'getConversations'];
+const publicOperations = ['sendMessage', 'getMessages', 'getConversations', 'checkAndAwardBadge', 'getUserBadges' ];
 
- // Function to send a message
+const checkBadgeEligibility = async (userEmail, action) => {
+  const badgeCriteria = {
+    'memeLiker': { table: 'UserLikes', countAttribute: 'LikeCount', threshold: 10 },
+    'memeCommenter': { table: 'Comments', countAttribute: 'CommentCount', threshold: 5 },
+    'socialButterfly': { table: 'Followers', countAttribute: 'FollowingCount', threshold: 10 },
+    'memeMaster': { table: 'Memes', countAttribute: 'MemeCount', threshold: 5 },
+    'trendSetter': { table: 'Memes', countAttribute: 'LikeCount', threshold: 100 },
+  };
+
+  if (!badgeCriteria[action]) return null;
+
+  const { table, countAttribute, threshold } = badgeCriteria[action];
+
+  const params = {
+    TableName: table,
+    KeyConditionExpression: 'email = :email',
+    ExpressionAttributeValues: { ':email': userEmail },
+  };
+
+  const { Items } = await docClient.send(new QueryCommand(params));
+  const count = Items.reduce((sum, item) => sum + (item[countAttribute] || 0), 0);
+
+  if (count >= threshold) {
+    return action;
+  }
+
+  return null;
+};
+
+const awardBadge = async (userEmail, badgeType) => {
+  const params = {
+    TableName: 'UserBadges',
+    Item: {
+      Email: userEmail,
+      BadgeID: `${badgeType}_${uuidv4()}`,
+      BadgeType: badgeType,
+      AwardedDate: new Date().toISOString(),
+    },
+  };
+
+  await docClient.send(new PutCommand(params));
+};
+
+const getUserBadges = async (userEmail) => {
+  const params = {
+    TableName: 'UserBadges',
+    KeyConditionExpression: 'Email = :email',
+    ExpressionAttributeValues: { ':email': userEmail },
+  };
+
+  const { Items } = await docClient.send(new QueryCommand(params));
+  return Items;
+};
+
 const sendMessage = async (senderID, receiverID, content) => {
     const messageID = uuidv4();
     const timestamp = new Date().toISOString();
@@ -102,16 +155,15 @@ const sendMessage = async (senderID, receiverID, content) => {
     }
   };
   
-  // Function to get messages
 const getMessages = async (userID, conversationID) => {
   const queryParams = {
     TableName: 'Messages',
-    IndexName: 'ConversationID-Timestamp-index', // Assuming you have a GSI on ConversationID and Timestamp
+    IndexName: 'ConversationID-Timestamp-index',
     KeyConditionExpression: 'ConversationID = :conversationID',
     ExpressionAttributeValues: {
     ':conversationID': conversationID,
     },
-    ScanIndexForward: false, // to get the latest messages first
+    ScanIndexForward: false, 
 };
 
 try {
@@ -125,7 +177,6 @@ try {
 
 export const handler = async (event) => {
     //console.log('Received event:', JSON.stringify(event, null, 2));
-
     try {
         let requestBody;
         if (event.body) {
@@ -269,6 +320,38 @@ export const handler = async (event) => {
                 } catch (error) {
                   console.error('Error fetching conversations:', error);
                 return createResponse(500, 'Failed to fetch conversations.');
+              }
+            }
+
+            case 'checkAndAwardBadge': {
+              const { userEmail, action } = requestBody;
+              if (!userEmail || !action) {
+                return createResponse(400, 'userEmail and action are required for checking and awarding badges.');
+              }
+              try {
+                const eligibleBadge = await checkBadgeEligibility(userEmail, action);
+                if (eligibleBadge) {
+                  await awardBadge(userEmail, eligibleBadge);
+                  return createResponse(200, 'Badge awarded successfully.', { badgeType: eligibleBadge });
+                }
+                return createResponse(200, 'No new badge awarded.');
+              } catch (error) {
+                console.error(`Error checking and awarding badge: ${error}`);
+                return createResponse(500, 'Failed to check and award badge.');
+              }
+            }
+        
+            case 'getUserBadges': {
+              const { userEmail } = requestBody;
+              if (!userEmail) {
+                return createResponse(400, 'userEmail is required for getting user badges.');
+              }
+              try {
+                const badges = await getUserBadges(userEmail);
+                return createResponse(200, 'User badges retrieved successfully.', { badges });
+              } catch (error) {
+                console.error(`Error getting user badges: ${error}`);
+                return createResponse(500, 'Failed to get user badges.');
               }
             }
           

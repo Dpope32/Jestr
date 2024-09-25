@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, TextInput, Alert } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { View, Text, TouchableOpacity, Image, TextInput,Alert, Animated} from 'react-native';
+import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faUpload, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faUpload, faCheck, faTimes} from '@fortawesome/free-solid-svg-icons';
+import * as MediaLibrary from 'expo-media-library'
 
 import styles from './MemeUpload.styles';
-import VideoEditor from './VideoEditor';
+import MediaEditor from './MediaEditor';
 import { uploadMeme } from '../../services/memeService';
 
 interface MemeUploadProps {
@@ -35,27 +36,77 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
   const [media, setMedia] = useState<MediaState | null>(null);
   const [caption, setCaption] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [overlayText, setOverlayText] = useState('');
+  const [textColor, setTextColor] = useState('#FFFFFF');
+  const [textSize, setTextSize] = useState(24);
+  const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
+  const [shouldPlay, setShouldPlay] = useState(true);
 
   const videoRef = useRef<Video>(null);
 
-  const pickMedia = useCallback(async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: false,
-      quality: 1,
-    });
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        // Reset state when screen loses focus
+        setMedia(null);
+        setCaption('');
+        setIsEditing(false);
+        setOverlayText('');
+        setTextColor('#FFFFFF');
+        setTextSize(24);
+        setTextPosition({ x: 0, y: 0 });
+        onImageSelect(false);
+      };
+    }, [])
+  );
 
-    if (!result.canceled && result.assets && result.assets[0]) {
-      setMedia({
-        uri: result.assets[0].uri,
-        type: result.assets[0].type === 'video' ? 'video' : 'image',
-      });
-      onImageSelect(true);
-      if (result.assets[0].type === 'video') {
-        setIsEditing(true);
+
+// Add this function to your component
+const requestPermissions = async () => {
+  const { status: mediaLibraryStatus } = await MediaLibrary.requestPermissionsAsync();
+  const { status: cameraRollStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+  if (mediaLibraryStatus !== 'granted' || cameraRollStatus !== 'granted') {
+    Alert.alert('Permission required', 'Please allow access to your media library to use this feature.');
+    return false;
+  }
+  return true;
+};
+
+const pickMedia = useCallback(async () => {
+  const hasPermission = await requestPermissions();
+  if (!hasPermission) return;
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.All,
+    allowsEditing: true, // Enable editing (video trimming)
+    videoMaxDuration: 120,
+    quality: 1,
+  });
+
+  if (!result.canceled && result.assets && result.assets[0]) {
+    const asset = result.assets[0];
+
+    if (asset.type === 'video') {
+      const durationInSeconds = asset.duration ? asset.duration / 1000 : 0;
+
+      if (durationInSeconds > 90) {
+        Alert.alert('Error', 'Videos cannot be longer than 90 seconds.');
+        return;
       }
     }
-  }, [onImageSelect]);
+
+    setMedia({
+      uri: asset.uri,
+      type: asset.type === 'video' ? 'video' : 'image',
+    });
+    onImageSelect(true);
+    setIsEditing(true);
+  }
+}, [onImageSelect]);
+
+
+  
+  
 
   const handleUpload = async () => {
     if (!media) {
@@ -69,8 +120,8 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
         userEmail,
         username,
         caption,
-        [], // Empty array for tags, will be generated on the server
-        media.type,
+        [],
+        media.type
       );
       onUploadSuccess(result.url);
     } catch (error) {
@@ -81,50 +132,99 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
 
   const renderMediaPreview = () => {
     if (!media) return null;
-
+  
     switch (media.type) {
       case 'image':
-        return <Image source={{ uri: media.uri }} style={styles.media} />;
+        return (
+          <View>
+            <Image source={{ uri: media.uri }} style={styles.media} />
+            {/* No need to render overlayText here since it's part of the image */}
+          </View>
+        );
       case 'video':
         return (
-          <Video
-            ref={videoRef}
-            source={{ uri: media.uri }}
-            style={styles.media}
-            useNativeControls
-            resizeMode={ResizeMode.CONTAIN}
-            isLooping
-            shouldPlay={false}
-            isMuted={false}
-          />
+          <TouchableOpacity
+            onPress={() => {
+              setShouldPlay((prev) => !prev);
+            }}
+          >
+            <Video
+              ref={videoRef}
+              source={{ uri: media.uri }}
+              style={styles.media}
+              resizeMode={ResizeMode.CONTAIN}
+              isLooping
+              shouldPlay={shouldPlay}
+              isMuted={false}
+            />
+            {overlayText !== '' && (
+              <Animated.Text
+                style={[
+                  styles.overlayText,
+                  {
+                    color: textColor,
+                    fontSize: textSize,
+                    top: textPosition.y,
+                    left: textPosition.x,
+                  },
+                ]}
+              >
+                {overlayText}
+              </Animated.Text>
+            )}
+          </TouchableOpacity>
         );
       default:
         return null;
     }
   };
+  
+
+  const clearMedia = () => {
+    setMedia(null);
+    setCaption('');
+    setOverlayText('');
+    setTextColor('#FFFFFF');
+    setTextSize(24);
+    setTextPosition({ x: 0, y: 0 });
+    onImageSelect(false);
+  };
 
   return (
-    <KeyboardAwareScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContainer}
-    >
-      {isEditing && media?.type === 'video' ? (
-        <VideoEditor
-          videoUri={media.uri}
-          onComplete={(editedUri: string) => {
+    <View style={styles.container}>
+      {isEditing && media ? (
+        <MediaEditor
+          media={media}
+          onComplete={(
+            editedUri: string,
+            text: string,
+            position: { x: number; y: number },
+            size: number,
+            color: string
+          ) => {
             setMedia({ ...media, uri: editedUri });
+            setOverlayText(text);
+            setTextPosition(position);
+            setTextSize(size);
+            setTextColor(color);
             setIsEditing(false);
           }}
         />
+
       ) : (
         <>
           <TouchableOpacity style={styles.mediaContainer} onPress={pickMedia}>
             {media ? (
-              renderMediaPreview()
+              <>
+                {renderMediaPreview()}
+                <TouchableOpacity style={styles.clearButton} onPress={clearMedia}>
+                  <FontAwesomeIcon icon={faTimes} size={20} color="#fff" />
+                </TouchableOpacity>
+              </>
             ) : (
               <View style={styles.uploadPrompt}>
                 <FontAwesomeIcon icon={faUpload} size={50} color="#1bd40b" />
-                <Text style={styles.uploadText}>Tap to upload</Text>
+                <Text style={styles.uploadText}>Upload media to get started</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -143,17 +243,12 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
             onPress={handleUpload}
             disabled={!media}
           >
-            <FontAwesomeIcon
-              icon={faCheck}
-              size={20}
-              color="#fff"
-              style={styles.buttonIcon}
-            />
+            <FontAwesomeIcon icon={faCheck} size={20} color="#fff" style={styles.buttonIcon} />
             <Text style={styles.buttonText}>Upload Meme</Text>
           </TouchableOpacity>
         </>
       )}
-    </KeyboardAwareScrollView>
+    </View>
   );
 };
 
