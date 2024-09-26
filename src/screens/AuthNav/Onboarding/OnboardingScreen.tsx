@@ -90,7 +90,7 @@ const OnboardingScreen = () => {
   return (
     <Animated.View style={[styles.container, {opacity: fadeAnim}]}>
       <Backdrop scrollX={scrollX} windowWidth={windowWidth} />
-      <Particles windowWidth={windowWidth} windowHeight={windowHeight} />
+      <Particles windowWidth={windowWidth} windowHeight={windowHeight} color={'green'}density={0.1}/>
       <Animated.FlatList
         data={slides}
         renderItem={renderItem}

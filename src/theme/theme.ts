@@ -31,6 +31,14 @@ export const COLORS = {
   info: '#5AC8FA',
   gold: '#FFD700',
   cardBackground: '#2A2A2A',
+  // Add the missing properties below
+  darkBackgroundStart: '#1E1E1E',
+  darkBackgroundEnd: '#121212',
+  lightBackgroundStart: '#FFFFFF',
+  lightBackgroundEnd: '#F8F8F8',
+  particlesDark: '#333333',
+  particlesLight: '#CCCCCC',
+  iconBackground: '#EFEFEF', // Optional: for icon container background
 };
 
 export const SPACING = {

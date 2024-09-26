@@ -5,6 +5,8 @@ import {styles, Particle} from '../../screens/AuthNav/Onboarding/componentData';
 interface ParticlesProps {
   windowWidth: number;
   windowHeight: number;
+  density: number;
+  color: string;
 }
 
 const Particles: React.FC<ParticlesProps> = ({windowWidth, windowHeight}) => {

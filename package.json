@@ -48,6 +48,7 @@
     "expo-clipboard": "~6.0.3",
     "expo-constants": "~16.0.2",
     "expo-dev-client": "~4.0.26",
+    "expo-device": "6.0.2",
     "expo-file-system": "~17.0.1",
     "expo-font": "~12.0.10",
     "expo-haptics": "^13.0.1",
@@ -56,6 +57,7 @@
     "expo-keep-awake": "~13.0.2",
     "expo-linear-gradient": "~13.0.2",
     "expo-media-library": "~16.0.4",
+    "expo-notifications": "0.28.17",
     "expo-screen-orientation": "~7.0.5",
     "expo-secure-store": "~13.0.2",
     "expo-splash-screen": "~0.27.5",
@@ -88,7 +90,9 @@
     "react-native-view-shot": "3.8.0",
     "uuid": "^10.0.0",
     "web-streams-polyfill": "^4.0.0",
-    "zustand": "^4.5.4"
+    "zustand": "^4.5.4",
+    "expo-tracking-transparency": "~4.0.2",
+    "expo-location": "~17.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

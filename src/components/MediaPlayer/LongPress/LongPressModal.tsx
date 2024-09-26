@@ -9,6 +9,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system';
 import { styles } from './LongPress.styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface LongPressModalProps {
   isVisible: boolean;
@@ -45,21 +46,22 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
 }) => {
   const scale = React.useRef(new Animated.Value(0)).current;
 
-  const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions();
-
-  const ensurePermission = async () => {
-    if (mediaLibraryPermission?.status !== 'granted') {
-      const newPermission = await requestMediaLibraryPermission();
-      if (newPermission.status !== 'granted') {
+  const ensureMediaLibraryPermission = async () => {
+    const mediaPermission = await AsyncStorage.getItem('mediaPermission');
+    if (mediaPermission !== 'granted') {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
         Alert.alert(
           'Permission Required',
           'This app needs access to your media library to save images. Please grant permission in your device settings.',
           [
             { text: 'Cancel', style: 'cancel' },
             { text: 'Open Settings', onPress: () => Linking.openSettings() },
-          ],
+          ]
         );
         return false;
+      } else {
+        await AsyncStorage.setItem('mediaPermission', 'granted');
       }
     }
     return true;
@@ -132,7 +134,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
 
   const saveToGallery = async () => {
     try {
-      const hasPermission = await ensurePermission();
+      const hasPermission = await ensureMediaLibraryPermission();
    //   console.log('Permission:', hasPermission);
       if (!hasPermission) {
         return;
@@ -172,9 +174,9 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
   };
   
 
-  const handleSaveToProfile = () => {
+  const handleSaveToProfile = async () => {
     try {
-      onSaveToProfile();
+      await onSaveToProfile();
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       Toast.show({
         type: 'success',
@@ -182,7 +184,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
         text2: 'Saved image to your gallery inside your profile',
       });
     } catch (error) {
-      console.error('Error updating meme reaction:', error);
+      console.error('Error saving meme to profile:', error);
       Toast.show({
         type: 'error',
         text1: 'Error',

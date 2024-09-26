@@ -7,13 +7,42 @@
     "assetBundlePatterns": ["**/*"],
     "android": {
       "package": "com.jestrmobile.app",
-      "permissions": ["MEDIA_LIBRARY", "MEDIA_LIBRARY_WRITE_ONLY"]
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "READ_MEDIA_AUDIO",
+        "WRITE_MEDIA_IMAGES",
+        "WRITE_MEDIA_VIDEO",
+        "WRITE_MEDIA_AUDIO",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_ADVERTISE",
+        "BLUETOOTH_CONNECT",
+        "INTERNET",
+        "VIBRATE",
+        "WAKE_LOCK",
+        "FOREGROUND_SERVICE",
+        "REQUEST_INSTALL_PACKAGES",
+        "SYSTEM_ALERT_WINDOW",
+        "RECEIVE_BOOT_COMPLETED",
+        "RECEIVE_USER_PRESENT",
+        "READ_CONTACTS",
+        "USE_FACIAL_RECOGNITION"
+      ]
     },
     "ios": {
       "bundleIdentifier": "com.jestrmobile.app",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "The app accesses your photos to let you share them with your friends.",
-        "NSPhotoLibraryAddUsageDescription": "Allow app to save photos."
+        "NSPhotoLibraryAddUsageDescription": "Allow app to save photos.",
+        "NSLocationWhenInUseUsageDescription": "We need access to your location to provide better service.",
+        "NSLocationAlwaysUsageDescription": "We need access to your location for tracking purposes.",
+        "NSContactsUsageDescription": "The app accesses your contacts to let you connect with your friends.",
+        "NSFaceIDUsageDescription": "This app uses Face ID to enhance the user experience."
       }
     },
     "splash": {
@@ -44,7 +73,19 @@
           "isAccessMediaLocationEnabled": true
         }
       ],
-      "expo-secure-store"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#ffffff",
+          "sounds": ["./assets/notification-sound.wav"],
+          "androidMode": "default",
+          "androidCollapsedTitle": "#{unread_notifications} new notifications",
+          "iosDisplayInForeground": true
+        }
+      ],
+      "expo-secure-store",
+      "expo-tracking-transparency"
     ]
   }
 }

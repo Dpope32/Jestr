@@ -1,15 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  Animated,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, Animated, Alert, KeyboardAvoidingView, Platform,} from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPlus, faBell, faThumbtack } from '@fortawesome/free-solid-svg-icons';
 import { Conversation, User } from '../../../types/types';

@@ -16,6 +16,12 @@ const cognitoClient = new CognitoIdentityProviderClient({ region: "us-east-2" })
 const USER_POOL_ID = "us-east-2_ifrUnY9b1";
 const COGNITO_CLIENT_ID = "4c19sf6mo8nbl9sfncrl86d1qv";
 
+const verifier = CognitoJwtVerifier.create({
+  userPoolId: process.env.COGNITO_USER_POOL_ID,
+  tokenUse: "access",
+  clientId: process.env.COGNITO_CLIENT_ID,
+});
+
 export const deleteAccount = async (email) => {
   try {
     // First, find the Cognito username using the email
