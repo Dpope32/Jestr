@@ -16,17 +16,21 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   overlay: {
-    flex: 1,
-    justifyContent: 'flex-start',
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+    paddingHorizontal: 0,
     paddingTop: Platform.OS === 'ios' ? 30 : 30,
+    justifyContent: 'flex-start', 
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-     padding:20
+     padding:12,
+     backgroundColor: '#1E1E1E',
   },
   backButton: {
     padding: 10,
@@ -45,7 +49,7 @@ const styles = StyleSheet.create({
     margin: CARD_MARGIN / 2,
     alignItems: 'center',
     width: CARD_WIDTH,
-    height: CARD_WIDTH * 1.2, // Increased height for better layout
+    height: CARD_WIDTH * 1, // Increased height for better layout
   },
   badgeCard: {
     width: '100%',

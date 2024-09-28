@@ -6,7 +6,6 @@ export type AppNavParamList = {
   Settings: undefined;
   Notifications: undefined;
   Badges: undefined;
-  NotificationDetail: { notificationId: number };
 };
 
 export type AppNavProp = NativeStackNavigationProp<AppNavParamList>;

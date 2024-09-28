@@ -9,13 +9,13 @@ import { CognitoJwtVerifier } from "aws-jwt-verify";
 // Initialize AWS clients
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
-
+const CLOUDFRONT_URL = process.env.CLOUDFRONT_URL;
 
 const verifier = CognitoJwtVerifier.create({
-  userPoolId: "us-east-2_ifrUnY9b1",
-  tokenUse: "access",
-  clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
-});
+    userPoolId: process.env.COGNITO_USER_POOL_ID,
+    tokenUse: "access",
+    clientId: process.env.COGNITO_CLIENT_ID,
+  });
 
 const publicOperations = ['fetchLikedMemes', 'fetchDownloadedMemes', 'fetchViewHistory','getAllUsers'];
 
@@ -75,10 +75,8 @@ export const handler = async (event) => {
             try {
                 //console.log('Querying UserLikes with params:', queryParams);
                 const result = await docClient.send(new QueryCommand(queryParams));
-                 //console.log('UserLikes query result:', result);
-            
-                // Fetch additional meme details
-            const memeDetails = await Promise.all(result.Items.map(async (item) => {
+
+                const memeDetails = await Promise.all(result.Items.map(async (item) => {
                 const memeParams = {
                     TableName: 'Memes',
                     Key: { MemeID: item.MemeID }
@@ -91,7 +89,7 @@ export const handler = async (event) => {
                     }
                     return {
                         ...item,
-                        MemeURL: memeItem.MemeURL,
+                        MemeURL: `${CLOUDFRONT_URL}/${memeItem.MemeID}`,
                         ProfilePicUrl: memeItem.ProfilePicUrl,
                         Username: memeItem.Username,
                         Caption: memeItem.Caption,
@@ -107,8 +105,6 @@ export const handler = async (event) => {
                 }}));
             
                 const validMemeDetails = memeDetails.filter(meme => meme !== null);
-                //console.log('Valid meme details:', validMemeDetails);
-            
                 return createResponse(200, 'Liked memes retrieved successfully.', {
                     data: {
                         memes: validMemeDetails,
@@ -123,7 +119,6 @@ export const handler = async (event) => {
 
         case 'fetchDownloadedMemes': {
             const { email, lastEvaluatedKey, limit = 10 } = requestBody;
-            //console.log('Fetching downloaded memes for email:', email);
             if (!email) {
                 return createResponse(400, 'Email is required to fetch downloaded memes.');
             }
@@ -142,8 +137,6 @@ export const handler = async (event) => {
                 if (!result.Items || result.Items.length === 0) {
                     return createResponse(200, 'No downloaded memes found.', { data: { memes: [], lastEvaluatedKey: null } });
                 }
-
-            // Fetch the actual memes from the Memes table
             const memeDetails = await Promise.all(result.Items.map(async (item) => {
                 const memeParams = {
                     TableName: 'Memes',
@@ -157,7 +150,7 @@ export const handler = async (event) => {
                     }
                     return {
                         ...item,
-                        MemeURL: memeItem.MemeURL,
+                        MemeURL: `${CLOUDFRONT_URL}/${memeItem.MemeID}`,
                         Username: memeItem.Username,
                         Caption: memeItem.Caption,
                         LikeCount: memeItem.LikeCount || 0,
@@ -172,7 +165,6 @@ export const handler = async (event) => {
                     return null;
                 }
             }));
-            // Filter out null values from memeDetails
             const validMemeDetails = memeDetails.filter(meme => meme !== null);
             return createResponse(200, 'Downloaded memes retrieved successfully.', {
             data: {
@@ -204,15 +196,10 @@ export const handler = async (event) => {
             });
             
             try {
-            //console.log('Querying UserMemeViews with params:', viewHistoryCommand);
             const viewHistoryResponse = await docClient.send(viewHistoryCommand);
-            //console.log('UserMemeViews query result:', viewHistoryResponse);
-            
             if (!viewHistoryResponse.Items || viewHistoryResponse.Items.length === 0) {
                 return createResponse(200, 'No view history found.', { data: { memes: [], lastEvaluatedKey: null } });
             }
-            
-            // map out the results from viewHistoryResponse
             const viewedMemeIDs = viewHistoryResponse.Items
                 .flatMap(item => item.viewedMemes || [])    
                 .slice(0, limit)
@@ -224,7 +211,6 @@ export const handler = async (event) => {
             
             const memeDetailsMap = new Map(batchGetResponse.Responses.Memes.map(meme => [meme.MemeID, meme]));
             
-            // Prepare the final meme details
             const memeDetails = viewedMemeIDs.map(memeID => {
             const memeItem = memeDetailsMap.get(memeID);
 
@@ -234,13 +220,11 @@ export const handler = async (event) => {
             }
             return {
                 ...memeItem,
+                MemeURL: `${CLOUDFRONT_URL}/${memeItem.MemeID}`,
                 viewedAt: viewHistoryResponse.Items.find(item => item.viewedMemes.includes(memeID)).date,
                 mediaType: memeItem.mediaType || 'image'
             };
             }).filter(meme => meme !== null);
-            
-            //console.log('Valid meme details:', memeDetails);
-            
             return createResponse(200, 'View history retrieved successfully.', {
             data: {
                 memes: memeDetails,
@@ -258,7 +242,6 @@ export const handler = async (event) => {
                 TableName: 'Profiles',
                 ProjectionExpression: 'email, username, profilePic'
             };
-            
             try {
                 const { Items } = await docClient.send(new ScanCommand(params));
                 const users = Items.map(item => ({

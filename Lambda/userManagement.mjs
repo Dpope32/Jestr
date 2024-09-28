@@ -1,14 +1,14 @@
 // userManagement.mjs
-// deleteAccount, updateUserProfile, updatePassword, resendConfirmationCode, forgotPassword, confirmForgotPassword, updateProfileImage, updateFeedback, getFeedback, getAllFeedback
+// deleteAccount, updateUserProfile, updatePassword, resendConfirmationCode, forgotPassword, confirmForgotPassword, updateProfileImage, updateFeedback, getFeedback, getAllFeedback, submitFeedback
 // must be zipped with the accountServices.mjs file when uploading to AWS, along with node_modules, and the package.json files  
 
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import * as accountServices from './accountServices.mjs';
 
 const verifier = CognitoJwtVerifier.create({
-  userPoolId: "us-east-2_ifrUnY9b1",
+  userPoolId: process.env.COGNITO_USER_POOL_ID,
   tokenUse: "access",
-  clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
+  clientId: process.env.COGNITO_CLIENT_ID,
 });
 
 const publicOperations = [
@@ -79,6 +79,9 @@ export const handler = async (event) => {
               case 'updateFeedback':
                 return await accountServices.updateFeedback(requestBody);
               
+              case 'submitFeedback':
+                return await accountServices.submitFeedback(requestBody);
+
               case 'getFeedback':
                 return await accountServices.getFeedback(requestBody);
               

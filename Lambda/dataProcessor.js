@@ -18,6 +18,13 @@ const redis = new Redis({
   maxRetriesPerRequest: 1
 });
 
+const verifier = CognitoJwtVerifier.create({
+  userPoolId: process.env.COGNITO_USER_POOL_ID,
+  tokenUse: "access",
+  clientId: process.env.COGNITO_CLIENT_ID,
+});
+
+const CLOUDFRONT_URL = process.env.CLOUDFRONT_URL;
 const VIEWED_MEMES_EXPIRATION = 86400; // 24 hours
 const MEME_METADATA_EXPIRATION = 43200; // 12 hours
 const ALL_MEMES_CACHE_EXPIRATION = 10800; // 3 hours
@@ -30,18 +37,9 @@ const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({ region: "us-east-2" });
 
-const verifier = CognitoJwtVerifier.create({
-  userPoolId: "us-east-2_ifrUnY9b1",
-  tokenUse: "access",
-  clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
-});
-
 // Helper functions for encoding and decoding likeStatus to reduce Redis memory usage
 const encodeLikeStatus = (liked, doubleLiked) => `${liked ? '1' : '0'}${doubleLiked ? '1' : '0'}`;
-const decodeLikeStatus = (status) => ({
-  liked: status[0] === '1',
-  doubleLiked: status[1] === '1',
-});
+const decodeLikeStatus = (status) => ({ liked: status[0] === '1', doubleLiked: status[1] === '1'});
 
 // Function to get all meme IDs from cache or DynamoDB and cache them in Redis
 async function getAllMemeIDs() {
@@ -235,7 +233,7 @@ async function getCachedMemeData(memeID) {
         memeData = {
           memeID: Item.MemeID,
           email: Item.Email || '',
-          url: `https://jestr-meme-uploads.s3.amazonaws.com/${Item.MemeID}`,
+          url: `${CLOUDFRONT_URL}/${Item.MemeID}`,
           uploadTimestamp: Item.UploadTimestamp || '',
           username: Item.Username || '',
           caption: Item.Caption || '',
@@ -248,7 +246,6 @@ async function getCachedMemeData(memeID) {
         };
         await redis.hmset(memeKey, memeData);
         await redis.expire(memeKey, MEME_METADATA_EXPIRATION);
-      //  console.log(`Cached memeID ${memeID} in Redis.`);
       }
     } catch (error) {
       console.error('Error fetching meme data from DynamoDB:', error);
@@ -357,23 +354,24 @@ exports.handler = async (event) => {
         try {
           let memeItem = await getCachedMemeData(memeID);
 
-          if (!memeItem) {
-            const newMemeParams = {
-              TableName: 'Memes',
-              Item: {
-                MemeID: memeID,
-                Email: 'pope.dawson@gmail.com',
-                UploadTimestamp: new Date().toISOString(),
-                LikeCount: 0,
-                ShareCount: 0,
-                CommentCount: 0,
-                DownloadsCount: 0,
-                Username: 'Admin',
-                ProfilePicUrl: 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/pope.dawson@gmail.com-profilePic-1719862276108.jpg',
-                mediaType: memeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
-                MemeURL: `https://jestr-meme-uploads.s3.amazonaws.com/${memeID}`
-              }
-            };
+          
+        if (!memeItem) {
+          const newMemeParams = {
+            TableName: 'Memes',
+            Item: {
+              MemeID: memeID,
+              Email: 'pope.dawson@gmail.com',
+              UploadTimestamp: new Date().toISOString(),
+              LikeCount: 0,
+              ShareCount: 0,
+              CommentCount: 0,
+              DownloadsCount: 0,
+              Username: 'Admin',
+              ProfilePicUrl: 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/pope.dawson@gmail.com-profilePic-1719862276108.jpg',
+              mediaType: memeID.toLowerCase().endsWith('.mp4') ? 'video' : 'image',
+              MemeURL: `${CLOUDFRONT_URL}/${memeID}`
+            }
+          };
             await docClient.send(new PutCommand(newMemeParams));
             memeItem = newMemeParams.Item;
           //  console.log(`Created new meme entry for memeID ${memeID}.`);

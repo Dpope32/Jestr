@@ -11,9 +11,9 @@ const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 
 const verifier = CognitoJwtVerifier.create({
-    userPoolId: "us-east-2_ifrUnY9b1",
-    tokenUse: "access",
-    clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
+  userPoolId: process.env.COGNITO_USER_POOL_ID,
+  tokenUse: "access",
+  clientId: process.env.COGNITO_CLIENT_ID,
 });
 
   export const handler = async (event) => {
@@ -26,20 +26,15 @@ const verifier = CognitoJwtVerifier.create({
       } else {
         return createResponse(400, 'No valid request body or operation found');
       }
-  
       const { operation } = requestBody;
-  
       const publicOperations = ['getPopularMemes','getTotalMemes','deleteMeme','removeDownloadedMeme','getTotalUsers','getUserGrowthRate','getDAU'];
-  
       let verifiedUser = null;
   
       if (!publicOperations.includes(operation)) {
         const token = event.headers?.Authorization?.split(' ')[1] || event.headers?.authorization?.split(' ')[1];
-  
         if (!token) {
           return createResponse(401, 'No token provided');
         }
-  
         try {
           const payload = await verifier.verify(token);
           verifiedUser = payload;
@@ -73,9 +68,7 @@ const verifier = CognitoJwtVerifier.create({
               ScanIndexForward: false
             };
             const result = await docClient.send(new ScanCommand(params));
-  
             const sortedMemes = result.Items.sort((a, b) => (b.LikeCount || 0) - (a.LikeCount || 0)).slice(0, 5);
-  
             return createResponse(200, 'Popular memes retrieved successfully.', { popularMemes: sortedMemes });
           } catch (error) {
             console.error('Error getting popular memes:', error);
@@ -84,12 +77,10 @@ const verifier = CognitoJwtVerifier.create({
   
         case 'deleteMeme': {
           const { memeID, userEmail } = requestBody;
-  
           if (!memeID || !userEmail) {
             console.log('Missing required fields for deleting a meme');
             return createResponse(400, 'MemeID and userEmail are required for deleting a meme.');
           }
-  
           try {
             // First, check if the meme exists
             const getMemeParams = {
@@ -108,15 +99,13 @@ const verifier = CognitoJwtVerifier.create({
               console.log(`Unauthorized delete attempt. Meme owner: ${memeData.Item.Email}, Requester: ${userEmail}`);
               return createResponse(403, 'You are not authorized to delete this meme');
             }
-  
             // If the meme exists and the user is the owner, proceed with deletion
             const deleteParams = {
               TableName: 'Memes',
               Key: { MemeID: memeID },
             };
-  
+
             await docClient.send(new DeleteCommand(deleteParams));
-  
             return createResponse(200, 'Meme deleted successfully');
           } catch (error) {
             console.error('Error deleting meme:', error);
@@ -126,11 +115,9 @@ const verifier = CognitoJwtVerifier.create({
   
         case 'removeDownloadedMeme': {
           const { userEmail, memeID } = requestBody;
-  
           if (!userEmail || !memeID) {
             return createResponse(400, 'UserEmail and memeID are required for removing a downloaded meme.');
           }
-  
           try {
             const params = {
               TableName: 'UserDownloads',
@@ -139,9 +126,7 @@ const verifier = CognitoJwtVerifier.create({
                 MemeID: memeID,
               },
             };
-  
             await docClient.send(new DeleteCommand(params));
-          //  console.log('Downloaded meme removed successfully');
             return createResponse(200, 'Downloaded meme removed successfully');
           } catch (error) {
             console.error('Error removing downloaded meme:', error);
@@ -163,14 +148,14 @@ const verifier = CognitoJwtVerifier.create({
         }
 
         case 'getUserGrowthRate':
-        try {
-        const today = new Date();
-        const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-        
-        const paramsToday = {
-            TableName: 'Profiles',
-            Select: 'COUNT'
-        };
+          try {
+            const today = new Date();
+            const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            const paramsToday = {
+                TableName: 'Profiles',
+                Select: 'COUNT'
+            };
         const paramsLastWeek = {
             TableName: 'Profiles',
             FilterExpression: '#cd <= :lastWeek',
@@ -201,24 +186,17 @@ const verifier = CognitoJwtVerifier.create({
         case 'getDAU':
             try {
                 // Get the date for 3 days ago in UTC
-                const threeDaysAgo = new Date();
+              const threeDaysAgo = new Date();
                 threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-                const threeDaysAgoString = threeDaysAgo.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-            
-                const params = {
-                TableName: 'UserMemeViews',
-                FilterExpression: '#date >= :threeDaysAgo',
-                ExpressionAttributeNames: {
-                    '#date': 'date'
-                },
-                ExpressionAttributeValues: {
-                    ':threeDaysAgo': threeDaysAgoString
-                }
-                };
-                
-            //  console.log('DAU Params:', JSON.stringify(params));
+              const threeDaysAgoString = threeDaysAgo.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+          
+              const params = {
+                  TableName: 'UserMemeViews',
+                  FilterExpression: '#date >= :threeDaysAgo',
+                  ExpressionAttributeNames: {'#date': 'date'},
+                  ExpressionAttributeValues: {':threeDaysAgo': threeDaysAgoString}
+              };
                 const result = await docClient.send(new ScanCommand(params));
-            //  console.log('DAU Result:', JSON.stringify(result));
                 
                 // Count unique emails
                 const uniqueEmails = new Set(result.Items.map(item => item.email));
@@ -232,14 +210,13 @@ const verifier = CognitoJwtVerifier.create({
                     scannedCount: result.ScannedCount,
                     matchedCount: result.Count,
                     uniqueEmailCount: activeUsers,
-                    sampleItems: result.Items.slice(0, 5) // Include up to 5 sample items for debugging
+                    sampleItems: result.Items.slice(0, 5) 
                 }
                 });
             } catch (error) {
                 console.error('Error getting active users:', error);
                 return createResponse(500, 'Failed to get active users', { error: error.message });
         }
-
         default:
           return createResponse(400, `Unsupported operation: ${operation}`);
       }

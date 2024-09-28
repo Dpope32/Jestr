@@ -18,6 +18,12 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
   memeContainer: {
     flex: 1,
     justifyContent: 'center',

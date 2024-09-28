@@ -1,4 +1,5 @@
-import React, {useState} from 'react';
+// src/components/Input/InputField.tsx
+import React, { useState, forwardRef } from 'react';
 import {
   View,
   Text,
@@ -8,31 +9,21 @@ import {
   TextStyle,
   TouchableOpacity,
   Keyboard,
+  TextInputProps,
+  StyleProp,
 } from 'react-native';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faEye, faEyeSlash, faLock} from '@fortawesome/free-solid-svg-icons';
-import {COLORS} from '../../theme/theme';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faEye, faEyeSlash, faLock } from '@fortawesome/free-solid-svg-icons';
+import { COLORS } from '../../theme/theme';
 
-interface InputFieldProps {
-  label: string;
-  placeholder: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  secureTextEntry?: boolean;
-  onBlur?: () => void;
-  containerStyle?: ViewStyle | ViewStyle[];
-  labelStyle?: TextStyle | TextStyle[];
-  inputStyle?: TextStyle | TextStyle[];
-  placeholderTextColor?: string;
-  multiline?: boolean;
-  numberOfLines?: number;
-  maxLength?: number;
-  textAlignVertical?: 'auto' | 'top' | 'bottom' | 'center';
-  onSubmitEditing?: () => void;
-  style?: TextStyle | TextStyle[]; // Added this line
+interface InputFieldProps extends TextInputProps {
+  label?: string;
+  containerStyle?: StyleProp<ViewStyle> | StyleProp<ViewStyle>[];
+  labelStyle?: StyleProp<TextStyle> | StyleProp<TextStyle>[];
+  inputStyle?: StyleProp<TextStyle> | StyleProp<TextStyle>[];
 }
 
-const InputField: React.FC<InputFieldProps> = ({
+const InputField = forwardRef<TextInput, InputFieldProps>(({
   label,
   placeholder,
   value,
@@ -48,28 +39,27 @@ const InputField: React.FC<InputFieldProps> = ({
   placeholderTextColor = '#999',
   maxLength,
   onSubmitEditing,
-}) => {
+  ...rest
+}, ref) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isAllCaps, setIsAllCaps] = useState(false);
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
   };
-
+  
   const handleTextChange = (text: string) => {
-    onChangeText(text);
+    onChangeText!(text);
     setIsAllCaps(text === text.toUpperCase() && text !== '');
   };
-
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
+  
 
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <View style={styles.inputContainer}>
         <TextInput
+          ref={ref}
           style={[styles.input, inputStyle]}
           placeholder={placeholder}
           value={value}
@@ -83,6 +73,7 @@ const InputField: React.FC<InputFieldProps> = ({
           placeholderTextColor={placeholderTextColor}
           onSubmitEditing={onSubmitEditing}
           autoCapitalize="none"
+          {...rest}
         />
         {secureTextEntry && (
           <TouchableOpacity
@@ -103,7 +94,9 @@ const InputField: React.FC<InputFieldProps> = ({
       </View>
     </View>
   );
-};
+});
+
+InputField.displayName = 'InputField'; // For better debugging with forwardRef
 
 const styles = StyleSheet.create({
   container: {
@@ -111,8 +104,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    marginBottom: 14,
-    color: '#333',
+    marginBottom: 8, // Reduced from 14 for tighter vertical spacing
+    color: '#fff', // Changed to white for better visibility against dark backgrounds
     fontWeight: 'bold',
   },
   inputContainer: {
@@ -127,8 +120,8 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 15,
     fontSize: 16,
-    color: 'white',
-    paddingVertical: 8,
+    color: '#fff', // Changed to white for better readability
+    paddingVertical: 10, // Increased padding for better touch area
   },
   eyeIcon: {
     padding: 10,
@@ -136,7 +129,7 @@ const styles = StyleSheet.create({
   capsIcon: {
     position: 'absolute',
     right: 10,
-    top: 15,
+    top: 12, // Adjusted to align better vertically
   },
 });
 

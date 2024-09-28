@@ -306,7 +306,7 @@ const Badges: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={[styles.loadingText, { color: isDarkMode ? COLORS.white : COLORS.black }]}>
+        <Text style={[styles.loadingText, { color: isDarkMode ? COLORS.white : COLORS.white }]}>
           Loading Badges...
         </Text>
       </View>
@@ -326,21 +326,16 @@ const Badges: React.FC = () => {
 
   return (
     <LinearGradient
-      colors={isDarkMode ? [COLORS.darkBackgroundStart, COLORS.darkBackgroundEnd] : [COLORS.lightBackgroundStart, COLORS.lightBackgroundEnd]}
+    colors={['#013026', '#014760', '#107e57', '#a1ce3f', '#39FF14']}
       style={styles.gradientBackground}
     >
+      <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <Particles 
         windowWidth={windowWidth} 
         windowHeight={windowHeight} 
         density={0.05} 
-        color={isDarkMode ? COLORS.particlesDark : COLORS.particlesLight} 
+        color={isDarkMode ? COLORS.particlesDark : COLORS.particlesDark} 
       />
-      <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-        <BlurView
-          intensity={100}
-          tint={isDarkMode ? "dark" : "light"}
-          style={styles.overlay}
-        >
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
@@ -374,7 +369,6 @@ const Badges: React.FC = () => {
             contentContainerStyle={styles.badgeList}
             accessibilityLabel="List of badges"
           />
-        </BlurView>
       </Animated.View>
     </LinearGradient>
   );

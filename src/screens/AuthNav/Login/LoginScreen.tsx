@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { ActivityIndicator } from 'react-native';
+// src/screens/AuthNav/Login/LoginScreen.tsx
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  TouchableWithoutFeedback,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput, // Import TextInput for ref typing
+  Alert, // Optional: For user-friendly error messages
+} from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { styles } from './componentData';
+import { styles } from './componentData'; // Ensure correct import
 import { colorsGradient } from '../LandingPage/componentData';
 import { AuthNavProp } from '../../../navigation/NavTypes/AuthStackTypes';
 import InputField from '../../../components/Input/InputField';
@@ -24,75 +35,118 @@ const LoginScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false);
 
+  // Refs for input fields
+  const passwordInputRef = useRef<TextInput>(null);
+
   const handleLoginAction = async () => {
+    Keyboard.dismiss(); // Dismiss keyboard when login button is pressed
     setIsLoading(true);
     try {
       await handleLogin(email, password, navigation);
     } catch (error: any) {
       console.log('Error logging in:', error.message);
+      // Optionally, show an alert or a toast message to inform the user
+      Alert.alert('Login Error', error.message || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <LinearGradient colors={colorsGradient} style={styles.container}>
-      <RainEffect />
-      <Text style={styles.signupHeader}>Login</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <LinearGradient colors={colorsGradient} style={styles.container}>
+        <RainEffect />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+        >
+          <View style={styles.contentContainer}>
+            <Text style={styles.signupHeader}>Login</Text>
 
-      <InputField
-        label=""
-        placeholder="Enter Email"
-        value={email}
-        onChangeText={text => setEmail(text)}
-        containerStyle={styles.input}
-        inputStyle={styles.inputText}
-      />
+            <InputField
+              placeholder="Enter Email"
+              value={email}
+              onChangeText={text => setEmail(text)}
+              containerStyle={styles.input}
+              inputStyle={styles.inputText}
+              keyboardType="email-address"
+              returnKeyType="next"
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
+              // Optional: Add accessibilityLabel for better accessibility
+              accessibilityLabel="Email Input"
+            />
 
-      <InputField
-        label=""
-        placeholder="Enter Password"
-        secureTextEntry
-        value={password}
-        onChangeText={text => setPassword(text)}
-        containerStyle={styles.input}
-      />
+            <InputField
+              ref={passwordInputRef}
+              placeholder="Enter Password"
+              secureTextEntry
+              value={password}
+              onChangeText={text => setPassword(text)}
+              containerStyle={styles.input}
+              returnKeyType="done"
+              onSubmitEditing={Keyboard.dismiss}
+              // Optional: Add accessibilityLabel for better accessibility
+              accessibilityLabel="Password Input"
+            />
 
-      {/* HANDLE SIGN UP BUTTON */}
-      <TouchableOpacity onPress={handleLoginAction} style={styles.button2}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
+            {/* HANDLE LOGIN BUTTON */}
+            <TouchableOpacity
+              onPress={handleLoginAction}
+              style={styles.button2}
+              disabled={isLoading} // Disable button while loading
+              accessibilityLabel="Login Button"
+              accessibilityRole="button"
+            >
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
 
-      {/* NAV to LOGIN BUTTON */}
-      <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-        <Text style={styles.toggleFormText}>Need an account? Sign up here</Text>
-      </TouchableOpacity>
+            {/* NAV to SIGN UP BUTTON */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('SignUp')}
+              accessibilityLabel="Navigate to Sign Up"
+              accessibilityRole="button"
+            >
+              <Text style={styles.toggleFormText}>Need an account? Sign up here</Text>
+            </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => setForgotPasswordModalVisible(true)}>
-        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-      </TouchableOpacity>
+            {/* FORGOT PASSWORD BUTTON */}
+            <TouchableOpacity
+              onPress={() => setForgotPasswordModalVisible(true)}
+              accessibilityLabel="Forgot Password"
+              accessibilityRole="button"
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
 
-      {/* Forgot Password Modal */}
-      <ForgotPasswordModal
-        isVisible={isForgotPasswordModalVisible}
-        onClose={() => setForgotPasswordModalVisible(false)}
-      />
-      <SocialLoginBtns />
-      <SocialBtnsRow />
-      <AuthFooterLinks />
+            {/* Forgot Password Modal */}
+            <ForgotPasswordModal
+              isVisible={isForgotPasswordModalVisible}
+              onClose={() => setForgotPasswordModalVisible(false)}
+            />
 
-      {/* BLURVIEW WHILE LOADING */}
-      {isLoading && (
-        <BlurView
-          intensity={100}
-          style={[StyleSheet.absoluteFill, styles.blurView]}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#00ff00" />
-            <Text style={styles.loadingText}>Logging in...</Text>
+            {/* SOCIAL LOGIN BUTTONS */}
+            <SocialLoginBtns />
+            <SocialBtnsRow />
+            <AuthFooterLinks />
           </View>
-        </BlurView>
-      )}
-    </LinearGradient>
+
+          {/* BLURVIEW WHILE LOADING */}
+          {isLoading && (
+            <BlurView
+              intensity={100}
+              style={styles.blurView}
+              accessibilityLabel="Loading Indicator"
+              accessible={true}
+            >
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#00ff00" />
+                <Text style={styles.loadingText}>Logging in...</Text>
+              </View>
+            </BlurView>
+          )}
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </TouchableWithoutFeedback>
   );
 };
 

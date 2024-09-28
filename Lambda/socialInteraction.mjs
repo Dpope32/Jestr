@@ -1,14 +1,17 @@
 // socialInteraction.mjs
-// Functions: sendMessage, getMessages, getConversations, checkAndAwardBadge, getUserBadges
+// Functions: sendMessage, getMessages, getConversations
 // Note: Must be zipped with node_modules, package.json, and package-lock.json when uploading to AWS
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand} from "@aws-sdk/lib-dynamodb";
+import { SNSClient, PublishCommand, CreatePlatformEndpointCommand } from "@aws-sdk/client-sns";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import { v4 as uuidv4 } from "uuid";
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
+const snsClient = new SNSClient({});
+const SNS_PLATFORM_APPLICATION_ARN = process.env.SNS_PLATFORM_APPLICATION_ARN 
 
 const verifier = CognitoJwtVerifier.create({
   userPoolId: process.env.COGNITO_USER_POOL_ID,
@@ -16,11 +19,9 @@ const verifier = CognitoJwtVerifier.create({
   clientId: process.env.COGNITO_CLIENT_ID,
 });
 
-const publicOperations = [
-  "sendMessage",
-  "getMessages",
-  "getConversations",
-];
+const publicOperations = ["sendMessage", "getMessages", "getConversations", "registerDevice"];
+
+const FCM_PLATFORM_APPLICATION_ARN = process.env.FCM_PLATFORM_APPLICATION_ARN;
 
 const sendMessage = async (senderID, receiverID, content) => {
   const messageID = uuidv4();
@@ -57,32 +58,38 @@ const sendMessage = async (senderID, receiverID, content) => {
     await docClient.send(new UpdateCommand(conversationParams));
 
     // 3. Update UserConversations for sender
-    const senderParams = {
-      TableName: "UserConversations",
-      Key: { UserID: senderID },
-      UpdateExpression:
-        "SET LastReadMessageID = :messageID, UnreadCount = :zero, ConversationID = :conversationID",
-      ExpressionAttributeValues: {
-        ":messageID": messageID,
-        ":zero": 0,
-        ":conversationID": conversationID,
-      },
-    };
-    await docClient.send(new UpdateCommand(senderParams));
+    await updateUserConversations(senderID, conversationID, messageID, 0);
 
     // 4. Update UserConversations for receiver
-    const receiverParams = {
-      TableName: "UserConversations",
-      Key: { UserID: receiverID },
-      UpdateExpression:
-        "SET UnreadCount = if_not_exists(UnreadCount, :zero) + :inc, ConversationID = :conversationID",
-      ExpressionAttributeValues: {
-        ":zero": 0,
-        ":inc": 1,
-        ":conversationID": conversationID,
-      },
-    };
-    await docClient.send(new UpdateCommand(receiverParams));
+    await updateUserConversations(receiverID, conversationID, null, 1);
+
+    // 5. Get receiver's endpoint ARN
+    const { Item: receiverProfile } = await docClient.send(new GetCommand({
+      TableName: "Profiles",
+      Key: { email: receiverID },
+    }));
+
+    if (receiverProfile && receiverProfile.endpointArn) {
+      // 6. Publish to SNS
+      await snsClient.send(new PublishCommand({
+        TargetArn: receiverProfile.endpointArn,
+        Message: JSON.stringify({
+          default: JSON.stringify({
+            messageId: messageID,
+            senderEmail: senderID,
+            content: content
+          }),
+          GCM: JSON.stringify({
+            data: {
+              messageId: messageID,
+              senderEmail: senderID,
+              content: content
+            }
+          })
+        }),
+        MessageStructure: 'json'
+      }));
+    }
 
     return { success: true, messageID, conversationID };
   } catch (error) {
@@ -194,6 +201,78 @@ const getConversations = async (userID) => {
   }
 };
 
+async function updateUserConversations(userId, conversationId, lastReadMessageId, unreadCount) {
+  await docClient.send(new PutCommand({
+    TableName: 'UserConversations',
+    Item: {
+      UserID: userId,
+      ConversationID: conversationId,
+      LastReadMessageID: lastReadMessageId,
+      UnreadCount: unreadCount
+    }
+  }));
+}
+
+async function sendNotification(receiverID, senderID, type, content, relatedID = null) {
+  try {
+    const notificationID = uuidv4();
+    const timestamp = new Date().toISOString();
+
+    // Store notification in DynamoDB
+    const notificationParams = {
+      TableName: 'Notis',
+      Item: {
+        ReceiverID: receiverID,
+        SenderID: senderID,
+        NotificationID: notificationID,
+        Type: type,
+        Content: content,
+        RelatedID: relatedID, // This could be a messageID, memeID, etc.
+        Seen: false,
+        Timestamp: timestamp
+      }
+    };
+    await docClient.send(new PutCommand(notificationParams));
+
+    // Fetch the user's endpoint ARN from the Profiles table
+    const { Item: userProfile } = await docClient.send(new GetCommand({
+      TableName: "Profiles",
+      Key: { email: receiverID },
+    }));
+
+    if (userProfile && userProfile.endpointArn) {
+      // Send push notification via SNS
+      await snsClient.send(new PublishCommand({
+        TargetArn: userProfile.endpointArn,
+        Message: JSON.stringify({
+          default: JSON.stringify({
+            notificationId: notificationID,
+            type,
+            content,
+            senderID,
+            relatedID
+          }),
+          GCM: JSON.stringify({
+            data: {
+              notificationId: notificationID,
+              type,
+              content,
+              senderID,
+              relatedID
+            }
+          })
+        }),
+        MessageStructure: 'json'
+      }));
+    }
+
+    return { success: true, notificationID };
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export const handler = async (event) => {
   try {
     let requestBody;
@@ -238,6 +317,7 @@ export const handler = async (event) => {
         }
         try {
           const result = await sendMessage(senderID, receiverID, content);
+          
           return createResponse(200, "Message sent successfully.", result);
         } catch (error) {
           console.error(`Error sending message: ${error}`);
@@ -284,6 +364,72 @@ export const handler = async (event) => {
           return createResponse(500, "Failed to fetch conversations.");
         }
       }
+
+      case "registerDevice": {
+        const { userID, deviceToken } = requestBody;
+        if (!userID || !deviceToken) {
+          return createResponse(
+            400,
+            "userID and deviceToken are required for registering a device."
+          );
+        }
+        try {
+          // Create an SNS platform endpoint for this device
+          const createEndpointParams = {
+            PlatformApplicationArn: SNS_PLATFORM_APPLICATION_ARN,
+            Token: deviceToken,
+            CustomUserData: userID
+          };
+          const createEndpointCommand = new CreatePlatformEndpointCommand(createEndpointParams);
+          const { EndpointArn } = await snsClient.send(createEndpointCommand);
+
+          // Update the Profile in DynamoDB with the new EndpointArn
+          const updateParams = {
+            TableName: 'Profiles',
+            Key: { email: userID },
+            UpdateExpression: 'set EndpointArn = :e',
+            ExpressionAttributeValues: {
+              ':e': EndpointArn
+            },
+            ReturnValues: 'UPDATED_NEW'
+          };
+
+          await docClient.send(new UpdateCommand(updateParams));
+
+          return createResponse(200, "Device registered successfully.", { EndpointArn });
+        } catch (error) {
+          console.error(`Error registering device: ${error}`);
+          return createResponse(500, "Failed to register device.");
+        }
+      }
+
+      case "getNotifications": {
+        const { userID, lastEvaluatedKey } = requestBody;
+        if (!userID) {
+          return createResponse(400, "userID is required for fetching notifications.");
+        }
+        try {
+          const params = {
+            TableName: "Notis",
+            KeyConditionExpression: "ReceiverID = :userID",
+            ExpressionAttributeValues: { ":userID": userID },
+            ScanIndexForward: false, // to get newest notifications first
+            Limit: 20, // adjust as needed
+          };
+          if (lastEvaluatedKey) {
+            params.ExclusiveStartKey = lastEvaluatedKey;
+          }
+          const result = await docClient.send(new QueryCommand(params));
+          return createResponse(200, "Notifications retrieved successfully.", {
+            notifications: result.Items,
+            lastEvaluatedKey: result.LastEvaluatedKey,
+          });
+        } catch (error) {
+          console.error("Error fetching notifications:", error);
+          return createResponse(500, "Failed to fetch notifications.");
+        }
+      }
+
       default:
         return createResponse(400, `Unsupported operation: ${operation}`);
     }

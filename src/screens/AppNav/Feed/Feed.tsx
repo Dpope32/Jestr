@@ -13,6 +13,7 @@ import { useMemes } from '../../../services/memeService';
 import { InfiniteData } from '@tanstack/react-query';
 import { FetchMemesResult } from '../../../types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import  SplashScreen  from '../../../screens/AppNav/Loading/SplashScreen';
 
 const CACHE_KEY_PREFIX = 'memes_cache_';
 

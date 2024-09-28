@@ -1,16 +1,7 @@
 // src/screens/MemeUploadScreen.tsx
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  Alert,
-  Animated,
-  TouchableOpacity,
-  Easing,
-} from 'react-native';
+import {  View,  Text,  StyleSheet, StatusBar, Alert, Animated, TouchableOpacity, Easing,} from 'react-native';
 import Toast from 'react-native-toast-message'; // Import Toast
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';

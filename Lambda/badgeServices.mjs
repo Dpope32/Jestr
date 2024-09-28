@@ -1,3 +1,8 @@
+// badgeServices.mjs
+// checkBadgeEligibility, awardBadge, getUserBadges
+// must be zipped with node_modules, package.json, and package-lock.json when uploading to AWS
+
+
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { CognitoJwtVerifier } from "aws-jwt-verify";

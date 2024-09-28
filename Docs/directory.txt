@@ -7,6 +7,9 @@ Jestr-Mobile
 │   ├── amplify
 │   ├── android
 |   |-- docs
+|   |   |-- AllStores.jpg
+|   |   |-- directory.txt
+|   |   |-- directory.txt
 |   |   |-- directory.txt
 |   |   |-- storage_overview.jpeg
 │   ├── ios
@@ -19,8 +22,18 @@ Jestr-Mobile
 │   │   ├── Lambda.zip
 │   │   ├── package-lock.json
 │   │   ├── package.json
+│   │   ├── accountServices.mjs
+│   │   ├── adminServices.mjs
+│   │   ├── badgeServices.mjs
+│   │   ├── dataProcessor.mjs
+│   │   ├── dynamoManagement.mjs
+│   │   ├── memeManagement.mjs
+│   │   ├── followManagement.mjs
+│   │   ├── memeProcessor.mjs
 │   │   ├── socialInteraction.mjs
+│   │   ├── userDetails.mjs
 │   │   └── userManagement.mjs
+
 │   ├── node_modules
 │   ├── src
 │   │   ├── assets

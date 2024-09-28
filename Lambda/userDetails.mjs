@@ -14,9 +14,9 @@ const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({ region: "us-east-2" });
 
 const verifier = CognitoJwtVerifier.create({
-  userPoolId: "us-east-2_ifrUnY9b1",
+  userPoolId: process.env.COGNITO_USER_POOL_ID,
   tokenUse: "access",
-  clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
+  clientId: process.env.COGNITO_CLIENT_ID,
 });
 
 

@@ -16,7 +16,7 @@ import {useMediaPlayerLogic} from './Logic/useMediaPlayerLogic';
 import {useUserStore} from '../../stores/userStore';
 import {LongPressModal} from './LongPress/LongPressModal';
 import {useTheme} from '../../theme/ThemeContext';
-
+import  SplashScreen  from '../../screens/AppNav/Loading/SplashScreen';
 const SaveSuccessModal = React.lazy(() => import('../Modals/SaveSuccessModal'));
 const ShareModal = React.lazy(() => import('../Modals/ShareModal'));
 
@@ -58,7 +58,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     const lottieRef = useRef(null);
     const iconAreaRef = useRef(null);
     const isSwiping = useRef(false);
-
+    const username = useUserStore(state => state.username);
     const [status, setStatus] = useState<AVPlaybackStatus>({} as AVPlaybackStatus,);
     const [imageSize, setImageSize] = useState({width: 0, height: 0});
     const [isLoading, setIsLoading] = useState(true);
@@ -261,7 +261,16 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       }
 
       if (isLoading) {
-        return <ActivityIndicator size="large" color="#1bd40b" />;
+        return (
+          <View
+            style={[
+              styles.loadingContainer,
+              { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' },
+            ]}
+          >
+            <SplashScreen username={username} />
+          </View>
+        );
       }
 
       if (mediaLoadError) {

@@ -12,12 +12,71 @@ import {fetchUserDetails} from './userService';
 //import * as Google from 'expo-auth-session/providers/google';
 import {AuthNavProp} from '../navigation/NavTypes/AuthStackTypes';
 
+import * as Notifications from 'expo-notifications';
+
 export const checkAuthStatus = async () => {
   try {
     const {tokens} = await fetchAuthSession();
     return tokens !== undefined;
   } catch (error) {
     return false;
+  }
+};
+
+export const registerDevice = async (userID: string) => {
+  try {
+    // Request permissions if not already granted
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      Alert.alert(
+        'Permissions Required',
+        'Enable notifications to stay updated with the latest features.'
+      );
+      return;
+    }
+
+    // Get the Expo Push Token
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const expoPushToken = tokenData.data;
+
+    // Send the token to your backend
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/registerDevice',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation: 'registerDevice',
+          userID: userID,
+          deviceToken: expoPushToken
+        }),
+      },
+    );
+
+    const responseData = await response.json();
+
+    if (response.ok) {
+      console.log('Device registered successfully:', responseData);
+      Alert.alert('Success', 'Device registered for notifications.');
+    } else {
+      console.error('Failed to register device:', responseData);
+      Alert.alert('Registration Failed', responseData.message || 'Please try again.');
+    }
+
+    return responseData;
+  } catch (error: any) {
+    console.error('Error registering device:', error);
+    Alert.alert('Registration Error', error.message || 'An unknown error occurred.');
+    throw error;
   }
 };
 
@@ -67,7 +126,11 @@ export const handleLogin = async (
       ].includes(userDetails.email);
 
       // await AsyncStorage.setItem('isAdmin', JSON.stringify(isAdmin));
-
+      try {
+        await registerDevice(userDetails.email);
+      } catch (error) {
+        console.error('Failed to register device:', error);
+      }
       useUserStore.getState().setUserDetails({
         email: userDetails.email,
         username: userDetails.username,
@@ -206,6 +269,39 @@ export const handleSignup = async (
   }
 };
 
+export const verifyToken = async (token: string) => {
+  try {
+    const response = await fetch(
+      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/verifyToken',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.ok;
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    return false;
+  }
+};
+
+const convertAuthUserToUser = (authUser: any): User => {
+  return {
+    email: authUser.username,
+    username: authUser.username,
+    profilePic: '',
+    displayName: '',
+    headerPic: '',
+    CreationDate: new Date().toISOString(),
+    followersCount: 0,
+    followingCount: 0,
+    bio: '', // Add this line
+  };
+};
+
 export const handleForgotPassword = async (email: string) => {
   try {
     if (!email) {
@@ -262,6 +358,7 @@ export const updatePassword = async (
   // Always "succeed"
   return;
 };
+
 export const resendConfirmationCode = async (username: string) => {
   try {
     const response = await fetch(
@@ -292,39 +389,6 @@ export const resendConfirmationCode = async (username: string) => {
     console.error('Error resending confirmation code:', error);
     return false; // Return failure without showing a toast
   }
-};
-
-export const verifyToken = async (token: string) => {
-  try {
-    const response = await fetch(
-      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/verifyToken',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-    return response.ok;
-  } catch (error) {
-    console.error('Error verifying token:', error);
-    return false;
-  }
-};
-
-const convertAuthUserToUser = (authUser: any): User => {
-  return {
-    email: authUser.username,
-    username: authUser.username,
-    profilePic: '',
-    displayName: '',
-    headerPic: '',
-    CreationDate: new Date().toISOString(),
-    followersCount: 0,
-    followingCount: 0,
-    bio: '', // Add this line
-  };
 };
 
 export const handleAppleSignIn = async () => {

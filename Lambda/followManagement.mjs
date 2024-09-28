@@ -1,3 +1,7 @@
+// followManagement.mjs
+// addFollow, removeFollow, getFollowers, getFollowing, checkFollowStatus, batchCheckStatus
+// // must be zipped with node_modules, package.json, and package-lock.json when uploading to AWS
+
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, UpdateCommand,DeleteCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
@@ -7,9 +11,9 @@ const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 
 const verifier = CognitoJwtVerifier.create({
-  userPoolId: "us-east-2_ifrUnY9b1",
+  userPoolId: process.env.COGNITO_USER_POOL_ID,
   tokenUse: "access",
-  clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
+  clientId: process.env.COGNITO_CLIENT_ID,
 });
 
 const publicOperations = ['addFollow', 'removeFollow','getFollowers','getFollowing', 'checkFollowStatus', 'batchCheckStatus'];

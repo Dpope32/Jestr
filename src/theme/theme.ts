@@ -30,7 +30,7 @@ export const COLORS = {
   warning: '#FF9500',
   info: '#5AC8FA',
   gold: '#FFD700',
-  cardBackground: '#2A2A2A',
+  cardBackground: '#1E1E1E',
   // Add the missing properties below
   darkBackgroundStart: '#1E1E1E',
   darkBackgroundEnd: '#121212',

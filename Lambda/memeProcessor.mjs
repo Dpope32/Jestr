@@ -14,13 +14,13 @@ const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({ region: "us-east-2" });
 
 const verifier = CognitoJwtVerifier.create({
-  userPoolId: "us-east-2_ifrUnY9b1",
+  userPoolId: process.env.COGNITO_USER_POOL_ID,
   tokenUse: "access",
-  clientId: "4c19sf6mo8nbl9sfncrl86d1qv",
+  clientId: process.env.COGNITO_CLIENT_ID,
 });
 
 const BUCKET_NAME = 'jestr-meme-uploads';
-  // List of operations that don't require authentication
+const CLOUDFRONT_URL = process.env.CLOUDFRONT_URL;
 const publicOperations = ['shareMeme','getPresignedUrl','uploadMeme', 'getUserMemes'];
 
 const recordShare = async (memeID, userEmail, shareType, username, catchUser, message) => {
@@ -277,7 +277,7 @@ export const handler = async (event) => {
                     MemeID: memeKey,
                     Email: email,
                     UploadTimestamp: new Date().toISOString(),
-                    MemeURL: `https://${BUCKET_NAME}.s3.amazonaws.com/${memeKey}`,
+                    MemeURL: `${CLOUDFRONT_URL}/${memeKey}`,
                     Username: username,
                     Caption: caption || '',
                     Tags: tags || [],
@@ -292,9 +292,9 @@ export const handler = async (event) => {
                 await docClient.send(new PutCommand(memeMetadataParams));
         
                 return createResponse(200, 'Meme metadata processed successfully.', { 
-                    url: `https://${BUCKET_NAME}.s3.amazonaws.com/${memeKey}`,
-                    profilePicUrl: profilePicUrl 
-                });
+                  url: `${CLOUDFRONT_URL}/${memeKey}`,
+                  profilePicUrl: profilePicUrl 
+              });
                 } catch (error) {
                     console.error('Error storing meme metadata in DynamoDB:', error);
                 return createResponse(500, `Failed to store meme metadata: ${error.message}`);
@@ -323,7 +323,7 @@ export const handler = async (event) => {
           const userMemes = result.Items ? result.Items.map(item => ({
               memeID: item.MemeID,
               email: item.Email,
-              url: item.MemeURL,
+              url: item.MemeURL.replace(`https://${BUCKET_NAME}.s3.amazonaws.com`, CLOUDFRONT_URL),
               caption: item.Caption,
               uploadTimestamp: item.UploadTimestamp,
               likeCount: item.LikeCount || 0,

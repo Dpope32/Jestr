@@ -13,20 +13,15 @@ const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({ region: "us-east-2" });
 const cognitoClient = new CognitoIdentityProviderClient({ region: "us-east-2" });
 
-const USER_POOL_ID = "us-east-2_ifrUnY9b1";
-const COGNITO_CLIENT_ID = "4c19sf6mo8nbl9sfncrl86d1qv";
+const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
+const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
 
-const verifier = CognitoJwtVerifier.create({
-  userPoolId: process.env.COGNITO_USER_POOL_ID,
-  tokenUse: "access",
-  clientId: process.env.COGNITO_CLIENT_ID,
-});
 
 export const deleteAccount = async (email) => {
   try {
     // First, find the Cognito username using the email
     const listUsersParams = {
-      UserPoolId: "us-east-2_ifrUnY9b1",
+      UserPoolId: USER_POOL_ID, // Correct, using the variable
       Filter: `email = "${email}"`,
       Limit: 1
     };
@@ -41,7 +36,7 @@ export const deleteAccount = async (email) => {
 
     // Delete user from Cognito
     await cognitoClient.send(new AdminDeleteUserCommand({
-      UserPoolId: "us-east-2_ifrUnY9b1",
+      UserPoolId: USER_POOL_ID, // Correct, using the variable
       Username: cognitoUsername,
     }));
 
@@ -76,7 +71,7 @@ export const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
     try {
       const command = new PutObjectCommand(params);
       const result = await s3Client.send(command);
-      return `https://${bucketName}.s3.amazonaws.com/${key}`;
+      return `${process.env.CLOUDFRONT_URL}/${key}`;
     } catch (error) {
       console.error('Error in uploadToS3:', error);
       throw new Error(`S3 upload failed: ${error.message}`);
@@ -361,7 +356,39 @@ export async function updatePassword(username, newPassword) {
     const command = new AdminSetUserPasswordCommand(params);
     return cognitoClient.send(command);
 };
-  
+
+export async function submitFeedback(requestBody) {
+  const { email, message } = requestBody;
+
+  if (!email || !message) {
+    return createResponse(400, 'Email and message are required for submitting feedback.');
+  }
+
+  const feedbackId = `FB-${Date.now()}`; // Create a unique feedback ID using the current timestamp
+
+  const feedbackItem = {
+    FeedbackID: feedbackId,
+    Email: email,
+    Message: message,
+    Status: 'New',
+    Timestamp: new Date().toISOString(), // Set Timestamp instead of CreatedAt
+  };
+
+  try {
+    const params = {
+      TableName: 'UserFeedback',
+      Item: feedbackItem,
+    };
+
+    await docClient.send(new PutCommand(params));
+
+    return createResponse(200, 'Feedback submitted successfully', feedbackItem);
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    return createResponse(500, 'Failed to submit feedback', { error: error.message });
+  }
+}
+
 export function createResponse(statusCode, message, data = null) {
   return {
     statusCode,

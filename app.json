@@ -2,6 +2,10 @@
   "expo": {
     "name": "JestrMobile",
     "slug": "jestrmobile",
+    "splash": {
+    "backgroundColor": "#1C1C1C",
+    "resizeMode": "contain"
+    },
     "owner": "deedaw22",
     "version": "1.0.0",
     "assetBundlePatterns": ["**/*"],
@@ -45,11 +49,6 @@
         "NSFaceIDUsageDescription": "This app uses Face ID to enhance the user experience."
       }
     },
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1C1C1C"
-    },
     "icon": "./assets/icon.png",
     "extra": {
       "eas": {
@@ -78,7 +77,7 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#ffffff",
-          "sounds": ["./assets/notification-sound.wav"],
+          "sounds": ["./assets/notification_sound.wav"],
           "androidMode": "default",
           "androidCollapsedTitle": "#{unread_notifications} new notifications",
           "iosDisplayInForeground": true
