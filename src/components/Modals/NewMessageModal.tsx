@@ -59,11 +59,13 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
 
   useEffect(() => {
     const filtered = allUsers.filter(user => 
+      typeof user.username === 'string' &&
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) &&
       user.email !== currentUser.email
     );
     setFilteredUsers(filtered);
   }, [searchQuery, allUsers, currentUser.email]);
+  
 
   useEffect(() => {
     const fetchUsers = async () => {

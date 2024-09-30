@@ -10,6 +10,7 @@ interface ThemeColors {
   textSecondary: string;
   textTertiary: string;
   primary: string;
+  lightGray: string;
   secondary: string;
   accent: string;
   error: string;
@@ -34,6 +35,7 @@ const lightColors: ThemeColors = {
   secondary: COLORS.secondary,
   accent: COLORS.accent,
   error: COLORS.error,
+  lightGray: COLORS.lightGray,
   success: COLORS.success,
   warning: COLORS.warning,
   card: COLORS.cardBackground,
@@ -47,6 +49,7 @@ const darkColors: ThemeColors = {
   textSecondary: COLORS.textSecondary,
   textTertiary: COLORS.textTertiary,
   primary: COLORS.primary,
+  lightGray: COLORS.lightGray,
   secondary: COLORS.secondary,
   accent: COLORS.accent,
   card: COLORS.cardBackground,

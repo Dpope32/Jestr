@@ -1,3 +1,5 @@
+// Notification Screen inside the Profile Panel Drawer, considering turning into a component rather than a screen
+
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { useNotificationStore, Notification } from '../../../stores/notificationStore';
@@ -9,6 +11,7 @@ import { COLORS, SPACING } from '../../../theme/theme';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faBell } from '@fortawesome/free-solid-svg-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { usePushNotifications } from './usePushNotification';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
@@ -17,6 +20,10 @@ const NotificationsScreen = () => {
   const notificationStore = useNotificationStore();
   const notifications = notificationStore.notifications; 
   const { colors, isDarkMode } = useTheme();
+  const { expoPushToken, notification } = usePushNotifications();
+  const data = JSON.stringify(notification, undefined, 2);
+  console.log('expoPushToken:', expoPushToken);
+
 
   const renderNotification = ({ item }: { item: Notification }) => (
     <TouchableOpacity
@@ -77,6 +84,8 @@ const NotificationsScreen = () => {
           >
             Notifications
           </Text>
+          <Text>Notification: {data}</Text>
+          <Text>Token: {expoPushToken?.data }</Text>
           <FontAwesomeIcon icon={faBell} size={24} color={COLORS.primary} />
           
         </View>

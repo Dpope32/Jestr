@@ -1,18 +1,33 @@
 {
-    "cli": {
-      "version": ">= 3.13.3"
+  "cli": {
+    "version": ">= 3.13.3"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
     },
-    "build": {
-      "development": {
-        "developmentClient": true,
-        "distribution": "internal"
-      },
-      "preview": {
-        "distribution": "internal"
-      },
-      "production": {}
+    "preview": {
+      "distribution": "internal"
     },
-    "submit": {
-      "production": {}
+    "production": {
+      "distribution": "store"
+    }
+  },
+  "submit": {
+    "development": {
+      "ios": {
+        "appleId": "dawsom.alex32@gmail.com",
+        "ascAppId": "6733220278",
+        "appleTeamId": "8KC9WUUJRS"
+      }
+    },
+    "production": {
+      "ios": {
+        "appleId": "dawsom.alex32@gmail.com",
+        "ascAppId": "6733220278",
+        "appleTeamId": "8KC9WUUJRS"
+      }
     }
   }
+}

@@ -13,7 +13,6 @@ import { useMemes } from '../../../services/memeService';
 import { InfiniteData } from '@tanstack/react-query';
 import { FetchMemesResult } from '../../../types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import  SplashScreen  from '../../../screens/AppNav/Loading/SplashScreen';
 
 const CACHE_KEY_PREFIX = 'memes_cache_';
 
@@ -141,7 +140,9 @@ const Feed: React.FC = React.memo(() => {
           { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' },
         ]}
       >
+         <View style={styles.centerContent}>
         <ActivityIndicator size="large" color="#00ff00" />
+      </View>
       </View>
     );
   }

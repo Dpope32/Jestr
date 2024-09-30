@@ -19,7 +19,6 @@ DerivedData
 *.ipa
 *.xcuserstate
 **/.xcode.env.local
-config.ts
 
 # Android/IntelliJ
 build/
@@ -80,14 +79,13 @@ amplify/backend/.temp
 build/
 dist/
 node_modules/
-aws-exports.js
+.env
 /Lambda/check_invalid_media.js
 /Lambda/update_meme_captions.py
 /src/assets/meme_clips/
 /src/assets/memes/
 /src/assets/videos/
 awsconfiguration.json
-amplifyconfiguration.json
 amplifyconfiguration.dart
 amplify-build-config.json
 amplify-gradle-config.json

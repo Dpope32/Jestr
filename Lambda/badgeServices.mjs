@@ -161,7 +161,7 @@ const checkBadgeEligibility = async (userEmail, action) => {
 };
 
 /**
- * Function to award a badge to a user.
+ * Function to award a badge to a user and update holders count.
  * @param {string} userEmail - The email of the user.
  * @param {string} badgeType - The type of badge to award.
  * @returns {Promise<void>}
@@ -199,7 +199,12 @@ const awardBadge = async (userEmail, badgeType) => {
 
     console.log(`Params for PutCommand:`, params);
 
+    // Award the badge to the user
     await docClient.send(new PutCommand(params));
+
+    // Update holders count in BadgeStats table
+    await updateBadgeHoldersCount(badgeType);
+
     console.log(`Badge '${badgeType}' awarded to ${userEmail}`);
   } catch (error) {
     console.error(`Failed to award badge '${badgeType}' to ${userEmail}:`, error);
@@ -208,13 +213,40 @@ const awardBadge = async (userEmail, badgeType) => {
 };
 
 /**
- * Function to retrieve all badges awarded to a user.
+ * Function to update the holders count for a badge.
+ * @param {string} badgeType - The type of the badge.
+ * @returns {Promise<void>}
+ */
+const updateBadgeHoldersCount = async (badgeType) => {
+  const params = {
+    TableName: "BadgeStats",
+    Key: { BadgeType: badgeType },
+    UpdateExpression: "SET HoldersCount = if_not_exists(HoldersCount, :start) + :inc",
+    ExpressionAttributeValues: {
+      ":inc": 1,
+      ":start": 0,
+    },
+    ReturnValues: "UPDATED_NEW",
+  };
+
+  try {
+    await docClient.send(new UpdateCommand(params));
+    console.log(`Updated holders count for badge '${badgeType}'`);
+  } catch (error) {
+    console.error(`Failed to update holders count for badge '${badgeType}':`, error);
+    throw error;
+  }
+};
+
+
+/**
+ * Function to retrieve all badges awarded to a user with holders count.
  * @param {string} userEmail - The email of the user.
  * @returns {Promise<Array>} - Array of badge items.
  */
 const getUserBadges = async (userEmail) => {
   const params = {
-    TableName: "UserBadges_v2", // Use the new table name with composite key
+    TableName: "UserBadges_v2",
     KeyConditionExpression: "Email = :email",
     ExpressionAttributeValues: { ":email": userEmail },
   };
@@ -223,10 +255,38 @@ const getUserBadges = async (userEmail) => {
 
   try {
     const { Items } = await docClient.send(new QueryCommand(params));
+
+    // Fetch holders count for each badge
+    for (const item of Items) {
+      const holdersCount = await getBadgeHoldersCount(item.BadgeType);
+      item.HoldersCount = holdersCount;
+    }
+
     return Items;
   } catch (error) {
     console.error(`Failed to get user badges for ${userEmail}:`, error);
     throw error;
+  }
+};
+
+/**
+ * Function to get the holders count for a badge.
+ * @param {string} badgeType - The type of the badge.
+ * @returns {Promise<number>} - Number of holders.
+ */
+const getBadgeHoldersCount = async (badgeType) => {
+  const params = {
+    TableName: "BadgeStats",
+    Key: { BadgeType: badgeType },
+    ProjectionExpression: "HoldersCount",
+  };
+
+  try {
+    const { Item } = await docClient.send(new GetCommand(params));
+    return Item?.HoldersCount || 0;
+  } catch (error) {
+    console.error(`Failed to get holders count for badge '${badgeType}':`, error);
+    return 0;
   }
 };
 

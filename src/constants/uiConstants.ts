@@ -1,3 +1,5 @@
+import { Badge } from '../stores/badgeStore';
+
 export const TERMS_OF_SERVICE = `
 **Terms of Service**
   
@@ -163,3 +165,39 @@ export const faqs = [
       answer: "Visit the profile of the user you want to block/unblock, tap the three dots menu, and select 'Block' or 'Unblock'. You can manage your block list in Settings > Privacy > Blocked Accounts."
     }
   ];
+
+export const allBadges: Badge[] = [
+  {
+    id: 'memeLiker',
+    type: 'memeLiker',
+    title: 'Meme Liker',
+    description: 'Liked 100 memes',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'socialButterfly',
+    type: 'socialButterfly',
+    title: 'Social Butterfly',
+    description: 'Made 50 friends',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'memeMaster',
+    type: 'memeMaster',
+    title: 'Meme Master',
+    description: 'Uploaded 200 memes',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'trendSetter',
+    type: 'trendSetter',
+    title: 'Trend Setter',
+    description: 'Started a viral trend',
+    earned: false,
+    progress: 0,
+  },
+  // Add more badges as needed
+];

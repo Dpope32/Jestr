@@ -1,18 +1,18 @@
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
-import {Alert} from 'react-native';
+import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {User} from '../types/types';
-import {signUp,signOut,resetPassword,getCurrentUser,fetchAuthSession,signIn,confirmResetPassword} from '@aws-amplify/auth';
+import { User } from '../types/types';
+import { signUp, signOut, resetPassword, getCurrentUser, fetchAuthSession, signIn, confirmResetPassword } from '@aws-amplify/auth';
 
-import {useUserStore} from '../stores/userStore';
-import {removeToken} from '../stores/secureStore';
+import { useUserStore } from '../stores/userStore';
+import { removeToken } from '../stores/secureStore';
 import * as SecureStore from 'expo-secure-store';
-import {fetchUserDetails} from './userService';
+import { fetchUserDetails } from './userService';
 //import * as Google from 'expo-auth-session/providers/google';
-import {AuthNavProp} from '../navigation/NavTypes/AuthStackTypes';
-
+import { AuthNavProp } from '../navigation/NavTypes/AuthStackTypes';
 import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 
 export const checkAuthStatus = async () => {
   try {
@@ -25,7 +25,12 @@ export const checkAuthStatus = async () => {
 
 export const registerDevice = async (userID: string) => {
   try {
-    // Request permissions if not already granted
+
+    if (!Device.isDevice) {
+      console.log('Skipping device registration on emulator');
+      return;
+    }
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -45,6 +50,7 @@ export const registerDevice = async (userID: string) => {
     // Get the Expo Push Token
     const tokenData = await Notifications.getExpoPushTokenAsync();
     const expoPushToken = tokenData.data;
+    await AsyncStorage.setItem('expoPushToken', expoPushToken);
 
     // Send the token to your backend
     const response = await fetch(

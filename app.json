@@ -3,12 +3,14 @@
     "name": "JestrMobile",
     "slug": "jestrmobile",
     "splash": {
-    "backgroundColor": "#1C1C1C",
-    "resizeMode": "contain"
+      "backgroundColor": "#1C1C1C",
+      "resizeMode": "contain"
     },
     "owner": "deedaw22",
-    "version": "1.0.0",
-    "assetBundlePatterns": ["**/*"],
+    "version": "1.0.3",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "package": "com.jestrmobile.app",
       "permissions": [
@@ -21,8 +23,6 @@
         "WRITE_MEDIA_AUDIO",
         "CAMERA",
         "RECORD_AUDIO",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
         "BLUETOOTH_SCAN",
         "BLUETOOTH_ADVERTISE",
         "BLUETOOTH_CONNECT",
@@ -38,21 +38,10 @@
         "USE_FACIAL_RECOGNITION"
       ]
     },
-    "ios": {
-      "bundleIdentifier": "com.jestrmobile.app",
-      "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "The app accesses your photos to let you share them with your friends.",
-        "NSPhotoLibraryAddUsageDescription": "Allow app to save photos.",
-        "NSLocationWhenInUseUsageDescription": "We need access to your location to provide better service.",
-        "NSLocationAlwaysUsageDescription": "We need access to your location for tracking purposes.",
-        "NSContactsUsageDescription": "The app accesses your contacts to let you connect with your friends.",
-        "NSFaceIDUsageDescription": "This app uses Face ID to enhance the user experience."
-      }
-    },
     "icon": "./assets/icon.png",
     "extra": {
       "eas": {
-        "projectId": "project-id"
+        "projectId": "67868a97-b51c-4a57-a602-7fb4eb32563b"
       }
     },
     "plugins": [
@@ -77,7 +66,9 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#ffffff",
-          "sounds": ["./assets/notification_sound.wav"],
+          "sounds": [
+            "./assets/notification_sound.wav"
+          ],
           "androidMode": "default",
           "androidCollapsedTitle": "#{unread_notifications} new notifications",
           "iosDisplayInForeground": true
@@ -85,6 +76,20 @@
       ],
       "expo-secure-store",
       "expo-tracking-transparency"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.jestrmobile.app",
+      "buildNumber": "3", 
+      "excludedModules": ["Amplify", "AmplifyCore", "AmplifyAnalytics", "AmplifyAPI", "AmplifyDataStore", "AmplifyStorage"]
+    },
+    "hooks": {
+      "postInstall": "npx pod-install && cd ios && pod install"
+    },
+    "podspecRepos": [
+      {
+        "name": "trunk",
+        "url": "https://cdn.cocoapods.org/"
+      }
     ]
   }
 }
