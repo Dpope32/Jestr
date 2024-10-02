@@ -1,0 +1,79 @@
+This is the "Backend" 
+Lambda functions hosted on AWS, communicating with the frontend through API Gateway.
+Cognito -> API Gateway -> Lambda Functions -> DynamoDB / Redis -> S3 
+
+******* indicates files that must be included in the zip file when uploading to AWS **********
+
+--Lambda
+    --accountServices.mjs
+        -updateUserProfile
+        -deleteAccount
+        -uploadToS3
+        -resendConfirmationCode
+        -forgotPassword
+        -confirmForgotPassword
+        -updateProfileImage
+        -updateFeedback
+        -getFeedback
+        -getAllFeedback
+        -updatePassword
+    --adminServices.mjs
+        -getTotalMemes
+        -getPopularMemes
+        -deleteMeme
+        -removeDownloadedMeme
+        -getTotalUsers
+        -getUserGrowthRate
+        -getDAU
+    --dataProcessor.mjs
+        -fetchMemes
+        -getLikeStatus
+        -requestDataArchive
+        -recordMemeView
+    --dynamoManagement.mjs
+        -fetchLikedMemes
+        -fetchDownloadedMemes
+        -fetchViewHistory
+        -getAllUsers
+    --memeProcessor.mjs
+        -shareMeme
+        -getPresignedUrl
+        -uploadMeme
+        -getUserMemes
+    --memeManagement
+        --updateMemeReaction
+        --sendNotification
+        --getComments
+        --postComment
+        --updateCommentReaction
+    --socialInteraction.mjs
+        -sendMessage
+        -getMessages
+        -getConversations
+    --userDetails.mjs
+        -updateBio
+        -completeProfile
+        -getUser
+    --userManagement.mjs
+        -updateUserProfile
+        -deleteAccount
+        -uploadToS3
+        -resendConfirmationCode
+        -forgotPassword
+        -confirmForgotPassword
+        -updateProfileImage
+        -updateFeedback
+        -getFeedback
+        -getAllFeedback
+        -updatePassword
+    --package.json ***********
+    --package-lock.json ***********
+    --node_modules ***********
+    --Extras
+        --addStatusAttribute.json
+        --addStatusAttribute.js
+        --adminAnalytics.mjs
+        --check_invalid_media.js
+        --directory.txt
+        --processMemes.py
+        --update_meme_captions.py

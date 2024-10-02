@@ -5,7 +5,7 @@ import { COLORS } from '../../theme/theme';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   scrollContainer: {
     flexGrow: 1,
