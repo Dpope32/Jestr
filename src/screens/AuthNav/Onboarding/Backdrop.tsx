@@ -5,6 +5,8 @@ import {slides} from './componentData';
 interface BackdropProps {
   scrollX: Animated.Value;
   windowWidth: number;
+  windowHeight: number;
+  pointerEvents: string;
 }
 
 const Backdrop: React.FC<BackdropProps> = ({scrollX, windowWidth}) => {

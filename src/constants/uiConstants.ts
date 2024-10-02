@@ -199,5 +199,55 @@ export const allBadges: Badge[] = [
     earned: false,
     progress: 0,
   },
-  // Add more badges as needed
+  {
+    id: 'commentator',
+    type: 'commentator',
+    title: 'Commentator',
+    description: 'Commented on 100 memes',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'memeCreator',
+    type: 'memeCreator',
+    title: 'Meme Creator',
+    description: 'Created 50 original memes',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'viralStar',
+    type: 'viralStar',
+    title: 'Viral Star',
+    description: 'Achieved 1,000 views on a meme',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'insightfulUser',
+    type: 'insightfulUser',
+    title: 'Insightful User',
+    description: 'Received 100 likes on comments',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'memeExplorer',
+    type: 'memeExplorer',
+    title: 'Meme Explorer',
+    description: 'Browsed 500 memes',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'communityChampion',
+    type: 'communityChampion',
+    title: 'Community Champion',
+    description: 'Participated in 10 discussions',
+    earned: false,
+    progress: 0,
+  }
 ];
+
+export const DEFAULT_PROFILE_PIC_URL =
+  'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg';

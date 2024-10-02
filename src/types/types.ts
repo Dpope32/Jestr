@@ -1,8 +1,9 @@
 // src/types/types.ts
-import {View} from 'react-native';
-import {ViewToken} from 'react-native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {Animated} from 'react-native';
+
+import { View } from 'react-native';
+import { ViewToken } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Animated } from 'react-native';
 
 export type LandingPageNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -15,7 +16,7 @@ export interface User {
   profilePic: string | ProfileImage | null;
   headerPic: string | ProfileImage | null;
   displayName: string;
-  CreationDate?: string | undefined;
+  CreationDate?: string;
   followersCount: number;
   followingCount: number;
   Bio?: string;
@@ -69,11 +70,11 @@ export type RootStackParamList = {
   LandingPage: undefined;
   Onboarding: undefined;
   Feed: { userEmail: string };
-  Settings: {email: string};
-  MemeUploadScreen: {user: any};
-  CompleteProfileScreen: {email: string};
-  Inbox: {user: any};
-  ConfirmSignUp: {email: string};
+  Settings: { email: string };
+  MemeUploadScreen: { user: any };
+  CompleteProfileScreen: { email: string };
+  Inbox: { user: any };
+  ConfirmSignUp: { email: string };
   AdminPage: undefined;
   Conversations: {
     localUser: any;
@@ -165,7 +166,7 @@ export type MediaPlayerProps = {
   };
   onLikeStatusChange: (
     memeID: string,
-    status: {liked: boolean; doubleLiked: boolean},
+    status: { liked: boolean; doubleLiked: boolean },
     newLikeCount: number,
   ) => void;
   liked: boolean;
@@ -176,7 +177,7 @@ export type MediaPlayerProps = {
   isCommentFeedVisible: boolean;
   numOfComments?: number;
   onMemeViewed: (memeID: string) => void;
-}
+};
 
 export type ProfilePanelProps = {
   isVisible: boolean;
@@ -190,7 +191,6 @@ export type ProfilePanelProps = {
   user: User | null;
   navigation: any;
 };
-
 
 export interface IconsAndContentProps {
   memeUser: any;
@@ -222,11 +222,24 @@ export interface IconsAndContentProps {
   numOfComments: number;
 }
 
+export type MemeShareContent = {
+  type: "meme_share";
+  memeID: string;
+  message: string;
+};
+
+export type MessageContent = string | MemeShareContent;
+
+export type LastMessage = {
+  Content: MessageContent;
+  Timestamp: string;
+};
+
 export type Message = {
   MessageID: string;
   SenderID: string;
   ReceiverID: string;
-  Content: string;
+  Content: MessageContent;
   Timestamp: string;
   Status: 'sent' | 'delivered' | 'read';
   ConversationID: string;
@@ -241,12 +254,9 @@ export interface Conversation {
   userEmail: string;
   username: string;
   profilePicUrl: string | ProfileImage | null;
-  lastMessage: {
-    Content: string;
-    Timestamp: string;
-  };
+  lastMessage: LastMessage;
   timestamp: string;
-  messages: any[];
+  messages: Message[];
   UnreadCount: number;
   LastReadMessageID: string;
   partnerUser: {
@@ -277,5 +287,4 @@ export type MemeListProps = {
     isLoadingMore: boolean;
     numOfComments: number;
     handleMemeViewed: (memeId: string) => Promise<void>;
-  };
-  
+};

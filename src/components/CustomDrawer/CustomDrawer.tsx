@@ -35,11 +35,6 @@ const drawerItems = [
     icon: faCog,
     navigateTo: 'Settings' as keyof AppNavParamList,
   },
-  {
-    label: 'Notifications',
-    icon: faBell,
-    navigateTo: 'Notifications' as keyof AppNavParamList,
-  },
 ];
 
 const CustomDrawer = (props: DrawerContentComponentProps) => {

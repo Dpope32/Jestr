@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export type BadgeType = 'memeLiker' | 'socialButterfly' | 'memeMaster' | 'trendSetter';
+import { BadgeType } from '../screens/AppNav/Badges/Badges.types';
 
 export interface Badge {
   id: string;

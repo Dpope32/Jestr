@@ -13,13 +13,13 @@ import Profile from '../screens/AppNav/Profile/Profile';
 import Badges from '../screens/AppNav/Badges/Badges'
 import Settings from '../screens/AppNav/Settings/Settings';
 import Notifications from '../screens/AppNav/Notifications';
-// import {getToken} from '../stores/secureStore';
+import AdminPage from '../screens/AppNav/AdminPage';
 
 const Drawer = createDrawerNavigator<AppNavParamList>();
 
 const AppNavigator = () => {
   const username = useUserStore(state => state.username);
-  console.log('AppNavigator - username:', username);
+  //console.log('AppNavigator - username:', username);
 
   const screenOptions = {
     headerShown: false,
@@ -43,8 +43,9 @@ const AppNavigator = () => {
       screenOptions={screenOptions}>
       <Drawer.Screen name="Home" component={BottomTabNav} />
       <Drawer.Screen name="Profile" component={Profile} />
-      <Drawer.Screen name="Badges" component={Badges} />
       <Drawer.Screen name="Settings" component={Settings} />
+      <Drawer.Screen name="AdminPage" component={AdminPage} />
+      <Drawer.Screen name="Badges" component={Badges} />
       <Drawer.Screen name="Notifications" component={Notifications} />
     </Drawer.Navigator>
   );

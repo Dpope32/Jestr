@@ -1,24 +1,31 @@
-import React, {useState, useRef, useEffect} from 'react';
-import {View, Text, ViewToken} from 'react-native';
-import {TouchableOpacity, Animated, useWindowDimensions} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {LinearGradient} from 'expo-linear-gradient';
+import React, { useState, useRef, useEffect, memo } from 'react';
+import {
+  View,
+  Text,
+  ViewToken,
+  Animated,
+  useWindowDimensions,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LottieView from 'lottie-react-native';
 
-import {styles, slides, Slide} from './componentData';
-import {AuthNavProp} from '../../../navigation/NavTypes/AuthStackTypes';
+import { styles as baseStyles } from './styles';
+import { slides, Slide } from './componentData';
+import { AuthNavProp } from '../../../navigation/NavTypes/AuthStackTypes';
 import Backdrop from './Backdrop';
 import Particles from '../../../components/Particles/Particles';
 import Pagination from './Pagination';
-import {useUserStore} from '../../../stores/userStore';
+import { useUserStore } from '../../../stores/userStore';
 
-const OnboardingScreen = () => {
+const OnboardingScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<AuthNavProp>();
-  const setIsFirstLaunch = useUserStore(state => state.setIsFirstLaunch);
+  const setIsFirstLaunch = useUserStore((state) => state.setIsFirstLaunch);
 
-  const {width: windowWidth, height: windowHeight} = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   const slideRef = useRef<Animated.FlatList | null>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -37,15 +44,15 @@ const OnboardingScreen = () => {
   }, []);
 
   const viewableItemsChanged = useRef(
-    ({viewableItems}: {viewableItems: ViewToken[]}) => {
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       const index = viewableItems[0]?.index;
       if (index != null && index !== currentIndex) {
         setCurrentIndex(index);
       }
-    },
+    }
   ).current;
 
-  const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
+  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
   const scrollToNext = () => {
     if (currentIndex < slides.length - 1) {
@@ -54,43 +61,51 @@ const OnboardingScreen = () => {
         animated: true,
       });
     } else {
-      // has completed the onboarding slides
       setIsFirstLaunch(false);
       navigation.navigate('LandingPage');
     }
   };
 
-  const renderItem = ({item, index}: {item: Slide; index: number}) => {
-    const inputRange = [
-      (index - 1) * windowWidth,
-      index * windowWidth,
-      (index + 1) * windowWidth,
-    ];
-    const scale = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.8, 1, 0.8],
-      extrapolate: 'clamp',
-    });
+  const renderItem = ({ item, index }: { item: Slide; index: number }) => {
+    const isCurrentSlide = index === currentIndex;
 
     return (
-      <Animated.View
-        style={[styles.slide, {width: windowWidth, transform: [{scale}]}]}>
-        <LottieView
-          source={item.animation}
-          autoPlay
-          loop
-          style={styles.lottieAnimation}
-        />
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.description}>{item.description}</Text>
-      </Animated.View>
+      <View style={[styles.slide, { width: windowWidth }]}>
+        <View style={styles.contentContainer}>
+          {isCurrentSlide && (
+            <LottieView
+              source={item.animation}
+              autoPlay
+              loop
+              style={styles.lottieAnimation}
+            />
+          )}
+          <View style={styles.textContainer}>
+            <Text style={[styles.description, { color: item.textColor }]}>
+              {item.description}
+            </Text>
+          </View>
+        </View>
+      </View>
     );
   };
 
+  const buttonColor = slides[currentIndex].colors[0];
+
   return (
-    <Animated.View style={[styles.container, {opacity: fadeAnim}]}>
-      <Backdrop scrollX={scrollX} windowWidth={windowWidth} />
-      <Particles windowWidth={windowWidth} windowHeight={windowHeight} color={'green'}density={0.1}/>
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+      <Backdrop
+        scrollX={scrollX}
+        windowWidth={windowWidth}
+        windowHeight={windowHeight}
+        pointerEvents="none"
+      />
+      <Particles
+        windowWidth={windowWidth}
+        windowHeight={windowHeight}
+        density={0.02} // Reduced density
+        color={slides[currentIndex].particleColor}
+      />
       <Animated.FlatList
         data={slides}
         renderItem={renderItem}
@@ -98,18 +113,25 @@ const OnboardingScreen = () => {
         showsHorizontalScrollIndicator={false}
         pagingEnabled
         bounces={false}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         onScroll={Animated.event(
-          [{nativeEvent: {contentOffset: {x: scrollX}}}],
-          {useNativeDriver: true},
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: true }
         )}
         scrollEventThrottle={16}
         onViewableItemsChanged={viewableItemsChanged}
         viewabilityConfig={viewConfig}
         ref={slideRef}
+        getItemLayout={(data, index) => ({
+          length: windowWidth,
+          offset: windowWidth * index,
+          index,
+        })}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={1} // Limit rendering
       />
 
-      <View style={[styles.footer, {paddingBottom: insets.bottom + 20}]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <Pagination
           slides={slides}
           scrollX={scrollX}
@@ -117,18 +139,64 @@ const OnboardingScreen = () => {
           slideRef={slideRef}
         />
 
-        <TouchableOpacity style={styles.button} onPress={scrollToNext}>
-          <LinearGradient
-            colors={slides[currentIndex].colors}
-            style={styles.buttonGradient}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}>
-            <Text style={styles.buttonText}>{btnTxt}</Text>
-          </LinearGradient>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: buttonColor }]}
+          onPress={scrollToNext}
+        >
+          <Text style={styles.buttonText}>{btnTxt}</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  ...baseStyles,
+  // Adjusted styles
+  container: {
+    ...baseStyles.container,
+    justifyContent: 'space-between',
+    backgroundColor: '#000', // Dark background for contrast
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 20, // Added padding
+  },
+  lottieAnimation: {
+    width: '80%',
+    height: '40%',
+    marginBottom: 20,
+  },
+  textContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderRadius: 15,
+    padding: 20,
+    width: '90%',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  description: {
+    fontSize: 18,
+    textAlign: 'center',
+    lineHeight: 28,
+    color: '#333',
+  },
+  button: {
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff', // White button for contrast
+  },
+  buttonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 
 export default OnboardingScreen;

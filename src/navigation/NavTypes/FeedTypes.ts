@@ -4,7 +4,6 @@ import {RouteProp} from '@react-navigation/native';
 export type FeedNavParamList = {
   Feed: {userEmail: string};
   CommentFeed: undefined;
-  AdminPage: undefined;
 };
 
 export type FeedNavProp = NativeStackNavigationProp<FeedNavParamList>;

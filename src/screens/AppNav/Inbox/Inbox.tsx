@@ -1,8 +1,10 @@
+// src/screens/AppNav/Inbox/Inbox.tsx
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, Animated, Alert, KeyboardAvoidingView, Platform,} from 'react-native';
+import {  View,  Text,  Image,  TextInput,  TouchableOpacity,  Animated, KeyboardAvoidingView,  Platform,} from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPlus, faBell, faThumbtack } from '@fortawesome/free-solid-svg-icons';
-import { Conversation, User } from '../../../types/types';
+import { Conversation, User, MessageContent } from '../../../types/types';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SwipeListView, RowMap } from 'react-native-swipe-list-view';
 import { useQuery } from '@tanstack/react-query';
@@ -17,10 +19,20 @@ import { useInboxStore } from '../../../stores/inboxStore';
 import { fetchConversations as apiFetchConversations } from '../../../services/socialService';
 import { InboxNavProp } from '../../../navigation/NavTypes/InboxStackTypes';
 import { AppNavProp } from '../../../navigation/NavTypes/RootNavTypes';
-import Toast from 'react-native-toast-message';
+import { BUCKET_NAME } from '../../../services/config';
+import { isMemeShareContent } from '../../../utils/typeGuards';
 
-// Default profile picture URL
-const DEFAULT_PROFILE_PIC_URL = 'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg';
+import {
+  handleThreadClick,
+  handleProfileClick,
+  handleUserSelect,
+  handlePinConversation,
+  handleUnpinConversation,
+  handleDeleteConversation,
+  toggleNewMessageModalHandler,
+} from './inboxHandlers';
+
+import { DEFAULT_PROFILE_PIC_URL } from '../../../constants/uiConstants';
 
 type InboxProps = {};
 
@@ -33,7 +45,6 @@ const Inbox: React.FC<InboxProps> = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const fadeAnim = useState(new Animated.Value(0))[0];
   const [isNewMessageModalVisible, setIsNewMessageModalVisible] = useState(false);
-  const [notifications] = useState<string[]>(['New follower: @Admin']);
 
   const {
     conversations,
@@ -45,7 +56,6 @@ const Inbox: React.FC<InboxProps> = () => {
     pinnedConversations,
   } = useInboxStore();
 
-  // Exclude pinned conversations from the conversations list
   const filteredConversations = conversations.filter(
     (conv) => !pinnedConversations.some((pinnedConv) => pinnedConv.id === conv.id)
   );
@@ -57,7 +67,7 @@ const Inbox: React.FC<InboxProps> = () => {
   } = useQuery({
     queryKey: ['conversations', user.email],
     queryFn: () => apiFetchConversations(user.email),
-    enabled: false, // Disable automatic fetching
+    enabled: false, 
   });
 
   useEffect(() => {
@@ -76,8 +86,7 @@ const Inbox: React.FC<InboxProps> = () => {
           });
           isInitialMount.current = false;
         } else {
-          // Use data from InboxStore for subsequent accesses
-          console.log('Using conversations from InboxStore:', conversations.length);
+          // Optionally handle subsequent focus events
         }
       }
     }, [user.email, refetchConversations, fetchConversations, conversations.length])
@@ -87,7 +96,7 @@ const Inbox: React.FC<InboxProps> = () => {
     <TouchableOpacity
       activeOpacity={1}
       style={styles.rowFront}
-      onPress={() => handleThreadClick(item)}
+      onPress={() => handleThreadClick(item, user, navigation)}
     >
       <Image
         source={{
@@ -105,7 +114,8 @@ const Inbox: React.FC<InboxProps> = () => {
             <FontAwesomeIcon icon={faThumbtack} size={16} color="orange" style={styles.pinIcon} />
           )}
         </View>
-        <Text style={styles.preview}>{item.lastMessage.Content}</Text>
+        {/* Use MessagePreview to handle Content rendering */}
+        <MessagePreview content={item.lastMessage.Content} />
         <Text style={styles.timestamp}>{formatTimestamp(item.lastMessage.Timestamp)}</Text>
       </View>
       {item.UnreadCount > 0 && (
@@ -116,6 +126,25 @@ const Inbox: React.FC<InboxProps> = () => {
     </TouchableOpacity>
   );
 
+  const MessagePreview: React.FC<{ content: MessageContent }> = ({ content }) => {
+    if (typeof content === 'string') {
+      return <Text style={styles.preview}>{content}</Text>;
+    } else if (isMemeShareContent(content)) {
+      return (
+        <>
+          <Text style={styles.preview}>{content.message}</Text>
+          <Image 
+            source={{ uri: `${BUCKET_NAME}/${content.memeID}` }}
+            style={styles.memeThumbnail} 
+            resizeMode="cover" 
+          />
+        </>
+      );
+    } else {
+      return <Text style={styles.preview}>Unknown message type</Text>;
+    }
+  };
+
   const renderHiddenItem = (
     { item }: { item: Conversation },
     rowMap: RowMap<Conversation>
@@ -124,154 +153,29 @@ const Inbox: React.FC<InboxProps> = () => {
       {pinnedConversations.some((conv) => conv.id === item.id) ? (
         <TouchableOpacity
           style={styles.backLeftBtn}
-          onPress={() => handleUnpinConversation(item.id, rowMap)}
+          onPress={() => handleUnpinConversation(item.id, rowMap, unpinConversation)}
         >
           <FontAwesomeIcon icon={faThumbtack} size={24} color="white" />
         </TouchableOpacity>
       ) : (
         <TouchableOpacity
           style={styles.backLeftBtn}
-          onPress={() => handlePinConversation(item.id, rowMap)}
+          onPress={() => handlePinConversation(item.id, rowMap, pinConversation)}
         >
           <FontAwesomeIcon icon={faThumbtack} size={24} color="orange" />
         </TouchableOpacity>
       )}
       <TouchableOpacity
         style={styles.backRightBtn}
-        onPress={() => handleDeleteConversation(item.id, rowMap)}
+        onPress={() => handleDeleteConversation(item.id, rowMap, deleteConversation)}
       >
         <Text style={styles.deleteText}>Delete</Text>
       </TouchableOpacity>
     </View>
   );
 
-  const closeRow = (rowMap: RowMap<Conversation>, rowKey: string) => {
-    if (rowMap[rowKey]) {
-      rowMap[rowKey].closeRow();
-    }
-  };
-
-  const handlePinConversation = (conversationId: string, rowMap: RowMap<Conversation>) => {
-    pinConversation(conversationId);
-    closeRow(rowMap, conversationId);
-    Toast.show({
-      type: 'success',
-      text1: 'Conversation pinned',
-      position: 'top',
-      visibilityTime: 1500,
-      autoHide: true,
-      topOffset: 30,
-      bottomOffset: 40,
-    });
-  };
-
-  const handleUnpinConversation = (conversationId: string, rowMap: RowMap<Conversation>) => {
-    unpinConversation(conversationId);
-    closeRow(rowMap, conversationId);
-    Toast.show({
-      type: 'success',
-      text1: 'Conversation unpinned',
-      position: 'top',
-      visibilityTime: 2000,
-      autoHide: true,
-      topOffset: 30,
-      bottomOffset: 40,
-    });
-  };
-
-  const handleDeleteConversation = (conversationId: string, rowMap: RowMap<Conversation>) => {
-    closeRow(rowMap, conversationId);
-    Alert.alert(
-      'Delete Conversation',
-      'Are you sure you want to delete this conversation?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Yes',
-          onPress: () => {
-            deleteConversation(conversationId);
-            Toast.show({
-              type: 'success',
-              text1: 'Conversation deleted',
-              position: 'bottom',
-              visibilityTime: 2000,
-              autoHide: true,
-              topOffset: 30,
-              bottomOffset: 40,
-            });
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-
   const toggleNewMessageModal = () => {
-    setIsNewMessageModalVisible(!isNewMessageModalVisible);
-  };
-
-  const handleThreadClick = (conversation: Conversation) => {
-    if (!user.email) {
-      console.error('User is not logged in');
-      return;
-    }
-    navigation.navigate('Conversations', {
-      partnerUser: {
-        email: conversation.userEmail,
-        username: conversation.username,
-        profilePic: conversation.profilePicUrl,
-        headerPic: null,
-        displayName: '',
-        CreationDate: '',
-        followersCount: 0,
-        followingCount: 0,
-      },
-      conversation: conversation,
-    });
-  };
-
-  const handleProfileClick = () => {
-    try {
-      drawerNavigation.navigate('Profile');
-    } catch (error) {
-      console.error('Error navigating to Profile from INBOX:', error);
-    }
-  };
-
-  const handleUserSelect = (selectedUser: User) => {
-    if (!user.email) {
-      console.error('User is not logged in');
-      return;
-    }
-
-    toggleNewMessageModal();
-    const conversationID = generateUniqueId();
-    navigation.navigate('Conversations', {
-      partnerUser: selectedUser,
-      conversation: {
-        id: conversationID,
-        ConversationID: conversationID,
-        userEmail: selectedUser.email,
-        username: selectedUser.username,
-        profilePicUrl: selectedUser.profilePic,
-        lastMessage: {
-          Content: '',
-          Timestamp: new Date().toISOString(),
-        },
-        timestamp: new Date().toISOString(),
-        messages: [],
-        UnreadCount: 0,
-        LastReadMessageID: '',
-        partnerUser: {
-          email: selectedUser.email,
-          username: selectedUser.username,
-          profilePic:
-            typeof selectedUser.profilePic === 'string' && selectedUser.profilePic.trim() !== ''
-              ? selectedUser.profilePic
-              : DEFAULT_PROFILE_PIC_URL,
-        },
-      },
-    });
+    toggleNewMessageModalHandler(isNewMessageModalVisible, setIsNewMessageModalVisible);
   };
 
   const SkeletonLoader = () => {
@@ -299,13 +203,13 @@ const Inbox: React.FC<InboxProps> = () => {
       <Animated.View
         style={[
           styles.container,
-          { opacity: fadeAnim, backgroundColor: isDarkMode ? '#000' : '#2E2E2E' },
+          { opacity: fadeAnim, backgroundColor: isDarkMode ? '#000' : '#1E1E1E' },
         ]}
       >
         <View style={styles.header}>
           <Text style={styles.sectionHeaderIn}>Inbox</Text>
           {user && (
-            <TouchableOpacity onPress={handleProfileClick}>
+            <TouchableOpacity onPress={() => handleProfileClick(drawerNavigation)}>
               <Image
                 source={{
                   uri:
@@ -319,28 +223,15 @@ const Inbox: React.FC<InboxProps> = () => {
           )}
         </View>
 
-            <TextInput
-              style={styles.searchBar}
-              placeholder="Search messages"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholderTextColor="#999"
-            />
-            <View style={styles.section}>
-              <Text style={styles.sectionHeader}>Notifications</Text>
-              {notifications.map((notification, index) => (
-                <TouchableOpacity key={index} style={styles.notificationItem}>
-                  <FontAwesomeIcon
-                    icon={faBell}
-                    size={20}
-                    color="#00ff00"
-                    style={styles.notificationIcon}
-                  />
-                  <Text style={styles.notificationText}>{notification}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {isStoreLoading || isServerLoading ? (
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search messages"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor="#999"
+        />
+
+        {isStoreLoading || isServerLoading ? (
           <SkeletonLoader />
         ) : error ? (
           <Text>Error loading conversations</Text>
@@ -385,7 +276,9 @@ const Inbox: React.FC<InboxProps> = () => {
         <NewMessageModal
           isVisible={isNewMessageModalVisible}
           onClose={toggleNewMessageModal}
-          onSelectUser={handleUserSelect}
+          onSelectUser={(selectedUser: User) =>
+            handleUserSelect(selectedUser, user, navigation, toggleNewMessageModal, generateUniqueId)
+          }
           existingConversations={[...conversations, ...pinnedConversations]}
           currentUser={
             user || {
@@ -399,7 +292,7 @@ const Inbox: React.FC<InboxProps> = () => {
               followingCount: 0,
             }
           }
-          allUsers={[]}
+          allUsers={[]} // Populate this appropriately if needed
         />
       </Animated.View>
     </KeyboardAvoidingView>

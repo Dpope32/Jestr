@@ -1,109 +1,112 @@
-// Notification Screen inside the Profile Panel Drawer, considering turning into a component rather than a screen
-
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, Platform } from 'react-native';
-import { useNotificationStore, Notification } from '../../../stores/notificationStore';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../../../theme/ThemeContext'; 
+import { useTheme } from '../../../theme/ThemeContext';
 import { BottomNavProp } from '../../../navigation/NavTypes/BottomTabsTypes';
-import Particles from '../../../components/Particles/Particles';
-import { COLORS, SPACING } from '../../../theme/theme';
+import { COLORS, FONTS } from '../../../theme/theme';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowLeft, faBell } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { useNotificationStore, Notification } from '../../../stores/notificationStore';
 import { LinearGradient } from 'expo-linear-gradient';
-import { usePushNotifications } from './usePushNotification';
+import Particles from '../../../components/Particles/Particles';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
 const NotificationsScreen = () => {
   const navigation = useNavigation<BottomNavProp>();
-  const notificationStore = useNotificationStore();
-  const notifications = notificationStore.notifications; 
-  const { colors, isDarkMode } = useTheme();
-  const { expoPushToken, notification } = usePushNotifications();
-  const data = JSON.stringify(notification, undefined, 2);
-  console.log('expoPushToken:', expoPushToken);
+  const { isDarkMode } = useTheme();
+  const { notifications, markAllAsRead } = useNotificationStore();
+  const [newNotifications, setNewNotifications] = useState<Notification[]>([]);
+  const [oldNotifications, setOldNotifications] = useState<Notification[]>([]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      markAllAsRead();
+    }, 3000);
 
-  const renderNotification = ({ item }: { item: Notification }) => (
-    <TouchableOpacity
-      onPress={() => handleNotificationPress(item)}
-      style={[styles.notificationItem]}
-      accessible
-      accessibilityLabel={`Notification: ${item.title}`}
-    >
-      <View style={styles.notificationHeader}>
-        <Text style={[styles.notificationTitle, { color: colors.text }]}>{item.title}</Text>
-        {!item.read && (
-          <View style={styles.unreadIndicator} />
-        )}
-      </View>
-      <Text style={{ color: colors.text }}>{item.message}</Text>
-      <Text style={[styles.timestamp, { color: colors.textSecondary }]}>
-        {new Date(item.timestamp).toLocaleString()}
-      </Text>
-    </TouchableOpacity>
-  );
+    return () => clearTimeout(timer);
+  }, []);
 
-  const handleNotificationPress = (notification: Notification) => {
-    if (!notification.read) {
-      notificationStore.markAsRead(notification.id);
+  useEffect(() => {
+    setNewNotifications(notifications.filter(n => !n.read));
+    setOldNotifications(notifications.filter(n => n.read));
+  }, [notifications]);
+
+  const getProfilePic = (profilePicUrl: string) => {
+    if (profilePicUrl.startsWith('http')) {
+      return { uri: profilePicUrl };
+    } else {
+      // Dynamically require local images
+      switch (profilePicUrl) {
+        case '1.png':
+          return require('../../../assets/images/1.png');
+        case '2.png':
+          return require('../../../assets/images/2.png');
+        case '3.png':
+          return require('../../../assets/images/3.png');
+        case '4.png':
+          return require('../../../assets/images/4.png');
+        default:
+          return require('../../../assets/images/5.png');
+      }
     }
   };
 
+  const renderNotification = ({ item }: { item: Notification }) => (
+    <TouchableOpacity
+      style={[
+        styles.notificationItem,
+        { backgroundColor: item.read ? 'rgba(255,255,255,0.1)' : 'rgba(29,185,84,0.3)' }
+      ]}
+    >
+      <Image source={getProfilePic(item.profilePicUrl)} style={styles.profilePic} />
+      <View style={styles.notificationContent}>
+        <Text style={styles.notificationText}>{item.message}</Text>
+        <Text style={styles.timestamp}>{item.timestamp}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
-          <LinearGradient
-    colors={['#013026', '#014760', '#107e57', '#a1ce3f', '#39FF14']}
-    style={styles.blurOverlay}
-  >
-      <Particles 
-        windowWidth={windowWidth} 
-        windowHeight={windowHeight} 
-        density={0.05} 
-        color={isDarkMode ? COLORS.particlesDark : COLORS.particlesLight} 
+      <LinearGradient
+        colors={['#013026', '#014760', '#107e57']}
+        style={StyleSheet.absoluteFillObject}
       />
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-            accessible
-            accessibilityLabel="Go Back"
-          >
-            <FontAwesomeIcon
-              icon={faArrowLeft}
-              size={24}
-              color={isDarkMode ? COLORS.white : COLORS.black}
-            />
-          </TouchableOpacity>
-          <Text
-            style={[
-              styles.headerTitle,
-              { color: isDarkMode ? COLORS.white : COLORS.black }
-            ]}
-          >
-            Notifications
-          </Text>
-          <Text>Notification: {data}</Text>
-          <Text>Token: {expoPushToken?.data }</Text>
-          <FontAwesomeIcon icon={faBell} size={24} color={COLORS.primary} />
-          
-        </View>
-        {notifications.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={{ color: colors.text }}>No notifications available.</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={notifications}
-            renderItem={renderNotification}
-            keyExtractor={(item) => item.id.toString()}
-            style={styles.notificationList}
-            contentContainerStyle={styles.listContent}
-            accessibilityLabel="List of notifications"
+      <Particles
+        windowWidth={windowWidth}
+        windowHeight={windowHeight}
+        density={0.005}
+        color="#39FF14"
+      />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <FontAwesomeIcon
+            icon={faArrowLeft}
+            size={24}
+            color={COLORS.white}
           />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Notifications</Text>
+      </View>
+
+      <FlatList
+        data={[
+          { title: 'New', data: newNotifications },
+          { title: 'Earlier', data: oldNotifications },
+        ]}
+        renderItem={({ item }) => (
+          <View>
+            <Text style={styles.sectionTitle}>{item.title}</Text>
+            <FlatList
+              data={item.data}
+              renderItem={renderNotification}
+              keyExtractor={(item) => item.id.toString()}
+            />
+          </View>
         )}
-     </LinearGradient> 
+        keyExtractor={(item, index) => index.toString()}
+      />
     </View>
   );
 };
@@ -111,80 +114,57 @@ const NotificationsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#014760',
-  },
-  particles: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: windowWidth,
-    height: windowHeight - 100,
-    zIndex: -1,
-  },
-  blurOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 1,
-    paddingHorizontal: 0,
-    paddingTop: Platform.OS === 'ios' ? 0 : 0,
-    justifyContent: 'flex-start', 
+    paddingTop: 50,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    backgroundColor: '#1E1E1E',
+    padding: 16,
+    marginBottom: 10,
   },
   backButton: {
-    padding: 10,
+    padding: 8,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    letterSpacing: 1,
+    marginLeft: 16,
+    color: COLORS.white,
+    fontFamily: FONTS.bold,
   },
-  notificationList: {
-    marginTop: 16,
-  },
-  listContent: {
-    paddingBottom: 20,
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    padding: 16,
+    color: COLORS.white,
+    fontFamily: FONTS.semiBold,
   },
   notificationItem: {
-    padding: 16,
-    borderRadius: 10,
-    marginBottom: 12,
-    backgroundColor: 'rgba(30, 30, 30, 0.8)', 
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  notificationHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginBottom: 12,
   },
-  notificationTitle: {
+  profilePic: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 16,
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  notificationText: {
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  unreadIndicator: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: COLORS.error, // Red dot for unread
+    marginBottom: 4,
+    color: COLORS.white,
+    fontFamily: FONTS.regular,
   },
   timestamp: {
     fontSize: 12,
-    marginTop: 4,
-  },
-  emptyContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent', 
-    paddingTop: -100,
-    flexGrow: 1,
+    color: 'rgba(255,255,255,0.7)',
+    fontFamily: FONTS.regular,
   },
 });
 

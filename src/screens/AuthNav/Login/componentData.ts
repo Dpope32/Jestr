@@ -14,6 +14,7 @@ export const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 50,
   },
   contentContainer: {
     width: '85%', 
@@ -29,7 +30,7 @@ export const styles = StyleSheet.create({
     marginVertical: SPACING.sm, 
   },
   inputText: {
-    paddingVertical: 12,
+    paddingVertical: 8,
     paddingHorizontal: 15,
     fontSize: FONT_SIZES.md,
     color: '#fff',
@@ -119,9 +120,13 @@ export const styles = StyleSheet.create({
     marginLeft: 10,
   },
   blurView: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    borderRadius: 20,
+    bottom: 0,
+    zIndex: 1000,
   },
   loadingContainer: {
     flex: 1,

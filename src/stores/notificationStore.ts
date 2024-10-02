@@ -6,12 +6,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Define the structure for individual notifications
 export interface Notification {
-  id: number; // Ensure this is unique for each notification
-  title: string;
+  id: number;
   message: string;
   read: boolean;
-  timestamp: string; // ISO string or any preferred format
-  // Add any other fields as necessary
+  timestamp: string;
+  profilePicUrl: string;
 }
 
 export interface NotificationSettings {
@@ -24,6 +23,13 @@ export interface NotificationSettings {
   newLikeNotif: boolean;
   mentionNotif: boolean;
   dailyDigest: boolean;
+}
+
+interface NotificationStore {
+  notifications: Notification[];
+  addNotification: (notification: Notification) => void;
+  markAsRead: (notificationId: number) => void;
+  markAllAsRead: () => void;
 }
 
 interface NotificationStore extends NotificationSettings {
@@ -48,22 +54,51 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   dailyDigest: false,
 };
 
+const mockNotifications: Notification[] = [
+  {
+    id: 1,
+    message: "John Doe liked your meme",
+    read: false,
+    timestamp: "2h ago",
+    profilePicUrl: "4.png"
+  },
+  {
+    id: 2,
+    message: "Jane Smith commented on your post",
+    read: false,
+    timestamp: "5h ago",
+    profilePicUrl: "3.png"
+  },
+  {
+    id: 3,
+    message: "Mike Johnson started following you",
+    read: true,
+    timestamp: "1d ago",
+    profilePicUrl: "1.png" 
+  },
+  {
+    id: 4,
+    message: "Sarah Brown mentioned you in a comment",
+    read: true,
+    timestamp: "2d ago",
+    profilePicUrl: "2.png"  
+  },
+];
+
+
 export const useNotificationStore = create<NotificationStore>()(
   persist(
     (set) => ({
       ...DEFAULT_SETTINGS,
-      notifications: [], // Initialize with an empty array or default notifications
+      notifications: mockNotifications,
 
-      // Method to set the entire notifications array
       setNotifications: (notifications: Notification[]) => set({ notifications }),
 
-      // Method to add a single notification
       addNotification: (notification: Notification) =>
         set((state) => ({
           notifications: [notification, ...state.notifications],
         })),
 
-      // Method to mark a notification as read
       markAsRead: (notificationId: number) =>
         set((state) => ({
           notifications: state.notifications.map((notif) =>
@@ -71,7 +106,11 @@ export const useNotificationStore = create<NotificationStore>()(
           ),
         })),
 
-      // Existing methods for notification settings
+      markAllAsRead: () =>
+        set((state) => ({
+          notifications: state.notifications.map((notif) => ({ ...notif, read: true })),
+        })),
+
       updateAllSettings: (settings) => {
         set((state) => ({
           ...state,
@@ -91,7 +130,7 @@ export const useNotificationStore = create<NotificationStore>()(
       },
     }),
     {
-      name: 'notification-storage', // Name of the storage item
+      name: 'notification-storage',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

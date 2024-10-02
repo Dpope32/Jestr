@@ -10,7 +10,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.md,
     paddingTop: SPACING.md, 
-    paddingBottom: 0, 
     backgroundColor: 'transparent', 
   },
   keyboardAvoidingView: {
@@ -18,12 +17,14 @@ export const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 50,
   },
   contentContainer: {
     width: '85%',
     maxWidth: 400,
     alignItems: 'center',
     marginTop: SPACING.sm * 5, 
+    flexGrow: 1,
   },
   signupHeader: {
     fontSize: 35, 
@@ -123,20 +124,23 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#000000',
     borderRadius: 4,
-    paddingVertical: 8, // Reduced padding from 10 to 8
-    paddingHorizontal: 10, // Reduced padding from 12 to 10
-    // Removed elevationShadowStyle to eliminate elevation
+    paddingVertical: 8, 
+    paddingHorizontal: 10,
   },
   appleButtonText: {
     color: '#FFFFFF',
-    fontSize: 13, // Reduced font size from 14 to 13
+    fontSize: 13, 
     fontWeight: '500',
-    marginLeft: 8, // Reduced margin from 10 to 8
+    marginLeft: 8,
   },
   blurView: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    borderRadius: 20,
+    bottom: 0,
+    zIndex: 1000,
   },
   loadingContainer: {
     flex: 1,
@@ -145,8 +149,8 @@ export const styles = StyleSheet.create({
   },
   loadingText: {
     color: '#00ff00',
-    marginTop: 8, // Reduced margin from 10 to 8
-    fontSize: FONT_SIZES.md, // Adjusted font size
+    marginTop: 8, 
+    fontSize: FONT_SIZES.md, 
     fontWeight: 'bold',
   },
   socialButtonsRow: {
@@ -154,26 +158,25 @@ export const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '40%', // Reduced width from '50%' to '40%' for a tighter arrangement
-    marginVertical: SPACING.sm, // Reduced margin from SPACING.md to SPACING.sm
+    width: '40%', 
+    marginVertical: SPACING.sm, 
   },
   socialButton: {
-    width: 40, // Reduced width from 50 to 40
-    height: 40, // Reduced height from 50 to 40
-    borderRadius: 20, // Half of the new width and height
+    width: 40, 
+    height: 40, 
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    // Removed elevationShadowStyle to eliminate elevation
   },
   socialButtonIcon: {
-    width: 20, // Reduced width from 24 to 20
-    height: 20, // Reduced height from 24 to 20
+    width: 20, 
+    height: 20, 
     resizeMode: 'contain',
   },
   footerLinksContainer: {
-    width: '85%', // Ensures consistency with contentContainer width
+    width: '85%', 
     alignItems: 'center',
-    marginBottom: 0, // Removed excessive bottom margin
+    marginBottom: 20, 
   },
 });

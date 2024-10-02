@@ -9,14 +9,14 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  TextInput, // Import TextInput for ref typing
-  Alert, // Optional: For user-friendly error messages
+  TextInput,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { styles } from './componentData'; // Ensure correct import
+import { styles } from './componentData';
 import { colorsGradient } from '../LandingPage/componentData';
 import { AuthNavProp } from '../../../navigation/NavTypes/AuthStackTypes';
 import InputField from '../../../components/Input/InputField';
@@ -45,7 +45,6 @@ const LoginScreen = () => {
       await handleLogin(email, password, navigation);
     } catch (error: any) {
       console.log('Error logging in:', error.message);
-      // Optionally, show an alert or a toast message to inform the user
       Alert.alert('Login Error', error.message || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
@@ -72,7 +71,6 @@ const LoginScreen = () => {
               keyboardType="email-address"
               returnKeyType="next"
               onSubmitEditing={() => passwordInputRef.current?.focus()}
-              // Optional: Add accessibilityLabel for better accessibility
               accessibilityLabel="Email Input"
             />
 
@@ -84,8 +82,7 @@ const LoginScreen = () => {
               onChangeText={text => setPassword(text)}
               containerStyle={styles.input}
               returnKeyType="done"
-              onSubmitEditing={Keyboard.dismiss}
-              // Optional: Add accessibilityLabel for better accessibility
+              onSubmitEditing={handleLoginAction} // Trigger login on submit
               accessibilityLabel="Password Input"
             />
 
@@ -93,7 +90,7 @@ const LoginScreen = () => {
             <TouchableOpacity
               onPress={handleLoginAction}
               style={styles.button2}
-              disabled={isLoading} // Disable button while loading
+              disabled={isLoading}
               accessibilityLabel="Login Button"
               accessibilityRole="button"
             >
@@ -127,6 +124,8 @@ const LoginScreen = () => {
             {/* SOCIAL LOGIN BUTTONS */}
             <SocialLoginBtns />
             <SocialBtnsRow />
+
+            {/* FOOTER LINKS */}
             <AuthFooterLinks />
           </View>
 

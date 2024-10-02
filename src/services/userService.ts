@@ -358,7 +358,7 @@ export const getAllUsers = async (): Promise<User[]> => {
     }
 
     const responseText = await response.text();
-    //console.log('Raw response:', responseText);
+    console.log('Raw response:', responseText);
 
     let data;
     try {
@@ -368,13 +368,15 @@ export const getAllUsers = async (): Promise<User[]> => {
       throw new Error('Invalid JSON response');
     }
 
-    if (!data.data || !Array.isArray(data.data)) {
+    console.log('Parsed data:', data);
+
+    if (!data.data || !data.data.users || !Array.isArray(data.data.users)) {
       console.error('Unexpected response structure:', data);
       throw new Error('Unexpected response structure');
     }
 
-    return data.data.map((user: any) => ({
-      email: user.email,
+    return data.data.users.map((user: any) => ({
+      email: user.email || '',
       username: user.username || '',
       profilePic: user.profilePic || '',
     }));

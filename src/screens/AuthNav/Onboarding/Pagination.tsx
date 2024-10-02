@@ -1,6 +1,7 @@
 import React from 'react';
 import {Animated, View, TouchableOpacity} from 'react-native';
-import {Slide, styles} from './componentData';
+import {Slide} from './componentData';
+import {styles} from './styles';
 
 interface PaginationProps {
   slides: Slide[];

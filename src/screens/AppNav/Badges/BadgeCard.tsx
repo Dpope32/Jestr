@@ -7,11 +7,7 @@ import { COLORS } from '../../../theme/theme';
 import { Badge, useBadgeStore } from '../../../stores/badgeStore';
 import styles from './Badges.styles'; 
 
-type BadgeCardProps = {
-  badge: Badge;
-  badgeImage: any;
-  isDarkMode: boolean;
-};
+type BadgeCardProps = { badge: Badge; badgeImage: any; isDarkMode: boolean;};
 
 const CARD_MARGIN = 15;
 const NUM_COLUMNS = 2;
@@ -129,9 +125,6 @@ const BadgeCard: React.FC<BadgeCardProps> = ({ badge, badgeImage, isDarkMode }) 
               ? new Date(badge.acquiredDate).toLocaleDateString()
               : 'N/A'}
           </Text>
-          {badge.holdersCount !== undefined && (
-            <Text style={styles.badgeDetails}>Holders: {badge.holdersCount}</Text>
-          )}
         </Animated.View>
       </TouchableOpacity>
     </View>

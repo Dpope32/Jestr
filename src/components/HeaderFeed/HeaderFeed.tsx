@@ -1,54 +1,42 @@
 import React, {useState} from 'react';
-import {View, StyleSheet, Text} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {Image, TouchableOpacity, TextInput} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {DrawerActions} from '@react-navigation/native';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faSearch, faCog} from '@fortawesome/free-solid-svg-icons';
-import {widthPercentageToDP as wp,heightPercentageToDP as hp,} from 'react-native-responsive-screen';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image, TextInput } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { DrawerActions } from '@react-navigation/native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faSearch, faBell, faCog } from '@fortawesome/free-solid-svg-icons';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
-import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
-// import {useTheme} from '../../theme/ThemeContext';
-import {FONTS} from '../../theme/theme';
-import {User} from '../../types/types';
-import {useUserStore} from '../../stores/userStore';
+import { AppNavProp } from '../../navigation/NavTypes/RootNavTypes';
+import { FONTS } from '../../theme/theme';
+import { User } from '../../types/types';
+import { useUserStore } from '../../stores/userStore';
+import { useNotificationStore } from '../../stores/notificationStore';
 
 const HeaderFeed = () => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<FeedNavProp>();
-
-  // const {isDarkMode} = useTheme();
-
+  const navigation = useNavigation<AppNavProp>();
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [selectedTab, setSelectedTab] = useState('Flow');
+  const user = useUserStore(state => state as User);
+  const isAdmin = useUserStore(state => state.isAdmin);
+  const notificationCount = useNotificationStore(state => state.notifications.filter(n => !n.read).length);
 
   const handleTabClick = (tab: string) => {
     setSelectedTab(tab);
   };
 
-  const user = useUserStore(state => state as User);
-  const isAdmin = useUserStore(state => state.isAdmin);
-
-  console.log('HeaderFeed - isAdmin:', isAdmin);
-
-  // const bgdColDark = isDarkMode ? '#000' : '#1C1C1C';
-
   const imgSrc = user.profilePic
     ? {uri: user.profilePic}
     : require('../../assets/images/Jestr.jpg');
 
+  const handleNotificationPress = () => { navigation.navigate('Notifications');};
+
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          top: insets.top,
-        },
-      ]}>
+    <View style={[styles.container, {top: insets.top}]}>
       <View style={styles.firstRow}>
-        {/*  PROFILE PICTURE */}
         {!isSearchActive && (
           <TouchableOpacity
             onPress={() => {
@@ -59,7 +47,6 @@ const HeaderFeed = () => {
           </TouchableOpacity>
         )}
 
-        {/* LOGO  */}
         {!isSearchActive && (
           <Image
             source={require('../../assets/images/Jestr.jpg')}
@@ -79,13 +66,7 @@ const HeaderFeed = () => {
           </TouchableOpacity>
         )}
 
-        {/* == TODO: NEEDS REFACTORING to mitigate when search input appears */}
-        {/* SEARCH  */}
-        <View
-          style={[
-            styles.searchContainer,
-            isSearchActive && styles.searchContainerActive,
-          ]}>
+        <View style={[styles.searchContainer, isSearchActive && styles.searchContainerActive]}>
           {isSearchActive && (
             <TextInput
               style={styles.searchInput}
@@ -109,17 +90,22 @@ const HeaderFeed = () => {
             />
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity onPress={handleNotificationPress} style={styles.notificationContainer}>
+          <FontAwesomeIcon icon={faBell} size={wp('5%')} style={styles.notificationIcon} />
+          {notificationCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{notificationCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
-      {/* TABS CONTAINER */}
+
       <View style={styles.tabsContainer}>
         <TouchableOpacity
           style={[styles.tab, selectedTab === 'Flow' && styles.activeTab]}
           onPress={() => handleTabClick('Flow')}>
-          <Text
-            style={[
-              styles.tabText,
-              selectedTab === 'Flow' && styles.activeTabText,
-            ]}>
+          <Text style={[styles.tabText, selectedTab === 'Flow' && styles.activeTabText]}>
             Flow
           </Text>
         </TouchableOpacity>
@@ -127,11 +113,7 @@ const HeaderFeed = () => {
         <TouchableOpacity
           style={[styles.tab, selectedTab === 'Following' && styles.activeTab]}
           onPress={() => handleTabClick('Following')}>
-          <Text
-            style={[
-              styles.tabText,
-              selectedTab === 'Following' && styles.activeTabText,
-            ]}>
+          <Text style={[styles.tabText, selectedTab === 'Following' && styles.activeTabText]}>
             Following
           </Text>
         </TouchableOpacity>
@@ -234,6 +216,29 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: '#fff',
+  },
+  notificationContainer: {
+    marginLeft: wp('2%'),
+    padding: wp('2%'),
+  },
+  notificationIcon: {
+    color: '#fff',
+  },
+  badge: {
+    position: 'absolute',
+    right: -5,
+    top: -5,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 

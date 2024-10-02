@@ -1,5 +1,17 @@
+// src/screens/AuthNav/Signup/SignUpScreen.tsx
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Platform, ActivityIndicator, Keyboard, TouchableWithoutFeedback, Alert, TextInput, KeyboardAvoidingView, } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+  ActivityIndicator,
+  Keyboard,
+  TouchableWithoutFeedback,
+  Alert,
+  TextInput,
+  KeyboardAvoidingView,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -89,7 +101,7 @@ const SignUpScreen = () => {
               containerStyle={styles.input}
               inputStyle={styles.inputText}
               returnKeyType="done"
-              onSubmitEditing={handleSignupAction}
+              onSubmitEditing={handleSignupAction} // Trigger sign up on submit
               accessibilityLabel="Confirm Password Input"
             />
 
@@ -97,15 +109,6 @@ const SignUpScreen = () => {
             {password !== confirmPassword && confirmPassword !== '' && (
               <Text style={styles.errorMessage}>Passwords do not match!</Text>
             )}
-
-            {/* TERMS AGREEMENT */}
-            <View style={styles.termsContainer}>
-              <Text style={styles.termsText}>
-                I agree with{' '}
-                <Text style={styles.termsHighlight}>terms of service</Text>, and{' '}
-                <Text style={styles.termsHighlight}>privacy policy</Text>
-              </Text>
-            </View>
 
             {/* SIGN UP BUTTON */}
             <TouchableOpacity
