@@ -2,9 +2,8 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../../../theme/ThemeContext';
-import { fetchComments } from '../../../services/socialService';
+import { fetchComments } from '../../../services/commentServices';
 import styles from './Feed.styles';
-import CommentFeed from '../../../components/Modals/CommentFeed';
 import MemeList from '../../../components/MediaPlayer/Logic/MemeList';
 import { getToken } from '../../../stores/secureStore';
 import { useUserStore, isEmptyUserState } from '../../../stores/userStore';
@@ -23,18 +22,20 @@ const Feed: React.FC = React.memo(() => {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [currCommentsLength, setCurrCommentsLength] = useState(0);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [initialMemesData, setInitialMemesData] = useState<
-    InfiniteData<FetchMemesResult> | undefined
-  >(undefined);
+  const [initialMemesData, setInitialMemesData] = useState< InfiniteData<FetchMemesResult> | undefined>(undefined);
   const [isCacheLoaded, setIsCacheLoaded] = useState(false);
   const userEmail = userStore.email;
-
+  const setIsFirstLongLaunch = useUserStore((state) => state.setIsFirstLongLaunch);
+  const isFirstLongLaunch = useUserStore(state => state.isFirstLongLaunch);
+  
   useFocusEffect(
     useCallback(() => {
       const loadUserData = async () => {
         const token = await getToken('accessToken');
         console.log('Loaded token:', token);
         setAccessToken(token);
+        setIsFirstLongLaunch(false);
+        console.log('isFirstLongLaunch in AuthStackNav:', isFirstLongLaunch);
         if (token && userStore.email && isEmptyUserState(userStore)) {
           const userDetails = await fetchUserDetails(userStore.email, token);
           useUserStore.getState().setUserDetails(userDetails);
@@ -183,21 +184,10 @@ const Feed: React.FC = React.memo(() => {
     <View
       style={[
         styles.container,
-        { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' },
+        { backgroundColor: isDarkMode ? '#000' : '#1E1E1E' },
       ]}
     >
       {memoizedMemeList}
-      {isCommentFeedVisible && memes[currentMediaIndex] && (
-        <CommentFeed
-          memeID={memes[currentMediaIndex].memeID}
-          mediaIndex={currentMediaIndex}
-          profilePicUrl={userStore.profilePic || ''}
-          user={userStore}
-          isCommentFeedVisible={isCommentFeedVisible}
-          toggleCommentFeed={toggleCommentFeed}
-          updateCommentCount={updateCommentCount}
-        />
-      )}
     </View>
   );
 });

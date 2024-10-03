@@ -5,7 +5,7 @@ import { faLock } from '@fortawesome/free-solid-svg-icons';
 import * as Progress from 'react-native-progress';
 import { COLORS } from '../../../theme/theme';
 import { Badge, useBadgeStore } from '../../../stores/badgeStore';
-import styles from './Badges.styles'; 
+import { getStyles } from './Badges.styles'; 
 
 type BadgeCardProps = { badge: Badge; badgeImage: any; isDarkMode: boolean;};
 
@@ -16,6 +16,7 @@ const CARD_WIDTH = (SCREEN_WIDTH - (NUM_COLUMNS + 1) * CARD_MARGIN) / NUM_COLUMN
 const PROGRESS_BAR_WIDTH = CARD_WIDTH - 30;
 
 const BadgeCard: React.FC<BadgeCardProps> = ({ badge, badgeImage, isDarkMode }) => {
+  const styles = getStyles(isDarkMode);
   const setPinnedBadge = useBadgeStore((state) => state.setPinnedBadge);
   const flipAnim = useRef(new Animated.Value(0)).current;
   const [isFront, setIsFront] = useState(true);

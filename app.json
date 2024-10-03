@@ -7,7 +7,7 @@
       "resizeMode": "contain"
     },
     "owner": "deedaw22",
-    "version": "1.0.3",
+    "version": "1.0.7",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -79,7 +79,7 @@
     ],
     "ios": {
       "bundleIdentifier": "com.jestrmobile.app",
-      "buildNumber": "3", 
+      "buildNumber": "7", 
       "excludedModules": ["Amplify", "AmplifyCore", "AmplifyAnalytics", "AmplifyAPI", "AmplifyDataStore", "AmplifyStorage"]
     },
     "hooks": {

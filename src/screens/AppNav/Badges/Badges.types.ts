@@ -37,7 +37,7 @@ export const badgeImages: { [key in BadgeType]: any } = {
 };
 
 // Import badge images
-import memeLikerImg from '../../../assets/images/s.png';
+import memeLikerImg from '../../../assets/images/9.png';
 import socialButterflyImg from '../../../assets/images/socialButterfly.png';
 import memeMasterImg from '../../../assets/images/2.png';
 import trendSetterImg from '../../../assets/images/1.png';

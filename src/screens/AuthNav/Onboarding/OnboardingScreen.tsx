@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, memo } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,11 @@ import {
   Animated,
   useWindowDimensions,
   TouchableOpacity,
-  StyleSheet,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LottieView from 'lottie-react-native';
+import Color from 'color';
 
 import { styles as baseStyles } from './styles';
 import { slides, Slide } from './componentData';
@@ -19,6 +19,7 @@ import Backdrop from './Backdrop';
 import Particles from '../../../components/Particles/Particles';
 import Pagination from './Pagination';
 import { useUserStore } from '../../../stores/userStore';
+import { styles } from './styles';
 
 const OnboardingScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -31,7 +32,9 @@ const OnboardingScreen: React.FC = () => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  const [hasVisitedFirstSlide, setHasVisitedFirstSlide] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const descriptionOpacities = useRef(slides.map(() => new Animated.Value(0))).current;
 
   const btnTxt = currentIndex === slides.length - 1 ? "LET'S MEME" : 'Next';
 
@@ -43,16 +46,39 @@ const OnboardingScreen: React.FC = () => {
     }).start();
   }, []);
 
-  const viewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      const index = viewableItems[0]?.index;
-      if (index != null && index !== currentIndex) {
-        setCurrentIndex(index);
-      }
-    }
-  ).current;
+  useEffect(() => {
+    // Reset opacity for all slides
+    descriptionOpacities.forEach((opacity, index) => {
+      opacity.setValue(index === currentIndex ? 0 : 0);
+    });
 
-  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
+    // Animate the description for the current slide
+    Animated.timing(descriptionOpacities[currentIndex], {
+      toValue: 1,
+      duration: 1000,
+      delay: currentIndex === 0 && !hasVisitedFirstSlide ? 3000 : 100,
+      useNativeDriver: true,
+    }).start();
+
+    if (currentIndex === 0) {
+      setHasVisitedFirstSlide(true);
+    }
+  }, [currentIndex]);
+
+  const viewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      console.log('Viewable Items:', viewableItems);
+      if (viewableItems.length > 0) {
+        const index = viewableItems[0].index;
+        if (index != null && index !== currentIndex) {
+          setCurrentIndex(index);
+        }
+      }
+    },
+    [currentIndex]
+  );
+
+  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 30 }).current;
 
   const scrollToNext = () => {
     if (currentIndex < slides.length - 1) {
@@ -66,31 +92,62 @@ const OnboardingScreen: React.FC = () => {
     }
   };
 
+  const renderStyledText = (text: string, textColor: string, buttonColor: string, highlightWords: string[] = []) => {
+    const words = text.split(' ');
+    return words.map((word, index) => {
+      const isHighlighted = highlightWords.some(hw => word.toLowerCase().includes(hw.toLowerCase()));
+      return (
+        <Text
+          key={index}
+          style={[
+            styles.description,
+            { color: textColor },
+            isHighlighted && {
+              color: Color(buttonColor).isDark() ? '#FFFFFF' : '#000000',
+              fontWeight: 'bold',
+              textShadowColor: buttonColor,
+              textShadowOffset: { width: 1, height: 1 },
+              textShadowRadius: 1,
+              borderRadius: 4,
+              paddingHorizontal: 4,
+              marginHorizontal: 1,
+            }
+          ]}
+        >
+          {word}{' '}
+        </Text>
+      );
+    });
+  };
+
   const renderItem = ({ item, index }: { item: Slide; index: number }) => {
-    const isCurrentSlide = index === currentIndex;
+    const buttonColor = Color(item.colors[0]).darken(0.2).hex();
 
     return (
       <View style={[styles.slide, { width: windowWidth }]}>
         <View style={styles.contentContainer}>
-          {isCurrentSlide && (
-            <LottieView
-              source={item.animation}
-              autoPlay
-              loop
-              style={styles.lottieAnimation}
-            />
-          )}
-          <View style={styles.textContainer}>
-            <Text style={[styles.description, { color: item.textColor }]}>
-              {item.description}
-            </Text>
-          </View>
+          <LottieView
+            source={item.animation}
+            autoPlay
+            loop
+            style={styles.lottieAnimation}
+          />
+          <Animated.View
+            style={[
+              styles.textContainer,
+              { opacity: descriptionOpacities[index] },
+            ]}
+          >
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+              {renderStyledText(item.description, item.textColor, buttonColor, item.highlightWords)}
+            </View>
+          </Animated.View>
         </View>
       </View>
     );
   };
 
-  const buttonColor = slides[currentIndex].colors[0];
+  const buttonColor = Color(slides[currentIndex].colors[0]).lighten(0.2).hex();
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
@@ -103,7 +160,7 @@ const OnboardingScreen: React.FC = () => {
       <Particles
         windowWidth={windowWidth}
         windowHeight={windowHeight}
-        density={0.02} // Reduced density
+        density={0.02}
         color={slides[currentIndex].particleColor}
       />
       <Animated.FlatList
@@ -127,10 +184,9 @@ const OnboardingScreen: React.FC = () => {
           offset: windowWidth * index,
           index,
         })}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={1} // Limit rendering
+        removeClippedSubviews={false} // Changed from true to false
+        maxToRenderPerBatch={2} // Increased from 1 to 2
       />
-
       <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <Pagination
           slides={slides}
@@ -143,60 +199,11 @@ const OnboardingScreen: React.FC = () => {
           style={[styles.button, { backgroundColor: buttonColor }]}
           onPress={scrollToNext}
         >
-          <Text style={styles.buttonText}>{btnTxt}</Text>
+          <Text style={[styles.buttonText, { color: slides[currentIndex].textColor }]}>{btnTxt}</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  ...baseStyles,
-  // Adjusted styles
-  container: {
-    ...baseStyles.container,
-    justifyContent: 'space-between',
-    backgroundColor: '#000', // Dark background for contrast
-  },
-  contentContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: 20, // Added padding
-  },
-  lottieAnimation: {
-    width: '80%',
-    height: '40%',
-    marginBottom: 20,
-  },
-  textContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-    borderRadius: 15,
-    padding: 20,
-    width: '90%',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  description: {
-    fontSize: 18,
-    textAlign: 'center',
-    lineHeight: 28,
-    color: '#333',
-  },
-  button: {
-    borderRadius: 25,
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff', // White button for contrast
-  },
-  buttonText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 export default OnboardingScreen;

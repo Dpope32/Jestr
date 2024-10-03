@@ -6,7 +6,9 @@ import { Meme, ProfileImage } from '../types/types';
 
 export interface UserState {
   isFirstLaunch: boolean;
+  isFirstLongLaunch: boolean;
   setIsFirstLaunch: (isFirstLaunch: boolean) => void;
+  setIsFirstLongLaunch: (isFirstLongLaunch: boolean) => void;
   resetUserState: () => void;
   email: string;
   username: string;
@@ -41,6 +43,8 @@ export const useUserStore = create(
   persist(
     immer<UserState>((set) => ({
       isFirstLaunch: true,
+      isFirstLongLaunch: true,
+      setIsFirstLongLaunch: isFirstLongLaunch => set({isFirstLongLaunch}),
       setIsFirstLaunch: isFirstLaunch => set({isFirstLaunch}),
       bio: '',
       username: '',

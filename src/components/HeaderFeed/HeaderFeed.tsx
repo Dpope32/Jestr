@@ -1,9 +1,7 @@
-import React, {useState} from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, Image, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Image, TextInput } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { DrawerActions } from '@react-navigation/native';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faSearch, faBell, faCog } from '@fortawesome/free-solid-svg-icons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -29,82 +27,97 @@ const HeaderFeed = () => {
   };
 
   const imgSrc = user.profilePic
-    ? {uri: user.profilePic}
+    ? { uri: user.profilePic }
     : require('../../assets/images/Jestr.jpg');
 
-  const handleNotificationPress = () => { navigation.navigate('Notifications');};
+  const handleNotificationPress = () => {
+    navigation.navigate('Notifications');
+  };
 
   return (
-    <View style={[styles.container, {top: insets.top}]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.firstRow}>
-        {!isSearchActive && (
+        {/* Left Container */}
+        <View style={styles.leftContainer}>
           <TouchableOpacity
             onPress={() => {
               navigation.dispatch(DrawerActions.toggleDrawer());
             }}
-            style={styles.profileContainer}>
+            style={styles.profileContainer}
+          >
             <Image source={imgSrc} style={styles.profilePic} />
           </TouchableOpacity>
-        )}
-
-        {!isSearchActive && (
-          <Image
-            source={require('../../assets/images/Jestr.jpg')}
-            style={styles.logo}
-          />
-        )}
-
-        {isAdmin && !isSearchActive && (
-          <TouchableOpacity
-            style={styles.adminIconContainer}
-            onPress={() => navigation.navigate('AdminPage')}>
-            <FontAwesomeIcon
-              icon={faCog}
-              size={wp('5%')}
-              style={styles.adminIcon}
-            />
-          </TouchableOpacity>
-        )}
-
-        <View style={[styles.searchContainer, isSearchActive && styles.searchContainerActive]}>
-          {isSearchActive && (
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search"
-              placeholderTextColor="#888"
-              value={searchText}
-              onChangeText={setSearchText}
-              autoFocus={true}
-              onBlur={() => setIsSearchActive(false)}
-            />
+          {isAdmin && (
+            <TouchableOpacity
+              style={styles.adminIconContainerLeft}
+              onPress={() => navigation.navigate('AdminPage')}
+            >
+              <FontAwesomeIcon
+                icon={faCog}
+                size={wp('5%')}
+                style={styles.adminIcon}
+              />
+            </TouchableOpacity>
           )}
-          <TouchableOpacity
-            style={styles.searchIconContainer}
-            onPress={() => {
-              setIsSearchActive(prev => !prev);
-            }}>
-            <FontAwesomeIcon
-              icon={faSearch}
-              size={wp('5%')}
-              style={styles.searchIcon}
-            />
-          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={handleNotificationPress} style={styles.notificationContainer}>
-          <FontAwesomeIcon icon={faBell} size={wp('5%')} style={styles.notificationIcon} />
-          {notificationCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{notificationCount}</Text>
-            </View>
+        {/* Center Container */}
+        <View style={styles.centerContainer}>
+          {!isSearchActive && (
+            <Image
+              source={require('../../assets/images/Jestr.jpg')}
+              style={styles.logo}
+            />
           )}
-        </TouchableOpacity>
+        </View>
+
+        {/* Right Container */}
+        <View style={styles.rightContainer}>
+          {/* Search Bar */}
+          <View style={[styles.searchContainer, isSearchActive && styles.searchContainerActive]}>
+            {isSearchActive && (
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search"
+                placeholderTextColor="#888"
+                value={searchText}
+                onChangeText={setSearchText}
+                autoFocus={true}
+                onBlur={() => setIsSearchActive(false)}
+              />
+            )}
+            <TouchableOpacity
+              style={styles.searchIconContainer}
+              onPress={() => {
+                setIsSearchActive(prev => !prev);
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faSearch}
+                size={wp('5%')}
+                style={styles.searchIcon}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Notifications */}
+          <TouchableOpacity onPress={handleNotificationPress} style={styles.notificationContainer}>
+            <FontAwesomeIcon icon={faBell} size={wp('5%')} style={styles.notificationIcon} />
+            {notificationCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{notificationCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
+      {/* Tabs */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity
           style={[styles.tab, selectedTab === 'Flow' && styles.activeTab]}
-          onPress={() => handleTabClick('Flow')}>
+          onPress={() => handleTabClick('Flow')}
+        >
           <Text style={[styles.tabText, selectedTab === 'Flow' && styles.activeTabText]}>
             Flow
           </Text>
@@ -112,7 +125,8 @@ const HeaderFeed = () => {
 
         <TouchableOpacity
           style={[styles.tab, selectedTab === 'Following' && styles.activeTab]}
-          onPress={() => handleTabClick('Following')}>
+          onPress={() => handleTabClick('Following')}
+        >
           <Text style={[styles.tabText, selectedTab === 'Following' && styles.activeTabText]}>
             Following
           </Text>
@@ -133,13 +147,27 @@ const styles = StyleSheet.create({
   },
   firstRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
     height: hp('7%'),
+    justifyContent: 'space-between',
+    position: 'relative',
   },
-  txt: {
-    color: 'white',
+  leftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  centerContainer: {
+    position: 'absolute',
+    left: '50%',
+    top: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Shift left by half the logo's width to center it
+    transform: [{ translateX: -wp('10%') }], // Half of logo width (wp('20%') / 2)
+  },
+  rightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   profileContainer: {
     flexDirection: 'column',
@@ -150,7 +178,6 @@ const styles = StyleSheet.create({
     height: wp('10%'),
     borderRadius: wp('5%'),
     marginTop: 4,
-
     borderWidth: 1,
     borderColor: 'yellow',
   },
@@ -161,15 +188,16 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
     alignItems: 'center',
+    marginRight: wp('2%'),
   },
   searchContainerActive: {
     flexGrow: 1,
-    height: '100%',
+    height: '80%',
+    width: '80%',
   },
   searchInput: {
-    height: '100%',
+    height: '80%',
     flex: 1,
     backgroundColor: '#1C1C1C',
     color: '#fff',
@@ -177,48 +205,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('2%'),
     fontFamily: FONTS.regular,
     fontSize: wp('4%'),
-
+    marginRight: wp('2%'),
     borderWidth: 1,
-    borderColor: 'yellow',
+    borderColor: 'white',
   },
   searchIconContainer: {
-    padding: wp('2%'),
+    padding: wp('0.5%'),
   },
   searchIcon: {
     color: '#fff',
   },
-  adminIconContainer: {
-    marginLeft: wp('-5%'),
-    padding: wp('2%'),
-
-    borderWidth: 1,
-    borderColor: 'yellow',
-  },
-  adminIcon: {
-    color: '#fff',
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    paddingTop: 10,
-  },
-  tab: {
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#1bd40b',
-  },
-  tabText: {
-    color: '#888',
-    fontSize: wp('5%'),
-    fontFamily: FONTS.regular,
-  },
-  activeTabText: {
-    color: '#fff',
-  },
   notificationContainer: {
-    marginLeft: wp('2%'),
     padding: wp('2%'),
   },
   notificationIcon: {
@@ -239,6 +236,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  adminIconContainerLeft: {
+    padding: wp('1%'),
+    marginLeft: wp('2%'),
+  },
+  adminIcon: {
+    color: 'yellow',
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  tab: {},
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#1bd40b',
+  },
+  tabText: {
+    color: '#888',
+    fontSize: wp('5%'),
+    fontFamily: FONTS.regular,
+  },
+  activeTabText: {
+    color: '#fff',
   },
 });
 

@@ -17,7 +17,6 @@ interface LongPressModalProps {
   meme: {
     id: string;
     url: string;
-    caption: string;
   };
   onSaveToProfile: () => Promise<void>;
   onShare: () => void;
@@ -256,9 +255,6 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
                     style={styles.memeImage}
                     resizeMode="contain"
                   />
-                  {meme.caption && (
-                    <Text style={styles.caption}>{meme.caption}</Text>
-                  )}
                 </View>
               </TouchableWithoutFeedback>
               <View style={styles.optionsContainer}>{renderOptions()}</View>

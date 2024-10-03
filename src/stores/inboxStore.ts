@@ -1,24 +1,10 @@
+// src/stores/inboxStore.ts
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchConversations as apiFetchConversations } from '../services/socialService';
-import { Conversation, Message } from '../types/types'; 
-
-interface InboxState {
-  conversations: Conversation[];
-  pinnedConversations: Conversation[];
-  notifications: string[];
-  isLoading: boolean;
-  fetchConversations: (userEmail: string) => Promise<void>;
-  pinConversation: (id: string) => void;
-  unpinConversation: (id: string) => void;
-  updateConversationMessages: (conversationId: string, messages: Message[]) => void;
-  getConversationMessages: (conversationId: string) => Message[] | undefined;
-  addMessageToConversation: (conversationId: string, message: Message) => void;
-  addConversation: (conversation: Conversation) => void; // <-- Add this line
-  deleteConversation: (id: string) => void;
-  resetUnreadCount: (conversationId: string) => void;
-}
+import { Conversation, Message, InboxState, ApiConversation } from '../types/messageTypes'; 
 
 export const useInboxStore = create<InboxState>()(
   persist(
@@ -31,7 +17,7 @@ export const useInboxStore = create<InboxState>()(
         set({ isLoading: true });
         try {
           const userConversations = await apiFetchConversations(userEmail);
-          const formattedConversations: Conversation[] = userConversations.map((conv: any) => ({
+          const formattedConversations: Conversation[] = userConversations.map((conv: ApiConversation) => ({
             id: conv.ConversationID,
             ConversationID: conv.ConversationID,
             userEmail: conv.partnerUser.email,
@@ -62,12 +48,14 @@ export const useInboxStore = create<InboxState>()(
           return state;
         });
       },
-      // In your InboxStore
       addConversation: (conversation: Conversation) => {
-        set(state => ({
-          conversations: [...state.conversations, conversation],
-        }));
+        set(state => {
+          const exists = state.conversations.some(conv => conv.id === conversation.id);
+          if (exists) return state;
+          return { conversations: [...state.conversations, conversation] };
+        });
       },
+      
       resetUnreadCount: (conversationId: string) => {
         set((state) => ({
           conversations: state.conversations.map((conv) =>
@@ -112,7 +100,7 @@ export const useInboxStore = create<InboxState>()(
             conv.id === conversationId
               ? {
                   ...conv,
-                  messages: [message, ...(conv.messages || [])],
+                  messages: [...(conv.messages || []), message], // Append the new message
                   lastMessage: message
                 }
               : conv

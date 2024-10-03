@@ -14,6 +14,7 @@ import Badges from '../screens/AppNav/Badges/Badges'
 import Settings from '../screens/AppNav/Settings/Settings';
 import Notifications from '../screens/AppNav/Notifications';
 import AdminPage from '../screens/AppNav/AdminPage';
+import Conversations from '../screens/AppNav/Inbox/Conversations';
 
 const Drawer = createDrawerNavigator<AppNavParamList>();
 
@@ -47,6 +48,7 @@ const AppNavigator = () => {
       <Drawer.Screen name="AdminPage" component={AdminPage} />
       <Drawer.Screen name="Badges" component={Badges} />
       <Drawer.Screen name="Notifications" component={Notifications} />
+      <Drawer.Screen name="Conversations" component={Conversations} />
     </Drawer.Navigator>
   );
 };

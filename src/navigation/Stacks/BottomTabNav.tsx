@@ -21,7 +21,7 @@ type TabNavigationProp = BottomTabNavigationProp<ParamListBase> | StackNavigatio
 
 const BottomTabNav = () => {
   const isTabBarVisible = useTabBarStore(state => state.isTabBarVisible);
-
+  const isCommentModalVisible = useTabBarStore(state => state.isCommentModalVisible);
   const customIcons = { home: faHome, upload: faPlus, inbox: faEnvelope };
   const iconSize = () => Math.floor(Dimensions.get('window').width * 0.07);
 
@@ -84,9 +84,9 @@ const BottomTabNav = () => {
       initialRouteName="FeedStackNav"
       screenOptions={({ route }) => getTabNavigatorOptions(route)}
       tabBar={(props) => {
-        if (!isTabBarVisible) return null;
+        if (!isTabBarVisible || isCommentModalVisible) return null;
         return (
-          <View style={styles.tabBarPropStyle}>
+          <View style={styles.tabBarContainer}>
             <BottomTabBar {...props} />
           </View>
         );
@@ -112,12 +112,15 @@ const BottomTabNav = () => {
 };
 
 const styles = StyleSheet.create({
-  tabBarPropStyle: {
+  tabBarContainer: {
     position: 'absolute',
     left: 0,
     bottom: 0,
     right: 0,
+    backgroundColor: 'transparent',
+    elevation: 0,
     zIndex: 0,
+    paddingBottom: Platform.OS === 'ios' ? 0 : 0, // Account for iPhone X and later
   },
 });
 

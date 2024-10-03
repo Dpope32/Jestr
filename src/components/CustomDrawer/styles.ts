@@ -16,6 +16,7 @@ const styles = StyleSheet.create({
   },
   userInfoContainer: {
     marginTop: 15,
+    paddingVertical: 10,
     alignItems: 'center',
     fontFamily: FONTS.regular,
   },
@@ -62,20 +63,20 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   navItemsCtr: {
-    width: '90%',
+    width: '100%',
     justifyContent: 'center',
     alignSelf: 'center',
-    marginTop: 20,
+    marginTop: 26,
   },
   iconLabel: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: FONTS.regular,
-    marginLeft: -35,
+    marginLeft: -30,
   },
   bottomContainer: {
     position: 'absolute',
-    bottom:  Platform.OS === 'ios' ? 10 : 20,
+    bottom:  25,
     fontFamily: FONTS.regular,
     left: 0,
     right: 0,

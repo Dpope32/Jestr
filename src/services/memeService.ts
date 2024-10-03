@@ -198,6 +198,26 @@ export const useMemes = (
   };
 };
 
+export const fetchDownloadedMemes = async (email: string) => {
+  try {
+    const response = await fetch(`${API_URL}/memes/downloaded`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({operation: 'fetchDownloadedMemes', email}),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch downloaded memes');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching downloaded memes:', error);
+    throw error;
+  }
+};
+
 
 export const getUserMemes = async (
   email: string,
@@ -325,10 +345,7 @@ export const handleShareMeme = async (
     message,
   };
 
-  //    console.log('Share data:', shareData);
-
   try {
-    //   console.log('Initiating share operation...');
     const response = await fetch(
       'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/shareMeme',
       {
@@ -437,26 +454,6 @@ export const getLikeStatus = async (memeID: string, userEmail: string) => {
   } catch (error) {
     console.error('Error getting meme info and like status:', error);
     return null;
-  }
-};
-
-export const fetchDownloadedMemes = async (email: string) => {
-  try {
-    const response = await fetch(`${API_URL}/memes/downloaded`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({operation: 'fetchDownloadedMemes', email}),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch downloaded memes');
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching downloaded memes:', error);
-    throw error;
   }
 };
 

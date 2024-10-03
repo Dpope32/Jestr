@@ -135,19 +135,23 @@ export const useMediaPlayerLogic = ({
   }, [user, memeID, handleDownload, isSaved]);
 
   const onShare = useCallback(
-    async (type: ShareType, username: string, message: string) => {
+    async (type: ShareType, username?: string, message?: string) => {
       if (user && type === 'friend' && username) {
         try {
+          // Provide default values for username and message if they are undefined
+          const validUsername = username ?? 'Anonymous';
+          const validMessage = message ?? '';
+  
           await handleShareMeme(
             memeID,
             user.email,
             user.username,
-            username,
-            message,
+            validUsername,
+            validMessage,
             setShowShareModal,
             setToastMessage,
           );
-          setCounts(prev => ({...prev, shares: prev.shares + 1}));
+          setCounts(prev => ({ ...prev, shares: prev.shares + 1 }));
         } catch (error) {
           console.error('Sharing failed:', error);
           setToastMessage('Failed to share meme.');
@@ -156,6 +160,8 @@ export const useMediaPlayerLogic = ({
     },
     [user, memeID],
   );
+  
+  
 
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);

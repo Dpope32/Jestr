@@ -8,13 +8,13 @@ import {
   ViewStyle,
   TextStyle,
   TouchableOpacity,
-  Keyboard,
+  Dimensions,
   TextInputProps,
   StyleProp,
 } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faEye, faEyeSlash, faLock } from '@fortawesome/free-solid-svg-icons';
-import { COLORS } from '../../theme/theme';
+import { COLORS, SPACING } from '../../theme/theme';
 
 interface InputFieldProps extends TextInputProps {
   label?: string;
@@ -22,6 +22,8 @@ interface InputFieldProps extends TextInputProps {
   labelStyle?: StyleProp<TextStyle> | StyleProp<TextStyle>[];
   inputStyle?: StyleProp<TextStyle> | StyleProp<TextStyle>[];
 }
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const InputField = forwardRef<TextInput, InputFieldProps>(({
   label,
@@ -100,7 +102,7 @@ InputField.displayName = 'InputField'; // For better debugging with forwardRef
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 8,
+    marginVertical: SCREEN_HEIGHT * 0.01,
   },
   label: {
     fontSize: 16,
@@ -117,11 +119,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#1c1c1c',
   },
   input: {
-    flex: 1,
-    paddingHorizontal: 15,
+    width: '100%',
     fontSize: 16,
+    paddingVertical: SCREEN_HEIGHT * 0.01,
+    paddingHorizontal: SCREEN_WIDTH * 0.04,
     color: '#fff', // Changed to white for better readability
-    paddingVertical: 10, // Increased padding for better touch area
   },
   eyeIcon: {
     padding: 10,

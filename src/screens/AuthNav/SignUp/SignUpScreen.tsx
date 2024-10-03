@@ -136,8 +136,8 @@ const SignUpScreen = () => {
             <SocialLoginBtns />
 
             {/* FOOTER LINKS */}
-            <AuthFooterLinks />
           </View>
+          <AuthFooterLinks />
 
           {/* BLURVIEW WHILE LOADING */}
           {isLoading && (

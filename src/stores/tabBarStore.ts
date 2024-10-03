@@ -2,10 +2,14 @@ import {create} from 'zustand';
 
 type TabBarStore = {
   isTabBarVisible: boolean;
-  setTabBarVisibility: (isVisible: boolean) => void;
+  setTabBarVisible: (visible: boolean) => void;
+  isCommentModalVisible: boolean;
+  setCommentModalVisible: (visible: boolean) => void;
 };
 
-export const useTabBarStore = create<TabBarStore>(set => ({
+export const useTabBarStore = create<TabBarStore>((set) => ({
   isTabBarVisible: true,
-  setTabBarVisibility: isVisible => set({isTabBarVisible: isVisible}),
+  setTabBarVisible: (visible) => set({ isTabBarVisible: visible }),
+  isCommentModalVisible: false,
+  setCommentModalVisible: (visible) => set({ isCommentModalVisible: visible }),
 }));

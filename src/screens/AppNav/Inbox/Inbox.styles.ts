@@ -28,14 +28,16 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
+    padding: 2,
   },
   searchBar: {
     backgroundColor: '#2C2C2C',
     borderRadius: 10,
     color: '#FFF',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    marginHorizontal: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginTop: 10,
+    marginHorizontal: 20,
     marginBottom: 12,
     fontSize: 16,
   },
@@ -85,7 +87,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15, 
     padding: 12,
-    backgroundColor: '#2C2C2C',
+    backgroundColor: '#1E1E1E',
     borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -103,7 +105,7 @@ const styles = StyleSheet.create({
     width: 55,
     height: 55,
     borderRadius: 27.5,
-    backgroundColor: '#ddd',
+    backgroundColor: '#4d4c4c',
     marginRight: 12,
   },
   skeletonTextContainer: {
@@ -113,14 +115,14 @@ const styles = StyleSheet.create({
   skeletonText: {
     width: '80%',
     height: 12,
-    backgroundColor: '#ddd',
+    backgroundColor: '#4d4c4c',
     borderRadius: 4,
     marginBottom: 6,
   },
   skeletonTextShort: {
     width: '50%',
     height: 12,
-    backgroundColor: '#ddd',
+    backgroundColor: '#4d4c4c',
     borderRadius: 4,
   },
   // Styles for the conversation items
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#444',
+    borderBottomColor: '#4d4c4c',
     zIndex: 2, // Ensure the front row is above the hidden row
   },
   conversationInfo: {

@@ -2,10 +2,11 @@
 
 import { Alert } from 'react-native';
 import { RowMap } from 'react-native-swipe-list-view';
-import { Conversation, User } from '../../../types/types';
+import { Conversation } from '../../../types/messageTypes';
+import { User } from '../../../types/types';
 import Toast from 'react-native-toast-message';
 import { DEFAULT_PROFILE_PIC_URL } from '../../../constants/uiConstants';
-
+import * as Haptics from 'expo-haptics';
 
 export const handleThreadClick = (
   conversation: Conversation,
@@ -29,6 +30,7 @@ export const handleThreadClick = (
     },
     conversation: conversation,
   });
+  Haptics.selectionAsync(); 
 };
 
 // Handler to navigate to the profile screen
@@ -49,6 +51,7 @@ export const handleUserSelect = (
   navigation: any, // Replace 'any' with your actual navigation type
   toggleNewMessageModal: () => void,
   generateUniqueIdFn: () => string
+  
 ) => {
   if (!user.email) {
     console.error('User is not logged in');
@@ -93,6 +96,7 @@ export const handlePinConversation = (
 ) => {
   pinConversation(conversationId);
   closeRow(rowMap, conversationId);
+  Haptics.selectionAsync(); 
   Toast.show({
     type: 'success',
     text1: 'Conversation pinned',
@@ -112,6 +116,7 @@ export const handleUnpinConversation = (
 ) => {
   unpinConversation(conversationId);
   closeRow(rowMap, conversationId);
+  Haptics.selectionAsync()
   Toast.show({
     type: 'success',
     text1: 'Conversation unpinned',
@@ -139,6 +144,7 @@ export const handleDeleteConversation = (
         text: 'Yes',
         onPress: () => {
           deleteConversation(conversationId);
+          Haptics.selectionAsync(); 
           Toast.show({
             type: 'success',
             text1: 'Conversation deleted',
@@ -165,7 +171,9 @@ const closeRow = (rowMap: RowMap<Conversation>, rowKey: string) => {
 // Handler to toggle the New Message modal
 export const toggleNewMessageModalHandler = (
   isNewMessageModalVisible: boolean,
+  
   setIsNewMessageModalVisible: React.Dispatch<React.SetStateAction<boolean>>
+  
 ) => {
   setIsNewMessageModalVisible(!isNewMessageModalVisible);
 };

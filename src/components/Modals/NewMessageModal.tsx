@@ -8,7 +8,6 @@ import {
   Animated, 
   Image, 
   ImageSourcePropType, 
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
@@ -17,12 +16,13 @@ import {
 } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { User, ProfileImage, Conversation, MessageContent } from '../../types/types'; 
+import { User, ProfileImage } from '../../types/types'; 
+import { Conversation, MessageContent, MemeShareContent } from '../../types/messageTypes';
 import { getAllUsers } from '../../services/userService';
 import { FlashList } from '@shopify/flash-list';
 import createStyles from './ModalStyles/NewMM.styles';
-import { isMemeShareContent } from '../../utils/typeGuards';
 import { DEFAULT_PROFILE_PIC_URL } from '../../constants/uiConstants';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../theme/ThemeContext';
 
 interface NewMessageModalProps {
@@ -32,6 +32,9 @@ interface NewMessageModalProps {
   currentUser: Partial<User>;
   allUsers: User[];
   existingConversations: Conversation[];
+  currentMedia?: string;
+  user: User;
+  navigation: any;
 }
 
 const NewMessageModal: React.FC<NewMessageModalProps> = ({
@@ -50,6 +53,11 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
   const [allUsers, setAllUsers] = useState<User[]>(initialUsers);
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
   const inputRef = useRef<TextInput>(null);
+  const navigation = useNavigation();
+
+  const isMemeShareContent = (content: any): content is MemeShareContent => {
+    return content && typeof content === 'object' && content.type === 'meme_share' && typeof content.memeID === 'string';
+  };
 
   useEffect(() => {
     if (isVisible) {
@@ -105,7 +113,7 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
         return { uri: profilePic.url };
       }
     }
-    return { uri: DEFAULT_PROFILE_PIC_URL};
+    return { uri: DEFAULT_PROFILE_PIC_URL };
   };
 
   const renderUserItem = ({ item }: { item: User }) => {
@@ -118,11 +126,27 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
   
     if (existingConversation && existingConversation.lastMessage) {
       const content = existingConversation.lastMessage.Content;
+  
       if (typeof content === 'string') {
-        messageContent = content;
+        try {
+          const parsedContent = JSON.parse(content);
+          if (isMemeShareContent(parsedContent)) {
+            messageContent = parsedContent.message || "Shared a meme";
+            memeURL = parsedContent.memeID.startsWith('http') 
+              ? parsedContent.memeID 
+              : `https://jestr-bucket.s3.amazonaws.com/${parsedContent.memeID}`;
+          } else {
+            messageContent = content; // It's a plain text message
+          }
+        } catch (e) {
+          console.warn('Failed to parse message content:', e);
+          messageContent = content; // Fallback to displaying the raw string
+        }
       } else if (isMemeShareContent(content)) {
-        messageContent = content.message;
-        memeURL = content.memeID; 
+        messageContent = content.message || "Shared a meme";
+        memeURL = content.memeID.startsWith('http') 
+          ? content.memeID 
+          : `https://jestr-bucket.s3.amazonaws.com/${content.memeID}`;
       }
     }
   
@@ -133,22 +157,25 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
           <View style={{ flex: 1 }}>
             <Text style={styles.username}>{item.username}</Text>
             {existingConversation && (
-              <>
+              <View style={styles.messageContainer}>
                 <Text style={styles.lastMessage}>{messageContent}</Text> 
                 {memeURL && (
                   <Image 
-                    source={getImageSource(memeURL)}
+                    source={{ uri: memeURL }}
                     style={styles.memeThumbnail} 
                     resizeMode="cover" 
                   />
                 )}
-              </>
+              </View>
             )}
           </View>
         </View>
       </TouchableOpacity>
     );
   };
+  
+  
+  
 
   return (
     <Modal
@@ -156,56 +183,58 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
       transparent
       animationType="slide"
     >
-      <SafeAreaView style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDarkMode ? '#1e1e1e' : '#494949' }}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.modalContainer}>
-              <View style={styles.header}>
-                <Text style={styles.headerTitle}>New Chat Message</Text>
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <FontAwesomeIcon icon={faTimes} size={20} color="#1bd40b" />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.searchContainer}>
-                <TextInput
-                  ref={inputRef}
-                  style={styles.searchInput}
-                  placeholder="To: Enter username"
-                  placeholderTextColor="#999"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-              </View>
-              <View style={styles.listContainer}>
-                <FlashList
-                  data={filteredUsers}
-                  renderItem={renderUserItem}
-                  estimatedItemSize={73}
-                  keyboardShouldPersistTaps="handled"
-                  keyExtractor={(item) => item.email}
-                />
-              </View>
-              <View style={styles.suggestionsContainer}>
-                <Text style={styles.suggestionsTitle}>Suggested Users</Text>
-                <View style={styles.horizontalListContainer}>
+              <View style={styles.modalContent}> 
+                <View style={styles.header}>
+                  <Text style={styles.headerTitle}>New Chat Message</Text>
+                  <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                    <FontAwesomeIcon icon={faTimes} size={20} color="#1bd40b" />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.searchContainer}>
+                  <TextInput
+                    ref={inputRef}
+                    style={styles.searchInput}
+                    placeholder="To: Enter username"
+                    placeholderTextColor="#999"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
+                </View>
+                <View style={styles.listContainer}>
                   <FlashList
-                    data={suggestedUsers}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity onPress={() => handleSelectUser(item)} style={styles.suggestionItem}>
-                        <Image source={getImageSource(item.profilePic)} style={styles.suggestionAvatar} />
-                        <Text style={styles.suggestionUsername} numberOfLines={1} ellipsizeMode="tail">
-                          {item.username}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                    estimatedItemSize={85}
-                    horizontal
+                    data={filteredUsers}
+                    renderItem={renderUserItem}
+                    estimatedItemSize={73}
                     keyboardShouldPersistTaps="handled"
                     keyExtractor={(item) => item.email}
                   />
+                </View>
+                <View style={styles.suggestionsContainer}>
+                  <Text style={styles.suggestionsTitle}>Suggested Users</Text>
+                  <View style={styles.horizontalListContainer}>
+                    <FlashList
+                      data={suggestedUsers}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => handleSelectUser(item)} style={styles.suggestionItem}>
+                          <Image source={getImageSource(item.profilePic)} style={styles.suggestionAvatar} />
+                          <Text style={styles.suggestionUsername} numberOfLines={1} ellipsizeMode="tail">
+                            {item.username}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                      estimatedItemSize={85}
+                      horizontal
+                      keyboardShouldPersistTaps="handled"
+                      keyExtractor={(item) => item.email}
+                    />
+                  </View>
                 </View>
               </View>
             </View>
