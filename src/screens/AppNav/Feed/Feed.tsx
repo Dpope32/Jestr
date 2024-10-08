@@ -245,7 +245,7 @@ const Feed: React.FC = () => {
     item: Meme | undefined;
     index: number;
   }) => {
-    console.log('Rendering item:', item);
+    // console.log('Rendering item:', item);
 
     // console.log('Rendering item:', item);
     // if (!item || !item.url) {
@@ -256,7 +256,7 @@ const Feed: React.FC = () => {
       item?.url?.toLowerCase().endsWith('.mp4') || item?.mediaType === 'video';
 
     const mediaSource = {uri: item?.url || ''};
-    console.log('Media Source:', mediaSource);
+    // console.log('Media Source:', mediaSource);
 
     const loadMedia = () => {
       if (isVideo) {

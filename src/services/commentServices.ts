@@ -160,7 +160,7 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
 export const organizeCommentsIntoThreads = (
   flatComments: CommentType[],
 ): CommentType[] => {
-  console.log('Organizing comments into threads...', {flatComments});
+  // console.log('Organizing comments into threads...', {flatComments});
 
   const commentMap = new Map<string, CommentType>();
   const topLevelComments: CommentType[] = [];
@@ -187,7 +187,7 @@ export const organizeCommentsIntoThreads = (
     }
   });
 
-  console.log('Organized Comment Threads:', topLevelComments);
+  // console.log('Organized Comment Threads:', topLevelComments);
   return topLevelComments;
 };
 
