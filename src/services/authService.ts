@@ -3,7 +3,15 @@ import 'react-native-url-polyfill/auto';
 import {Alert} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {User} from '../types/types';
-import {signUp,signOut,resetPassword,getCurrentUser,fetchAuthSession,signIn,confirmResetPassword} from '@aws-amplify/auth';
+import {
+  signUp,
+  signOut,
+  resetPassword,
+  getCurrentUser,
+  fetchAuthSession,
+  signIn,
+  confirmResetPassword,
+} from '@aws-amplify/auth';
 
 import {useUserStore} from '../stores/userStore';
 import {removeToken} from '../stores/secureStore';
@@ -66,8 +74,6 @@ export const handleLogin = async (
         'tpope918@aol.com',
       ].includes(userDetails.email);
 
-      // await AsyncStorage.setItem('isAdmin', JSON.stringify(isAdmin));
-
       useUserStore.getState().setUserDetails({
         email: userDetails.email,
         username: userDetails.username,
@@ -102,7 +108,7 @@ export const handleLogin = async (
   }
 };
 
-export const handleSignOut = async (navigation: AuthNavProp) => {
+export const handleSignOut = async () => {
   try {
     await signOut({global: true});
     await removeToken('accessToken');
@@ -110,9 +116,6 @@ export const handleSignOut = async (navigation: AuthNavProp) => {
     await AsyncStorage.clear();
     useUserStore.getState().resetUserState();
     console.log('Sign out successful');
-    
-    // Navigate to LandingPage
-    navigation.navigate('LandingPage');
   } catch (error) {
     console.error('Error signing out:', error);
   }
@@ -186,8 +189,8 @@ export const handleSignup = async (
         'Account Already Exists',
         "Looks like you already have an account. Try to sign in or click 'Forgot Password'.",
         [
-          { text: 'OK', onPress: () => {} },
-          { text: 'Sign In', onPress: () => navigation.navigate('Login') },
+          {text: 'OK', onPress: () => {}},
+          {text: 'Sign In', onPress: () => navigation.navigate('Login')},
           {
             text: 'Forgot Password',
             onPress: () => {
@@ -196,7 +199,6 @@ export const handleSignup = async (
           },
         ],
       );
-
     } else {
       Alert.alert(
         'Signup Failed',
@@ -209,10 +211,13 @@ export const handleSignup = async (
 export const handleForgotPassword = async (email: string) => {
   try {
     if (!email) {
-      Alert.alert('Error', 'Please enter your email address on the login screen');
+      Alert.alert(
+        'Error',
+        'Please enter your email address on the login screen',
+      );
       return;
     }
-    await resetPassword({ username: email });
+    await resetPassword({username: email});
     Alert.alert('Success', 'Check your email for password reset instructions');
   } catch (error) {
     console.error('Error in forgotPassword:', error);
@@ -220,9 +225,13 @@ export const handleForgotPassword = async (email: string) => {
   }
 };
 
-export const confirmForgotPassword = async (username: string, code: string, newPassword: string): Promise<void> => {
+export const confirmForgotPassword = async (
+  username: string,
+  code: string,
+  newPassword: string,
+): Promise<void> => {
   try {
-    await confirmResetPassword({ username, confirmationCode: code, newPassword });
+    await confirmResetPassword({username, confirmationCode: code, newPassword});
   } catch (error) {
     console.error('Error confirming reset password:', error);
     throw error;
@@ -231,11 +240,18 @@ export const confirmForgotPassword = async (username: string, code: string, newP
 
 export const updatePassword = async (
   username: string,
-  newPassword: string
+  newPassword: string,
 ): Promise<void> => {
   console.log('Updating password for user:', username);
-  console.log('Full request body:', JSON.stringify({operation: 'updatePassword', username: username, newPassword: newPassword}));
-  
+  console.log(
+    'Full request body:',
+    JSON.stringify({
+      operation: 'updatePassword',
+      username: username,
+      newPassword: newPassword,
+    }),
+  );
+
   try {
     await fetch(
       'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updatePassword',
@@ -249,7 +265,7 @@ export const updatePassword = async (
           username: username,
           newPassword: newPassword,
         }),
-      }
+      },
     );
 
     // We're not checking the response status here
@@ -275,17 +291,23 @@ export const resendConfirmationCode = async (username: string) => {
           operation: 'resendConfirmationCode',
           username: username,
         }),
-      }
+      },
     );
 
     const responseData = await response.json();
 
-    if ((response.ok || response.status === 500) && responseData.CodeDeliveryDetails) {
+    if (
+      (response.ok || response.status === 500) &&
+      responseData.CodeDeliveryDetails
+    ) {
       // Treat as success if 500 but CodeDeliveryDetails is present
       console.log('Resend confirmation code response:', responseData);
       return true; // Return success without showing a toast
     } else {
-      console.error('Failed to resend confirmation code, status:', response.status);
+      console.error(
+        'Failed to resend confirmation code, status:',
+        response.status,
+      );
       return false; // Return failure without showing a toast
     }
   } catch (error) {

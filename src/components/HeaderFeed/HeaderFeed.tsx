@@ -6,7 +6,10 @@ import {useNavigation} from '@react-navigation/native';
 import {DrawerActions} from '@react-navigation/native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faSearch, faCog} from '@fortawesome/free-solid-svg-icons';
-import {widthPercentageToDP as wp,heightPercentageToDP as hp,} from 'react-native-responsive-screen';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 
 import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
 // import {useTheme} from '../../theme/ThemeContext';
@@ -31,7 +34,7 @@ const HeaderFeed = () => {
   const user = useUserStore(state => state as User);
   const isAdmin = useUserStore(state => state.isAdmin);
 
-  console.log('HeaderFeed - isAdmin:', isAdmin);
+  // console.log('HeaderFeed - isAdmin:', isAdmin);
 
   // const bgdColDark = isDarkMode ? '#000' : '#1C1C1C';
 
@@ -221,8 +224,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 10,
   },
-  tab: {
-  },
+  tab: {},
   activeTab: {
     borderBottomWidth: 2,
     borderBottomColor: '#1bd40b',

@@ -36,9 +36,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-
-    // borderWidth: 1,
-    // borderColor: 'red',
   },
   innerCtr: {
     flex: 1,

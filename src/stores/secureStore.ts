@@ -1,4 +1,3 @@
-// src/utils/secureStore.ts
 import * as SecureStore from 'expo-secure-store';
 
 export const storeToken = async (key: string, value: string | undefined) => {
@@ -7,7 +6,10 @@ export const storeToken = async (key: string, value: string | undefined) => {
       console.error('Invalid token type:', typeof value);
       return;
     }
-    console.log(`Storing token for key ${key}:`, value.substring(0, 10) + '...');
+    console.log(
+      `Storing token for key ${key}:`,
+      value.substring(0, 10) + '...',
+    );
     await SecureStore.setItemAsync(key, value);
     console.log(`Token stored successfully for key ${key}`);
   } catch (error) {
@@ -18,7 +20,7 @@ export const storeToken = async (key: string, value: string | undefined) => {
 export const getToken = async (key: string) => {
   try {
     const token = await SecureStore.getItemAsync(key);
-    console.log(`Retrieved token for key ${key}:`, token ? token.substring(0, 10) + '...' : 'No token found');
+    // console.log(`Retrieved token for key ${key}:`, token ? token.substring(0, 10) + '...' : 'No token found');
     return token;
   } catch (error) {
     console.error(`Error retrieving the token for key ${key}:`, error);
@@ -39,7 +41,10 @@ export const storeUserIdentifier = async (identifier: string) => {
 export const getUserIdentifier = async () => {
   try {
     const identifier = await SecureStore.getItemAsync('userIdentifier');
-    console.log('Retrieved user identifier:', identifier ? 'Identifier exists' : 'No identifier found');
+    console.log(
+      'Retrieved user identifier:',
+      identifier ? 'Identifier exists' : 'No identifier found',
+    );
     return identifier;
   } catch (error) {
     console.error('Error retrieving user identifier', error);

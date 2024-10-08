@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Meme, ProfileImage } from '../types/types';
+import {create} from 'zustand';
+import {immer} from 'zustand/middleware/immer';
+import {persist, createJSONStorage} from 'zustand/middleware';
+import {Meme, ProfileImage} from '../types/types';
+import zustandMMKVStorage from '../utils/zustandMMKVStorage';
 
 export interface UserState {
   isFirstLaunch: boolean;
@@ -21,8 +21,8 @@ export interface UserState {
   FollowingCount?: number;
   tempPassword: string;
   setTempPassword: (password: string) => void;
-  profilePic: string | ProfileImage | null; 
-  headerPic: string | ProfileImage | null; 
+  profilePic: string | ProfileImage | null;
+  headerPic: string | ProfileImage | null;
   setDarkMode?: (darkMode: boolean) => void;
   setBio?: (bio: string) => void;
   setUserDetails: (details: Partial<UserState>) => void;
@@ -39,7 +39,7 @@ export interface UserState {
 }
 export const useUserStore = create(
   persist(
-    immer<UserState>((set) => ({
+    immer<UserState>(set => ({
       isFirstLaunch: true,
       setIsFirstLaunch: isFirstLaunch => set({isFirstLaunch}),
       bio: '',
@@ -60,14 +60,15 @@ export const useUserStore = create(
         set(state => ({followingCount: Math.max(0, state.followingCount - 1)})),
       creationDate: '',
       tempPassword: '',
-      setTempPassword: (password: string) => set({ tempPassword: password }),
+      setTempPassword: (password: string) => set({tempPassword: password}),
       profilePic: null,
       headerPic: null,
       darkMode: false,
       likesPublic: true,
       setDarkMode: (darkMode: boolean) => set({darkMode}),
       setBio: (bio: string) => set({bio}),
-      setHeaderPic: (headerPic: string | ProfileImage | null) => set({headerPic}),
+      setHeaderPic: (headerPic: string | ProfileImage | null) =>
+        set({headerPic}),
       setProfilePic: (profilePic: string | ProfileImage | null) => {
         // Fallback to a default image if `profilePic` is empty
         if (typeof profilePic === 'string' && !profilePic.trim()) {
@@ -75,44 +76,51 @@ export const useUserStore = create(
         }
         set({profilePic});
       },
-  setUserDetails: (details) =>
-    set((state) => ({
-      ...state,
-      email: details.email ?? state.email,
-      username: details.username ?? state.username,
-      displayName: details.displayName ?? state.displayName,
-      bio: details.bio ?? state.bio,
-      creationDate: details.creationDate ?? details.CreationDate ?? state.creationDate,
-      followersCount: details.FollowersCount ?? details.FollowersCount ?? state.FollowersCount,
-      followingCount: details.followingCount ?? details.FollowingCount ?? state.followingCount,
-      profilePic: details.profilePic || state.profilePic,
-      headerPic: details.headerPic || state.headerPic,
-      darkMode: details.darkMode ?? state.darkMode,
-      isAdmin: details.isAdmin ?? state.isAdmin,
-      userId: details.userId ?? state.userId,
-    })),
+      setUserDetails: details =>
+        set(state => ({
+          ...state,
+          email: details.email ?? state.email,
+          username: details.username ?? state.username,
+          displayName: details.displayName ?? state.displayName,
+          bio: details.bio ?? state.bio,
+          creationDate:
+            details.creationDate ?? details.CreationDate ?? state.creationDate,
+          followersCount:
+            details.FollowersCount ??
+            details.FollowersCount ??
+            state.FollowersCount,
+          followingCount:
+            details.followingCount ??
+            details.FollowingCount ??
+            state.followingCount,
+          profilePic: details.profilePic || state.profilePic,
+          headerPic: details.headerPic || state.headerPic,
+          darkMode: details.darkMode ?? state.darkMode,
+          isAdmin: details.isAdmin ?? state.isAdmin,
+          userId: details.userId ?? state.userId,
+        })),
 
-  resetUserState: () =>
-    set({
-      bio: '',
-      username: '',
-      displayName: '',
-      email: '',
-      followersCount: 0,
-      followingCount: 0,
-      creationDate: '',
-      profilePic: null,
-      darkMode: false,
-      headerPic: null,
-      isAdmin: undefined,
-      userId: undefined,
-    }),
-  })),
-  {
-    name: 'user-storage',
-    storage: createJSONStorage(() => AsyncStorage),
-  }
-)
+      resetUserState: () =>
+        set({
+          bio: '',
+          username: '',
+          displayName: '',
+          email: '',
+          followersCount: 0,
+          followingCount: 0,
+          creationDate: '',
+          profilePic: null,
+          darkMode: false,
+          headerPic: null,
+          isAdmin: undefined,
+          userId: undefined,
+        }),
+    })),
+    {
+      name: 'user-storage',
+      storage: createJSONStorage(() => zustandMMKVStorage),
+    },
+  ),
 );
 
 export const isEmptyUserState = (state: UserState): boolean => {
@@ -128,4 +136,4 @@ export const isEmptyUserState = (state: UserState): boolean => {
     !state.headerPic &&
     !state.userId
   );
-}
+};

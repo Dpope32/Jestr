@@ -8,11 +8,12 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import {Amplify} from 'aws-amplify';
-import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+import {Mutation, Query, QueryClient} from '@tanstack/react-query';
 import {useReactQueryDevTools} from '@dev-plugins/react-query';
 import {PersistQueryClientProvider} from '@tanstack/react-query-persist-client';
-import {createAsyncStoragePersister} from '@tanstack/query-async-storage-persister';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {createMMKVPersister} from './src/utils/mmkvPersister';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // import {Platform} from 'react-native';
 // import axios from 'axios';
 
@@ -34,16 +35,48 @@ Amplify.configure(awsconfig);
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      gcTime: 1000 * 60 * 60 * 24, // 24 hours
+      // * gcTime = duration until inactive queries will be removed from the cache
+      gcTime: 1000 * 60 * 60 * 24,
+      // * staleTime = duration until a query transitions from fresh to stale. As long as the query is fresh, data will always be read from the cache only - no network request will happen
+      //*  If the query is stale (which per default is: instantly), you will still get data from the cache, but a background refetch can happen under certain conditions
       staleTime: 2000,
       retry: 0,
     },
   },
 });
 
-const asyncStoragePersister = createAsyncStoragePersister({
-  storage: AsyncStorage,
-});
+const mmkvPersister = createMMKVPersister();
+
+const persistOptions = {
+  persister: mmkvPersister,
+  dehydrateOptions: {
+    shouldDehydrateQuery: (query: Query) => {
+      const queryKey = query.queryKey;
+      // console.log('queryKey:', queryKey);
+      const queriesToExclude = ['comments'];
+      if (Array.isArray(queryKey) && queriesToExclude.includes(queryKey[0])) {
+        // Do not persist 'queriesToExclude' queries
+        return false;
+      }
+      // Persist other queries
+      return true;
+    },
+    shouldDehydrateMutation: (mutation: Mutation) => {
+      const mutationKey = mutation.options.mutationKey;
+      const mutationsToExclude = ['postComment'];
+
+      if (
+        Array.isArray(mutationKey) &&
+        mutationsToExclude.includes(mutationKey[0])
+      ) {
+        // Do not persist this mutation
+        return false;
+      }
+      // Persist other mutations
+      return true;
+    },
+  },
+};
 
 const App = () => {
   useReactQueryDevTools(queryClient);
@@ -84,13 +117,7 @@ const App = () => {
   return (
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{persister: asyncStoragePersister}}
-      onSuccess={() => {
-    //    console.log('QueryClient persisted successfully!');
-        queryClient.resumePausedMutations().then(() => {
-          queryClient.invalidateQueries();
-        });
-      }}>
+      persistOptions={persistOptions}>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <ThemeProvider>
           <NavigationContainer onReady={() => SplashScreen.hideAsync()}>

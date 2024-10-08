@@ -5,6 +5,7 @@
     "owner": "deedaw22",
     "version": "1.0.0",
     "assetBundlePatterns": ["**/*"],
+    "jsEngine": "hermes",
     "android": {
       "package": "com.jestrmobile.app",
       "permissions": ["MEDIA_LIBRARY", "MEDIA_LIBRARY_WRITE_ONLY"]

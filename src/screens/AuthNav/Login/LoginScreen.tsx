@@ -13,7 +13,7 @@ import AuthFooterLinks from '../../../components/AuthFooterLinks/AuthFooterLinks
 import RainEffect from '../../../components/RainEffect/RainEffect';
 import SocialLoginBtns from '../../../components/SocialLoginBtns/SocialLoginBtns';
 import SocialBtnsRow from '../../../components/SocialLoginBtns/SocialBtnsRow';
-import {handleLogin, handleForgotPassword} from '../../../services/authService';
+import {handleLogin} from '../../../services/authService';
 import ForgotPasswordModal from '../../../components/Modals/ForgotPasswordModal';
 
 const LoginScreen = () => {
@@ -22,7 +22,8 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isForgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false);
+  const [isForgotPasswordModalVisible, setForgotPasswordModalVisible] =
+    useState(false);
 
   const handleLoginAction = async () => {
     setIsLoading(true);

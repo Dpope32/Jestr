@@ -4,7 +4,12 @@ import App from './App';
 import {LogBox} from 'react-native';
 import '@azure/core-asynciterator-polyfill';
 
-LogBox.ignoreLogs(['AsyncStorage has been extracted from react-native core']);
+LogBox.ignoreLogs([
+  'AsyncStorage has been extracted from react-native core',
+  'source.uri should not be an empty string',
+]);
+
+// LogBox.ignoreAllLogs();
 
 // enableScreens();
 

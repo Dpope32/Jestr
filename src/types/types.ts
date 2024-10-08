@@ -62,13 +62,16 @@ export type ShareType =
   | 'twitter'
   | 'email'
   | 'friend'
-  | 'instagram';
+  | 'instagram'
+  | 'facebookMessenger'
+  | 'sms'
+  | 'report';
 
 export type RootStackParamList = {
   Loading: undefined;
   LandingPage: undefined;
   Onboarding: undefined;
-  Feed: { userEmail: string };
+  Feed: {userEmail: string};
   Settings: {email: string};
   MemeUploadScreen: {user: any};
   CompleteProfileScreen: {email: string};
@@ -112,14 +115,15 @@ export type Meme = {
   profilePicUrl: string;
   isFollowed: boolean;
   email: string;
-  liked?: boolean; 
-  doubleLiked?: boolean; 
+  liked?: boolean;
+  doubleLiked?: boolean;
   memeUser?: Partial<User>;
   downloaded?: boolean;
   followStatus?: {
     isFollowing: boolean;
     canFollow: boolean;
   };
+  likedByUser?: boolean;
 };
 
 export type OnViewableItemsChanged = {
@@ -145,7 +149,7 @@ export type MediaPlayerProps = {
   likedIndices?: Set<number>;
   doubleLikedIndices?: Set<number>;
   downloadedIndices?: Set<number>;
-  likeDislikeCounts?: Record<number, { likeCount: number; dislikeCount: number }>;
+  likeDislikeCounts?: Record<number, {likeCount: number; dislikeCount: number}>;
   currentMediaIndex: number;
   user: User | null;
   likeCount: number;
@@ -176,7 +180,7 @@ export type MediaPlayerProps = {
   isCommentFeedVisible: boolean;
   numOfComments?: number;
   onMemeViewed: (memeID: string) => void;
-}
+};
 
 export type ProfilePanelProps = {
   isVisible: boolean;
@@ -190,7 +194,6 @@ export type ProfilePanelProps = {
   user: User | null;
   navigation: any;
 };
-
 
 export interface IconsAndContentProps {
   memeUser: any;
@@ -265,17 +268,35 @@ export interface FeedbackItem {
 }
 
 export type MemeListProps = {
-    memes: Meme[];
-    user: User | null;
-    onEndReached: () => void;
-    toggleCommentFeed: () => void;
-    updateLikeStatus: (memeID: string, status: any, newLikeCount: number) => void;
-    currentMediaIndex: number;
-    setCurrentMediaIndex: (index: number) => void;
-    currentUserId: string | undefined;
-    isCommentFeedVisible: boolean;
-    isLoadingMore: boolean;
-    numOfComments: number;
-    handleMemeViewed: (memeId: string) => Promise<void>;
-  };
-  
+  memes: Meme[];
+  user: User | null;
+  onEndReached: () => void;
+  toggleCommentFeed: () => void;
+  updateLikeStatus: (memeID: string, status: any, newLikeCount: number) => void;
+  currentMediaIndex: number;
+  setCurrentMediaIndex: (index: number) => void;
+  currentUserId: string | undefined;
+  isCommentFeedVisible: boolean;
+  isLoadingMore: boolean;
+  numOfComments: number;
+  handleMemeViewed: (memeId: string) => Promise<void>;
+};
+
+export interface FriendType {
+  username: string;
+  profilePic: string;
+}
+
+export type CommentType = {
+  commentID: string;
+  text: string;
+  username: string;
+  profilePicUrl: string | ProfileImage | null;
+  likesCount: number;
+  dislikesCount: number;
+  timestamp: string;
+  parentCommentID: string | null;
+  email: string;
+  replies: CommentType[];
+  userReaction: 'like' | 'dislike' | null;
+};

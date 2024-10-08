@@ -1,14 +1,31 @@
-import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Image, TouchableWithoutFeedback, Alert, Linking } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faLink, faSave, faShare, faFlag, faUser } from '@fortawesome/free-solid-svg-icons';
+import React, {useEffect} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+  Image,
+  TouchableWithoutFeedback,
+  Alert,
+  Linking,
+} from 'react-native';
+import {BlurView} from 'expo-blur';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {
+  faLink,
+  faSave,
+  faShare,
+  faFlag,
+  faUser,
+} from '@fortawesome/free-solid-svg-icons';
 import Toast from 'react-native-toast-message';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system';
-import { styles } from './LongPress.styles';
+import {styles} from './LongPress.styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface LongPressModalProps {
   isVisible: boolean;
@@ -16,23 +33,10 @@ interface LongPressModalProps {
   meme: {
     id: string;
     url: string;
-    caption: string;
   };
   onSaveToProfile: () => Promise<void>;
   onShare: () => void;
   onReport: () => void;
-  user: any;
-  memeID: string;
-  isSaved: boolean;
-  setIsSaved: React.Dispatch<React.SetStateAction<boolean>>;
-  setCounts: React.Dispatch<
-    React.SetStateAction<{
-      likes: number;
-      downloads: number;
-      shares: number;
-      comments: number;
-    }>
-  >;
 }
 
 export const LongPressModal: React.FC<LongPressModalProps> = ({
@@ -45,21 +49,22 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
 }) => {
   const scale = React.useRef(new Animated.Value(0)).current;
 
-  const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions();
-
-  const ensurePermission = async () => {
-    if (mediaLibraryPermission?.status !== 'granted') {
-      const newPermission = await requestMediaLibraryPermission();
-      if (newPermission.status !== 'granted') {
+  const ensureMediaLibraryPermission = async () => {
+    const mediaPermission = await AsyncStorage.getItem('mediaPermission');
+    if (mediaPermission !== 'granted') {
+      const {status} = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
         Alert.alert(
           'Permission Required',
           'This app needs access to your media library to save images. Please grant permission in your device settings.',
           [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+            {text: 'Cancel', style: 'cancel'},
+            {text: 'Open Settings', onPress: () => Linking.openSettings()},
           ],
         );
         return false;
+      } else {
+        await AsyncStorage.setItem('mediaPermission', 'granted');
       }
     }
     return true;
@@ -100,23 +105,25 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
   const downloadImage = async (url: string): Promise<string | null> => {
     try {
       const fileName = url.substring(url.lastIndexOf('/') + 1);
-   //   console.log('fileName:', fileName);
+      //   console.log('fileName:', fileName);
       // Set the directory to include the 'Memes' subdirectory
       const directoryUri = `${FileSystem.cacheDirectory}Memes/`;
-   //   console.log('directoryUri:', directoryUri);
-  
+      //   console.log('directoryUri:', directoryUri);
+
       // Check if the directory exists
       const dirInfo = await FileSystem.getInfoAsync(directoryUri);
       if (!dirInfo.exists) {
         // Create the directory if it doesn't exist
-        await FileSystem.makeDirectoryAsync(directoryUri, { intermediates: true });
+        await FileSystem.makeDirectoryAsync(directoryUri, {
+          intermediates: true,
+        });
       }
-  
+
       // Construct the file URI
       const fileUri = `${directoryUri}${fileName}`;
-  //    console.log('fileUri:', fileUri);
+      //    console.log('fileUri:', fileUri);
       // Proceed with downloading the image
-      const { uri } = await FileSystem.downloadAsync(url, fileUri);
+      const {uri} = await FileSystem.downloadAsync(url, fileUri);
       return uri;
     } catch (error) {
       console.error('Error downloading file:', error);
@@ -128,28 +135,30 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
       return null;
     }
   };
-  
 
   const saveToGallery = async () => {
     try {
-      const hasPermission = await ensurePermission();
-   //   console.log('Permission:', hasPermission);
+      const hasPermission = await ensureMediaLibraryPermission();
+      //   console.log('Permission:', hasPermission);
       if (!hasPermission) {
         return;
       }
-  
+
       const localUri = await downloadImage(meme.url);
-   //   console.log('Local URI:', localUri);
+      //   console.log('Local URI:', localUri);
       if (localUri) {
         const asset = await MediaLibrary.createAssetAsync(localUri);
-  
+
         // Attempt to create an album named 'Jestr' and add the asset to it
         try {
           await MediaLibrary.createAlbumAsync('Jestr', asset, false);
         } catch (albumError) {
-          console.warn('Could not create album, but image was saved:', albumError);
+          console.warn(
+            'Could not create album, but image was saved:',
+            albumError,
+          );
         }
-  
+
         Toast.show({
           type: 'success',
           text1: 'Image Saved',
@@ -170,11 +179,10 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
       onClose();
     }
   };
-  
 
-  const handleSaveToProfile = () => {
+  const handleSaveToProfile = async () => {
     try {
-      onSaveToProfile();
+      await onSaveToProfile();
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       Toast.show({
         type: 'success',
@@ -182,7 +190,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
         text2: 'Saved image to your gallery inside your profile',
       });
     } catch (error) {
-      console.error('Error updating meme reaction:', error);
+      console.error('Error saving meme to profile:', error);
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -231,7 +239,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
         key={index}
         style={styles.option}
         onPress={option.onPress}>
-        <View style={[styles.iconContainer, { backgroundColor: option.color }]}>
+        <View style={[styles.iconContainer, {backgroundColor: option.color}]}>
           <FontAwesomeIcon icon={option.icon} size={24} color="#fff" />
         </View>
         <Text style={styles.optionText}>{option.text}</Text>
@@ -246,17 +254,14 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={styles.container}>
             <Animated.View
-              style={[styles.modalContainer, { transform: [{ scale }] }]}>
+              style={[styles.modalContainer, {transform: [{scale}]}]}>
               <TouchableWithoutFeedback onPress={onClose}>
                 <View style={styles.memePreview}>
                   <Image
-                    source={{ uri: meme.url }}
+                    source={{uri: meme.url}}
                     style={styles.memeImage}
                     resizeMode="contain"
                   />
-                  {meme.caption && (
-                    <Text style={styles.caption}>{meme.caption}</Text>
-                  )}
                 </View>
               </TouchableWithoutFeedback>
               <View style={styles.optionsContainer}>{renderOptions()}</View>

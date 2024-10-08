@@ -8,6 +8,7 @@ export type InboxNavParamList = {
   Conversations: {
     partnerUser: User;
     conversation: Conversation;
+    currentMedia: string;
   };
 };
 

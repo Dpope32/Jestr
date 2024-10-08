@@ -1,6 +1,7 @@
 import {create} from 'zustand';
 import {persist, createJSONStorage} from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import zustandMMKVStorage from '../utils/zustandMMKVStorage';
 
 export interface NotificationSettings {
   pushEnabled: boolean;
@@ -54,7 +55,7 @@ export const useNotificationStore = create<NotificationStore>()(
     }),
     {
       name: 'notification-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => zustandMMKVStorage),
     },
   ),
 );

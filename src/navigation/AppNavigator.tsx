@@ -18,7 +18,7 @@ const Drawer = createDrawerNavigator<AppNavParamList>();
 
 const AppNavigator = () => {
   const username = useUserStore(state => state.username);
-  console.log('AppNavigator - username:', username);
+  // console.log('AppNavigator - username:', username);
 
   const screenOptions = {
     headerShown: false,
