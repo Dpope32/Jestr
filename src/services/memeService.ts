@@ -530,26 +530,6 @@ export const getLikeStatus = async (memeID: string, userEmail: string) => {
   }
 };
 
-export const fetchDownloadedMemes = async (email: string) => {
-  try {
-    const response = await fetch(`${API_URL}/memes/downloaded`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({operation: 'fetchDownloadedMemes', email}),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch downloaded memes');
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching downloaded memes:', error);
-    throw error;
-  }
-};
-
 // export const updateMemeReaction = async (
 //   memeID: string,
 //   incrementLikes: boolean,

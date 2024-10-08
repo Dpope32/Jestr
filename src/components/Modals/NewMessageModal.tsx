@@ -1,29 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  Modal, 
-  Animated, 
-  Image, 
-  ImageSourcePropType, 
+import React, {useState, useEffect, useRef} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  Animated,
+  Image,
+  ImageSourcePropType,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
-  Keyboard, 
+  Keyboard,
   SafeAreaView,
 } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { User, ProfileImage } from '../../types/types'; 
-import { Conversation, MessageContent, MemeShareContent } from '../../types/messageTypes';
-import { getAllUsers } from '../../services/userService';
-import { FlashList } from '@shopify/flash-list';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faTimes} from '@fortawesome/free-solid-svg-icons';
+import {User, ProfileImage} from '../../types/types';
+import {
+  Conversation,
+  MessageContent,
+  MemeShareContent,
+} from '../../types/messageTypes';
+import {getAllUsers} from '../../services/userService';
+import {FlashList} from '@shopify/flash-list';
 import createStyles from './ModalStyles/NewMM.styles';
-import { DEFAULT_PROFILE_PIC_URL } from '../../constants/uiConstants';
-import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../../theme/ThemeContext';
+import {DEFAULT_PROFILE_PIC_URL} from '../../constants/uiConstants';
+import {useNavigation} from '@react-navigation/native';
+import {useTheme} from '../../theme/ThemeContext';
 
 interface NewMessageModalProps {
   isVisible: boolean;
@@ -32,9 +36,6 @@ interface NewMessageModalProps {
   currentUser: Partial<User>;
   allUsers: User[];
   existingConversations: Conversation[];
-  currentMedia?: string;
-  user: User;
-  navigation: any;
 }
 
 const NewMessageModal: React.FC<NewMessageModalProps> = ({
@@ -45,7 +46,7 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
   allUsers: initialUsers,
   existingConversations,
 }) => {
-  const { isDarkMode } = useTheme();
+  const {isDarkMode} = useTheme();
   const styles = createStyles(isDarkMode);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -56,7 +57,12 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
   const navigation = useNavigation();
 
   const isMemeShareContent = (content: any): content is MemeShareContent => {
-    return content && typeof content === 'object' && content.type === 'meme_share' && typeof content.memeID === 'string';
+    return (
+      content &&
+      typeof content === 'object' &&
+      content.type === 'meme_share' &&
+      typeof content.memeID === 'string'
+    );
   };
 
   useEffect(() => {
@@ -76,10 +82,11 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
   }, [isVisible, modalY]);
 
   useEffect(() => {
-    const filtered = allUsers.filter(user => 
-      typeof user.username === 'string' &&
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      user.email !== currentUser.email
+    const filtered = allUsers.filter(
+      user =>
+        typeof user.username === 'string' &&
+        user.username.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        user.email !== currentUser.email,
     );
     setFilteredUsers(filtered);
   }, [searchQuery, allUsers, currentUser.email]);
@@ -89,12 +96,14 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
       try {
         const users = await getAllUsers();
         setAllUsers(users);
-        setSuggestedUsers(users.filter(user => user.email !== currentUser.email).slice(0, 5));
+        setSuggestedUsers(
+          users.filter(user => user.email !== currentUser.email).slice(0, 5),
+        );
       } catch (error) {
         console.error('Error fetching users:', error);
       }
     };
-  
+
     fetchUsers();
   }, [currentUser.email]);
 
@@ -103,37 +112,47 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
     onClose();
   };
 
-  const getImageSource = (profilePic: string | ProfileImage | null | undefined): ImageSourcePropType => {
+  const getImageSource = (
+    profilePic: string | ProfileImage | null | undefined,
+  ): ImageSourcePropType => {
     if (typeof profilePic === 'string' && profilePic.trim() !== '') {
-      return { uri: profilePic };
+      return {uri: profilePic};
     } else if (typeof profilePic === 'object' && profilePic !== null) {
-      if ('uri' in profilePic && typeof profilePic.uri === 'string' && profilePic.uri.trim() !== '') {
-        return { uri: profilePic.uri };
-      } else if ('url' in profilePic && typeof profilePic.url === 'string' && profilePic.url.trim() !== '') {
-        return { uri: profilePic.url };
+      if (
+        'uri' in profilePic &&
+        typeof profilePic.uri === 'string' &&
+        profilePic.uri.trim() !== ''
+      ) {
+        return {uri: profilePic.uri};
+      } else if (
+        'url' in profilePic &&
+        typeof profilePic.url === 'string' &&
+        profilePic.url.trim() !== ''
+      ) {
+        return {uri: profilePic.url};
       }
     }
-    return { uri: DEFAULT_PROFILE_PIC_URL };
+    return {uri: DEFAULT_PROFILE_PIC_URL};
   };
 
-  const renderUserItem = ({ item }: { item: User }) => {
+  const renderUserItem = ({item}: {item: User}) => {
     const existingConversation = existingConversations.find(
-      conv => conv.userEmail === item.email
+      conv => conv.userEmail === item.email,
     );
-  
-    let messageContent = "No message";
-    let memeURL = "";
-  
+
+    let messageContent = 'No message';
+    let memeURL = '';
+
     if (existingConversation && existingConversation.lastMessage) {
       const content = existingConversation.lastMessage.Content;
-  
+
       if (typeof content === 'string') {
         try {
           const parsedContent = JSON.parse(content);
           if (isMemeShareContent(parsedContent)) {
-            messageContent = parsedContent.message || "Shared a meme";
-            memeURL = parsedContent.memeID.startsWith('http') 
-              ? parsedContent.memeID 
+            messageContent = parsedContent.message || 'Shared a meme';
+            memeURL = parsedContent.memeID.startsWith('http')
+              ? parsedContent.memeID
               : `https://jestr-bucket.s3.amazonaws.com/${parsedContent.memeID}`;
           } else {
             messageContent = content; // It's a plain text message
@@ -143,27 +162,30 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
           messageContent = content; // Fallback to displaying the raw string
         }
       } else if (isMemeShareContent(content)) {
-        messageContent = content.message || "Shared a meme";
-        memeURL = content.memeID.startsWith('http') 
-          ? content.memeID 
+        messageContent = content.message || 'Shared a meme';
+        memeURL = content.memeID.startsWith('http')
+          ? content.memeID
           : `https://jestr-bucket.s3.amazonaws.com/${content.memeID}`;
       }
     }
-  
+
     return (
       <TouchableOpacity onPress={() => handleSelectUser(item)}>
         <View style={styles.userItem}>
-          <Image source={getImageSource(item.profilePic)} style={styles.userAvatar} />
-          <View style={{ flex: 1 }}>
+          <Image
+            source={getImageSource(item.profilePic)}
+            style={styles.userAvatar}
+          />
+          <View style={{flex: 1}}>
             <Text style={styles.username}>{item.username}</Text>
             {existingConversation && (
               <View style={styles.messageContainer}>
-                <Text style={styles.lastMessage}>{messageContent}</Text> 
+                <Text style={styles.lastMessage}>{messageContent}</Text>
                 {memeURL && (
-                  <Image 
-                    source={{ uri: memeURL }}
-                    style={styles.memeThumbnail} 
-                    resizeMode="cover" 
+                  <Image
+                    source={{uri: memeURL}}
+                    style={styles.memeThumbnail}
+                    resizeMode="cover"
                   />
                 )}
               </View>
@@ -173,27 +195,22 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
       </TouchableOpacity>
     );
   };
-  
-  
-  
 
   return (
-    <Modal
-      visible={isVisible}
-      transparent
-      animationType="slide"
-    >
-      <SafeAreaView style={{ flex: 1, backgroundColor: isDarkMode ? '#1e1e1e' : '#494949' }}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
-        >
+    <Modal visible={isVisible} transparent animationType="slide">
+      <SafeAreaView
+        style={{flex: 1, backgroundColor: isDarkMode ? '#1e1e1e' : '#494949'}}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{flex: 1}}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.modalContainer}>
-              <View style={styles.modalContent}> 
+              <View style={styles.modalContent}>
                 <View style={styles.header}>
                   <Text style={styles.headerTitle}>New Chat Message</Text>
-                  <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <TouchableOpacity
+                    onPress={onClose}
+                    style={styles.closeButton}>
                     <FontAwesomeIcon icon={faTimes} size={20} color="#1bd40b" />
                   </TouchableOpacity>
                 </View>
@@ -213,7 +230,7 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
                     renderItem={renderUserItem}
                     estimatedItemSize={73}
                     keyboardShouldPersistTaps="handled"
-                    keyExtractor={(item) => item.email}
+                    keyExtractor={item => item.email}
                   />
                 </View>
                 <View style={styles.suggestionsContainer}>
@@ -221,10 +238,18 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
                   <View style={styles.horizontalListContainer}>
                     <FlashList
                       data={suggestedUsers}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => handleSelectUser(item)} style={styles.suggestionItem}>
-                          <Image source={getImageSource(item.profilePic)} style={styles.suggestionAvatar} />
-                          <Text style={styles.suggestionUsername} numberOfLines={1} ellipsizeMode="tail">
+                      renderItem={({item}) => (
+                        <TouchableOpacity
+                          onPress={() => handleSelectUser(item)}
+                          style={styles.suggestionItem}>
+                          <Image
+                            source={getImageSource(item.profilePic)}
+                            style={styles.suggestionAvatar}
+                          />
+                          <Text
+                            style={styles.suggestionUsername}
+                            numberOfLines={1}
+                            ellipsizeMode="tail">
                             {item.username}
                           </Text>
                         </TouchableOpacity>
@@ -232,7 +257,7 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
                       estimatedItemSize={85}
                       horizontal
                       keyboardShouldPersistTaps="handled"
-                      keyExtractor={(item) => item.email}
+                      keyExtractor={item => item.email}
                     />
                   </View>
                 </View>

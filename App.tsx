@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ErrorBoundary } from 'react-error-boundary';
-import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
-import { activateKeepAwakeAsync } from 'expo-keep-awake';
+import React, {useState, useEffect, useRef} from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {ErrorBoundary} from 'react-error-boundary';
+import {Inter_400Regular, Inter_700Bold} from '@expo-google-fonts/inter';
+import {activateKeepAwakeAsync} from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -11,22 +11,20 @@ import {Amplify} from 'aws-amplify';
 import {Mutation, Query, QueryClient} from '@tanstack/react-query';
 import {useReactQueryDevTools} from '@dev-plugins/react-query';
 import {PersistQueryClientProvider} from '@tanstack/react-query-persist-client';
-import {createMMKVPersister} from './src/utils/mmkvPersister';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// import {Platform} from 'react-native';
-// import axios from 'axios';
 
 import {ThemeProvider} from './src/theme/ThemeContext';
 import CustomToast from './src/components/ToastMessages/CustomToast';
 import AppNavigator from './src/navigation/AppNavigator';
-import ErrorFallback, { LoadingText } from './src/components/ErrorFallback/ErrorFallback';
-import { usePushNotifications } from './src/screens/AppNav/Notifications/usePushNotification';
-const fontz = { Inter_400Regular, Inter_700Bold};
+import ErrorFallback, {
+  LoadingText,
+} from './src/components/ErrorFallback/ErrorFallback';
+import {createMMKVPersister} from './src/utils/mmkvPersister';
+import {usePushNotifications} from './src/screens/AppNav/Notifications/usePushNotification';
+
+const fontz = {Inter_400Regular, Inter_700Bold};
 import awsconfig from './src/aws-exports';
 
 Amplify.configure(awsconfig);
-
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,7 +74,7 @@ const persistOptions = {
 
 const App = () => {
   useReactQueryDevTools(queryClient);
-  usePushNotifications(); 
+  usePushNotifications();
 
   const [isReady, setIsReady] = useState(false);
 
@@ -126,7 +124,5 @@ const App = () => {
     </PersistQueryClientProvider>
   );
 };
-
-
 
 export default App;

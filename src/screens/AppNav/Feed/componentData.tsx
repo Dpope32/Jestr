@@ -12,6 +12,8 @@ import {FONTS} from '../../../theme/theme';
 export const {width: screenWidth, height: screenHeight} =
   Dimensions.get('window');
 
+// console.log('Screen Height:', screenHeight);
+
 export type ViewableItemsType = {
   viewableItems: ViewToken[];
   // changed: ViewToken[];
@@ -75,19 +77,16 @@ const styles = StyleSheet.create({
     // borderColor: 'yellow',
   },
   flatlistStyle: {
-    height: screenHeight,
-    // width: screenWidth,
-    // zIndex: 108740,
-    // borderWidth: 1,
+    flex: 1,
+    // borderWidth: 12,
     // borderColor: 'red',
+    // backgroundColor: 'red',
   },
-  mediaCtr: {
-    // flex: 1,
-    width: screenWidth,
-    height: screenHeight,
-    // zIndex: 108740,
+  contentCtrStyle: {
+    flexGrow: 1,
     // borderWidth: 1,
-    // borderColor: 'red',
+    // borderColor: 'blue',
+    // backgroundColor: 'green',
   },
   loadingContainer: {
     flex: 1,
@@ -103,26 +102,16 @@ const styles = StyleSheet.create({
   video: {
     width: '100%',
     height: '100%',
-
     // borderWidth: 3,
     // borderColor: 'blue',
   },
   imgContainer: {
     width: '100%',
-    height: '100%',
-    // borderWidth: 3,
-    // borderColor: 'red',
+    // height: '100%',
+    // height: screenHeight,
+    // borderWidth: 6,
+    // borderColor: 'yellow',
     // backgroundColor: 'green',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  itemContainer: {
-    width: screenWidth,
-    height: screenHeight,
-  },
-  media: {
-    width: '100%',
-    height: '100%',
   },
   errorContainer: {
     backgroundColor: 'gray',
@@ -135,26 +124,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: screenHeight,
+    color: '#FFF',
   },
   emptyTxt: {
     color: '#FFF',
     fontFamily: FONTS.regular,
     fontSize: 16,
-  },
-  footerContainer: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  overlayContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
   },
 });
 

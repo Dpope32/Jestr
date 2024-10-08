@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, Text, TouchableWithoutFeedback, FlatList} from 'react-native';
 import {TextInput, Modal} from 'react-native';
-import {KeyboardAvoidingView, Keyboard} from 'react-native';
+import {KeyboardAvoidingView, Keyboard, Platform} from 'react-native';
 import {TouchableOpacity, Animated} from 'react-native';
 import {Image, ActivityIndicator} from 'react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -59,7 +59,7 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
     userEmail,
   });
 
-  console.log('comments:', comments);
+  // console.log('comments:', comments);
 
   const renderComment = (comment: CommentType) => (
     <Comment
@@ -100,102 +100,111 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
       transparent={true}
       onRequestClose={() => setIsCommentFeedVisible(false)}>
       {/* Backdrop: Captures presses outside the modal content */}
-      <TouchableWithoutFeedback onPress={handlePressOutside}>
-        {isLoading ? (
-          <View style={styles.activityIndicatorContainer}>
-            <ActivityIndicator style={styles.loader} />
-          </View>
-        ) : (
-          <View style={styles.modalContainer}>
-            <View style={styles.modalOverlay}>
-              {/* Prevent touch events from propagating to the backdrop */}
-              <TouchableWithoutFeedback onPress={() => {}}>
-                <Animated.View
-                  style={[
-                    styles.modalContentWrapper,
-                    {transform: [{translateY: modalY}]},
-                  ]}>
-                  <BlurView
-                    intensity={99}
-                    tint="dark"
-                    style={styles.modalContent}>
-                    <TouchableOpacity
-                      style={styles.closeButton}
-                      onPress={closeModal}>
-                      <FontAwesomeIcon icon={faTimes} size={24} color="#FFF" />
-                    </TouchableOpacity>
-
-                    <Text style={styles.commentCount}>
-                      Comments ({comments.length})
-                    </Text>
-
-                    {isLoading ? (
-                      <Text style={styles.loadingText}>
-                        Loading comments...
-                      </Text>
-                    ) : (
-                      <FlatList
-                        data={comments}
-                        renderItem={({item}) => renderComment(item)}
-                        keyExtractor={item => item.commentID}
-                        contentContainerStyle={styles.commentsContainer}
-                        ListEmptyComponent={
-                          <Text style={{color: '#FFF', textAlign: 'center'}}>
-                            No comments yet. Be the first to comment!
-                          </Text>
-                        }
-                      />
-                    )}
-
-                    <View style={styles.inputContainer}>
-                      {replyingTo && (
-                        <View style={styles.replyingToContainer}>
-                          <Text style={styles.replyingToText}>
-                            Replying to @{replyingToUsername}
-                          </Text>
-                          <TouchableOpacity
-                            onPress={cancelReply}
-                            style={styles.cancelReplyButton}>
-                            <Text style={styles.cancelReplyText}>Cancel</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                    </View>
-
-                    {/* Moved inputWrapper inside modalContent to prevent overlapping */}
-                    <View style={styles.inputWrapper}>
-                      <Image
-                        source={getImageSource(user?.profilePic || '')}
-                        style={styles.profilePic}
-                      />
-                      <TextInput
-                        ref={inputRef}
-                        style={styles.newCommentInput}
-                        placeholder={
-                          replyingTo ? 'Write a reply...' : 'Add a comment...'
-                        }
-                        placeholderTextColor="#AAA"
-                        value={newComment}
-                        onChangeText={setNewComment}
-                        // onSubmitEditing={handleAddComment}
-                      />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{flex: 1}}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+        <TouchableWithoutFeedback onPress={handlePressOutside}>
+          {isLoading ? (
+            <View style={styles.activityIndicatorContainer}>
+              <ActivityIndicator style={styles.loader} />
+            </View>
+          ) : (
+            <View style={styles.modalContainer}>
+              <View style={styles.modalOverlay}>
+                {/* Prevent touch events from propagating to the backdrop */}
+                <TouchableWithoutFeedback onPress={() => {}}>
+                  <Animated.View
+                    style={[
+                      styles.modalContentWrapper,
+                      {transform: [{translateY: modalY}]},
+                    ]}>
+                    <BlurView
+                      intensity={99}
+                      tint="dark"
+                      style={styles.modalContent}>
                       <TouchableOpacity
-                        onPress={handleAddComment}
-                        style={styles.sendButton}>
+                        style={styles.closeButton}
+                        onPress={closeModal}>
                         <FontAwesomeIcon
-                          icon={faArrowUp}
-                          color="white"
+                          icon={faTimes}
                           size={24}
+                          color="#FFF"
                         />
                       </TouchableOpacity>
-                    </View>
-                  </BlurView>
-                </Animated.View>
-              </TouchableWithoutFeedback>
+
+                      <Text style={styles.commentCount}>
+                        Comments ({comments.length})
+                      </Text>
+
+                      {isLoading ? (
+                        <Text style={styles.loadingText}>
+                          Loading comments...
+                        </Text>
+                      ) : (
+                        <FlatList
+                          data={comments}
+                          renderItem={({item}) => renderComment(item)}
+                          keyExtractor={item => item.commentID}
+                          contentContainerStyle={styles.commentsContainer}
+                          ListEmptyComponent={
+                            <Text style={{color: '#FFF', textAlign: 'center'}}>
+                              No comments yet. Be the first to comment!
+                            </Text>
+                          }
+                        />
+                      )}
+
+                      <View style={styles.inputContainer}>
+                        {replyingTo && (
+                          <View style={styles.replyingToContainer}>
+                            <Text style={styles.replyingToText}>
+                              Replying to @{replyingToUsername}
+                            </Text>
+                            <TouchableOpacity
+                              onPress={cancelReply}
+                              style={styles.cancelReplyButton}>
+                              <Text style={styles.cancelReplyText}>Cancel</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Moved inputWrapper inside modalContent to prevent overlapping */}
+                      <View style={styles.inputWrapper}>
+                        <Image
+                          source={getImageSource(user?.profilePic || '')}
+                          style={styles.profilePic}
+                        />
+                        <TextInput
+                          ref={inputRef}
+                          style={styles.newCommentInput}
+                          placeholder={
+                            replyingTo ? 'Write a reply...' : 'Add a comment...'
+                          }
+                          placeholderTextColor="#AAA"
+                          value={newComment}
+                          onChangeText={setNewComment}
+                          // onSubmitEditing={handleAddComment}
+                        />
+                        <TouchableOpacity
+                          onPress={handleAddComment}
+                          style={styles.sendButton}>
+                          <FontAwesomeIcon
+                            icon={faArrowUp}
+                            color="white"
+                            size={24}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </BlurView>
+                  </Animated.View>
+                </TouchableWithoutFeedback>
+              </View>
             </View>
-          </View>
-        )}
-      </TouchableWithoutFeedback>
+          )}
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

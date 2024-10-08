@@ -1,11 +1,12 @@
 import React, {useState, useCallback, useEffect, useRef} from 'react';
-import {View, StyleSheet, TouchableOpacity} from 'react-native';
-import {FlatList, AppState, Animated} from 'react-native';
+import {View, StyleSheet, TouchableOpacity, Text} from 'react-native';
+import {FlatList, AppState, Animated, Platform} from 'react-native';
 import {Video, ResizeMode} from 'expo-av';
-import {Image, RefreshControl} from 'react-native';
+import {Image} from 'react-native';
 import {LinearGradient} from 'expo-linear-gradient';
 import {useQueryClient} from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
+import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
 
 import {User, Meme} from '../../../types/types';
 import styles, {
@@ -24,7 +25,6 @@ import {useLikeMutation} from './useLikeMutation';
 import {updateMemeReaction} from '../../../services/memeService';
 import {ShareType} from '../../../types/types';
 import {useTheme} from '../../../theme/ThemeContext';
-// import {FetchMemesResult} from '../../../types/types';
 // import {handleShareMeme} from '../../../services/memeService';
 // import useLogPersistedData from '../../../utils/useLogPersistedData';
 
@@ -37,14 +37,21 @@ import CommentFeed from '../../../components/Modals/CommentFeed/CommentFeed';
 
 const viewabilityConfig = {itemVisiblePercentThreshold: 50};
 
-const Feed: React.FC = React.memo(() => {
+const Feed: React.FC = () => {
   const queryClient = useQueryClient();
   const userStore = useUserStore();
   const userEmail = userStore.email;
   const likeMutation = useLikeMutation(userEmail);
   const {isDarkMode} = useTheme();
-  const bgdCol = isDarkMode ? '#000' : '#1C1C1C';
+  const bgdCol = isDarkMode ? '#1C1C1C' : '#1C1C1C';
+  // const bgdCol = '#1C1C1C';
   // useLogPersistedData();
+  const tabBarHeight = useBottomTabBarHeight();
+
+  const heightItem = Platform.select({
+    ios: screenHeight,
+    android: screenHeight + tabBarHeight,
+  });
 
   // console.log('userEmail:', userEmail);
 
@@ -202,17 +209,6 @@ const Feed: React.FC = React.memo(() => {
     setIsCommentFeedVisible(prev => !prev);
   };
 
-  // == R E F R E S H  C O N T R O L ==
-  const MyRefreshControl = () => {
-    return (
-      <RefreshControl
-        refreshing={isRefetching}
-        onRefresh={refetch}
-        tintColor="#0000ff"
-      />
-    );
-  };
-
   // Handle End Reached
   const handleEndReached = () => {
     console.log('End reached');
@@ -237,21 +233,6 @@ const Feed: React.FC = React.memo(() => {
     }
   };
 
-  // ==> DATA IS FETCHING
-  if (isFetching) {
-    return <LoadingComponent style={{backgroundColor: bgdCol}} />;
-  }
-
-  // ==> ERROR FROM QUERY
-  if (isError) {
-    return <ErrorComponent error={error} style={{backgroundColor: bgdCol}} />;
-  }
-
-  // ==> NO DATA
-  if (memes?.length === 0) {
-    return <NoDataComponent style={{backgroundColor: bgdCol}} />;
-  }
-
   // ==> KEY EXTRACTOR
   const keyExtractor = (item: Meme | undefined, index: number) =>
     item?.memeID || `meme-${index}`;
@@ -264,17 +245,18 @@ const Feed: React.FC = React.memo(() => {
     item: Meme | undefined;
     index: number;
   }) => {
+    console.log('Rendering item:', item);
+
     // console.log('Rendering item:', item);
     // if (!item || !item.url) {
     //   return null;
     // }
 
-    // console.log('Rendering item:', item);
     const isVideo =
       item?.url?.toLowerCase().endsWith('.mp4') || item?.mediaType === 'video';
 
     const mediaSource = {uri: item?.url || ''};
-    // console.log('Media Source:', mediaSource);
+    console.log('Media Source:', mediaSource);
 
     const loadMedia = () => {
       if (isVideo) {
@@ -296,7 +278,7 @@ const Feed: React.FC = React.memo(() => {
         return (
           <Image
             source={mediaSource}
-            style={[styles.imgContainer]}
+            style={[styles.imgContainer, {height: heightItem}]}
             resizeMode="contain"
           />
         );
@@ -305,7 +287,6 @@ const Feed: React.FC = React.memo(() => {
 
     const handleLongPress = () => {
       setSelectedMeme(item);
-      // setModalVisible(true);
       setIsLongPressModalVisible(true);
     };
 
@@ -318,14 +299,14 @@ const Feed: React.FC = React.memo(() => {
       }
     };
 
-    // return <View style={{height: screenHeight}}>{loadMedia()}</View>;
-
     return (
       <TouchableOpacity
         activeOpacity={1}
         onPress={handlePress}
         onLongPress={handleLongPress}
-        style={{height: screenHeight}}>
+        style={{
+          height: heightItem,
+        }}>
         {loadMedia()}
       </TouchableOpacity>
     );
@@ -339,6 +320,21 @@ const Feed: React.FC = React.memo(() => {
     offset: screenHeight * index,
     index,
   });
+
+  // ==> DATA IS FETCHING
+  if (isFetching) {
+    return <LoadingComponent style={{backgroundColor: bgdCol}} />;
+  }
+
+  // ==> ERROR FROM QUERY
+  if (isError) {
+    return <ErrorComponent error={error} style={{backgroundColor: bgdCol}} />;
+  }
+
+  // ==> NO DATA
+  if (memes?.length === 0) {
+    return <NoDataComponent style={{backgroundColor: bgdCol}} />;
+  }
 
   // LOG CURRENT MEME IN VIEW
   console.log('Current meme:', memes[lastViewedIndex]);
@@ -358,15 +354,13 @@ const Feed: React.FC = React.memo(() => {
         viewabilityConfig={viewabilityConfig}
         onViewableItemsChanged={onViewableItemsChanged}
         style={styles.flatlistStyle}
-        contentContainerStyle={{}}
+        contentContainerStyle={styles.contentCtrStyle}
         pagingEnabled
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={true}
         ListEmptyComponent={ListEmptyComponent}
-        refreshControl={<MyRefreshControl />}
-        initialNumToRender={2}
-        maxToRenderPerBatch={2}
-        windowSize={3}
+        initialNumToRender={3}
+        maxToRenderPerBatch={4}
         updateCellsBatchingPeriod={100}
       />
 
@@ -410,32 +404,36 @@ const Feed: React.FC = React.memo(() => {
 
       {/* == SHARE MODAL == */}
       {/* FIXME: onShare isn't used inside the component! */}
-      <ShareModal
-        visible={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        friends={[]}
-        onShare={handleShare}
-        currentMedia={memes[lastViewedIndex]?.url}
-      />
+      {showShareModal && (
+        <ShareModal
+          visible={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          friends={[]}
+          onShare={handleShare}
+          currentMedia={memes[lastViewedIndex]?.url}
+        />
+      )}
 
       {/* === LongPress Modal === */}
-      <LongPressModal
-        isVisible={isLongPressModalVisible}
-        onClose={closeLongPressModal}
-        meme={{
-          id: selectedMeme?.memeID as string,
-          url: selectedMeme?.url as string,
-        }}
-        onSaveToProfile={handleDownloadPress}
-        onShare={() => setShowShareModal(true)}
-        onReport={() => {}}
-      />
+      {isLongPressModalVisible && (
+        <LongPressModal
+          isVisible={isLongPressModalVisible}
+          onClose={closeLongPressModal}
+          meme={{
+            id: selectedMeme?.memeID as string,
+            url: selectedMeme?.url as string,
+          }}
+          onSaveToProfile={handleDownloadPress}
+          onShare={() => setShowShareModal(true)}
+          onReport={() => {}}
+        />
+      )}
 
       {showLikeAnimation && (
         <LikeAnimation onAnimationFinish={() => setShowLikeAnimation(false)} />
       )}
     </View>
   );
-});
+};
 
 export default Feed;

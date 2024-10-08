@@ -28,7 +28,8 @@ import {
   faXTwitter,
 } from '@fortawesome/free-brands-svg-icons';
 import Toast from 'react-native-toast-message';
-import {FriendType, ShareType, User, Conversation} from '../../types/types';
+import {FriendType, ShareType, User} from '../../types/types';
+import {Conversation} from '../../types/messageTypes';
 import NewMessageModal from '../Modals/NewMessageModal';
 import {useInboxStore} from '../../stores/inboxStore';
 import {useNavigation} from '@react-navigation/native';
@@ -274,9 +275,6 @@ const ShareModal: React.FC<ShareModalProps> = ({
         currentUser={user}
         allUsers={[]} // You might want to fetch this or pass it from a parent component
         existingConversations={[...conversations, ...pinnedConversations]}
-        // currentMedia={currentMedia}
-        // user={user}
-        // navigation={navigation} // Pass navigation if needed
       />
     </Modal>
   );
@@ -315,20 +313,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#FFFFFF',
     marginBottom: 10,
-  sectionTitle: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    marginBottom: 10,
   },
   friendsContainer: {
     paddingVertical: 10,
-  friendsContainer: {
-    paddingVertical: 10,
   },
-  friendItem: {
   friendItem: {
     alignItems: 'center',
-    marginHorizontal: 10,
     marginHorizontal: 10,
   },
   friendImage: {
@@ -337,9 +327,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   friendName: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    marginTop: 5,
     color: '#FFFFFF',
     fontSize: 12,
     marginTop: 5,
