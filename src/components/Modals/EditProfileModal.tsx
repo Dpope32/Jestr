@@ -41,6 +41,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isVisible, onClose,
         const response = await updateProfileImage(user.email, type, result.assets[0].uri);
         if (type === 'profile') {
           setProfilePic(response.data.profilePic);
+          console.log('Profile image updated:', response.data.profilePic);
+          console.log(profilePic)
           Toast.show({ type: 'success', text1: 'Profile image updated!' });
         } else {
           setHeaderPic(response.data.headerPic);

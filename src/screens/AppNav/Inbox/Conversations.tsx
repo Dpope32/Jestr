@@ -1,3 +1,5 @@
+// src/screens/AppNav/Inbox/Conversations.tsx
+
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { 
   View, 
@@ -31,6 +33,7 @@ import { User } from '../../../types/types';
 import { useInboxStore } from '../../../stores/inboxStore';
 import { InboxNavRouteProp } from '../../../navigation/NavTypes/InboxStackTypes';
 import { useTabBarStore } from '../../../stores/tabBarStore';
+import { useBadgeStore } from '../../../stores/badgeStore';
 import { fetchMessages, sendMessage } from '../../../services/socialService';
 import { getProfilePicUri } from '../../../utils/helpers'; 
 
@@ -43,7 +46,7 @@ export const Conversations = () => {
   const route = useRoute<InboxNavRouteProp>();
   const partnerUser = route.params?.partnerUser as User;
   const conversation = route.params?.conversation as Conversation;
-  
+  const badgeStore = useBadgeStore();
   const memeId = route.params?.currentMedia;
   const queryClient = useQueryClient();
   const { isDarkMode } = useTheme();
@@ -173,11 +176,11 @@ export const Conversations = () => {
     if (newMessage.trim() === '' || !currentUser.email) return;
     Keyboard.dismiss();
     setNewMessage('');
-    setIsSending(true); // Start sending
-
+    setIsSending(true);
+  
     // Haptic Feedback
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
+    await badgeStore.checkMessengerBadge(currentUser.email); // Corrected method call
     Animated.sequence([
       Animated.timing(sendingAnimation, {
         toValue: 1,
@@ -218,7 +221,7 @@ export const Conversations = () => {
       duration: 500,
       useNativeDriver: true,
     }).start();
-  }, [newMessage, currentUser.email, partnerUser.email, sendingAnimation, messageOpacity, sendMessageMutation]);
+  }, [newMessage, currentUser.email, partnerUser.email, sendingAnimation, messageOpacity, sendMessageMutation, badgeStore]);
 
   const handlePressIn = useCallback(() => {
     Animated.spring(sendButtonScale, {
@@ -280,7 +283,7 @@ export const Conversations = () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     });
-  
+
   }, [memeId, newMessage, currentUser.email, partnerUser.email, sendMessageMutation, navigation]);
 
   const renderMessage: ListRenderItem<Message> = useCallback(
@@ -387,7 +390,7 @@ export const Conversations = () => {
     }
 
     if (error) {
-      return <Text>Error loading messages: {error.message}</Text>;
+      return <Text style={styles.errorText}>Error loading messages: {error.message}</Text>;
     }
 
     return (
@@ -464,6 +467,8 @@ export const Conversations = () => {
             value={newMessage}
             onChangeText={setNewMessage}
             placeholderTextColor="#999"
+            onSubmitEditing={handleSendMessage}
+            returnKeyType="send"
           />
           
           <TouchableOpacity

@@ -1,4 +1,5 @@
 // src/screens/AuthNav/Signup/SignUpScreen.tsx
+
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -11,6 +12,8 @@ import {
   Alert,
   TextInput,
   KeyboardAvoidingView,
+  Animated,
+  Easing,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { BlurView } from 'expo-blur';
@@ -32,6 +35,11 @@ const SignUpScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState('');
+
+  // Animation value for confirm password field
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // Refs for input fields
   const emailInputRef = useRef<TextInput>(null);
@@ -52,6 +60,28 @@ const SignUpScreen = () => {
       Alert.alert('Sign Up Error', error.message || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const evaluatePasswordStrength = (pwd: string) => {
+    if (pwd.length < 6) {
+      setPasswordStrength('Weak');
+    } else if (pwd.match(/^(?=.*[A-Z])(?=.*\d).{6,}$/)) {
+      setPasswordStrength('Strong');
+    } else {
+      setPasswordStrength('Medium');
+    }
+  };
+
+  const handlePasswordBlur = () => {
+    if (password.length > 0) {
+      setShowConfirmPassword(true);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }).start();
     }
   };
 
@@ -77,6 +107,7 @@ const SignUpScreen = () => {
               returnKeyType="next"
               onSubmitEditing={() => passwordInputRef.current?.focus()}
               accessibilityLabel="Email Input"
+              isEmail={true}
             />
 
             <InputField
@@ -84,30 +115,53 @@ const SignUpScreen = () => {
               placeholder="Enter Password"
               secureTextEntry
               value={password}
-              onChangeText={text => setPassword(text)}
-              containerStyle={styles.input}
-              inputStyle={styles.inputText}
-              returnKeyType="next"
-              onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
-              accessibilityLabel="Password Input"
-            />
-
-            <InputField
-              ref={confirmPasswordInputRef}
-              placeholder="Re-enter Password"
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={text => setConfirmPassword(text)}
+              onChangeText={text => {
+                setPassword(text);
+                evaluatePasswordStrength(text);
+              }}
               containerStyle={styles.input}
               inputStyle={styles.inputText}
               returnKeyType="done"
-              onSubmitEditing={handleSignupAction} // Trigger sign up on submit
-              accessibilityLabel="Confirm Password Input"
+              onSubmitEditing={() => {
+                passwordInputRef.current?.blur();
+              }}
+              accessibilityLabel="Password Input"
+              onBlur={handlePasswordBlur}
             />
 
-            {/* Show error message if passwords do not match */}
-            {password !== confirmPassword && confirmPassword !== '' && (
-              <Text style={styles.errorMessage}>Passwords do not match!</Text>
+            {/* Password Strength Indicator */}
+            {password.length > 0 && (
+              <Text style={[styles.passwordStrength, {
+                color:
+                  passwordStrength === 'Weak' ? '#FF3B30' :
+                  passwordStrength === 'Medium' ? '#FF9500' :
+                  '#00C851'
+              }]}>
+                Password Strength: {passwordStrength}
+              </Text>
+            )}
+
+            {/* Conditionally Render Confirm Password Field */}
+            {showConfirmPassword && (
+              <Animated.View style={{ opacity: fadeAnim, width: '100%' }}>
+                <InputField
+                  ref={confirmPasswordInputRef}
+                  placeholder="Re-enter Password"
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={text => setConfirmPassword(text)}
+                  containerStyle={styles.input}
+                  inputStyle={styles.inputText}
+                  returnKeyType="done"
+                  onSubmitEditing={handleSignupAction} // Trigger sign up on submit
+                  accessibilityLabel="Confirm Password Input"
+                />
+
+                {/* Show error message if passwords do not match */}
+                {password !== confirmPassword && confirmPassword !== '' && (
+                  <Text style={styles.errorMessage}>Passwords do not match!</Text>
+                )}
+              </Animated.View>
             )}
 
             {/* SIGN UP BUTTON */}
@@ -128,7 +182,7 @@ const SignUpScreen = () => {
               accessibilityRole="button"
             >
               <Text style={styles.toggleFormText}>
-                Already have an account? Login here
+                Already have an account?
               </Text>
             </TouchableOpacity>
 

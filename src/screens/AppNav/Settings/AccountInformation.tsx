@@ -41,13 +41,14 @@ const AccountInfoItem: React.FC<AccountInfoItemProps> = ({
         <Text style={styles.labelText}>{label}</Text>
         {isEditing ? (
           <InputField
-            label={''}
-            placeholder={`Enter new ${label.toLowerCase()}`}
-            value={editedValue}
-            onChangeText={setEditedValue}
-            style={styles.inputField}
-            onSubmitEditing={handleSend}
-          />
+          label=""
+          placeholder={`Enter new ${label.toLowerCase()}`}
+          value={editedValue}
+          onChangeText={setEditedValue}
+          style={styles.inputField}
+          onSubmitEditing={handleSend}
+          isEmail={isEmail} 
+        />
         ) : (
           <Text style={styles.valueText}>{value}</Text>
         )}

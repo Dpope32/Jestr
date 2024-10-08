@@ -5,12 +5,15 @@ export type BadgeType =
   | 'socialButterfly' 
   | 'memeMaster' 
   | 'trendSetter' 
+  | 'messenger'
   | 'commentator'
   | 'memeCreator'
+  | 'viralSensation'
+  | 'memeCollector'
   | 'viralStar'
   | 'insightfulUser'
   | 'memeExplorer'
-  | 'communityChampion';
+  | 'communityChampion'
 
 export interface Badge {
   id: string;
@@ -30,10 +33,13 @@ export const badgeImages: { [key in BadgeType]: any } = {
   trendSetter: trendSetterImg,
   commentator: commentatorImg,   
   memeCreator: memeCreatorImg,  
-  viralStar: viralStarImg,       
-  insightfulUser: insightfulUserImg, 
-  memeExplorer: memeExplorerImg, 
-  communityChampion: communityChampionImg, 
+  viralSensation: viralSensationImg,       
+  memeCollector: memeCollectorImg,
+  messenger: messengerImg,
+  viralStar: viralStarImg,
+  insightfulUser: insightfulUserImg,
+  memeExplorer: memeExplorerImg,
+  communityChampion: communityChampionImg,
 };
 
 // Import badge images
@@ -43,7 +49,10 @@ import memeMasterImg from '../../../assets/images/2.png';
 import trendSetterImg from '../../../assets/images/1.png';
 import commentatorImg from '../../../assets/images/3.png';
 import memeCreatorImg from '../../../assets/images/4.png';
-import viralStarImg from '../../../assets/images/5.png';
-import insightfulUserImg from '../../../assets/images/6.png';
-import memeExplorerImg from '../../../assets/images/7.png';
-import communityChampionImg from '../../../assets/images/8.png';
+import viralSensationImg from '../../../assets/images/5.png';
+import memeCollectorImg from '../../../assets/images/6.png';
+import messengerImg from '../../../assets/images/7.png';
+import viralStarImg from '../../../assets/images/8.png';
+import insightfulUserImg from '../../../assets/images/10.png';
+import memeExplorerImg from '../../../assets/images/11.png';
+import communityChampionImg from '../../../assets/images/memeLiker.png';

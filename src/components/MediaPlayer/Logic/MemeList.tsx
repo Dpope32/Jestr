@@ -1,3 +1,5 @@
+// MemeList.tsx
+
 import React, { useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   Dimensions,
@@ -18,7 +20,7 @@ const MemeList: React.FC<MemeListProps> = React.memo((props) => {
     user,
     onEndReached,
     toggleCommentFeed,
-    updateLikeStatus,
+    updateLikeStatus, // Ensure this is included
     currentMediaIndex,
     setCurrentMediaIndex,
     currentUserId,
@@ -29,10 +31,6 @@ const MemeList: React.FC<MemeListProps> = React.memo((props) => {
   } = props;
 
   const flatListRef = useRef<FlatList>(null);
-
-  useEffect(() => {
-    console.log('Memes updated:', memes.length);
-  }, [memes]);
 
   useEffect(() => {
     if (
@@ -87,7 +85,7 @@ const MemeList: React.FC<MemeListProps> = React.memo((props) => {
         return null;
       }
 
-      console.log('Rendering meme at index:', index);
+  //    console.log('Rendering meme at index:', index);
 
       const prevMedia = index > 0 ? memes[index - 1].url : null;
       const nextMedia = index < memes.length - 1 ? memes[index + 1].url : null;
@@ -103,7 +101,7 @@ const MemeList: React.FC<MemeListProps> = React.memo((props) => {
           toggleCommentFeed={toggleCommentFeed}
           goToPrevMedia={goToPrevMedia}
           goToNextMedia={goToNextMedia}
-          onLikeStatusChange={updateLikeStatus}
+          onLikeStatusChange={updateLikeStatus} // Pass updateLikeStatus here
           handleLike={noop}
           handleDownload={noop}
           prevMedia={prevMedia}
@@ -132,7 +130,7 @@ const MemeList: React.FC<MemeListProps> = React.memo((props) => {
       toggleCommentFeed,
       goToPrevMedia,
       goToNextMedia,
-      updateLikeStatus,
+      updateLikeStatus, // Include in dependencies
       currentUserId,
       isCommentFeedVisible,
       numOfComments,

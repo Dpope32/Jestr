@@ -15,6 +15,8 @@ const cognitoClient = new CognitoIdentityProviderClient({ region: "us-east-2" })
 
 const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
+const CLOUDFRONT_URL = process.env.CLOUDFRONT_URL;
+
 
 
 export const deleteAccount = async (email) => {
@@ -236,44 +238,49 @@ export async function confirmForgotPassword(username, confirmationCode, newPassw
   return cognitoClient.send(command);
 };
 
+
 export async function updateProfileImage(requestBody) {
-    const { email, imageType, image } = requestBody;
-    if (!email || !imageType || !image) {
-      console.error('Missing required fields for updateProfileImage:', { email, imageType, imageProvided: !!image });
-      return createResponse(400, 'Email, imageType, and image are required for updating profile image.');
-    }
-  
-    try {
-      const bucketName = 'jestr-bucket';
-      const imageKey = `${imageType === 'profile' ? 'ProfilePictures' : 'HeaderPictures'}/${email}-${imageType}Pic-${Date.now()}.jpg`;
-      const newImageUrl = await uploadToS3(image, imageKey, 'image/jpeg', bucketName);
-  
-      const updateProfileParams = {
-        TableName: 'Profiles',
-        Key: { email },
-        UpdateExpression: 'SET #imagePic = :url',
-        ExpressionAttributeNames: {
-          '#imagePic': `${imageType}Pic`
-        },
-        ExpressionAttributeValues: {
-          ':url': newImageUrl
-        },
-        ReturnValues: 'ALL_NEW'
-      };
-  
-      await docClient.send(new UpdateCommand(updateProfileParams));
-  
-      return createResponse(200, 'Profile image updated successfully.', { [imageType + 'Pic']: newImageUrl });
-    } catch (error) {
-      console.error('Error updating profile image:', error);
-      console.error('Stack trace:', error.stack);
-      return createResponse(500, 'Failed to update profile image.', { 
-        error: error.message, 
-        stack: error.stack,
-        details: error.toString() 
-      });
-    }
+  const { email, imageType, image } = requestBody;
+  if (!email || !imageType || !image) {
+    console.error('Missing required fields for updateProfileImage:', { email, imageType, imageProvided: !!image });
+    return createResponse(400, 'Email, imageType, and image are required for updating profile image.');
+  }
+
+  try {
+    const bucketName = 'jestr-bucket';
+    const imageKey = `${imageType === 'profile' ? 'ProfilePictures' : 'HeaderPictures'}/${email}-${imageType}Pic-${Date.now()}.jpg`;
+    
+    // Upload to S3 and return the direct S3 URL
+    const newImageUrl = `https://${bucketName}.s3.amazonaws.com/${imageKey}`;
+    await uploadToS3(image, imageKey, 'image/jpeg', bucketName);
+
+    const updateProfileParams = {
+      TableName: 'Profiles',
+      Key: { email },
+      UpdateExpression: 'SET #imagePic = :url',
+      ExpressionAttributeNames: {
+        '#imagePic': `${imageType}Pic`
+      },
+      ExpressionAttributeValues: {
+        ':url': newImageUrl
+      },
+      ReturnValues: 'ALL_NEW'
+    };
+
+    await docClient.send(new UpdateCommand(updateProfileParams));
+
+    return createResponse(200, 'Profile image updated successfully.', { [imageType + 'Pic']: newImageUrl });
+  } catch (error) {
+    console.error('Error updating profile image:', error);
+    console.error('Stack trace:', error.stack);
+    return createResponse(500, 'Failed to update profile image.', { 
+      error: error.message, 
+      stack: error.stack,
+      details: error.toString() 
+    });
+  }
 };
+
 
 export async function updateFeedback(requestBody) {
   const { feedbackId, status } = requestBody;

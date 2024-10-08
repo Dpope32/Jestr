@@ -54,34 +54,20 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   dailyDigest: false,
 };
 
-const mockNotifications: Notification[] = [
+const initialNotifications: Notification[] = [
   {
     id: 1,
-    message: "John Doe liked your meme",
+    message: "Welcome to Jestr!",
     read: false,
-    timestamp: "2h ago",
+    timestamp: "1m ago",
     profilePicUrl: "4.png"
   },
   {
-    id: 2,
-    message: "Jane Smith commented on your post",
-    read: false,
-    timestamp: "5h ago",
-    profilePicUrl: "3.png"
-  },
-  {
     id: 3,
-    message: "Mike Johnson started following you",
+    message: "We promse we will never spam you with ads, notifications, or anything else annoying.",
     read: true,
     timestamp: "1d ago",
     profilePicUrl: "1.png" 
-  },
-  {
-    id: 4,
-    message: "Sarah Brown mentioned you in a comment",
-    read: true,
-    timestamp: "2d ago",
-    profilePicUrl: "2.png"  
   },
 ];
 
@@ -90,7 +76,7 @@ export const useNotificationStore = create<NotificationStore>()(
   persist(
     (set) => ({
       ...DEFAULT_SETTINGS,
-      notifications: mockNotifications,
+      notifications: initialNotifications,
 
       setNotifications: (notifications: Notification[]) => set({ notifications }),
 

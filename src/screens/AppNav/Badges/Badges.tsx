@@ -1,16 +1,7 @@
-// Badges.tsx
+// src/screens/AppNav/Badges/Badges.tsx
 
-import React, { useRef, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  Animated,
-  Dimensions,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-  StyleSheet,
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, Animated, TouchableOpacity, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
@@ -27,7 +18,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { allBadges } from '../../../constants/uiConstants';
 import BadgeCard from './BadgeCard';
 import { badgeImages } from './Badges.types';
-import { fetchUserBadges } from '../../../services/badgeServices';
+import { useQuery } from '@tanstack/react-query';
+import { fetchUserBadges } from 'services/badgeServices';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -38,68 +30,59 @@ const Badges: React.FC = () => {
   const COLORS = getColors(isDarkMode);
 
   const user = useUserStore((state) => state);
-  const badges = useBadgeStore((state) => state.badges);
-  const setBadges = useBadgeStore((state) => state.setBadges);
-  const pinnedBadgeId = useBadgeStore((state) => state.pinnedBadgeId);
+  const { badges, pinnedBadgeId, setBadges } = useBadgeStore();
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
-  const createdAtDate = user.creationDate
-    ? new Date(user.creationDate).toLocaleDateString()
-    : 'N/A';
-  const imgSrc = user.profilePic
-    ? { uri: user.profilePic }
-    : require('../../../assets/images/Jestr.jpg');
+  const createdAtDate = user.creationDate ? new Date(user.creationDate).toLocaleDateString() : 'N/A';
+  const imgSrc = user.profilePic ? { uri: user.profilePic } : require('../../../assets/images/Jestr.jpg');
 
+  const { isLoading, isError, error } = useQuery({
+    queryKey: ['userBadges', user.email],
+    queryFn: async () => {
+      const badges = await fetchUserBadges(user.email);
+      useBadgeStore.getState().setBadges(badges);
+      return badges;
+    },
+    enabled: !!user.email,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10, // Replace  'cacheTime' with gcTime'
+  });
+  
   useEffect(() => {
-    const fetchBadges = async () => {
-      setIsLoading(true);
-      try {
-        const formattedBadges = await fetchUserBadges(user.email);
-        setBadges(formattedBadges);
-        console.log('formattedBadges:', formattedBadges);
-      } catch (error) {
-        console.error('Error fetching badges:', error);
-        setError(
-          error instanceof Error ? error.message : 'An unknown error occurred'
-        );
-      } finally {
-        setIsLoading(false);
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }).start();
-      }
-    };
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
 
-    fetchBadges();
-  }, []);
-
+  // Handle loading state
   if (isLoading) {
     return <BadgesSkeletonLoader isDarkMode={isDarkMode} />;
   }
 
-  if (error) {
+  // Handle error state
+  if (isError) {
     return (
       <View style={styles.loadingContainer}>
         <FontAwesomeIcon icon={faLock} size={50} color={COLORS.error} />
         <Text style={[styles.loadingText, { color: COLORS.error }]}>
-          {error}
+          {error instanceof Error ? error.message : 'An error occurred'}
         </Text>
       </View>
     );
   }
 
   const totalBadges = allBadges.length;
-  const earnedBadgesCount = badges.length;
+  const earnedBadgesCount = badges.filter(badge => badge.earned).length;
   const score = Math.round((earnedBadgesCount / totalBadges) * 100);
   const pinnedBadge = badges.find((badge) => badge.id === pinnedBadgeId);
+  const earnedBadges = badges.filter((badge) => badge.earned);
   const unearnedBadges = allBadges.filter(
-    (badge) => !badges.some((b) => b.id === badge.id)
+    (badgeType) => !badges.some((badge) => badge.type === badgeType && badge.earned)
   );
+  
 
   return (
     <View style={styles.container}>
@@ -178,10 +161,10 @@ const Badges: React.FC = () => {
           </View>
 
           <Text style={styles.sectionTitle}>Earned Badges</Text>
-          {badges.length > 0 ? (
+          {earnedBadges.length > 0 ? (
             <View style={styles.flashListContainer}>
               <FlashList
-                data={badges}
+                data={earnedBadges}
                 renderItem={({ item }) => (
                   <BadgeCard
                     badge={item}
@@ -192,7 +175,7 @@ const Badges: React.FC = () => {
                 keyExtractor={(item) => item.id}
                 numColumns={2}
                 estimatedItemSize={188}
-                accessibilityLabel="List of badges"
+                accessibilityLabel="List of earned badges"
               />
             </View>
           ) : (
@@ -204,43 +187,40 @@ const Badges: React.FC = () => {
           )}
 
           <Text style={styles.sectionTitle}>Badges to Earn</Text>
-          {unearnedBadges.map((badge) => (
-            <View key={badge.id} style={styles.badgeTableRow}>
-              <View style={styles.badgeImageContainer}>
-                <Image
-                  source={badgeImages[badge.type]}
-                  style={styles.badgeTableImage}
-                  resizeMode="contain"
-                />
-                <View style={styles.badgeOverlay} />
-                <FontAwesomeIcon
-                  icon={faLock}
-                  size={24}
-                  color={COLORS.white}
-                  style={styles.lockIcon}
-                />
+          {unearnedBadges.map((badgeType) => {
+            const badge = badges.find(b => b.type === badgeType) || {
+              id: badgeType,
+              type: badgeType,
+              title: badgeType.replace(/([A-Z])/g, ' $1').trim(),
+              description: `Earn the ${badgeType.replace(/([A-Z])/g, ' $1').trim()} badge`,
+              earned: false,
+              progress: 0
+            };
+            return (
+              <View key={badge.id} style={styles.badgeTableRow}>
+                <View style={styles.badgeImageContainer}>
+                  <Image
+                    source={badgeImages[badge.type]}
+                    style={styles.badgeTableImage}
+                    resizeMode="contain"
+                  />
+                  <View style={styles.badgeOverlay} />
+                  <FontAwesomeIcon
+                    icon={faLock}
+                    size={24}
+                    color={COLORS.white}
+                    style={styles.lockIcon}
+                  />
+                </View>
+                <View style={styles.badgeTableInfo}>
+                  <Text style={styles.badgeTableTitle}>{badge.title}</Text>
+                  <Text style={styles.badgeTableDescription}>
+                  </Text>
+              
+                </View>
               </View>
-              <View style={styles.badgeTableInfo}>
-                <Text style={styles.badgeTableTitle}>{badge.title}</Text>
-                <Text style={styles.badgeTableDescription}>
-                  {badge.description}
-                </Text>
-                <Progress.Bar
-                  progress={badge.progress / 100}
-                  width={SCREEN_WIDTH - 180}
-                  color={COLORS.primary}
-                  unfilledColor={COLORS.lightGray}
-                  borderWidth={0}
-                  height={8}
-                  borderRadius={4}
-                  animated={true}
-                />
-                <Text style={styles.badgeTableProgressText}>
-                  {`${badge.progress}%`}
-                </Text>
-              </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
       </Animated.View>
     </View>

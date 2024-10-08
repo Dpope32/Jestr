@@ -23,7 +23,6 @@ import InputField from '../../../components/Input/InputField';
 import AuthFooterLinks from '../../../components/AuthFooterLinks/AuthFooterLinks';
 import RainEffect from '../../../components/RainEffect/RainEffect';
 import SocialLoginBtns from '../../../components/SocialLoginBtns/SocialLoginBtns';
-import SocialBtnsRow from '../../../components/SocialLoginBtns/SocialBtnsRow';
 import { handleLogin } from '../../../services/authService';
 import ForgotPasswordModal from '../../../components/Modals/ForgotPasswordModal';
 
@@ -77,6 +76,7 @@ const LoginScreen = () => {
                 returnKeyType="next"
                 onSubmitEditing={() => passwordInputRef.current?.focus()}
                 accessibilityLabel="Email Input"
+                isEmail={true}
               />
 
               <InputField
@@ -107,7 +107,7 @@ const LoginScreen = () => {
                 accessibilityLabel="Navigate to Sign Up"
                 accessibilityRole="button"
               >
-                <Text style={styles.toggleFormText}>Need an account? Sign up here</Text>
+                <Text style={styles.toggleFormText}>Don't have an account?</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -119,7 +119,6 @@ const LoginScreen = () => {
               </TouchableOpacity>
 
               <SocialLoginBtns />
-              <SocialBtnsRow />
             </View>
           </ScrollView>
 

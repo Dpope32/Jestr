@@ -1,3 +1,5 @@
+// Feed.tsx
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -12,6 +14,9 @@ import { useMemes } from '../../../services/memeService';
 import { InfiniteData } from '@tanstack/react-query';
 import { FetchMemesResult } from '../../../types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { checkBadgeEligibility, awardBadge } from '../../../services/badgeServices';
+import { useBadgeStore } from '../../../stores/badgeStore';
+import Toast from 'react-native-toast-message';
 
 const CACHE_KEY_PREFIX = 'memes_cache_';
 
@@ -22,12 +27,13 @@ const Feed: React.FC = React.memo(() => {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [currCommentsLength, setCurrCommentsLength] = useState(0);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [initialMemesData, setInitialMemesData] = useState< InfiniteData<FetchMemesResult> | undefined>(undefined);
+  const [initialMemesData, setInitialMemesData] = useState<InfiniteData<FetchMemesResult> | undefined>(undefined);
   const [isCacheLoaded, setIsCacheLoaded] = useState(false);
   const userEmail = userStore.email;
   const setIsFirstLongLaunch = useUserStore((state) => state.setIsFirstLongLaunch);
-  const isFirstLongLaunch = useUserStore(state => state.isFirstLongLaunch);
-  
+  const isFirstLongLaunch = useUserStore((state) => state.isFirstLongLaunch);
+  const badgeStore = useBadgeStore();
+
   useFocusEffect(
     useCallback(() => {
       const loadUserData = async () => {
@@ -75,7 +81,6 @@ const Feed: React.FC = React.memo(() => {
     isCacheLoaded // Enable the query only after cache is loaded
   );
 
-
   const updateCommentCount = useCallback(async (memeID: string) => {
     const updatedComments = await fetchComments(memeID);
     setCurrCommentsLength(updatedComments.length);
@@ -92,11 +97,20 @@ const Feed: React.FC = React.memo(() => {
     }
   }, [hasNextPage, fetchNextPage]);
 
+  // Add the updateLikeStatus function
   const updateLikeStatus = useCallback(
-    (memeID: string, status: any, newLikeCount: number) => {
+    async (memeID: string, status: { liked: boolean; doubleLiked: boolean }, newLikeCount: number) => {
       console.log('Like status updated:', { memeID, status, newLikeCount });
+
+      if (status.liked) {
+        try {
+
+        } catch (error) {
+          console.error('Error checking or awarding badge:', error);
+        }
+      }
     },
-    []
+    [userEmail, badgeStore]
   );
 
   const memoizedMemeList = useMemo(() => {
@@ -108,7 +122,7 @@ const Feed: React.FC = React.memo(() => {
       isDarkMode,
       onEndReached: handleEndReached,
       toggleCommentFeed,
-      updateLikeStatus,
+      updateLikeStatus, // Include updateLikeStatus in props
       currentMediaIndex,
       setCurrentMediaIndex,
       currentUserId: userStore.email,
@@ -125,7 +139,7 @@ const Feed: React.FC = React.memo(() => {
     isDarkMode,
     handleEndReached,
     toggleCommentFeed,
-    updateLikeStatus,
+    updateLikeStatus, // Add updateLikeStatus to dependencies
     currentMediaIndex,
     isCommentFeedVisible,
     isLoading,
@@ -141,9 +155,9 @@ const Feed: React.FC = React.memo(() => {
           { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' },
         ]}
       >
-         <View style={styles.centerContent}>
-        <ActivityIndicator size="large" color="#00ff00" />
-      </View>
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color="#00ff00" />
+        </View>
       </View>
     );
   }

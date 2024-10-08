@@ -8,6 +8,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 125,
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -17,19 +18,20 @@ export const styles = StyleSheet.create({
   },
   contentContainer: {
     width: '100%',
-    maxWidth: 350,
+    maxWidth: 300,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: SPACING.md,
-    paddingBottom: SPACING.xl,
+    paddingBottom: -SPACING.sm,
+    flex: 1, 
   },
   input: {
     width: '100%',
   },
   inputText: {
-    paddingVertical: SCREEN_HEIGHT * 0.015,
-    paddingHorizontal: SCREEN_WIDTH * 0.04,
     fontSize: Math.max(16, Math.min(FONT_SIZES.md, SCREEN_WIDTH * 0.045)),
+    color: '#fff',
+
     borderRadius: 8,
   },
   signupHeader: {
@@ -38,6 +40,11 @@ export const styles = StyleSheet.create({
     color: 'white',
     alignSelf: 'center',
     paddingVertical: SPACING.lg,
+  },
+  passwordStrength: {
+    fontSize: 14,
+    marginTop: 5,
+    marginBottom: 10,
   },
   button2: {
     width: '100%',

@@ -1,10 +1,13 @@
-import {useState, useCallback} from 'react';
-import {debounce} from 'lodash';
-import {Video, AVPlaybackStatus} from 'expo-av';
+// src/hooks/useMediaPlayerLogic.ts
 
-import {updateMemeReaction} from '../../../services/memeService';
-import {handleShareMeme} from '../../../services/memeService';
-import {ShareType, User} from '../../../types/types';
+import { useState, useCallback } from 'react';
+import { debounce } from 'lodash';
+import { Video, AVPlaybackStatus } from 'expo-av';
+
+import { useUpdateMemeReaction, useShareMeme, updateMemeReaction } from '../../../services/reactionServices';
+import { ShareType, User } from '../../../types/types';
+import { useBadgeStore } from '../../../stores/badgeStore';
+import Toast from 'react-native-toast-message';
 
 interface UseMediaPlayerLogicProps {
   initialLiked: boolean;
@@ -12,35 +15,49 @@ interface UseMediaPlayerLogicProps {
   mediaType: 'image' | 'video';
   initialLikeCount: number;
   initialDownloadCount: number;
-  video: React.RefObject<Video>;
-  status: AVPlaybackStatus;
   initialShareCount: number;
   initialCommentCount: number;
+  video: React.RefObject<Video>;
+  status: AVPlaybackStatus;
   user: User | null;
   memeID: string;
   handleDownload: () => void;
   handleSingleTap: () => void;
   onLikeStatusChange: (
     memeId: string,
-    likeStatus: {liked: boolean; doubleLiked: boolean},
+    likeStatus: { liked: boolean; doubleLiked: boolean },
     newLikeCount: number,
   ) => void;
 }
 
 export const useMediaPlayerLogic = ({
-  initialLikeCount,initialDownloadCount,initialShareCount,initialCommentCount,user,memeID,
-  handleDownload,onLikeStatusChange,handleSingleTap}: UseMediaPlayerLogicProps) => {
-  const [liked, setLiked] = useState(false);
-  const [doubleLiked, setDoubleLiked] = useState(false);
+  initialLiked,
+  initialDoubleLiked,
+  initialLikeCount,
+  initialDownloadCount,
+  initialShareCount,
+  initialCommentCount,
+  user,
+  memeID,
+  mediaType,
+  video,
+  status,
+  handleDownload,
+  handleSingleTap,
+  onLikeStatusChange,
+}: UseMediaPlayerLogicProps) => {
+  const [liked, setLiked] = useState(initialLiked);
+  const [doubleLiked, setDoubleLiked] = useState(initialDoubleLiked);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
-  const [likePosition, setLikePosition] = useState({x: 0, y: 0});
+  const [likePosition, setLikePosition] = useState({ x: 0, y: 0 });
   const [isModalVisible, setModalVisible] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [friends, setFriends] = useState([]);
+  const badgeStore = useBadgeStore();
 
   const [counts, setCounts] = useState({
     likes: initialLikeCount,
@@ -54,56 +71,116 @@ export const useMediaPlayerLogic = ({
     setModalVisible(true);
   };
 
+  const updateMemeReactionMutation = useUpdateMemeReaction();
+  const shareMemeMutation = useShareMeme();
+  
+  // Handle Like Press
   const handleLikePress = useCallback(async () => {
-    if (user) {
-      const newLikedState = !liked;
-      let newDoubleLikedState = doubleLiked;
-      let newLikeCount = counts.likes;
+    if (!user) return;
 
-      if (newLikedState) {
-        if (doubleLiked) {
-          newDoubleLikedState = false;
-          newLikeCount -= 1;
-        } else {
-          newLikeCount += 1;
-        }
-      } else {
+    const newLikedState = !liked;
+    let newDoubleLikedState = doubleLiked;
+    let newLikeCount = typeof counts.likes === 'string' ? parseInt(counts.likes, 10) : counts.likes;
+
+    if (newLikedState) {
+      if (doubleLiked) {
+        newDoubleLikedState = false;
         newLikeCount -= 1;
+      } else {
+        newLikeCount += 1;
       }
-
-      setLiked(newLikedState);
-      setDoubleLiked(newDoubleLikedState);
-      setCounts(prevCounts => ({...prevCounts, likes: newLikeCount}));
-
-      try {
-        await updateMemeReaction(
-          memeID,
-          newLikedState,
-          newDoubleLikedState,
-          false,
-          user.email,
-        );
-        onLikeStatusChange(
-          memeID,
-          {liked: newLikedState, doubleLiked: newDoubleLikedState},
-          newLikeCount,
-        );
-      } catch (error) {
-        console.error('Error updating meme reaction:', error);
-        setLiked(!newLikedState);
-        setDoubleLiked(!newDoubleLikedState);
-        setCounts(prevCounts => ({...prevCounts, likes: initialLikeCount}));
-      }
+    } else {
+      newDoubleLikedState = false;
+      newLikeCount -= 1;
     }
-  }, [user, liked, doubleLiked, counts.likes, memeID, onLikeStatusChange, initialLikeCount]);
 
-  const debouncedHandleLike = useCallback(
-    debounce(() => {
-      handleLikePress();
-    }, 300),
-    [handleLikePress],
+    setLiked(newLikedState);
+    setDoubleLiked(newDoubleLikedState);
+    setCounts(prevCounts => ({ ...prevCounts, likes: newLikeCount }));
+
+    try {
+      const result = await updateMemeReactionMutation.mutateAsync({
+        memeID,
+        incrementLikes: newLikedState,
+        doubleLike: newDoubleLikedState,
+        incrementDownloads: false,
+        email: user.email,
+      });
+
+      if (result && result.badgeEarned) {
+        badgeStore.earnBadge(result.badgeEarned);
+        Toast.show({
+          type: 'success',
+          text1: 'Congratulations!',
+          text2: `You earned the ${result.badgeEarned.title} badge!`,
+          position: 'top',
+          visibilityTime: 4000,
+        });
+      }
+
+      onLikeStatusChange(
+        memeID,
+        { liked: newLikedState, doubleLiked: newDoubleLikedState },
+        newLikeCount,
+      );
+
+    } catch (error) {
+      console.error('Error updating meme reaction:', error);
+      // Revert the state changes
+      setLiked(!newLikedState);
+      setDoubleLiked(!newDoubleLikedState);
+      setCounts(prevCounts => ({ ...prevCounts, likes: initialLikeCount }));
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to update like status. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
+    }
+  }, [user, liked, doubleLiked, counts.likes, memeID, updateMemeReactionMutation]);
+
+  // Handle Share
+  const onShare = useCallback(
+    async (type: ShareType, username?: string, message?: string) => {
+      if (user && type === 'friend' && username) {
+        try {
+          const result = await shareMemeMutation.mutateAsync({
+            memeID,
+            email: user.email,
+            username: user.username,
+            catchUser: username,
+            message: message || '',
+          });
+
+          setCounts(prev => ({ ...prev, shares: prev.shares + 1 }));
+
+          // Check for ViralSensation badge
+          await badgeStore.checkViralSensationBadge(user.email);
+
+          Toast.show({
+            type: 'success',
+            text1: 'Meme Shared!',
+            text2: 'Your meme has been shared successfully.',
+            position: 'top',
+            visibilityTime: 3000,
+          });
+        } catch (error) {
+          console.error('Sharing failed:', error);
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Failed to share meme.',
+            position: 'top',
+            visibilityTime: 3000,
+          });
+        }
+      }
+    },
+    [user, memeID, shareMemeMutation, badgeStore]
   );
 
+  // Handle Download Press
   const handleDownloadPress = useCallback(async () => {
     if (user) {
       try {
@@ -121,6 +198,13 @@ export const useMediaPlayerLogic = ({
           ...prev,
           downloads: prev.downloads + (newSavedState ? 1 : -1),
         }));
+
+        if (newSavedState) {
+          badgeStore.incrementDownloadCount();
+        } else {
+          badgeStore.decrementDownloadCount();
+        }
+
         setToastMessage(
           newSavedState
             ? 'Meme added to your gallery!'
@@ -128,40 +212,34 @@ export const useMediaPlayerLogic = ({
         );
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
+
+        // Check for MemeCollector badge
+        await badgeStore.checkMemeCollectorBadge(user.email);
       } catch (error) {
         console.error('Error updating meme reaction:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to update download status. Please try again.',
+          position: 'top',
+          visibilityTime: 4000,
+        });
       }
     }
-  }, [user, memeID, handleDownload, isSaved]);
+  }, [
+    user,
+    memeID,
+    handleDownload,
+    isSaved,
+    badgeStore,
+  ]);
 
-  const onShare = useCallback(
-    async (type: ShareType, username?: string, message?: string) => {
-      if (user && type === 'friend' && username) {
-        try {
-          // Provide default values for username and message if they are undefined
-          const validUsername = username ?? 'Anonymous';
-          const validMessage = message ?? '';
-  
-          await handleShareMeme(
-            memeID,
-            user.email,
-            user.username,
-            validUsername,
-            validMessage,
-            setShowShareModal,
-            setToastMessage,
-          );
-          setCounts(prev => ({ ...prev, shares: prev.shares + 1 }));
-        } catch (error) {
-          console.error('Sharing failed:', error);
-          setToastMessage('Failed to share meme.');
-        }
-      }
-    },
-    [user, memeID],
+  const debouncedHandleLike = useCallback(
+    debounce(() => {
+      handleLikePress();
+    }, 300),
+    [handleLikePress],
   );
-  
-  
 
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
@@ -183,7 +261,25 @@ export const useMediaPlayerLogic = ({
   }, []);
 
   return {
-    liked,doubleLiked,isSaved,showSaveModal,showShareModal,showToast,toastMessage,showLikeAnimation,likePosition,counts,friends,debouncedHandleLike,
-    handleDownloadPress,onShare,formatDate,setShowSaveModal,setShowShareModal,handleSingleTap,setIsSaved,setCounts,handleLongPress,
+    liked,
+    doubleLiked,
+    isSaved,
+    showSaveModal,
+    showShareModal,
+    showToast,
+    toastMessage,
+    showLikeAnimation,
+    likePosition,
+    counts,
+    friends,
+    debouncedHandleLike,
+    handleDownloadPress,
+    onShare,
+    formatDate,
+    setShowSaveModal,
+    setShowShareModal,
+    setIsSaved,
+    setCounts,
+    handleLongPress,
   };
 };

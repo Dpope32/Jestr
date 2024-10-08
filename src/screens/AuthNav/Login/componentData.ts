@@ -8,6 +8,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 50,
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -17,13 +18,14 @@ export const styles = StyleSheet.create({
   },
   contentContainer: {
     width: '100%',
-    maxWidth: 350,
+    maxWidth: 300,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: SPACING.lg,
-    paddingBottom: -SPACING.sm,
-    flex: 1, // Allow content to expand
+    paddingBottom: SPACING.sm,
+    flex: 1, 
   },
+
   scrollView: {
     flexGrow: 1,
 
@@ -32,8 +34,6 @@ export const styles = StyleSheet.create({
     width: '100%',
   },
   inputText: {
-    paddingVertical: SCREEN_HEIGHT * 0.015,
-    paddingHorizontal: SCREEN_WIDTH * 0.04,
     fontSize: Math.max(16, Math.min(FONT_SIZES.md, SCREEN_WIDTH * 0.045)),
     color: '#fff',
 
@@ -49,7 +49,7 @@ export const styles = StyleSheet.create({
 
   button2: {
     width: '100%',
-    height: SCREEN_HEIGHT * 0.07,
+    height: SCREEN_HEIGHT * 0.06,
     borderRadius: SCREEN_HEIGHT * 0.035,
     borderWidth: 2,
     borderColor: '#00ff00',
@@ -67,7 +67,7 @@ export const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: Math.max(14, Math.min(FONT_SIZES.md, SCREEN_WIDTH * 0.04)),
     textAlign: 'center',
-    marginVertical: SPACING.sm,
+    marginVertical: -SPACING.sm,
     textDecorationLine: 'underline',
   },
   forgotPasswordText: {
@@ -77,12 +77,6 @@ export const styles = StyleSheet.create({
     fontSize: Math.max(14, Math.min(FONT_SIZES.md, SCREEN_WIDTH * 0.04)),
     textAlign: 'center',
   },
-  continueButtonsContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -91,7 +85,6 @@ export const styles = StyleSheet.create({
     borderRadius: 4,
     paddingVertical: SCREEN_HEIGHT * 0.015,
     paddingHorizontal: SCREEN_WIDTH * 0.04,
-    marginBottom: SPACING.md,
     borderWidth: 1,
     borderColor: '#DADCE0',
   },
@@ -109,6 +102,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#000000',
+    marginBottom: SPACING.sm,
     borderRadius: 4,
     paddingVertical: SCREEN_HEIGHT * 0.015,
     paddingHorizontal: SCREEN_WIDTH * 0.04,
@@ -122,10 +116,10 @@ export const styles = StyleSheet.create({
   },
   blurView: {
     position: 'absolute',
-    top: 0,
+    top: -100,
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: -100,
     zIndex: 1000,
   },
   loadingContainer: {
@@ -138,32 +132,6 @@ export const styles = StyleSheet.create({
     marginTop: SPACING.sm,
     fontSize: Math.max(16, Math.min(FONT_SIZES.md, SCREEN_WIDTH * 0.045)),
     fontWeight: 'bold',
-  },
-  socialButtonsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '80%',
-    marginVertical: SPACING.md,
-  },
-  socialButton: {
-    width: SCREEN_WIDTH * 0.12,
-    height: SCREEN_WIDTH * 0.12,
-    borderRadius: SCREEN_WIDTH * 0.06,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // Optional: Add shadow for iOS
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    elevation: 5,
-  },
-  socialButtonIcon: {
-    width: '50%',
-    height: '50%',
-    resizeMode: 'contain',
   },
   footerLinksContainer: {
     width: '100%',

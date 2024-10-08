@@ -8,7 +8,9 @@ import { FetchMemesResult } from '../types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useInfiniteQuery, InfiniteData } from '@tanstack/react-query';
 import { User } from '../types/types';
-import Toast from 'react-native-toast-message';
+
+
+
 const COOLDOWN_PERIOD = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 const CACHE_KEY_PREFIX = 'memes_cache_';
 const LAST_VIEWED_MEME_KEY = 'lastViewedMemeId';
@@ -326,74 +328,6 @@ export const removeDownloadedMeme = async (
   }
 };
 
-
-export const handleShareMeme = async (
-  memeID: string,
-  email: string,
-  username: string,
-  catchUser: string,
-  message: string,
-  setResponseModalVisible: (visible: boolean) => void,
-  setResponseMessage: (message: string) => void,
-) => {
-  const shareData = {
-    operation: 'shareMeme',
-    memeID,
-    email: email,
-    username,
-    catchUser,
-    message,
-  };
-
-  try {
-    const response = await fetch(
-      'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/shareMeme',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(shareData),
-      },
-    );
-
-    //    console.log('Response status:', response.status);
-    //    console.log('Response body:', await response.text());
-
-    if (response.ok) {
-      Toast.show({
-        type: 'success', // There are 'success', 'info', 'error'
-        position: 'top',
-        text1: 'Meme shared successfully!',
-        visibilityTime: 4000,
-        autoHide: true,
-        topOffset: 30,
-        bottomOffset: 40,
-        props: {backgroundColor: '#333', textColor: '#white'},
-      });
-    } else {
-      Toast.show({
-        type: 'error',
-        position: 'top',
-        text1: 'Failed to share meme.',
-        visibilityTime: 4000,
-        autoHide: true,
-        topOffset: 30,
-        props: {backgroundColor: '#333', textColor: '#00ff00'},
-      });
-    }
-  } catch (error) {
-    Toast.show({
-      type: 'error',
-      position: 'top',
-      text1: 'An error occurred while sharing the meme.',
-      visibilityTime: 4000,
-      autoHide: true,
-      topOffset: 30,
-    });
-  }
-};
-
 export const getLikeStatus = async (memeID: string, userEmail: string) => {
   try {
     if (!memeID || !userEmail) {
@@ -455,39 +389,4 @@ export const getLikeStatus = async (memeID: string, userEmail: string) => {
     console.error('Error getting meme info and like status:', error);
     return null;
   }
-};
-
-export const updateMemeReaction = async (
-  memeID: string,
-  incrementLikes: boolean,
-  doubleLike: boolean,
-  incrementDownloads: boolean,
-  email: string,
-): Promise<void> => {
-  const requestBody = {
-    operation: 'updateMemeReaction',
-    memeID,
-    doubleLike,
-    incrementLikes,
-    incrementDownloads,
-    email,
-  };
-
-  // console.log('Updating meme reaction with requestBody:', requestBody);
-
-  const response = await fetch(`${API_URL}/updateMemeReaction`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  const data = await response.json();
-  if (!response.ok) {
-    console.error('Failed to update meme reaction:', data.message);
-    throw new Error(data.message);
-  }
-
-  // console.log('Meme reaction updated successfully:', data);
 };

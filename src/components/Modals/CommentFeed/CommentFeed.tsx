@@ -1,6 +1,5 @@
-// CommentFeed.tsx
-import React from 'react';
-import { TouchableWithoutFeedback, Text, View, TextInput, Animated, TouchableOpacity, Image, FlatList, Modal } from 'react-native';
+import React, { useRef } from 'react';
+import { Platform, TouchableWithoutFeedback, Text, View, TextInput, Animated, TouchableOpacity, Image, FlatList, Modal, PanResponder, KeyboardAvoidingView } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowUp, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -8,7 +7,6 @@ import { faArrowUp, faTimes } from '@fortawesome/free-solid-svg-icons';
 import Comment from './Comment';
 import { User, ProfileImage, CommentType } from '../../../types/types';
 import styles from './CommentFeed.styles';
-
 
 import useCommentFeed from './useCommentFeed'; 
 
@@ -20,39 +18,35 @@ type CommentFeedProps = {
   toggleCommentFeed: () => void;
 };
 
-const CommentFeed: React.FC<CommentFeedProps> = ({
-  profilePicUrl,
-  user,
-  memeID,
-  isCommentFeedVisible,
-  toggleCommentFeed,
-}) => {
-  const {
-    newComment,
-    setNewComment,
-    replyingTo,
-    replyingToUsername,
-    comments,
-    isLoading,
-    handleAddComment,
-    handleDeleteComment,
-    handleUpdateReaction,
-    handleReply,
-    cancelReply,
-    closeModal,
-    modalY,
-    inputRef,
-  } = useCommentFeed({
-    memeID,
-    user,
-    isCommentFeedVisible,
-    toggleCommentFeed,
-  });
+const CommentFeed: React.FC<CommentFeedProps> = ({ profilePicUrl, user, memeID, isCommentFeedVisible, toggleCommentFeed }) => {
+  const { 
+    newComment, replyingTo, replyingToUsername, comments, isLoading, modalY, inputRef,
+    keyboardHeight, setNewComment, handleAddComment, handleDeleteComment, handleUpdateReaction, 
+    handleReply, cancelReply, closeModal
+  } = useCommentFeed({ memeID, user, isCommentFeedVisible, toggleCommentFeed });
 
-  const handlePressOutside = () => {
-    console.log('Pressed outside');
-    closeModal();
-  };
+  const panResponder = useRef(
+    Platform.OS === 'ios' ? 
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy > 5,
+        onPanResponderMove: (_, gestureState) => {
+          if (gestureState.dy > 0) {
+            modalY.setValue(gestureState.dy);
+          }
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dy > 100) {
+            closeModal();
+          } else {
+            Animated.spring(modalY, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
+          }
+        },
+      })
+    : null
+  ).current;
 
   const renderComment = (comment: CommentType) => (
     <Comment
@@ -79,57 +73,65 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
   return (
     <Modal
       visible={isCommentFeedVisible}
-      animationType="none" // Using "none" as animations are handled manually
+      animationType="none"
       transparent={true}
       onRequestClose={closeModal}
     >
-      {/* Backdrop: Captures presses outside the modal content */}
-      <TouchableWithoutFeedback onPress={handlePressOutside}>
+      <TouchableWithoutFeedback onPress={closeModal} testID="modal-backdrop">
         <View style={styles.modalContainer}>
-          <View style={styles.modalOverlay}>
-            {/* Prevent touch events from propagating to the backdrop */}
-            <TouchableWithoutFeedback onPress={() => {}}>
-              <Animated.View
-                style={[
-                  styles.modalContentWrapper,
-                  { transform: [{ translateY: modalY }] },
-                ]}
+          <TouchableWithoutFeedback>
+            <Animated.View
+              style={[
+                styles.modalContentWrapper,
+                { transform: [{ translateY: modalY }] },
+              ]}
+              {...(Platform.OS === 'ios' ? panResponder?.panHandlers : {})}
+            >
+              <BlurView
+                intensity={99}
+                tint="dark"
+                style={styles.modalContent}
               >
-                <BlurView
-                  intensity={99}
-                  tint="dark"
-                  style={styles.modalContent}
-                >
+                {Platform.OS === 'android' && (
                   <TouchableOpacity
                     style={styles.closeButton}
                     onPress={closeModal}
                   >
                     <FontAwesomeIcon icon={faTimes} size={24} color="#FFF" />
                   </TouchableOpacity>
+                )}
 
-                  <Text style={styles.commentCount}>
-                    Comments ({comments.length})
+                <Text style={styles.commentCount}>
+                  Comments ({comments.length})
+                </Text>
+                {isLoading ? (
+                  <Text style={styles.loadingText}>
+                    Loading comments...
                   </Text>
-
-                  {isLoading ? (
-                    <Text style={styles.loadingText}>
-                      Loading comments...
-                    </Text>
-                  ) : (
-                    <FlatList
-                      data={comments}
-                      renderItem={({ item }) => renderComment(item)}
-                      keyExtractor={(item) => item.commentID}
-                      contentContainerStyle={styles.commentsContainer}
-                      ListEmptyComponent={
-                        <Text style={{ color: '#FFF', textAlign: 'center' }}>
-                          No comments yet. Be the first to comment!
-                        </Text>
-                      }
-                    />
-                  )}
-
-                  <View style={styles.inputContainer}>
+                ) : (
+                  <FlatList
+                    data={comments}
+                    renderItem={({ item }) => renderComment(item)}
+                    keyExtractor={(item) => item.commentID}
+                    contentContainerStyle={styles.commentsContainer}
+                    ListEmptyComponent={
+                      <Text style={{ color: '#FFF', textAlign: 'center' }}>
+                        No comments yet. Be the first to comment!
+                      </Text>
+                    }
+                  />
+                )}
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                  keyboardVerticalOffset={100}
+                >
+                  <Animated.View
+                    style={[
+                      styles.inputContainer,
+                      { transform: [{ translateY: Animated.multiply(keyboardHeight, -1) }] }
+                    ]}
+                    testID="input-container"
+                  >
                     {replyingTo && (
                       <View style={styles.replyingToContainer}>
                         <Text style={styles.replyingToText}>
@@ -143,10 +145,7 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
                         </TouchableOpacity>
                       </View>
                     )}
-
-                  </View>
-                  {/* Moved inputWrapper inside modalContent to prevent overlapping */}
-                  <View style={styles.inputWrapper}>
+                    <View style={styles.inputWrapper}>
                       <Image
                         source={getImageSource(profilePicUrl)}
                         style={styles.profilePic}
@@ -173,10 +172,11 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
                         />
                       </TouchableOpacity>
                     </View>
-                </BlurView>
-              </Animated.View>
-            </TouchableWithoutFeedback>
-          </View>
+                  </Animated.View>
+                </KeyboardAvoidingView>
+              </BlurView>
+            </Animated.View>
+          </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
     </Modal>

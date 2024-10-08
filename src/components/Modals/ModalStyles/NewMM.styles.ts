@@ -134,9 +134,11 @@ const createStyles = (isDarkMode: boolean) => {
       paddingHorizontal: 10,
       backgroundColor: COLORS.listBackground, // Adjusted background gray
       marginBottom: 20,
+      height: '100%', // Ensure it takes up full height
     },
     horizontalListContainer: {
       height: 80,
+      width: '100%', // Ensure full width is used
     },
     sendButton: {
       backgroundColor: COLORS.sendButtonBackground,

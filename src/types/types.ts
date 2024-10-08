@@ -77,7 +77,7 @@ export type RootStackParamList = {
   Feed: { userEmail: string };
   Settings: { email: string };
   MemeUploadScreen: { user: any };
-  CompleteProfileScreen: { email: string };
+  CompleteProfile: { email: string; name?: string };
   Inbox: { user: any };
   ConfirmSignUp: { email: string };
   AdminPage: undefined;
@@ -154,10 +154,10 @@ export type MediaPlayerProps = {
   likeDislikeCounts?: Record<number, { likeCount: number; dislikeCount: number }>;
   currentMediaIndex: number;
   user: User | null;
-  likeCount: number;
-  downloadCount: number;
-  commentCount: number;
-  shareCount: number;
+  likeCount: number | string;
+  downloadCount: number | string;
+  commentCount: number | string;
+  shareCount: number | string;
   profilePicUrl: string;
   memeID: string;
   nextMedia: string | null;

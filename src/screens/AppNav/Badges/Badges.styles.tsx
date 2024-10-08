@@ -1,4 +1,4 @@
-// Badges.styles.tsx
+// src/screens/AppNav/Badges/Badges.styles.tsx
 
 import { StyleSheet, Platform, Dimensions } from 'react-native';
 
@@ -342,12 +342,10 @@ export const getStyles = (isDarkMode: boolean) => {
       fontSize: 18,
       fontWeight: '700',
       color: COLORS.textPrimary,
-      marginBottom: 4,
     },
     badgeTableDescription: {
       fontSize: 14,
       color: COLORS.textSecondary,
-      marginBottom: 10,
     },
     badgeTableProgressText: {
       fontSize: 14,

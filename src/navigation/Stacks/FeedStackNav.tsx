@@ -20,12 +20,6 @@ const FeedStackNav: React.FC = () => {
     <Stack.Navigator screenOptions={getScreenOptions} initialRouteName="Feed">
       <Stack.Screen name="Feed" component={Feed} />
       <Stack.Screen name="AdminPage" component={AdminPage} />
-
-      {/* <Stack.Screen
-        name="CommentFeed"
-        component={CommentFeed}
-        options={{presentation: 'formSheet'}}
-      /> */}
     </Stack.Navigator>
   );
 };

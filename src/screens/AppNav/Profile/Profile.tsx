@@ -21,6 +21,7 @@ import {AppNavProp} from '../../../navigation/NavTypes/RootNavTypes';
 import LoadingOverlay from './loadingOverlay';
 
 const Profile = React.memo(() => {
+
   const {isDarkMode} = useTheme();
   const navigation = useNavigation<AppNavProp>();
 
@@ -31,6 +32,7 @@ const Profile = React.memo(() => {
     handleDeleteMeme, handleShareProfile, handleRemoveDownloadedMeme, handleTabSelect, openFollowModal, handleImagePress, convertUserStateToUser, 
     setIsFollowModalVisible, setIsEditProfileModalVisible, setFullScreenImage, setIsBlurVisible,setSelectedMeme, setIsCommentFeedVisible,setCurrentMemeIndex,
   } = useProfileLogic(navigation);
+  console.log('Current profilePic URL:', user.profilePic);
 
   const scrollY = new Animated.Value(0);
   const headerHeight = scrollY.interpolate({inputRange: [0, 200],outputRange: [200, 0], extrapolate: 'clamp',});
@@ -113,9 +115,13 @@ const Profile = React.memo(() => {
               style={styles.headerImage}/>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => handleImagePress('profile')}>
-            <Image
-              source={{uri:typeof user.profilePic === 'string'  ? user.profilePic : undefined,}}style={styles.profileImage}/>
-          </TouchableOpacity>
+  <Image
+    source={{ uri: typeof user.profilePic === 'string' ? user.profilePic : undefined }}
+    style={styles.profileImage}
+    onError={(e) => console.error('Failed to load profile image', e.nativeEvent.error)}
+  />
+</TouchableOpacity>
+
         </Animated.View>
         <View style={styles.userInfoContainer}>
           <TouchableOpacity

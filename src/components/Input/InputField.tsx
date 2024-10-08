@@ -1,5 +1,6 @@
 // src/components/Input/InputField.tsx
-import React, { useState, forwardRef } from 'react';
+
+import React, { useState, forwardRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,6 +22,7 @@ interface InputFieldProps extends TextInputProps {
   containerStyle?: StyleProp<ViewStyle> | StyleProp<ViewStyle>[];
   labelStyle?: StyleProp<TextStyle> | StyleProp<TextStyle>[];
   inputStyle?: StyleProp<TextStyle> | StyleProp<TextStyle>[];
+  isEmail?: boolean; // New prop to specify if the input is an email
 }
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -41,20 +43,41 @@ const InputField = forwardRef<TextInput, InputFieldProps>(({
   placeholderTextColor = '#999',
   maxLength,
   onSubmitEditing,
+  isEmail = false, // Default to false
   ...rest
 }, ref) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isAllCaps, setIsAllCaps] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  // Toggle password visibility
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
   };
-  
-  const handleTextChange = (text: string) => {
-    onChangeText!(text);
-    setIsAllCaps(text === text.toUpperCase() && text !== '');
+
+const handleTextChange = (text: string) => {
+  // let sanitizedText = text.trim(); 
+  let sanitizedText = text; // Use raw text
+  // sanitizedText = sanitizedText.replace(/<script.*?>.*?<\/script>/gi, '');
+
+  if (isEmail) {
+    if (validateEmail(sanitizedText)) {
+      setError(null);
+    } else {
+      setError('Please enter a valid email address');
+    }
+  }
+
+  onChangeText!(sanitizedText);
+  setIsAllCaps(sanitizedText === sanitizedText.toUpperCase() && sanitizedText !== '');
+};
+
+
+  // Email validation function using regex
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
   };
-  
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -74,13 +97,17 @@ const InputField = forwardRef<TextInput, InputFieldProps>(({
           onBlur={onBlur}
           placeholderTextColor={placeholderTextColor}
           onSubmitEditing={onSubmitEditing}
-          autoCapitalize="none"
+          autoCapitalize={isEmail ? 'none' : 'sentences'}
+          autoCorrect={false}
           {...rest}
         />
         {secureTextEntry && (
           <TouchableOpacity
             style={styles.eyeIcon}
-            onPress={togglePasswordVisibility}>
+            onPress={togglePasswordVisibility}
+            accessibilityLabel={isPasswordVisible ? "Hide password" : "Show password"}
+            accessibilityHint="Toggles password visibility"
+          >
             <FontAwesomeIcon
               icon={isPasswordVisible ? faEye : faEyeSlash}
               size={20}
@@ -94,6 +121,8 @@ const InputField = forwardRef<TextInput, InputFieldProps>(({
           </View>
         )}
       </View>
+      {/* Display error message if any */}
+      {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 });
@@ -106,8 +135,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    marginBottom: 8, // Reduced from 14 for tighter vertical spacing
-    color: '#fff', // Changed to white for better visibility against dark backgrounds
+    marginBottom: 8, 
+    color: '#fff',
     fontWeight: 'bold',
   },
   inputContainer: {
@@ -119,11 +148,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#1c1c1c',
   },
   input: {
-    width: '100%',
+    flex: 1,
     fontSize: 16,
     paddingVertical: SCREEN_HEIGHT * 0.01,
     paddingHorizontal: SCREEN_WIDTH * 0.04,
-    color: '#fff', // Changed to white for better readability
+    color: '#fff', 
   },
   eyeIcon: {
     padding: 10,
@@ -131,7 +160,13 @@ const styles = StyleSheet.create({
   capsIcon: {
     position: 'absolute',
     right: 10,
-    top: 12, // Adjusted to align better vertically
+    top: 12, 
+  },
+  errorText: {
+    color: COLORS.error || '#FF3B30', 
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
 

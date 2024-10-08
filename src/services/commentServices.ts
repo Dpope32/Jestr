@@ -1,6 +1,7 @@
-import { CommentType } from '../components/Modals/CommentFeed/CommentFeed';
-import { User } from '../types/types';
+
+import { User, CommentType } from '../types/types';
 import { API_URL } from './config';
+import { Badge } from '../screens/AppNav/Badges/Badges.types';
 
 // Define specific API endpoints
 const POST_COMMENT_ENDPOINT = `${API_URL}/postComment`;
@@ -27,7 +28,7 @@ export const postComment = async (
   text: string,
   user: User,
   parentCommentID?: string,
-): Promise<void> => {
+): Promise<{ comment: CommentType; badgeEarned: Badge | null }> => {
   const commentData = {
     operation: 'postComment',
     memeID,
@@ -56,6 +57,10 @@ export const postComment = async (
     if (!response.ok) {
       console.error('Failed to post comment:', data.message);
       throw new Error(data.message);
+    }
+    return { 
+      comment: data.data.comment, 
+      badgeEarned: data.data.badgeEarned 
     }
   } catch (error) {
     console.error('Error in postComment:', error);
@@ -151,7 +156,7 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
     }));
 
     // Optionally log the organized comments
-    console.log('Organized Comments:', organizedComments);
+ //   console.log('Organized Comments:', organizedComments);
 
     return organizedComments;
   } catch (error) {
@@ -163,7 +168,7 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
 export const organizeCommentsIntoThreads = (
     flatComments: CommentType[],
   ): CommentType[] => {
-    console.log('Organizing comments into threads...', { flatComments });
+  //  console.log('Organizing comments into threads...', { flatComments });
   
     const commentMap = new Map<string, CommentType>();
     const topLevelComments: CommentType[] = [];
@@ -188,7 +193,7 @@ export const organizeCommentsIntoThreads = (
       }
     });
   
-    console.log('Organized Comment Threads:', topLevelComments);
+ //   console.log('Organized Comment Threads:', topLevelComments);
     return topLevelComments;
   };
   
@@ -216,7 +221,7 @@ export const deleteComment = async (commentID: string, memeID: string, email: st
     const data = await response.json();
 
     // Log the response data
-    logResponse('deleteComment', response, data);
+  //  logResponse('deleteComment', response, data);
 
     if (!response.ok) {
       console.error('Failed to delete comment:', data.message);
@@ -247,7 +252,7 @@ export const replyToComment = async (
 
   try {
     // Log the request data
-    logRequest('replyToComment', requestBody);
+  //  logRequest('replyToComment', requestBody);
 
     const response = await fetch(REPLY_TO_COMMENT_ENDPOINT, {
       method: 'POST',
@@ -258,7 +263,7 @@ export const replyToComment = async (
     const data = await response.json();
 
     // Log the response data
-    logResponse('replyToComment', response, data);
+    //logResponse('replyToComment', response, data);
 
     if (!response.ok) {
       console.error('Failed to reply to comment:', data.message);

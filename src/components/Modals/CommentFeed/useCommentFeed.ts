@@ -1,13 +1,14 @@
-// useCommentFeed.ts
 import { useState, useRef, useEffect } from 'react';
 import { Keyboard, TextInput, Animated, Dimensions } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { useTabBarStore } from '../../../stores/tabBarStore';
+import { useBadgeStore } from '../../../stores/badgeStore';
+import Toast from 'react-native-toast-message';
 
-import { fetchComments, postComment, deleteComment, updateCommentReaction, organizeCommentsIntoThreads,} from '../../../services/commentServices';
+import { fetchComments, postComment, deleteComment, updateCommentReaction, organizeCommentsIntoThreads } from '../../../services/commentServices';
 
-import { User, ProfileImage, CommentType } from '../../../types/types';
+import { User, CommentType } from '../../../types/types';
 
 const screenHeight = Dimensions.get('window').height;
 
@@ -18,34 +19,16 @@ type UseCommentFeedProps = {
   toggleCommentFeed: () => void;
 };
 
-type UseCommentFeedReturn = {
-  newComment: string;
-  setNewComment: (text: string) => void;
-  replyingTo: string | null;
-  setReplyingTo: (id: string | null) => void;
-  replyingToUsername: string | null;
-  setReplyingToUsername: (username: string | null) => void;
-  modalY: Animated.Value;
-  inputRef: React.RefObject<TextInput>;
-  comments: CommentType[];
-  isLoading: boolean;
-  handleAddComment: () => void;
-  handleDeleteComment: (commentID: string) => void;
-  handleUpdateReaction: (commentID: string, reaction: 'like' | 'dislike' | null) => void;
-  handleReply: (commentID: string, username: string) => void;
-  cancelReply: () => void;
-  closeModal: () => void;
-};
-
 const useCommentFeed = ({
   memeID,
   user,
   isCommentFeedVisible,
   toggleCommentFeed,
-}: UseCommentFeedProps): UseCommentFeedReturn => {
+}: UseCommentFeedProps) => {
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyingToUsername, setReplyingToUsername] = useState<string | null>(null);
+  const [keyboardHeight] = useState(new Animated.Value(0));
   const modalY = useRef(new Animated.Value(screenHeight)).current;
   const inputRef = useRef<TextInput>(null);
   const queryClient = useQueryClient();
@@ -70,10 +53,34 @@ const useCommentFeed = ({
       }).start();
     }
 
+    const keyboardWillShowListener = Keyboard.addListener(
+      'keyboardWillShow',
+      (e) => {
+        Animated.timing(keyboardHeight, {
+          toValue: e.endCoordinates.height,
+          duration: 250,
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      'keyboardWillHide',
+      () => {
+        Animated.timing(keyboardHeight, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+
     return () => {
       setCommentModalVisible(false);
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
     };
-  }, [isCommentFeedVisible, setCommentModalVisible, modalY]);
+  }, [isCommentFeedVisible, setCommentModalVisible, modalY, keyboardHeight]);
 
   // Fetch comments
   const { data: fetchedComments = [], isLoading } = useQuery<CommentType[]>({
@@ -84,7 +91,7 @@ const useCommentFeed = ({
 
   // Organize comments into threads
   const comments = organizeCommentsIntoThreads(fetchedComments || []);
-
+  const badgeStore = useBadgeStore();
   // Mutation for posting a comment
   const postCommentMutation = useMutation({
     mutationFn: (newCommentData: {
@@ -132,6 +139,22 @@ const useCommentFeed = ({
         );
       }
     },
+    onSuccess: async (data) => {
+      if (user) {
+        badgeStore.incrementCommentCount();
+        if (data.badgeEarned) {
+          badgeStore.earnBadge(data.badgeEarned);
+          Toast.show({
+            type: 'success',
+            text1: 'Congratulations!',
+            text2: `You earned the ${data.badgeEarned.title} badge!`,
+            position: 'top',
+            visibilityTime: 4000,
+          });
+        }
+        await badgeStore.checkCommentatorBadge(user.email);
+      }
+    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', memeID] });
     },
@@ -144,7 +167,6 @@ const useCommentFeed = ({
       console.error('User is null, cannot post comment.');
     }
   };
-
   // Mutation for deleting a comment
   const deleteCommentMutation = useMutation({
     mutationFn: (commentID: string) =>
@@ -288,6 +310,7 @@ const useCommentFeed = ({
     inputRef,
     comments,
     isLoading,
+    keyboardHeight,
     handleAddComment,
     handleDeleteComment,
     handleUpdateReaction,

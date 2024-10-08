@@ -1,3 +1,5 @@
+// src/screens/AppNav/Badges/BadgeCard.tsx
+
 import React, { useRef, useState } from 'react';
 import { View, Text, Animated, TouchableOpacity, Image, Alert, Dimensions } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -7,7 +9,7 @@ import { COLORS } from '../../../theme/theme';
 import { Badge, useBadgeStore } from '../../../stores/badgeStore';
 import { getStyles } from './Badges.styles'; 
 
-type BadgeCardProps = { badge: Badge; badgeImage: any; isDarkMode: boolean;};
+type BadgeCardProps = { badge: Badge; badgeImage: any; isDarkMode: boolean; };
 
 const CARD_MARGIN = 15;
 const NUM_COLUMNS = 2;

@@ -23,6 +23,7 @@ import * as MediaLibrary from 'expo-media-library';
 import styles from './MemeUpload.styles';
 import MediaEditor from './MediaEditor';
 import { uploadMeme } from '../../services/memeService';
+import { useBadgeStore } from '../../stores/badgeStore';
 
 interface MemeUploadProps {
   userEmail: string;
@@ -34,18 +35,13 @@ interface MemeUploadProps {
   setIsUploading: (isUploading: boolean) => void;
 }
 
-interface MediaState {
-  uri: string;
-  type: 'image' | 'video';
-}
+interface MediaState { uri: string; type: 'image' | 'video';}
 
 const MemeUpload: React.FC<MemeUploadProps> = ({
   userEmail,
   username,
   onUploadSuccess,
   onImageSelect,
-  isDarkMode,
-  creationDate,
   setIsUploading,
 }) => {
   const [media, setMedia] = useState<MediaState | null>(null);
@@ -56,7 +52,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
   const [textSize, setTextSize] = useState(24);
   const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
   const [shouldPlay, setShouldPlay] = useState(true);
-
+  const badgeStore = useBadgeStore();
   const videoRef = useRef<Video>(null);
 
   useFocusEffect(
@@ -96,7 +92,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
       quality: 1,
     });
 
-    console.log('Image picker result:', JSON.stringify(result, null, 2));
+  //  console.log('Image picker result:', JSON.stringify(result, null, 2));
 
     if (!result.canceled && result.assets && result.assets[0]) {
       const asset = result.assets[0];
@@ -104,14 +100,14 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
 
       if (asset.type === 'video') {
         const durationInMilliseconds = asset.duration ? asset.duration : 0;
-        console.log('Video duration (milliseconds):', durationInMilliseconds);
+    //    console.log('Video duration (milliseconds):', durationInMilliseconds);
 
         if (durationInMilliseconds > 120000) {
-          console.log('Video duration exceeds limit');
+     //     console.log('Video duration exceeds limit');
           Alert.alert('Error', 'Videos cannot be longer than 120 seconds.');
           return;
         } else {
-          console.log('Video duration within limit');
+     //     console.log('Video duration within limit');
         }
       }
 
@@ -122,7 +118,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
       onImageSelect(true);
       setIsEditing(true);
     } else {
-      console.log('Media selection cancelled or failed');
+   //   console.log('Media selection cancelled or failed');
     }
   }, [onImageSelect]);
 
@@ -131,9 +127,9 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
       Alert.alert('Error', 'Please select a media file first');
       return;
     }
-
+  
     try {
-      setIsUploading(true); // Show loading indicator
+      setIsUploading(true);
       const result = await uploadMeme(
         media.uri,
         userEmail,
@@ -142,10 +138,12 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
         [],
         media.type
       );
-      setIsUploading(false); // Hide loading indicator
+      setIsUploading(false);
       onUploadSuccess(result.url);
+      await badgeStore.checkMemeMasterBadge(userEmail);
+      await badgeStore.checkMemeCreatorBadge(userEmail);
     } catch (error) {
-      setIsUploading(false); // Hide loading indicator
+      setIsUploading(false);
       console.error('Upload failed:', error);
       Alert.alert('Upload Failed', 'Please try again later.');
     }
@@ -235,7 +233,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
     setMedia({ ...media!, uri: editedUri });
     setOverlayText(text);
     setTextPosition(position);
-    setTextSize(24 * scale); // Multiply the base size (24) by the scale
+    setTextSize(24 * scale); 
     setTextColor(color);
     setIsEditing(false);
   };

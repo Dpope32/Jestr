@@ -20,6 +20,9 @@ const styles = StyleSheet.create({
     marginRight: 15,
     padding: 5,
   },
+  errorText: {
+    color:  '#FF3B30',
+  },
   profilePic: {
     width: 40,
     height: 40,

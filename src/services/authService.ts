@@ -3,13 +3,27 @@ import 'react-native-url-polyfill/auto';
 import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types/types';
-import { signUp, signOut, resetPassword, getCurrentUser, fetchAuthSession, signIn, confirmResetPassword } from '@aws-amplify/auth';
+import { 
+  signUp, 
+  signOut, 
+  resetPassword, 
+  getCurrentUser, 
+  fetchAuthSession, 
+  signIn, 
+  confirmResetPassword,
+} from '@aws-amplify/auth';
+import appleAuth, { AppleRequestScope, AppleRequestOperation } from '@invertase/react-native-apple-authentication';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
+// Initialize Google Sign-In
+GoogleSignin.configure({
+  webClientId: '667171669430-pcji1fi3ompmhtfr0uv2peh9qeqmo0rl.apps.googleusercontent.com', // Web client ID
+  offlineAccess: true,
+});
 import { useUserStore } from '../stores/userStore';
 import { removeToken } from '../stores/secureStore';
 import * as SecureStore from 'expo-secure-store';
 import { fetchUserDetails } from './userService';
-//import * as Google from 'expo-auth-session/providers/google';
 import { AuthNavProp } from '../navigation/NavTypes/AuthStackTypes';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
@@ -72,7 +86,7 @@ export const registerDevice = async (userID: string) => {
 
     if (response.ok) {
       console.log('Device registered successfully:', responseData);
-      Alert.alert('Success', 'Device registered for notifications.');
+      //Alert.alert('Success', 'Device registered for notifications.');
     } else {
       console.error('Failed to register device:', responseData);
       Alert.alert('Registration Failed', responseData.message || 'Please try again.');
@@ -85,6 +99,70 @@ export const registerDevice = async (userID: string) => {
     throw error;
   }
 };
+
+export const handleGoogleSignIn = async (navigation: AuthNavProp) => {
+  try {
+    await GoogleSignin.hasPlayServices();
+    const userInfo = await GoogleSignin.signIn();
+
+    if (userInfo.type === 'success') {
+      console.log('Google Sign-In success:', userInfo);
+    }
+     
+    // Retrieve the authenticated user's information
+    const authUser = await getCurrentUser();
+    console.log('authUser after Google sign-in:', authUser);
+
+    const user = convertAuthUserToUser(authUser);
+    useUserStore.getState().setUserDetails(user);
+    
+    // Corrected line: Use 'user.email' instead of 'Profile.email'
+    navigation.navigate('CompleteProfile', { email: user.email || '' });
+  } catch (error: any) {
+    console.error('Error in handleGoogleSignIn:', error);
+    Alert.alert('Google Sign-In Error', error.message || 'An error occurred');
+  }
+};
+
+
+export const handleAppleSignIn = async (navigation: AuthNavProp) => {
+  try {
+    const appleAuthRequestResponse = await appleAuth.performRequest({
+      requestedOperation: AppleRequestOperation.LOGIN,
+      requestedScopes: [AppleRequestScope.EMAIL, AppleRequestScope.FULL_NAME],
+    });
+
+    const { identityToken, email, fullName } = appleAuthRequestResponse;
+
+    if (identityToken) {
+      const { isSignedIn, nextStep } = await signIn({
+        username: email || '',
+        password: identityToken,
+        options: {
+          authFlowType: "USER_SRP_AUTH"
+        }
+      });
+
+      if (isSignedIn) {
+        const authUser = await getCurrentUser();
+        console.log('authUser after signup and signin in:', authUser);
+
+        const user = convertAuthUserToUser(authUser);
+        useUserStore.getState().setUserDetails(user);
+        navigation.navigate('CompleteProfile', { email: email || '' });
+      } else {
+        console.log('Additional steps required:', nextStep);
+      }
+    } else {
+      Alert.alert('Apple Sign-In Error', 'No identity token returned');
+    }
+  } catch (error: any) {
+    console.error('Error in handleAppleSignIn:', error);
+    Alert.alert('Apple Sign-In Error', error.message || 'An error occurred');
+  }
+};
+
+
 
 export const handleLogin = async (
   username: string,
@@ -395,14 +473,6 @@ export const resendConfirmationCode = async (username: string) => {
     console.error('Error resending confirmation code:', error);
     return false; // Return failure without showing a toast
   }
-};
-
-export const handleAppleSignIn = async () => {
-  // Implementation based on '@invertase/react-native-apple-authentication'
-};
-
-export const handleGoogleSignIn = async () => {
-  // Implementation based on '@react-native-google-signin/google-signin'
 };
 
 export const handleTwitterSignIn = async () => {

@@ -96,11 +96,12 @@ const FeedbackForm = () => {
           <View style={styles.formContainer}>
             <Text style={styles.modalText}>Please fill out the form below:</Text>
             <InputField
-              label=""
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-            />
+                label=""
+                placeholder="Enter your email"
+                value={email}
+                onChangeText={setEmail}
+                isEmail={true}
+              />
             <View style={styles.messageContainer}>
               <InputField
                 label=""
