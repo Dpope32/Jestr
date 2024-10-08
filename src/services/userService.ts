@@ -11,7 +11,6 @@ import * as SecureStore from 'expo-secure-store';
 import {getUserMemes} from './memeService';
 
 
-
 export const getUser = async (userEmail: string): Promise<User | null> => {
   console.log('getUser called with userEmail:', userEmail);
   try {
@@ -275,10 +274,12 @@ export const updateBio = async (
   }
 };
 
-export const updateUserProfile = async (updatedFields: Partial<User>): Promise<User> => {
+export const updateUserProfile = async (
+  updatedFields: Partial<User>,
+): Promise<User> => {
   try {
     console.log('Sending request to update user profile:', updatedFields);
-    
+
     const response = await fetch(`${API_URL}/updateUserProfile`, {
       method: 'POST',
       headers: {
@@ -297,7 +298,9 @@ export const updateUserProfile = async (updatedFields: Partial<User>): Promise<U
     console.log('Response text:', responseText);
 
     if (!response.ok) {
-      throw new Error(`Failed to update user profile: ${response.status} ${responseText}`);
+      throw new Error(
+        `Failed to update user profile: ${response.status} ${responseText}`,
+      );
     }
 
     const updatedUser = JSON.parse(responseText);
@@ -306,7 +309,7 @@ export const updateUserProfile = async (updatedFields: Partial<User>): Promise<U
     if (updatedFields.newEmail) {
       Alert.alert(
         'Email Update',
-        'Your email update request has been submitted. Please check your new email for a verification link.'
+        'Your email update request has been submitted. Please check your new email for a verification link.',
       );
     }
 
@@ -602,13 +605,16 @@ export const getFeedback = async (email: string) => {
 
 export const getAllFeedback = async (): Promise<FeedbackItem[]> => {
   try {
-    const response = await fetch(`https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getAllFeedback`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/getAllFeedback`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({operation: 'getAllFeedback'}),
       },
-      body: JSON.stringify({ operation: 'getAllFeedback' }),
-    });
+    );
 
     console.log('API Response Status:', response.status);
 
@@ -624,7 +630,9 @@ export const getAllFeedback = async (): Promise<FeedbackItem[]> => {
     }
 
     // Filter out feedback items with status "Closed"
-    const filteredFeedback = data.data.filter((item: FeedbackItem) => item.Status !== 'Closed');
+    const filteredFeedback = data.data.filter(
+      (item: FeedbackItem) => item.Status !== 'Closed',
+    );
 
     console.log('Filtered Feedback:', filteredFeedback);
     return filteredFeedback;

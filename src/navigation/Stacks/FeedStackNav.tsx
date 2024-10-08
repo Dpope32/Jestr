@@ -3,7 +3,6 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NativeStackNavigationOptions} from '@react-navigation/native-stack';
 
 import Feed from '../../screens/AppNav/Feed/Feed';
-// import CommentFeed from '../../screens/AppNav/CommentFeed/CommentFeed';
 import AdminPage from '../../screens/AppNav/AdminPage';
 
 const Stack = createNativeStackNavigator();

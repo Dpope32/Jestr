@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import {StyleSheet} from 'react-native';
 
 const styles = StyleSheet.create({
   commentContainer: {
@@ -9,6 +9,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginVertical: 5,
     marginHorizontal: 8,
+
+    // borderWidth: 2,
+    // borderColor: '#FFF',
   },
   replyContainer: {
     marginLeft: 30,

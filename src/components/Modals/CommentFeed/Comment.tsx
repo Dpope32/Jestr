@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -16,9 +16,9 @@ import {
   faTrash,
   faCopy,
 } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import moment from 'moment';
-import { CommentType } from '../../../types/types';
+import {CommentType} from '../../../types/types';
 import styles from './Comment.styles';
 import * as Clipboard from 'expo-clipboard';
 
@@ -44,26 +44,24 @@ const Comment: React.FC<CommentProps> = ({
 }) => {
   const [showReplies, setShowReplies] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [userReaction, setUserReaction] = useState<
-    'like' | 'dislike' | null
-  >(comment.userReaction);
-  const [likesCount, setLikesCount] = useState(comment.likesCount);
-  const [dislikesCount, setDislikesCount] = useState(
-    comment.dislikesCount,
+  const [userReaction, setUserReaction] = useState<'like' | 'dislike' | null>(
+    comment.userReaction,
   );
+  const [likesCount, setLikesCount] = useState(comment.likesCount);
+  const [dislikesCount, setDislikesCount] = useState(comment.dislikesCount);
   const timeAgo = moment(comment.timestamp).fromNow();
 
   const handleLike = () => {
     let newReaction: 'like' | 'dislike' | null = null;
     if (userReaction === 'like') {
       newReaction = null;
-      setLikesCount((prev) => prev - 1);
+      setLikesCount(prev => prev - 1);
     } else {
       if (userReaction === 'dislike') {
-        setDislikesCount((prev) => prev - 1);
+        setDislikesCount(prev => prev - 1);
       }
       newReaction = 'like';
-      setLikesCount((prev) => prev + 1);
+      setLikesCount(prev => prev + 1);
     }
     setUserReaction(newReaction);
     onUpdateReaction(comment.commentID, newReaction);
@@ -73,13 +71,13 @@ const Comment: React.FC<CommentProps> = ({
     let newReaction: 'like' | 'dislike' | null = null;
     if (userReaction === 'dislike') {
       newReaction = null;
-      setDislikesCount((prev) => prev - 1);
+      setDislikesCount(prev => prev - 1);
     } else {
       if (userReaction === 'like') {
-        setLikesCount((prev) => prev - 1);
+        setLikesCount(prev => prev - 1);
       }
       newReaction = 'dislike';
-      setDislikesCount((prev) => prev + 1);
+      setDislikesCount(prev => prev + 1);
     }
     setUserReaction(newReaction);
     onUpdateReaction(comment.commentID, newReaction);
@@ -110,14 +108,14 @@ const Comment: React.FC<CommentProps> = ({
       'Delete Comment',
       'Are you sure you want to delete this comment?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        {text: 'Cancel', style: 'cancel'},
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => onDelete(comment.commentID),
         },
       ],
-      { cancelable: true },
+      {cancelable: true},
     );
     setIsModalVisible(false);
   };
@@ -128,15 +126,10 @@ const Comment: React.FC<CommentProps> = ({
         activeOpacity={0.7}
         onLongPress={() => setIsModalVisible(true)}>
         <View
-          style={[
-            styles.commentContainer,
-            depth > 0 && styles.replyContainer,
-          ]}>
+          style={[styles.commentContainer, depth > 0 && styles.replyContainer]}>
           <Image
             source={
-              comment.profilePicUrl
-                ? { uri: comment.profilePicUrl }
-                : DefaultPfp
+              comment.profilePicUrl ? {uri: comment.profilePicUrl} : DefaultPfp
             }
             style={styles.profilePic}
           />
@@ -149,36 +142,24 @@ const Comment: React.FC<CommentProps> = ({
                 style={styles.reactionButton}>
                 <FontAwesomeIcon
                   icon={faThumbsUp}
-                  color={
-                    userReaction === 'like' ? '#4CAF50' : '#AAAAAA'
-                  }
+                  color={userReaction === 'like' ? '#4CAF50' : '#AAAAAA'}
                   size={16}
                 />
               </TouchableOpacity>
-              <Text style={styles.likesText}>
-                {likesCount - dislikesCount}
-              </Text>
+              <Text style={styles.likesText}>{likesCount - dislikesCount}</Text>
               <TouchableOpacity
                 onPress={handleDislike}
                 style={styles.reactionButton}>
                 <FontAwesomeIcon
                   icon={faThumbsDown}
-                  color={
-                    userReaction === 'dislike' ? '#FF0000' : '#AAAAAA'
-                  }
+                  color={userReaction === 'dislike' ? '#FF0000' : '#AAAAAA'}
                   size={16}
                 />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() =>
-                  onReply(comment.commentID, comment.username)
-                }
+                onPress={() => onReply(comment.commentID, comment.username)}
                 style={styles.reactionButton}>
-                <FontAwesomeIcon
-                  icon={faReply}
-                  color="#007AFF"
-                  size={16}
-                />
+                <FontAwesomeIcon icon={faReply} color="#007AFF" size={16} />
                 <Text style={styles.replyText}>Reply</Text>
               </TouchableOpacity>
               <Text style={styles.timestamp}>{timeAgo}</Text>
@@ -199,7 +180,7 @@ const Comment: React.FC<CommentProps> = ({
       )}
 
       {showReplies &&
-        comment.replies.map((reply) => (
+        comment.replies.map(reply => (
           <Comment
             key={reply.commentID}
             comment={reply}
@@ -217,40 +198,27 @@ const Comment: React.FC<CommentProps> = ({
         animationType="fade"
         visible={isModalVisible}
         onRequestClose={() => setIsModalVisible(false)}>
-        <TouchableWithoutFeedback
-          onPress={() => setIsModalVisible(false)}>
+        <TouchableWithoutFeedback onPress={() => setIsModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
               <View style={styles.modalContent}>
                 <TouchableOpacity
                   style={styles.modalOption}
                   onPress={handleCopyText}>
-                  <FontAwesomeIcon
-                    icon={faCopy}
-                    size={20}
-                    color="#000"
-                  />
+                  <FontAwesomeIcon icon={faCopy} size={20} color="#000" />
                   <Text style={styles.modalOptionText}>Copy Text</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.modalOption}
                   onPress={handleReplyPress}>
-                  <FontAwesomeIcon
-                    icon={faReply}
-                    size={20}
-                    color="#000"
-                  />
+                  <FontAwesomeIcon icon={faReply} size={20} color="#000" />
                   <Text style={styles.modalOptionText}>Reply</Text>
                 </TouchableOpacity>
                 {currentUserEmail === comment.email && (
                   <TouchableOpacity
                     style={styles.modalOption}
                     onPress={handleDelete}>
-                    <FontAwesomeIcon
-                      icon={faTrash}
-                      size={20}
-                      color="#000"
-                    />
+                    <FontAwesomeIcon icon={faTrash} size={20} color="#000" />
                     <Text style={styles.modalOptionText}>Delete</Text>
                   </TouchableOpacity>
                 )}
@@ -262,6 +230,5 @@ const Comment: React.FC<CommentProps> = ({
     </View>
   );
 };
- 
 
 export default Comment;

@@ -8,3 +8,4 @@ export type FeedNavParamList = {
 
 export type FeedNavProp = NativeStackNavigationProp<FeedNavParamList>;
 export type FeedNavRouteProp = RouteProp<FeedNavParamList>;
+export type CommentFeedRouteProp = RouteProp<FeedNavParamList, 'CommentFeed'>;

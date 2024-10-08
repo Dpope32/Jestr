@@ -12,5 +12,10 @@ module.exports = function (api) {
       'react-native-reanimated/plugin',
       ["module:react-native-dotenv"]
     ],
+    env: {
+      production: {
+        plugins: ['transform-remove-console'],
+      },
+    },
   };
 };

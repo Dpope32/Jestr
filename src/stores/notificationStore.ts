@@ -1,8 +1,9 @@
 // notificationStore.ts
 
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import {create} from 'zustand';
+import {persist, createJSONStorage} from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import zustandMMKVStorage from '../utils/zustandMMKVStorage';
 
 // Define the structure for individual notifications
 export interface Notification {
@@ -66,45 +67,47 @@ const initialNotifications: Notification[] = [
     id: 3,
     message: "We promse we will never spam you with ads, notifications, or anything else annoying.",
     read: true,
-    timestamp: "1d ago",
-    profilePicUrl: "1.png" 
+    timestamp: '1d ago',
+    profilePicUrl: '1.png',
   },
 ];
 
-
 export const useNotificationStore = create<NotificationStore>()(
   persist(
-    (set) => ({
+    set => ({
       ...DEFAULT_SETTINGS,
       notifications: initialNotifications,
 
-      setNotifications: (notifications: Notification[]) => set({ notifications }),
+      setNotifications: (notifications: Notification[]) => set({notifications}),
 
       addNotification: (notification: Notification) =>
-        set((state) => ({
+        set(state => ({
           notifications: [notification, ...state.notifications],
         })),
 
       markAsRead: (notificationId: number) =>
-        set((state) => ({
-          notifications: state.notifications.map((notif) =>
-            notif.id === notificationId ? { ...notif, read: true } : notif
+        set(state => ({
+          notifications: state.notifications.map(notif =>
+            notif.id === notificationId ? {...notif, read: true} : notif,
           ),
         })),
 
       markAllAsRead: () =>
-        set((state) => ({
-          notifications: state.notifications.map((notif) => ({ ...notif, read: true })),
+        set(state => ({
+          notifications: state.notifications.map(notif => ({
+            ...notif,
+            read: true,
+          })),
         })),
 
-      updateAllSettings: (settings) => {
-        set((state) => ({
+      updateAllSettings: settings => {
+        set(state => ({
           ...state,
           ...settings,
         }));
       },
-      setNotificationPreferences: (settings) =>
-        set((state) => ({
+      setNotificationPreferences: settings =>
+        set(state => ({
           ...state,
           ...settings,
         })),
@@ -117,7 +120,7 @@ export const useNotificationStore = create<NotificationStore>()(
     }),
     {
       name: 'notification-storage',
-      storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+      storage: createJSONStorage(() => zustandMMKVStorage),
+    },
+  ),
 );

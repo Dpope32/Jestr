@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Image,
@@ -10,11 +10,11 @@ import {
   SafeAreaView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowLeft, faSync } from '@fortawesome/free-solid-svg-icons';
-import { useNavigation } from '@react-navigation/native';
-import { COLORS, wp } from '../../../theme/theme';
-import { useTheme } from '../../../theme/ThemeContext';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faArrowLeft, faSync} from '@fortawesome/free-solid-svg-icons';
+import {useNavigation} from '@react-navigation/native';
+import {COLORS, wp} from '../../../theme/theme';
+import {useTheme} from '../../../theme/ThemeContext';
 import AnalyticsBoard from './AnalyticsBoard';
 import Toast from 'react-native-toast-message';
 
@@ -32,7 +32,7 @@ interface AdminData {
 
 const AdminPage = () => {
   const navigation = useNavigation();
-  const { isDarkMode } = useTheme();
+  const {isDarkMode} = useTheme();
   const [error, setError] = useState<string | null>(null);
   const [adminData, setAdminData] = useState<AdminData>({
     userCount: 0,
@@ -60,17 +60,23 @@ const AdminPage = () => {
 
   const fetchAdminData = async () => {
     try {
-      const baseUrl = 'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/';
-      const operations = ['getTotalUsers', 'getTotalMemes', 'getDAU', 'getUserGrowthRate'];
+      const baseUrl =
+        'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/';
+      const operations = [
+        'getTotalUsers',
+        'getTotalMemes',
+        'getDAU',
+        'getUserGrowthRate',
+      ];
 
       const results = await Promise.all(
-        operations.map((operation) =>
+        operations.map(operation =>
           fetch(`${baseUrl}${operation}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ operation }),
-          }).then((response) => response.json())
-        )
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({operation}),
+          }).then(response => response.json()),
+        ),
       );
 
       const [userData, memeData, dauData, growthData] = results;
@@ -86,7 +92,10 @@ const AdminPage = () => {
       await AsyncStorage.setItem('adminData', JSON.stringify(newAdminData));
     } catch (error) {
       console.error('Error fetching admin data:', error);
-      setError('Failed to fetch admin data: ' + (error instanceof Error ? error.message : String(error)));
+      setError(
+        'Failed to fetch admin data: ' +
+          (error instanceof Error ? error.message : String(error)),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -139,22 +148,33 @@ const AdminPage = () => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        isDarkMode ? styles.darkContainer : styles.lightContainer,
+      ]}>
       {showAnalytics ? (
-       <View style={[styles.analyticsContainer, { flex: 1 }]}>
-       <TouchableOpacity onPress={toggleAnalyticsBoard} style={styles.backButton}>
-         <FontAwesomeIcon icon={faArrowLeft} size={20} color={COLORS.primary} />
-       </TouchableOpacity>
-       <View style={{ flex: 1 }}>
-       <AnalyticsBoard onClose={handleCloseAnalytics} />
-       </View>
-     </View>
-     
+        <View style={[styles.analyticsContainer, {flex: 1}]}>
+          <TouchableOpacity
+            onPress={toggleAnalyticsBoard}
+            style={styles.backButton}>
+            <FontAwesomeIcon
+              icon={faArrowLeft}
+              size={20}
+              color={COLORS.primary}
+            />
+          </TouchableOpacity>
+          <View style={{flex: 1}}>
+            <AnalyticsBoard onClose={handleCloseAnalytics} />
+          </View>
+        </View>
       ) : (
         <>
           <View style={styles.header}>
             <Text style={styles.headerText}>Admin Dashboard</Text>
-            <TouchableOpacity onPress={refreshData} style={styles.refreshButton}>
+            <TouchableOpacity
+              onPress={refreshData}
+              style={styles.refreshButton}>
               <FontAwesomeIcon icon={faSync} size={20} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
@@ -164,10 +184,12 @@ const AdminPage = () => {
             renderItem={null}
             ListHeaderComponent={renderListHeader}
             keyExtractor={(_, index) => index.toString()}
-            style={styles.flatList} 
+            style={styles.flatList}
           />
 
-          <TouchableOpacity onPress={toggleAnalyticsBoard} style={styles.analyticsButton}>
+          <TouchableOpacity
+            onPress={toggleAnalyticsBoard}
+            style={styles.analyticsButton}>
             <Text style={styles.analyticsButtonText}>View User Feedback</Text>
           </TouchableOpacity>
         </>
@@ -181,7 +203,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    
   },
   darkContainer: {
     backgroundColor: '#1C1C1C',
@@ -199,7 +220,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   flatList: {
-    flexGrow: 0,  // Ensure FlatList doesn't take all available space
+    flexGrow: 0, // Ensure FlatList doesn't take all available space
     marginBottom: 20, // Add margin to separate the button
   },
   header: {
@@ -231,7 +252,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
@@ -243,7 +264,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
