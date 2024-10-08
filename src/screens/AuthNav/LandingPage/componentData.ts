@@ -65,7 +65,7 @@ export const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   button: {
-    width: '90%',
+    width: '50%',
     height: 80,
     borderRadius: 25,
     borderWidth: 2,

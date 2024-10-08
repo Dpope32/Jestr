@@ -67,3 +67,15 @@ export const removeToken = async (key: string) => {
     console.error('Error removing the token', error);
   }
 };
+
+export const storePushToken = async (token: string) => {
+  await storeToken('pushToken', token);
+};
+
+export const getPushToken = async () => {
+  return await getToken('pushToken');
+};
+
+export const removePushToken = async () => {
+  await removeToken('pushToken');
+};

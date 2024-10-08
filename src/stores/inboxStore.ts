@@ -2,7 +2,12 @@ import {create} from 'zustand';
 import {persist, createJSONStorage} from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {fetchConversations as apiFetchConversations} from '../services/socialService';
-import {Conversation, Message} from '../types/types';
+import {
+  Conversation,
+  Message,
+  InboxState,
+  ApiConversation,
+} from '../types/messageTypes';
 import zustandMMKVStorage from '../utils/zustandMMKVStorage';
 
 interface InboxState {
@@ -36,7 +41,7 @@ export const useInboxStore = create<InboxState>()(
         try {
           const userConversations = await apiFetchConversations(userEmail);
           const formattedConversations: Conversation[] = userConversations.map(
-            (conv: any) => ({
+            (conv: ApiConversation) => ({
               id: conv.ConversationID,
               ConversationID: conv.ConversationID,
               userEmail: conv.partnerUser.email,
@@ -73,12 +78,16 @@ export const useInboxStore = create<InboxState>()(
           return state;
         });
       },
-      // In your InboxStore
       addConversation: (conversation: Conversation) => {
-        set(state => ({
-          conversations: [...state.conversations, conversation],
-        }));
+        set(state => {
+          const exists = state.conversations.some(
+            conv => conv.id === conversation.id,
+          );
+          if (exists) return state;
+          return {conversations: [...state.conversations, conversation]};
+        });
       },
+
       resetUnreadCount: (conversationId: string) => {
         set(state => ({
           conversations: state.conversations.map(conv =>
@@ -134,7 +143,7 @@ export const useInboxStore = create<InboxState>()(
             conv.id === conversationId
               ? {
                   ...conv,
-                  messages: [message, ...(conv.messages || [])],
+                  messages: [...(conv.messages || []), message], // Append the new message
                   lastMessage: message,
                 }
               : conv,

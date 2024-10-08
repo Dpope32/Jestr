@@ -48,7 +48,7 @@ export type Message = {
 export type MessageContent = string | MemeShareContent;
 
 export type LastMessage = {
-  Content: string | MemeShareContent;
+  Content: MessageContent;
   Timestamp: string;
 };
 

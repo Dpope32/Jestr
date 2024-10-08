@@ -1,3 +1,7 @@
+// Part of the userManagement.mjs 
+// updateUserProfile, deleteAccount, uploadToS3, resendConfirmationCode, forgotPassword, confirmForgotPassword, updateProfileImage, updateFeedback, getFeedback, getAllFeedback, updatePassword
+// must be zipped with the userManagement.mjs file when uploading to AWS, along with node_modules, and the package.json files
+
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, ScanCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
@@ -9,14 +13,15 @@ const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({ region: "us-east-2" });
 const cognitoClient = new CognitoIdentityProviderClient({ region: "us-east-2" });
 
-const USER_POOL_ID = "us-east-2_ifrUnY9b1";
-const COGNITO_CLIENT_ID = "4c19sf6mo8nbl9sfncrl86d1qv";
+const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
+const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
+
 
 export const deleteAccount = async (email) => {
   try {
     // First, find the Cognito username using the email
     const listUsersParams = {
-      UserPoolId: "us-east-2_ifrUnY9b1",
+      UserPoolId: USER_POOL_ID, // Correct, using the variable
       Filter: `email = "${email}"`,
       Limit: 1
     };
@@ -31,17 +36,16 @@ export const deleteAccount = async (email) => {
 
     // Delete user from Cognito
     await cognitoClient.send(new AdminDeleteUserCommand({
-      UserPoolId: "us-east-2_ifrUnY9b1",
+      UserPoolId: USER_POOL_ID, // Correct, using the variable
       Username: cognitoUsername,
     }));
 
-    // Delete user profile from DynamoDB
+    // Also delete user profile from DynamoDB
     await ddbClient.send(new DeleteCommand({
       TableName: 'Profiles',
       Key: { email: email }
     }));
 
-    console.log('User successfully deleted from Cognito and DynamoDB.');
     return createResponse(200, 'User account deleted successfully.');
 
   } catch (error) {
@@ -49,7 +53,6 @@ export const deleteAccount = async (email) => {
     return createResponse(500, 'Failed to delete user account.', { error: error.message });
   }
 };
-
 
 export const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
     if (typeof key !== 'string') {
@@ -67,12 +70,12 @@ export const uploadToS3 = async (base64Data, key, contentType, bucketName) => {
     try {
       const command = new PutObjectCommand(params);
       const result = await s3Client.send(command);
-      return `https://${bucketName}.s3.amazonaws.com/${key}`;
+      return `${process.env.CLOUDFRONT_URL}/${key}`;
     } catch (error) {
       console.error('Error in uploadToS3:', error);
       throw new Error(`S3 upload failed: ${error.message}`);
     }
-  };
+};
   
 export async function updateUserProfile(requestBody) {
   const { email, username, displayName, likesPublic, notificationsEnabled, newEmail } = requestBody;
@@ -181,11 +184,11 @@ export async function updateUserProfile(requestBody) {
       errorStack: error.stack
     });
   }
-}
+};
 
 export async function resendConfirmationCode(username) {
     const params = {
-      ClientId: process.env.COGNITO_CLIENT_ID, // Ensure COGNITO_CLIENT_ID is set in environment variables
+      ClientId: process.env.COGNITO_CLIENT_ID,
       Username: username,
     };
   
@@ -203,8 +206,6 @@ export async function resendConfirmationCode(username) {
       };
     } catch (error) {
       console.error('Error resending confirmation code:', error);
-  
-      // Return a proper error response with a 500 status code if an error occurs
       return {
         statusCode: 500,
         body: JSON.stringify({
@@ -213,7 +214,7 @@ export async function resendConfirmationCode(username) {
         }),
       };
     }
-  }
+};
 
 export async function forgotPassword(username) {
   const params = {
@@ -222,7 +223,7 @@ export async function forgotPassword(username) {
   };
   const command = new ForgotPasswordCommand(params);
   return cognitoClient.send(command);
-}
+};
 
 export async function confirmForgotPassword(username, confirmationCode, newPassword) {
   const params = {
@@ -233,7 +234,7 @@ export async function confirmForgotPassword(username, confirmationCode, newPassw
   };
   const command = new ConfirmForgotPasswordCommand(params);
   return cognitoClient.send(command);
-}
+};
 
 export async function updateProfileImage(requestBody) {
     const { email, imageType, image } = requestBody;
@@ -272,8 +273,7 @@ export async function updateProfileImage(requestBody) {
         details: error.toString() 
       });
     }
-  };
-
+};
 
 export async function updateFeedback(requestBody) {
   const { feedbackId, status } = requestBody;
@@ -345,7 +345,6 @@ export async function getAllFeedback() {
   }
 };
 
-
 export async function updatePassword(username, newPassword) {
     const params = {
       UserPoolId: USER_POOL_ID,
@@ -355,11 +354,40 @@ export async function updatePassword(username, newPassword) {
     };
     const command = new AdminSetUserPasswordCommand(params);
     return cognitoClient.send(command);
-  }
-  
-  
+};
 
-// Helper function for creating responses
+export async function submitFeedback(requestBody) {
+  const { email, message } = requestBody;
+
+  if (!email || !message) {
+    return createResponse(400, 'Email and message are required for submitting feedback.');
+  }
+
+  const feedbackId = `FB-${Date.now()}`; // Create a unique feedback ID using the current timestamp
+
+  const feedbackItem = {
+    FeedbackID: feedbackId,
+    Email: email,
+    Message: message,
+    Status: 'New',
+    Timestamp: new Date().toISOString(), // Set Timestamp instead of CreatedAt
+  };
+
+  try {
+    const params = {
+      TableName: 'UserFeedback',
+      Item: feedbackItem,
+    };
+
+    await docClient.send(new PutCommand(params));
+
+    return createResponse(200, 'Feedback submitted successfully', feedbackItem);
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    return createResponse(500, 'Failed to submit feedback', { error: error.message });
+  }
+}
+
 export function createResponse(statusCode, message, data = null) {
   return {
     statusCode,
@@ -371,4 +399,4 @@ export function createResponse(statusCode, message, data = null) {
     },
     body: JSON.stringify({ message, data }),
   };
-}
+};

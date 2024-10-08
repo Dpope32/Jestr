@@ -1,29 +1,14 @@
 import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, Alert, StyleSheet} from 'react-native';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {
-  CodeField,
-  Cursor,
-  useBlurOnFulfill,
-  useClearByFocusCell,
-} from 'react-native-confirmation-code-field';
+import { View, Text, TouchableOpacity, Alert, StyleSheet} from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from 'react-native-confirmation-code-field';
 import {confirmSignUp} from 'aws-amplify/auth';
 import {signIn, fetchAuthSession, SignInInput} from 'aws-amplify/auth';
 import * as SecureStore from 'expo-secure-store';
 
-import {
-  COLORS,
-  SPACING,
-  FONT_SIZES,
-  FONTS,
-  wp,
-  elevationShadowStyle,
-} from '../../../theme/theme';
+import { COLORS, SPACING, FONT_SIZES, FONTS, wp, elevationShadowStyle} from '../../../theme/theme';
 import {storeUserIdentifier} from '../../../stores/secureStore';
-import {
-  AuthNavProp,
-  ConfirmNavRouteProp,
-} from '../../../navigation/NavTypes/AuthStackTypes';
+import {AuthNavProp, ConfirmNavRouteProp,} from '../../../navigation/NavTypes/AuthStackTypes';
 import {useUserStore} from '../../../stores/userStore';
 
 const CELL_COUNT = 6;
@@ -33,7 +18,6 @@ const ConfirmSignUpScreen = () => {
   const route = useRoute<ConfirmNavRouteProp>();
 
   const email = route.params?.email;
-  console.log('Email in ConfirmSignUpScreen:', email);
 
   const [value, setValue] = useState('');
   const ref = useBlurOnFulfill({value, cellCount: CELL_COUNT});

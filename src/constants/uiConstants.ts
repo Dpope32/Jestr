@@ -1,3 +1,5 @@
+import { Badge } from '../stores/badgeStore';
+
 export const TERMS_OF_SERVICE = `
 **Terms of Service**
   
@@ -163,3 +165,89 @@ export const faqs = [
       answer: "Visit the profile of the user you want to block/unblock, tap the three dots menu, and select 'Block' or 'Unblock'. You can manage your block list in Settings > Privacy > Blocked Accounts."
     }
   ];
+
+export const allBadges: Badge[] = [
+  {
+    id: 'memeLiker',
+    type: 'memeLiker',
+    title: 'Meme Liker',
+    description: 'Liked 100 memes',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'socialButterfly',
+    type: 'socialButterfly',
+    title: 'Social Butterfly',
+    description: 'Made 50 friends',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'memeMaster',
+    type: 'memeMaster',
+    title: 'Meme Master',
+    description: 'Uploaded 200 memes',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'trendSetter',
+    type: 'trendSetter',
+    title: 'Trend Setter',
+    description: 'Started a viral trend',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'commentator',
+    type: 'commentator',
+    title: 'Commentator',
+    description: 'Commented on 100 memes',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'memeCreator',
+    type: 'memeCreator',
+    title: 'Meme Creator',
+    description: 'Created 50 original memes',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'viralStar',
+    type: 'viralStar',
+    title: 'Viral Star',
+    description: 'Achieved 1,000 views on a meme',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'insightfulUser',
+    type: 'insightfulUser',
+    title: 'Insightful User',
+    description: 'Received 100 likes on comments',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'memeExplorer',
+    type: 'memeExplorer',
+    title: 'Meme Explorer',
+    description: 'Browsed 500 memes',
+    earned: false,
+    progress: 0,
+  },
+  {
+    id: 'communityChampion',
+    type: 'communityChampion',
+    title: 'Community Champion',
+    description: 'Participated in 10 discussions',
+    earned: false,
+    progress: 0,
+  }
+];
+
+export const DEFAULT_PROFILE_PIC_URL =
+  'https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg';

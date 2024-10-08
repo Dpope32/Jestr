@@ -1,18 +1,60 @@
 {
-    "cli": {
-      "version": ">= 3.13.3"
+  "cli": {
+    "version": ">= 3.13.3"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "REACT_APP_AWS_COGNITO_IDENTITY_POOL_ID": "@REACT_APP_AWS_COGNITO_IDENTITY_POOL_ID_DEV",
+        "REACT_APP_AWS_COGNITO_REGION": "@REACT_APP_AWS_COGNITO_REGION_DEV",
+        "REACT_APP_AWS_PROJECT_REGION": "@REACT_APP_AWS_PROJECT_REGION_DEV",
+        "REACT_APP_AWS_USER_POOLS_ID": "@REACT_APP_AWS_USER_POOLS_ID_DEV",
+        "REACT_APP_AWS_USER_POOLS_WEB_CLIENT_ID": "@REACT_APP_AWS_USER_POOLS_WEB_CLIENT_ID_DEV",
+        "REACT_APP_COGNITO_APP_CLIENT_ID": "@REACT_APP_COGNITO_APP_CLIENT_ID_DEV",
+        "REACT_APP_COGNITO_USER_POOL_ID": "@REACT_APP_COGNITO_USER_POOL_ID_DEV"
+      }
     },
-    "build": {
-      "development": {
-        "developmentClient": true,
-        "distribution": "internal"
-      },
-      "preview": {
-        "distribution": "internal"
-      },
-      "production": {}
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "REACT_APP_AWS_COGNITO_IDENTITY_POOL_ID": "@REACT_APP_AWS_COGNITO_IDENTITY_POOL_ID_PREVIEW",
+        "REACT_APP_AWS_COGNITO_REGION": "@REACT_APP_AWS_COGNITO_REGION_PREVIEW",
+        "REACT_APP_AWS_PROJECT_REGION": "@REACT_APP_AWS_PROJECT_REGION_PREVIEW",
+        "REACT_APP_AWS_USER_POOLS_ID": "@REACT_APP_AWS_USER_POOLS_ID_PREVIEW",
+        "REACT_APP_AWS_USER_POOLS_WEB_CLIENT_ID": "@REACT_APP_AWS_USER_POOLS_WEB_CLIENT_ID_PREVIEW",
+        "REACT_APP_COGNITO_APP_CLIENT_ID": "@REACT_APP_COGNITO_APP_CLIENT_ID_PREVIEW",
+        "REACT_APP_COGNITO_USER_POOL_ID": "@REACT_APP_COGNITO_USER_POOL_ID_PREVIEW"
+      }
     },
-    "submit": {
-      "production": {}
+    "production": {
+      "distribution": "store",
+      "env": {
+        "REACT_APP_AWS_COGNITO_IDENTITY_POOL_ID": "@REACT_APP_AWS_COGNITO_IDENTITY_POOL_ID",
+        "REACT_APP_AWS_COGNITO_REGION": "@REACT_APP_AWS_COGNITO_REGION",
+        "REACT_APP_AWS_PROJECT_REGION": "@REACT_APP_AWS_PROJECT_REGION",
+        "REACT_APP_AWS_USER_POOLS_ID": "@REACT_APP_AWS_USER_POOLS_ID",
+        "REACT_APP_AWS_USER_POOLS_WEB_CLIENT_ID": "@REACT_APP_AWS_USER_POOLS_WEB_CLIENT_ID",
+        "REACT_APP_COGNITO_APP_CLIENT_ID": "@REACT_APP_COGNITO_APP_CLIENT_ID",
+        "REACT_APP_COGNITO_USER_POOL_ID": "@REACT_APP_COGNITO_USER_POOL_ID"
+      }
+    }
+  },
+  "submit": {
+    "development": {
+      "ios": {
+        "appleId": "dawsom.alex32@gmail.com",
+        "ascAppId": "6733220278",
+        "appleTeamId": "8KC9WUUJRS"
+      }
+    },
+    "production": {
+      "ios": {
+        "appleId": "dawsom.alex32@gmail.com",
+        "ascAppId": "6733220278",
+        "appleTeamId": "8KC9WUUJRS"
+      }
     }
   }
+}

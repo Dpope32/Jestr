@@ -53,8 +53,8 @@ const InfoFooterAuth = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E1E1E', // Updated to a darker theme for consistency
-    paddingTop: 50, // Adjusted for back button spacing
+    backgroundColor: '#1E1E1E', 
+    paddingTop: 10, 
   },
   backButton: {
     flexDirection: 'row',
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
-    backgroundColor: '#2C2C2C', // Slightly lighter than the container
+    backgroundColor: '#2C2C2C', 
     padding: 20,
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,

@@ -1,0 +1,68 @@
+# memeService.ts:
+- getUserMemes (profile)
+- deleteMeme
+- removeDownloadedMeme
+- handleShareMeme
+- recordMemeViews
+- fetchMemes (feed)
+- getLikeStatus
+- updateMemeReaction
+- getPresignedUrl (
+- uploadMeme
+
+# userService.ts:
+- getUser
+- fetchUserDetails
+- handleCompleteProfile
+- updateProfileImage
+- getUserById
+- getAllUsers
+- updateBio (new) 
+- updateUserProfile
+- getTotalUsers (adminpage)
+- getPopularMemes (adminpage)
+- getTotalMemes (adminpage)
+- getUserGrowthRate (adminpage)
+- getDAU (adminpage)
+- fetchMemes (for user profile)
+- fetchTabMemes
+- fileBase64 (helper)
+- compressImage (helper)
+- getFeedback (settings)
+- updateFeedback
+- submitFeedback  (settings)
+
+# authService.ts:
+- checkAuthStatus
+- handleLogin
+- handleSignup
+- handleSignOut
+- handleChangePassword
+- handleForgotPassword
+- verifyToken
+- handleAppleSignIn
+- handleGoogleSignIn
+- handleTwitterSignIn
+- fetchAllUsers
+
+# socialService.ts:
+- addFollow
+- removeFollow
+- checkFollowStatus
+- getFollowing
+- getFollowers
+- fetchBatchStatus
+- sendMessage
+- fetchConversations
+- fetchMessages
+- postComment
+- updateCommentReaction
+- getComments
+- organizeCommentsIntoThreads (helper)
+- sendNotification
+
+#permissionsHandler
+- Notification Permission
+- Media Library Permission
+- Camera Permission
+- Location Permission

@@ -1,43 +1,30 @@
-import React, {useState, useRef, useEffect} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  Alert,
-  Animated,
-  TouchableOpacity,
-  Easing,
-} from 'react-native';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faArrowLeft} from '@fortawesome/free-solid-svg-icons';
-import {LinearGradient} from 'expo-linear-gradient';
+// src/screens/MemeUploadScreen.tsx
+
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {  View,  Text,  StyleSheet, StatusBar, Alert, Animated, TouchableOpacity, Easing,} from 'react-native';
+import Toast from 'react-native-toast-message'; // Import Toast
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import LottieView from 'lottie-react-native';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 import MemeUpload from '../../../components/Meme/MemeUpload';
-import {FONTS, COLORS} from '../../../theme/theme';
-import {useTheme} from '../../../theme/ThemeContext';
-import {useUserStore} from '../../../stores/userStore';
-import {BottomNavProp} from '../../../navigation/NavTypes/BottomTabsTypes';
-// import TopPanel from '../../../components/Panels/TopPanel';
-// import ProfilePanel from '../../../components/Panels/ProfilePanel';
+import { FONTS, COLORS } from '../../../theme/theme';
+import { useTheme } from '../../../theme/ThemeContext';
+import { useUserStore } from '../../../stores/userStore';
+import { BottomNavProp } from '../../../navigation/NavTypes/BottomTabsTypes';
 
-type MemeUploadScreenProps = {
-  navigation: any;
-  route: any;
-};
+type MemeUploadScreenProps = { navigation: any; route: any };
 
 const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
   const navigation = useNavigation<BottomNavProp>();
-  const {isDarkMode} = useTheme();
-
-  const user = useUserStore(state => state);
+  const { isDarkMode } = useTheme();
+  const user = useUserStore((state) => state);
 
   const [imageUploaded, setImageUploaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [imageSelected, setImageSelected] = useState(false);
-  // const [profilePanelVisible, setProfilePanelVisible] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -58,19 +45,19 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
   const handleUploadSuccess = (url: string) => {
     console.log('Meme uploaded successfully:', url);
     setImageUploaded(true);
+    // Show the toast
+    Toast.show({
+      type: 'success',
+      text1: 'Meme uploaded successfully',
+      visibilityTime: 3000, // Toast will be visible for 3 seconds
+      position: 'top', // Position is handled in the toastConfig, but you can adjust here if needed
+    });
+    navigation.goBack();
   };
 
-  const handleImageSelect = (selected: boolean) => {
+  const handleImageSelect = useCallback((selected: boolean) => {
     setImageSelected(selected);
-  };
-
-  // const handleHomeClick = () => {
-  //   navigation.navigate('Home');
-  // };
-
-  // const toggleProfilePanel = () => {
-  //   setProfilePanelVisible(!profilePanelVisible);
-  // };
+  }, []);
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -115,58 +102,26 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
   });
 
   const animatedStyle = {
-    transform: [{rotate: shakeInterpolate}],
+    transform: [{ rotate: shakeInterpolate }],
   };
 
   const cardFadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
-
     Animated.timing(cardFadeAnim, {
       toValue: 1,
       duration: 1000,
       delay: 400,
       useNativeDriver: true,
     }).start();
-  }, [fadeAnim, cardFadeAnim]);
+  }, [cardFadeAnim]);
 
   return (
     <View style={[styles.background, isDarkMode && styles.darkBackground]}>
       <StatusBar barStyle="light-content" />
-      {/* <TopPanel
-        onProfileClick={toggleProfilePanel}
-        profilePicUrl={user.profilePic}
-        username={user.username}
-        enableDropdown={true}
-        showLogo={true}
-        isAdmin={false}
-        onAdminClick={console.log}
-        isUploading={isUploading}
-      /> */}
-      {/* {profilePanelVisible && <View style={styles.overlay} />} */}
-      {/* {profilePanelVisible && user && (
-        <ProfilePanel
-          isVisible={profilePanelVisible}
-          onClose={() => setProfilePanelVisible(false)}
-          profilePicUrl={user.profilePic}
-          username={user.username}
-          displayName={user.displayName || 'N/A'}
-          followersCount={user.followersCount}
-          followingCount={user.followingCount}
-          user={user}
-          navigation={navigation}
-        />
-      )} */}
-      <Animated.View style={[styles.card, {opacity: cardFadeAnim}]}>
+      <Animated.View style={[styles.card, { opacity: cardFadeAnim }]}>
         <View style={styles.titleContainer}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <FontAwesomeIcon icon={faArrowLeft} size={24} color="#1bd40b" />
           </TouchableOpacity>
           <Text style={styles.title}>This </Text>
@@ -175,20 +130,25 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
           </Animated.Text>
           <Text style={styles.title}> be funny!</Text>
         </View>
-        <MemeUpload
-          userEmail={user.email}
-          username={user.username}
-          onUploadSuccess={handleUploadSuccess}
-          onImageSelect={handleImageSelect}
-          isDarkMode={isDarkMode}
-          creationDate={user.creationDate}
-        />
+        {/* Wrap MemeUpload in a View with flex: 1 */}
+        <View style={{ flex: 1 }}>
+          <MemeUpload
+            userEmail={user.email}
+            username={user.username}
+            onUploadSuccess={handleUploadSuccess}
+            onImageSelect={handleImageSelect}
+            isDarkMode={isDarkMode}
+            creationDate={user.creationDate}
+            setIsUploading={setIsUploading}
+          />
+        </View>
       </Animated.View>
       {isUploading && (
         <View style={styles.fullScreenOverlay}>
           <LinearGradient
             colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.7)']}
-            style={styles.gradientBackground}>
+            style={styles.gradientBackground}
+          >
             <View style={styles.uploadingContainer}>
               <LottieView
                 source={require('../../../assets/animations/loading-animation.json')}
@@ -196,9 +156,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
                 loop
                 style={styles.lottieAnimation}
               />
-              <Text style={styles.uploadingText}>
-                Uploading meme, please standby...
-              </Text>
+              <Text style={styles.uploadingText}>Uploading meme, please standby...</Text>
             </View>
           </LinearGradient>
         </View>
@@ -227,6 +185,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 20,
     paddingTop: 10,
+    paddingBottom: 40,
   },
   overlay: {
     position: 'absolute',
@@ -247,7 +206,7 @@ const styles = StyleSheet.create({
   better: {
     color: COLORS.accent,
     textShadowColor: '#000',
-    textShadowOffset: {width: 1, height: 1},
+    textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
     fontFamily: FONTS.bold,
   },
@@ -270,45 +229,12 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
-    overflow: 'hidden',
     paddingVertical: 30,
     marginTop: 10,
-  },
-  profilePanel: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    zIndex: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontFamily: FONTS.regular,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 20,
-    padding: 10,
-    zIndex: 11,
-  },
-  closeButtonText: {
-    color: '#000',
-    fontWeight: 'bold',
-    fontSize: 16,
-    fontFamily: FONTS.regular,
-  },
-  profileContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontFamily: FONTS.regular,
   },
   profileText: {
     color: '#fff',
@@ -334,7 +260,6 @@ const styles = StyleSheet.create({
   },
   lottieAnimation: {
     width: 200,
-    fontFamily: FONTS.regular,
     height: 200,
   },
   uploadingText: {

@@ -7,20 +7,34 @@ Jestr-Mobile
 │   ├── amplify
 │   ├── android
 |   |-- docs
+|   |   |-- AllStores.jpg
+|   |   |-- directory.txt
+|   |   |-- directory.txt
 |   |   |-- directory.txt
 |   |   |-- storage_overview.jpeg
 │   ├── ios
 │   ├── Lambda
 │   │   ├── Extras
 │   │   │   ├── adminAnalytics.mjs
+│   │   │   ├── addStatusAttribute.js
 │   │   │   ├── check_invalid_media.js
-│   │   │   ├── output.txt
+│   │   │   ├── directory.txt
 │   │   │   └── update_meme_captions.py
 │   │   ├── Lambda.zip
 │   │   ├── package-lock.json
 │   │   ├── package.json
+│   │   ├── accountServices.mjs
+│   │   ├── adminServices.mjs
+│   │   ├── badgeServices.mjs
+│   │   ├── dataProcessor.mjs
+│   │   ├── dynamoManagement.mjs
+│   │   ├── memeManagement.mjs
+│   │   ├── followManagement.mjs
+│   │   ├── memeProcessor.mjs
 │   │   ├── socialInteraction.mjs
+│   │   ├── userDetails.mjs
 │   │   └── userManagement.mjs
+│   |
 │   ├── node_modules
 │   ├── src
 │   │   ├── assets
@@ -28,38 +42,54 @@ Jestr-Mobile
 │   │   │   │   ├── loading-animation.json
 │   │   │   │   ├── create.json
 │   │   │   │   ├── join.json
+│   │   │   │   ├── lottie-liked.json
 │   │   │   │   ├── search.json
+│   │   │   │   ├── splash.json
 │   │   │   │   ├── discover.json
 │   │   │   │   ├── swipe-up.json
 │   │   │   │   ├── think.json
 │   │   │   │   ├── welcome.json
 │   │   │   │   └── welcome1.json
-│   │   │   ├── fonts
+│   │   │   ├── fonts (lato)
 │   │   │   ├── images
 │   │   │   ├── memes
 │   │   │   └── videos
 │   │   ├── components
+│   │   │   ├── AuthFooterLinks
+│   │   │   │   └── AuthFooterLinks.tsx
+|   │   │   ├── CustomDrawer
+│   │   │   │   ├── CustomDrawer.tsx
+│   │   │   │   ├── styles.ts
+│   │   │   ├── ErrorBoundary
+│   │   │   │   └── ErrorBoundary.tsx
+│   │   │   ├── HeaderFeed
+│   │   │   │   └── HeaderFeed.tsx
+│   │   │   ├── Input
+│   │   │   │   ├── InputField.tsx
 │   │   │   ├── MediaPlayer
+│   │   │   │   ├── Logic
+│   │   │   │   │   └── MemeList
+│   │   │   │   │   └── useMediaPlayerLogic.tsx
+│   │   │   │   │   └── usePanResponder.ts
 │   │   │   │   ├── LongPress
-│   │   │   │   ├── LongPressModal.tsx
-│   │   │   │   ├── lottie-liked.json
+│   │   │   │   │   └── LongPressModal.tsx
+│   │   │   │   │   └── LongPressModal.styles.ts
 │   │   │   │   ├── MediaPlayer.tsx
 │   │   │   │   ├── MediaPlayerContent.tsx
-│   │   │   │   ├── MemeList.tsx
 │   │   │   │   ├── MP.styles.ts
-│   │   │   │   ├── useMediaPlayerLogic.tsx
-│   │   │   │   └── usePanResponder.tsx
 │   │   │   ├── Meme
-│   │   │   │   ├── config.ts
-│   │   │   │   ├── memeService.ts
+│   │   │   │   ├── MediaEditor.tsx
 │   │   │   │   ├── MemeUpload.styles.ts
 │   │   │   │   └── MemeUpload.tsx
 │   │   │   ├── Modals
+│   │   │   │   ├── ModalStyles
+│   │   │   │   │   ├── CommentFeed.styles.ts
+│   │   │   │   │   ├── EditProfileModal.styles.ts
+│   │   │   │   │   ├── FollowModal.styles.tsx
+│   │   │   │   │   ├── NewMM.styles.ts
 │   │   │   │   ├── Comment.tsx
 │   │   │   │   ├── CommentFeed.tsx
-│   │   │   │   ├── CommentFeed.styles.ts
 │   │   │   │   ├── EditProfileModal.tsx
-│   │   │   │   ├── EditProfileModalStyles.ts
 │   │   │   │   ├── FollowModal.tsx
 │   │   │   │   ├── LogoutModal.tsx
 │   │   │   │   ├── NewMessageModal.tsx
@@ -73,79 +103,141 @@ Jestr-Mobile
 │   │   │   │   ├── ProfilePanel.styles.ts
 │   │   │   │   ├── ProfilePanel.tsx
 │   │   │   │   └── TopPanel.tsx
-│   │   │   ├── Settings
-│   │   │   │   ├── Settings.styles.tsx
-│   │   │   │   └── Settings.tsx
-│   │   │   ├── shared
-│   │   │   │   ├── Button
-│   │   │   │   │   └── Button.tsx
-│   │   │   │   └── Input
-│   │   │   │       └── InutField.tsx
+│   │   │   ├── Particles 
+│   │   │   │   └── Particles.tsx
+│   │   │   ├── RainEffect
+│   │   │   │   └── RainEffect.tsx
+│   │   │   ├── Shared 
+|   │   │   │   ├── Button
+|   │   │   │   │   └── Button.tsx
+|   │   │   │   ├── SafeImage.tsx
+│   │   │   ├── SocialLoginBtns
+│   │   │   │   └── SocialLoginBtns.tsx
+│   │   │   │   └── SocialBtnsRow.tsx
+│   │   │   ├── ToastMessages
+│   │   │   │   └── CustomToast.tsx
 │   │   │   ├── Upload
 │   │   │   │   ├── HeaderPicUpload.tsx
 │   │   │   │   └── ProfilePicUpload.tsx
+│   │   │   ├── WelcomeText
+│   │   │   │   └── AnimatedLetters.tsx
+│   │   │   │   └── WelcomeText
+│   │   │   ├── config
+│   │   │   │   └── toastConfig.tsx
+│   │   │   ├── constants
+│   │   │   │   └── uiConstants.ts
+│   │   │   ├── navigation
+│   │   │   |   ├── AppNavigator.tsx
+│   │   │   │   ├── NavTypes
+|   │   │   │   │   ├── AuthStackTypes.ts
+|   │   │   │   │   ├── BottomTabsTypes.ts
+|   │   │   │   │   ├── FeedTypes.ts
+|   │   │   │   │   ├── InboxStackTypes.ts
+|   │   │   │   │   ├── RootNavTypes.ts
+│   │   │   │   └── Stacks 
+|   │   │   │   │   ├── AuthStackNav.tsx
+|   │   │   │   │   ├── BottomTabNav.tsx
+|   │   │   │   │   ├── FeedStackNav.tsx
+|   │   │   │   │   ├── DrawerStackNav.tsx
+|   │   │   │   │   ├── InboxStackNav.tsx
+|   │   │   │   │   ├── UploadStackNav.tsx
 │   │   │   └── ErrorBoundary.tsx
 │   │   ├── screens
-│   │   │   ├── AdminPage
-│   │   │   │   └── AdminPage.tsx
-│   │   │   ├── ChangePassword
-│   │   │   │   └── ChangePassword.tsx
-│   │   │   ├── Feed
-│   │   │   │   ├── Feed.tsx
-│   │   │   │   ├── Feed.styles.ts
-│   │   │   │   └── useMemes.ts
-│   │   │   ├── Inbox
-│   │   │   │   ├── Conversations.tsx
-│   │   │   │   ├── convoStyles.ts
-│   │   │   │   ├── Inbox.styles.ts
-│   │   │   │   ├── Inbox.tsx
-│   │   │   │   ├── inboxStore.ts
-│   │   │   │   ├── SkeletonLoader.tsx
-│   │   │   │   └── UnreadNotifications.tsx
-│   │   │   ├── Loading
-│   │   │   │   └── LoadingScreen.tsx
-│   │   │   ├── LandingPage
-│   │   │   │   ├── CompleteProfileScreen.tsx
-│   │   │   │   ├── ConfirmSignUpScreen.tsx
-│   │   │   │   ├── ContentModal.tsx
-│   │   │   │   ├── declarations.d.ts
-│   │   │   │   ├── GradientText.tsx
-│   │   │   │   ├── LandingPage.styles.ts
-│   │   │   │   ├── LandingPage.tsx
-│   │   │   │   ├── LP.tsx
-│   │   │   │   ├── LPHandlers.tsx
-│   │   │   │   ├── OnboardingScreen.tsx
-│   │   │   │   ├── ProfileCompletedSlideshow.tsx
-│   │   │   │   ├── RainEffect.tsx
-│   │   │   │   └── WelcomeText.tsx
-│   │   │   ├── MemeUploadScreen
-│   │   │   │   └── index.tsx
-│   │   │   ├── Profile
-│   │   │   │   ├── Profile.tsx
-│   │   │   │   ├── EditableBio.tsx
-│   │   │   │   ├── MemeGrid.tsx
-│   │   │   │   ├── ProfileHandlers.tsx
-│   │   │   │   └── ProfileStyles.tsx
-│   │   │   └── NotificationsScreen
-│   │   │       └── index.tsx
-│   │   ├── stores
-│   │   │   ├── userStore.ts
-│   │   │   ├── followStore.ts
-│   │   │   ├── inboxStore.ts
-│   │   │   ├── memeStore.ts
-│   │   │   ├── notificationStore.ts
-│   │   │   ├── settingsStore.ts
-│   │   │   └── themeStore.ts
+│   │   │   ├──AppNav
+|   |   |   |   ├── AdminPage
+|   |   |   |   |   ├── index.tsx
+|   |   |   |   |   ├── AnalyticsBoard.tsx
+|   |   |   |   ├── Badges
+|   |   |   |   |   ├── Badges.tsx
+|   |   |   |   |   ├── Badge.styles.tsx
+|   |   |   |   ├── Feed
+|   |   |   |   |   ├── Feed.tsx
+|   |   |   |   |   ├── Feed.styles.tsx
+|   |   |   |   ├── Inbox
+|   |   |   |   |   ├── Conversations.tsx
+|   |   |   |   |   ├── convoStyles.ts
+|   |   |   |   |   ├── Inbox.styles.ts
+|   |   |   |   |   ├── Inbox.tsx
+|   |   |   |   |   ├── SkeletonLoader.tsx
+|   |   |   |   |   ├── UnreadNotifications.tsx
+|   |   |   |   ├── Loading
+|   |   |   |   |   ├── LoadingScreen.tsx
+|   |   |   |   |   ├── SplashScreen.tsx
+|   |   |   |   ├── MemeUpload
+|   |   |   |   |   ├── index.tsx
+|   |   |   |   ├── Notifications
+|   |   |   |   |   ├── index.tsx
+|   |   |   |   ├── Profile
+|   |   |   |   |   ├── EditableBio.tsx
+|   |   |   |   |   ├── LoadingOverlay.tsx
+|   |   |   |   |   ├── MemeGrid.tsx
+|   |   |   |   |   ├── Profile.tsx
+|   |   |   |   |   ├── ProfileHandlers.tsx
+|   |   |   |   |   ├── ProfileStyles.tsx
+|   |   |   |   |   ├── useProfileLogic.tsx
+|   |   |   |   ├── Settings
+|   |   |   |   |   ├── AccessibilitySettings.tsx1
+|   |   |   |   |   ├── AccountInformation.tsx
+|   |   |   |   |   ├── changePassword.tsx
+|   |   |   |   |   ├── DeactivateAccount.tsx
+|   |   |   |   |   ├── DownloadDataArchive.tsx
+|   |   |   |   |   ├── feedbackForm.tsx
+|   |   |   |   |   ├── NotiSettings.tsx
+|   |   |   |   |   ├── PrivacySafetySettings.tsx
+|   |   |   |   |   ├── Settings.tsx
+|   |   |   |   |   ├── Settings.styles.tsx
+|   |   |   |   |   ├── supportHelp.tsx
+│   │   │   ├──AuthNav
+|   |   |   |   ├──ChangePassword
+|   |   |   |   |   ├── index.tsx
+|   |   |   |   ├──ConfirmSignUp
+|   |   |   |   |   ├── CompleteProfileScreen.tsx
+|   |   |   |   ├──CompleteProfile
+|   |   |   |   |   ├── CompleteProfileScreen.tsx
+|   |   |   |   ├──ContactUs
+|   |   |   |   |   ├── ContactUs.tsx
+|   |   |   |   ├──InfoFooterAuth
+|   |   |   |   |   ├── InfoFooterAuth.tsx
+|   |   |   |   ├── LandingPage
+|   |   |   |   |   ├── LandingPage.tsx
+|   |   |   |   |   ├── LandingPage.styles.ts
+|   |   |   |   ├─ Login
+|   |   |   |   |   ├── LoginScreen.tsx
+|   |   |   |   |   ├── LoginScreen.styles.ts
+|   |   |   |   ├──Onboarding
+|   |   |   |   |   ├── Backdrop.tsx
+|   |   |   |   |   ├── componentData.ts
+|   |   |   |   |   ├── Pagination.tsx
+|   |   |   |   |   ├── Pagination.tsx
+|   |   |   |   ├──SignUp
+|   |   |   |   |   ├── SignUpScreen.tsx
+|   |   |   |   |   ├── SignUpScreen.styles.ts
 │   │   ├── services
-│   │   │   ├── authFunctions.ts
-│   │   │   ├── cognitoService.ts
-│   │   │   └── UserContext.js
+|   |   |   ├── retired
+|   |   |   ├── authService.ts
+|   |   |   ├── config.ts
+|   |   |   ├── memeService.ts
+|   |   |   ├── permissionsHandler.tsx
+|   |   |   ├── socialService.ts
+|   |   |   ├── userService.ts
+│   │   ├── stores
+|   |   |   ├── badgeStore.ts
+|   |   |   ├── followStore.ts
+|   |   |   ├── inboxStore.ts
+|   |   |   ├── memeStore.ts
+|   |   |   ├── notificationStore.ts
+|   |   |   ├── searchStore.ts
+|   |   |   ├── secureStore.ts
+|   |   |   ├── settingsStore.ts
+|   |   |   ├── tabBarStore.ts 
+│   │   │   ├── userStore.ts
 │   │   ├── theme
 │   │   │   ├── theme.ts
 │   │   │   └── ThemeContext.tsx
 │   │   ├── types
 │   │   │   ├── types.ts
 │   │   │   └── react-native-particles.d.ts
+│   │   │   └── react-native-pin-input.d.ts
 │   │   └── utils
 │   │       ├── dateUtils.ts
 │   │       ├── secureStore.ts

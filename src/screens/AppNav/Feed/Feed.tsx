@@ -315,7 +315,6 @@ const Feed: React.FC = React.memo(() => {
         handleDoubleTap();
       } else {
         lastTap.current = now;
-        // handleLongPress();
       }
     };
 

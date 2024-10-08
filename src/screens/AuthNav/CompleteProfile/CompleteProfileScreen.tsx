@@ -11,7 +11,7 @@ import LottieView from 'lottie-react-native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faMoon, faHeart, faBell} from '@fortawesome/free-solid-svg-icons';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ProfileImage} from '../../../types/types';
 import HeaderPicUpload from '../../../components/Upload/HeaderPicUpload';
 import ProfilePicUpload from '../../../components/Upload/ProfilePicUpload';
@@ -31,8 +31,6 @@ const CompleteProfileScreen: React.FC = () => {
   const {pushEnabled, setNotificationPreferences} = useNotificationStore();
 
   const email = route.params?.email;
-  console.log('email in CompleteProfileScreen:', email);
-
   const {isDarkMode, toggleDarkMode} = useTheme();
 
   const [displayName, setDisplayName] = useState('');
@@ -42,15 +40,24 @@ const CompleteProfileScreen: React.FC = () => {
   const [darkMode, setDarkModeLocal] = useState(isDarkMode);
 
   useEffect(() => {
-    (async () => {
-      const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission needed',
-          'Please grant permission to access your photos.',
-        );
+    const checkMediaPermission = async () => {
+      const storedPermission = await AsyncStorage.getItem('mediaPermission');
+
+      if (storedPermission !== 'granted') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert(
+            'Permission needed',
+            'Please grant permission to access your photos.',
+          );
+          await AsyncStorage.setItem('mediaPermission', 'denied');
+        } else {
+          await AsyncStorage.setItem('mediaPermission', 'granted');
+        }
       }
-    })();
+    };
+
+    checkMediaPermission();
   }, []);
 
   const handleDarkModeToggle = () => {
@@ -60,21 +67,21 @@ const CompleteProfileScreen: React.FC = () => {
     setDarkMode?.(newMode);
   };
 
-  const handleImagePick = async (type: 'header' | 'profile') => {
-    try {
-      const {status} = await ImagePicker.getMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        const {status: newStatus} =
-          await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (newStatus !== 'granted') {
-          Alert.alert(
-            'Permission needed',
-            'Please grant permission to access your photos.',
-          );
-          return;
-        }
-      }
+const handleImagePick = async (type: 'header' | 'profile') => {
+  const storedPermission = await AsyncStorage.getItem('mediaPermission');
+  
+  // Request permission if not previously granted
+  if (storedPermission !== 'granted') {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please grant permission to access your photos.');
+      await AsyncStorage.setItem('mediaPermission', 'denied');
+      return;
+    }
+    await AsyncStorage.setItem('mediaPermission', 'granted');
+  }
 
+    try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -83,20 +90,19 @@ const CompleteProfileScreen: React.FC = () => {
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        const imageAsset = result.assets[0];
-        const profileImage: ProfileImage = {
-          uri: imageAsset.uri,
-          width: imageAsset.width,
-          height: imageAsset.height,
-          type: imageAsset.type,
-          fileName: imageAsset.fileName,
-          fileSize: imageAsset.fileSize,
+        const selectedAsset: ProfileImage = {
+          uri: result.assets[0].uri,
+          width: result.assets[0].width,
+          height: result.assets[0].height,
+          type: result.assets[0].type,
+          fileName: result.assets[0].fileName,
+          fileSize: result.assets[0].fileSize,
         };
 
         if (type === 'header') {
-          useUserStore.getState().setHeaderPic(profileImage);
+          useUserStore.getState().setHeaderPic(selectedAsset);
         } else {
-          useUserStore.getState().setProfilePic(profileImage);
+          useUserStore.getState().setProfilePic(selectedAsset);
         }
       }
     } catch (error) {

@@ -1,34 +1,54 @@
-import React, {useState, useCallback, useRef} from 'react';
-import {View,Text,Image,TextInput,TouchableOpacity,KeyboardAvoidingView, Platform,Animated, StyleSheet} from 'react-native';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faArrowUp,faArrowLeft,faCheck} from '@fortawesome/free-solid-svg-icons';
-import {useRoute, useNavigation} from '@react-navigation/native';
-import {FlashList, ListRenderItem} from '@shopify/flash-list';
-import {formatTimestamp} from '../../../utils/dateUtils';
-import {useFocusEffect} from '@react-navigation/native';
-import {BlurView} from 'expo-blur';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
+import { 
+  View, 
+  Text, 
+  Image, 
+  TextInput, 
+  TouchableOpacity, 
+  Keyboard, 
+  KeyboardAvoidingView, 
+  Platform, 
+  Animated, 
+  StyleSheet, 
+  ActivityIndicator 
+} from 'react-native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faArrowUp, faArrowLeft, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { FlashList, ListRenderItem } from '@shopify/flash-list';
+import { formatTimestamp } from '../../../utils/dateUtils';
+import { BlurView } from 'expo-blur';
 import LottieView from 'lottie-react-native';
 import Toast from 'react-native-toast-message';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import * as Haptics from 'expo-haptics';
 
-import {useTheme} from '../../../theme/ThemeContext';
+import { useTheme } from '../../../theme/ThemeContext';
 import styles from './convoStyles';
-import {useUserStore} from '../../../stores/userStore';
-import {Message, Conversation, User} from '../../../types/types';
-import {useInboxStore} from '../../../stores/inboxStore';
-import {InboxNavRouteProp} from '../../../navigation/NavTypes/InboxStackTypes';
-import {useTabBarStore} from '../../../stores/tabBarStore';
-import {fetchMessages, sendMessage} from '../../../services/socialService';
+import { useUserStore } from '../../../stores/userStore';
+import { Message, Conversation, MemeShareContent } from '../../../types/messageTypes';
+import { User } from '../../../types/types';
+import { useInboxStore } from '../../../stores/inboxStore';
+import { InboxNavRouteProp } from '../../../navigation/NavTypes/InboxStackTypes';
+import { useTabBarStore } from '../../../stores/tabBarStore';
+import { fetchMessages, sendMessage } from '../../../services/socialService';
+import { getProfilePicUri } from '../../../utils/helpers'; 
+
+const isMemeShareContent = (content: any): content is MemeShareContent => {
+  return content && typeof content === 'object' && content.type === 'meme_share' && typeof content.memeID === 'string';
+};
 
 export const Conversations = () => {
   const navigation = useNavigation();
   const route = useRoute<InboxNavRouteProp>();
   const partnerUser = route.params?.partnerUser as User;
   const conversation = route.params?.conversation as Conversation;
+  
+  const memeId = route.params?.currentMedia;
   const queryClient = useQueryClient();
-  const {isDarkMode} = useTheme();
-  const currentUser = useUserStore(state => state);
-  const setTabBarVisibility = useTabBarStore(state => state.setTabBarVisibility);
+  const { isDarkMode } = useTheme();
+  const currentUser = useUserStore((state) => state);
+  const setTabBarVisibility = useTabBarStore((state) => state.setTabBarVisible);
   const inboxStore = useInboxStore();
   const inputRef = useRef<TextInput>(null);
   const [sendButtonScale] = useState(new Animated.Value(1));
@@ -36,23 +56,22 @@ export const Conversations = () => {
   const [sendingAnimation] = useState(new Animated.Value(0));
   const [messageOpacity] = useState(new Animated.Value(1));
   const [isSending, setIsSending] = useState(false);
+  const [showMeme, setShowMeme] = useState(!!memeId);
 
   const sendIcon = isSending ? faCheck : faArrowUp;
 
-  const {data: messages = [], isLoading, error, refetch} = useQuery({
+  const { data: messages = [], isLoading, error, refetch } = useQuery({
     queryKey: ['messages', conversation.id],
     queryFn: async () => {
-      const storedMessages = inboxStore.getConversationMessages(
-        conversation.id,
-      );
+      const storedMessages = inboxStore.getConversationMessages(conversation.id);
       if (storedMessages && storedMessages.length > 0) {
         console.log('Using messages from InboxStore:', storedMessages.length);
         return storedMessages;
       }
-      const fetchedMessages = await fetchMessages(
-        currentUser.email,
-        conversation.id,
-      );
+      const fetchedMessages = await fetchMessages(currentUser.email, conversation.id);
+      
+      fetchedMessages.sort((a: Message, b: Message) => new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime());
+
       console.log('Messages fetched from server:', fetchedMessages.length);
       inboxStore.updateConversationMessages(conversation.id, fetchedMessages);
       return fetchedMessages;
@@ -60,40 +79,18 @@ export const Conversations = () => {
     enabled: !!currentUser.email && !!conversation.id,
   });
 
-
   useFocusEffect(
     React.useCallback(() => {
       setTabBarVisibility(false);
       console.log('Conversation screen focused');
-  
-      // Reset UnreadCount in the store
       inboxStore.resetUnreadCount(conversation.id);
-  
-      // Update UnreadCount in DynamoDB
-     // updateUnreadCountAPI(conversation.id, currentUser.email);
-  
+      
       return () => {
         setTabBarVisibility(true);
         console.log('Conversation screen unfocused');
       };
-    }, [setTabBarVisibility]),
+    }, [setTabBarVisibility, conversation.id])
   );
-  
- // const updateUnreadCountAPI = async (conversationId: string, userEmail: string) => {
-   // try {
-   //   console.log('Updating UnreadCount for conversation:', conversationId, 'user:', userEmail);
-    //  const response = await fetch('https://aws need to implement this/updateUnreadCount', {
-    //    method: 'POST',
-    //    headers: { 'Content-Type': 'application/json' },
-    //    body: JSON.stringify({ conversationId, userEmail }),
-    //  });
-    //  const data = await response.json();
-    //  console.log('Update UnreadCount response:', data);
-   // } catch (error) {
-   //   console.error('Error updating UnreadCount:', error);
-   // }
-  //};
-  
 
   const sendMessageMutation = useMutation({
     mutationFn: ({
@@ -116,22 +113,19 @@ export const Conversations = () => {
         ConversationID: conversation.id,
         sentByMe: true,
       };
-    
-      // Update React Query cache
-      queryClient.setQueryData(
-        ['messages', conversation.id],
-        (old: Message[] | undefined) => [newMsg, ...(old || [])],
-      );
-    
-      // Update InboxStore
+
+      queryClient.setQueryData(['messages', conversation.id], (old: Message[] | undefined) => [
+        ...(old || []),
+        newMsg,
+      ]);
+
       const existingConversation = inboxStore.conversations.find(
-        conv => conv.id === conversation.id
+        (conv) => conv.id === conversation.id
       );
-    
+
       if (existingConversation) {
         inboxStore.addMessageToConversation(conversation.id, newMsg);
       } else {
-        // Create new conversation and add to InboxStore
         const newConversation: Conversation = {
           id: conversation.id,
           ConversationID: conversation.ConversationID,
@@ -147,7 +141,7 @@ export const Conversations = () => {
         };
         inboxStore.addConversation(newConversation);
       }
-    
+
       Toast.show({
         type: 'success',
         text1: 'Message sent successfully',
@@ -155,9 +149,11 @@ export const Conversations = () => {
         autoHide: true,
         visibilityTime: 2000,
       });
+
+      // Haptic Feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     },
-    
-    onError: error => {
+    onError: (error) => {
       console.error('Failed to send message:', error);
       Toast.show({
         type: 'error',
@@ -167,33 +163,37 @@ export const Conversations = () => {
         autoHide: true,
         visibilityTime: 3000,
       });
+
+      // Haptic Feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     },
   });
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (newMessage.trim() === '' || !currentUser.email) return;
-
+    Keyboard.dismiss();
     setNewMessage('');
-    setIsSending(true);
+    setIsSending(true); // Start sending
 
-    // Animate the up arrow icon
+    // Haptic Feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
     Animated.sequence([
       Animated.timing(sendingAnimation, {
         toValue: 1,
-        duration: 500,
+        duration: 300,
         useNativeDriver: true,
       }),
       Animated.timing(sendingAnimation, {
         toValue: 2,
-        duration: 500,
+        duration: 300,
         useNativeDriver: true,
       }),
     ]).start(() => {
       sendingAnimation.setValue(0);
-      setIsSending(false);
+      setIsSending(false); // Sending complete
     });
 
-    // Dim the message while "sending"
     Animated.timing(messageOpacity, {
       toValue: 0.5,
       duration: 500,
@@ -204,15 +204,21 @@ export const Conversations = () => {
       senderEmail: currentUser.email,
       receiverEmail: partnerUser.email,
       content: newMessage,
+    }, {
+      onSuccess: () => {
+        setIsSending(false); // Ensure isSending is reset
+      },
+      onError: () => {
+        setIsSending(false); // Reset on error as well
+      }
     });
 
-    // Reset message opacity after sending
     Animated.timing(messageOpacity, {
       toValue: 1,
       duration: 500,
       useNativeDriver: true,
     }).start();
-  };
+  }, [newMessage, currentUser.email, partnerUser.email, sendingAnimation, messageOpacity, sendMessageMutation]);
 
   const handlePressIn = useCallback(() => {
     Animated.spring(sendButtonScale, {
@@ -230,103 +236,226 @@ export const Conversations = () => {
     }).start();
   }, [sendButtonScale]);
 
-  const renderMessage: ListRenderItem<Message> = useCallback(
-    ({item}) => {
-      let content = item.Content;
-      let isMemeShare = false;
-      let memeUrl = '';
+  const handleSendMeme = useCallback(() => {
+    if (!memeId) {
+      console.log("No memeId available, cannot send meme");
+      return;
+    }
+  
+    setIsSending(true); // Start sending
 
-      if (typeof content === 'string' && content.trim().startsWith('{')) {
-        try {
-          const parsedContent = JSON.parse(content);
-          if (parsedContent.type === 'meme_share') {
-            content = parsedContent.message || 'Shared a meme';
-            isMemeShare = true;
-            memeUrl = parsedContent.memeID;
-          }
-        } catch (e) {
-          console.log('Failed to parse message content:', e);
-        }
+    // Haptic Feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  
+    const memeContent: MemeShareContent = {
+      type: 'meme_share',
+      memeID: memeId,
+      message: newMessage || 'Shared a meme'
+    };
+  
+    sendMessageMutation.mutate({
+      senderEmail: currentUser.email,
+      receiverEmail: partnerUser.email,
+      content: JSON.stringify(memeContent)
+    }, {
+      onSuccess: () => {
+        setShowMeme(false);
+        setNewMessage('');
+        setIsSending(false); 
+        navigation.navigate('Feed' as never);
+        Toast.show({
+          type: 'success',
+          text1: 'Meme sent successfully',
+          autoHide: true,
+          visibilityTime: 2000,
+        });
+
+        // Haptic Feedback
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      },
+      onError: () => {
+        setIsSending(false); 
+
+        // Haptic Feedback
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
+    });
+  
+  }, [memeId, newMessage, currentUser.email, partnerUser.email, sendMessageMutation, navigation]);
 
-      return (
-        <View
-          style={[
-            styles.messageBubble,
-            item.SenderID === currentUser.email
-              ? styles.sentMessage
-              : styles.receivedMessage,
-          ]}>
-          {isMemeShare && (
+  const renderMessage: ListRenderItem<Message> = useCallback(
+    ({ item }) => {
+      const { Content } = item;
+
+      if (typeof Content === 'string') {
+        let content = Content;
+        let isMemeShare = false;
+        let memeUrl = '';
+
+        if (Content.trim().startsWith('{')) {
+          try {
+            const parsedContent = JSON.parse(Content);
+            if (parsedContent.type === 'meme_share') {
+              content = parsedContent.message || 'Shared a meme';
+              isMemeShare = true;
+              memeUrl = parsedContent.memeID.startsWith('http') 
+                ? parsedContent.memeID 
+                : `https://jestr-bucket.s3.amazonaws.com/${parsedContent.memeID}`;
+            }
+          } catch (e) {
+            console.log('Failed to parse message content:', e);
+          }
+        }
+
+        return (
+          <View
+            style={[
+              styles.messageBubble,
+              item.SenderID === currentUser.email
+                ? styles.sentMessage
+                : styles.receivedMessage,
+            ]}
+          >
+            {isMemeShare && (
+              <Image
+                source={{ uri: memeUrl }}
+                style={styles.sharedMemeImage}
+                resizeMode="contain"
+              />
+            )}
+            <Text style={styles.messageText}>{content}</Text>
+            <Text style={styles.timestamp}>{formatTimestamp(item.Timestamp)}</Text>
+          </View>
+        );
+      } else if (isMemeShareContent(Content)) {
+        const memeUrl = Content.memeID.startsWith('http') 
+          ? Content.memeID 
+          : `https://jestr-bucket.s3.amazonaws.com/${Content.memeID}`;
+
+        return (
+          <View
+            style={[
+              styles.messageBubble,
+              item.SenderID === currentUser.email
+                ? styles.sentMessage
+                : styles.receivedMessage,
+            ]}
+          >
             <Image
-            source={{ uri: `https://jestr-bucket.s3.amazonaws.com/${memeUrl}` }}
+              source={{ uri: memeUrl }}
               style={styles.sharedMemeImage}
               resizeMode="contain"
             />
-          )}
-          <Text style={styles.messageText}>{content}</Text>
-          <Text style={styles.timestamp}>
-            {formatTimestamp(item.Timestamp)}
-          </Text>
-        </View>
-      );
+            <Text style={styles.messageText}>{Content.message || 'Shared a meme'}</Text>
+            <Text style={styles.timestamp}>{formatTimestamp(item.Timestamp)}</Text>
+          </View>
+        );
+      } else {
+        return (
+          <View
+            style={[
+              styles.messageBubble,
+              item.SenderID === currentUser.email
+                ? styles.sentMessage
+                : styles.receivedMessage,
+            ]}
+          >
+            <Text style={styles.messageText}>Unsupported content</Text>
+            <Text style={styles.timestamp}>{formatTimestamp(item.Timestamp)}</Text>
+          </View>
+        );
+      }
     },
     [currentUser.email, formatTimestamp],
   );
 
-  if (isLoading) {
-    return (
-      <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill}>
-        <View style={styles.loadingContainer}>
-          <LottieView
-            source={require('../../../assets/animations/loading-animation.json')}
-            autoPlay
-            loop
-            style={styles.lottieAnimation}
-          />
-          <Text style={styles.loadingText}>Loading</Text>
-        </View>
-      </BlurView>
-    );
-  }
+  const memoizedContent = useMemo(() => {
+    if (isLoading) {
+      return (
+        <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill}>
+          <View style={styles.loadingContainer}>
+            <LottieView
+              source={require('../../../assets/animations/loading-animation.json')}
+              autoPlay
+              loop
+              style={styles.lottieAnimation}
+            />
+            <Text style={styles.loadingText}>Loading</Text>
+          </View>
+        </BlurView>
+      );
+    }
 
-  if (error) {
-    return <Text>Error loading messages: {error.message}</Text>;
-  }
+    if (error) {
+      return <Text>Error loading messages: {error.message}</Text>;
+    }
+
+    return (
+      <>
+        <FlashList
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.MessageID}
+          inverted={true} // Inverted for starting at bottom
+          estimatedItemSize={79}
+          contentContainerStyle={{ paddingTop: showMeme ? 100 : 10 }} // Adjust paddingTop when inverted
+        />
+        {showMeme && (
+          <View style={styles.memeContainer}>
+            <Image
+              source={{ uri: memeId }}
+              style={styles.memeImage}
+              resizeMode="contain"
+            />
+            <TouchableOpacity
+              style={styles.closeMemeButton}
+              onPress={() => {
+                console.log("Closing meme preview");
+                setShowMeme(false);
+              }}
+            >
+              <FontAwesomeIcon icon={faTimes} size={20} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </>
+    );
+  }, [isLoading, error, messages, showMeme, memeId, renderMessage]);
 
   return (
     <KeyboardAvoidingView
-      behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-      style={{flex: 1}}>
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      style={{ flex: 1 }}
+    >
       <View
         style={[
           styles.container,
-          {backgroundColor: isDarkMode ? '#000' : '#1C1C1C'},
-        ]}>
+          { backgroundColor: isDarkMode ? '#000' : '#1C1C1C' },
+        ]}
+      >
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}>
+            onPress={() => {
+              navigation.goBack();
+              // Haptic Feedback
+              Haptics.selectionAsync();
+            }}
+            style={styles.backButton}
+          >
             <FontAwesomeIcon icon={faArrowLeft} size={24} color="#1bd40b" />
           </TouchableOpacity>
           <Image
             source={{
-              uri:
-                partnerUser.profilePic ||
-                ('https://jestr-bucket.s3.amazonaws.com/ProfilePictures/default-profile-pic.jpg' as any),
+              uri: getProfilePicUri(partnerUser.profilePic),
             }}
             style={styles.profilePic}
           />
           <Text style={styles.username}>{partnerUser.username}</Text>
         </View>
-        <FlashList
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={item => item.MessageID}
-          inverted
-          estimatedItemSize={79}
-        />
+
+        {memoizedContent}
+
         <View style={styles.inputContainer}>
           <TextInput
             ref={inputRef}
@@ -336,16 +465,26 @@ export const Conversations = () => {
             onChangeText={setNewMessage}
             placeholderTextColor="#999"
           />
+          
           <TouchableOpacity
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
             style={styles.sendButton}
-            onPress={handleSendMessage}
-            disabled={isSending}>
-            <Animated.View style={{transform: [{scale: sendButtonScale}]}}>
-              <FontAwesomeIcon icon={sendIcon} size={24} color="white" />
+            onPress={() => {
+              console.log("Send button pressed. ShowMeme:", showMeme);
+              showMeme ? handleSendMeme() : handleSendMessage();
+            }}
+            disabled={isSending}
+          >
+            <Animated.View style={{ transform: [{ scale: sendButtonScale }] }}>
+              {isSending ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <FontAwesomeIcon icon={sendIcon} size={24} color="white" />
+              )}
             </Animated.View>
           </TouchableOpacity>
+
         </View>
       </View>
     </KeyboardAvoidingView>

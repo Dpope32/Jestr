@@ -1,168 +1,154 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const styles = StyleSheet.create({
-  modalContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: SCREEN_HEIGHT * 0.75,
-    backgroundColor: '#2A2A2A',
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    paddingBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    backgroundColor: '#1F1F1F',
-    borderBottomWidth: 1,
-    borderBottomColor: '#444',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#E0E0E0',
-    marginLeft: 10,
-  },
-  closeButton: {
-    padding: 8,
-  },
-  searchContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#1F1F1F',
-  },
-  searchInput: {
-    backgroundColor: '#333',
-    color: '#FFF',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 25,
-    fontSize: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  userList: {
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-  },
-  userItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#444',
-  },
-  userAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 15,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  username: {
-    color: '#E0E0E0',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  lastMessage: {
-    color: '#A9A9A9',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  suggestionsContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
-  },
-  suggestionsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#E0E0E0',
-    marginBottom: 12,
-  },
-  suggestionsList: {
-    paddingRight: 20,
-  },
-  suggestionItem: {
-    alignItems: 'center',
-    marginRight: 15,
-    width: 70,
-  },
-  suggestionAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginBottom: 6,
-  },
-  suggestionUsername: {
-    color: '#FFF',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  messageList: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingTop: 10,
-  },
-  messageBubble: {
-    maxWidth: SCREEN_WIDTH * 0.7,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginVertical: 5,
-    alignSelf: 'flex-start',
-    backgroundColor: '#4A90E2', // Outgoing message color
-  },
-  messageText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#333',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderTopWidth: 1,
-    borderTopColor: '#444',
-    paddingBottom: 5, // Reduced bottom padding
-  },
-  inputField: {
-    flex: 1,
-    backgroundColor: '#444',
-    color: '#FFF',
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    marginRight: 10,
-  },
-  sendButton: {
-    backgroundColor: '#1bd40b',
-    borderRadius: 25,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-});
+const createStyles = (isDarkMode: boolean) => {
+  const COLORS = {
+    background: isDarkMode ? '#1E1E1E' : '#494949',
+    headerBorder: isDarkMode ? '#2C2C2C' : '#D3D3D3', 
+    textPrimary: '#FFFFFF', 
+    textSecondary: isDarkMode ? '#B0B0B0' : '#666666', 
+    inputBackground: isDarkMode ? '#2C2C2C' : '#E0E0E0', 
+    inputText: '#FFFFFF', 
+    listBackground: isDarkMode ? '#1E1E1E' : '#494949',
+    suggestionsBackground: isDarkMode ? '#1E1E1E' : '#494949', 
+    sendButtonBackground: '#87CEFA', 
+  };
 
-export default styles;
+  return StyleSheet.create({
+    modalContainer: {
+      flex: 1,
+      backgroundColor: COLORS.background,
+      padding: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    
+    modalContent: {
+      backgroundColor: COLORS.background,
+      borderRadius: 10,
+      justifyContent: 'space-between',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: COLORS.headerBorder,
+      paddingTop: Platform.OS === 'android' ? 20 : 10,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: COLORS.textPrimary, // Always white
+    },
+    closeButton: {
+      padding: 8,
+      borderRadius: 20,
+      marginRight: 5,
+    },
+    searchContainer: {
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+    },
+    searchInput: {
+      backgroundColor: COLORS.inputBackground,
+      borderRadius: 10,
+      padding: 8,
+      color: COLORS.inputText, // Always white
+      fontSize: 14,
+    },
+    userList: {
+      paddingHorizontal: 10,
+      paddingBottom: 10,
+    },
+    userItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#444' : '#ccc',
+    },
+    userAvatar: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      borderWidth: 2,
+      borderColor: '#1BD40B',
+      marginRight: 10,
+    },
+    username: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: COLORS.textPrimary, // Always white
+    },
+    lastMessage: {
+      fontSize: 14,
+      color: '#CCC',
+      marginTop: 2,
+    },
+    memeThumbnail: {
+      width: 40,
+      height: 40,
+      borderRadius: 5,
+      marginTop: -20,
+      marginLeft: 20
+    },
+    messageContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 5,
+    },
+    suggestionsContainer: {
+      paddingVertical: 10,
+      paddingHorizontal: 10,
+      backgroundColor: COLORS.suggestionsBackground, // Better background contrast
+    },
+    suggestionsTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: 5,
+      color: COLORS.textPrimary, // Always white
+    },
+    suggestionItem: {
+      alignItems: 'center',
+      marginRight: 10,
+    },
+    suggestionAvatar: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      borderWidth: 2,
+      borderColor: '#1BD40B',
+    },
+    suggestionUsername: {
+      marginTop: 5,
+      fontSize: 12,
+      textAlign: 'center',
+      color: COLORS.textPrimary, // Always white
+    },
+    listContainer: {
+      flex: 1,
+      paddingHorizontal: 10,
+      backgroundColor: COLORS.listBackground, // Adjusted background gray
+      marginBottom: 20,
+    },
+    horizontalListContainer: {
+      height: 80,
+    },
+    sendButton: {
+      backgroundColor: COLORS.sendButtonBackground,
+      borderRadius: 20,
+      padding: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 3,
+      elevation: 3,
+    },
+  });
+};
+
+export default createStyles;

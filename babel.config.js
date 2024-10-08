@@ -8,8 +8,9 @@ module.exports = function (api) {
         {
           regenerator: true,
         },
-        'react-native-reanimated/plugin',
       ],
+      'react-native-reanimated/plugin',
+      ["module:react-native-dotenv"]
     ],
     env: {
       production: {

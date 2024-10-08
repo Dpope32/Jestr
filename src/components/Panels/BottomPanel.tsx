@@ -1,11 +1,12 @@
 /* eslint-disable react/no-deprecated */
-import React, {useMemo} from 'react';
-import {View,TouchableOpacity,StyleSheet,Dimensions,Platform,} from 'react-native';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faHome, faPlus, faEnvelope} from '@fortawesome/free-solid-svg-icons';
-import {useNavigation, NavigationProp} from '@react-navigation/native';
-import {RootStackParamList, User} from '../../types/types';
+import React, { useMemo } from 'react';
+import { View, TouchableOpacity, StyleSheet, Dimensions, Platform } from 'react-native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faHome, faPlus, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { RootStackParamList, User } from '../../types/types';
 import * as Haptics from 'expo-haptics';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type BottomPanelProps = {
   onHomeClick?: () => void;
@@ -71,75 +72,65 @@ const BottomPanel: React.FC<BottomPanelProps> = ({
   if (!visible) return null;
 
   return (
-    <View style={[styles.container, {backgroundColor}]}>
-      <TouchableOpacity
-        style={styles.iconContainer}
-        onPress={handleHomeClick}
-        accessibilityLabel="Home"
-        activeOpacity={0.7}>
-        <FontAwesomeIcon
-          icon={customIcons.home}
-          size={iconSize}
-          style={styles.icon}
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.iconContainer}
-        onPress={handleUploadClick}
-        accessibilityLabel="Upload"
-        activeOpacity={0.7}>
-        <FontAwesomeIcon
-          icon={customIcons.upload}
-          size={iconSize}
-          style={styles.icon}
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.iconContainer}
-        onPress={handleInboxClick}
-        accessibilityLabel="Inbox"
-        activeOpacity={0.7}>
-        <FontAwesomeIcon
-          icon={customIcons.inbox}
-          size={iconSize}
-          style={styles.icon}
-        />
-      </TouchableOpacity>
-      {additionalButtons.map((button, index) => (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor }]} edges={['bottom']}>
+      <View style={styles.container}>
         <TouchableOpacity
-          key={index}
           style={styles.iconContainer}
-          onPress={button.onPress}
-          accessibilityLabel={button.accessibilityLabel}
-          activeOpacity={0.7}>
-          <FontAwesomeIcon
-            icon={button.icon}
-            size={iconSize}
-            style={styles.icon}
-          />
+          onPress={handleHomeClick}
+          accessibilityLabel="Home"
+          activeOpacity={0.7}
+        >
+          <FontAwesomeIcon icon={customIcons.home} size={iconSize} style={styles.icon} />
         </TouchableOpacity>
-      ))}
-    </View>
+        <TouchableOpacity
+          style={styles.iconContainer}
+          onPress={handleUploadClick}
+          accessibilityLabel="Upload"
+          activeOpacity={0.7}
+        >
+          <FontAwesomeIcon icon={customIcons.upload} size={iconSize} style={styles.icon} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.iconContainer}
+          onPress={handleInboxClick}
+          accessibilityLabel="Inbox"
+          activeOpacity={0.7}
+        >
+          <FontAwesomeIcon icon={customIcons.inbox} size={iconSize} style={styles.icon} />
+        </TouchableOpacity>
+        {additionalButtons.map((button, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.iconContainer}
+            onPress={button.onPress}
+            accessibilityLabel={button.accessibilityLabel}
+            activeOpacity={0.7}
+          >
+            <FontAwesomeIcon icon={button.icon} size={iconSize} style={styles.icon} />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
   container: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 15 : 0,
-    left: 0,
-    right: 0,
-    zIndex: 3,
-    elevation: 10,
     paddingVertical: 10,
+    borderTopWidth: 1,
     borderTopColor: '#1bd40b',
   },
   iconContainer: {
-    padding: 4,
-    zIndex: 2,
+    padding: 10,
   },
   icon: {
     color: '#1bd40b',

@@ -1,70 +1,61 @@
-import React, {useEffect, useRef} from 'react';
-import {Animated, StyleSheet, View, Dimensions} from 'react-native';
-import {BlurView} from 'expo-blur';
+// RainEffect.tsx
+import React from 'react';
+import { StyleSheet, View, Dimensions } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  withRepeat,
+  interpolate,
+} from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 
-const {width, height} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+interface DropProps {
+  delay: number;
+  startX: number;
+}
+
+const Drop: React.FC<DropProps> = ({ delay, startX }) => {
+  const translateY = useSharedValue(-50);
+
+  translateY.value = withDelay(
+    delay,
+    withRepeat(
+      withTiming(height + 50, {
+        duration: 2000,
+      }),
+      -1,
+      false,
+      (isFinished) => {
+        if (isFinished) {
+          translateY.value = -50;
+        }
+      }
+    )
+  );
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }, { translateX: startX }],
+  }));
+
+  return <Animated.View style={[styles.drop, animatedStyle]} />;
+};
 
 const RainEffect = () => {
-  const numDrops = 100;
-  const animatedValues = useRef(
-    [...Array(numDrops)].map(() => new Animated.Value(0)),
-  ).current;
-  const animationRefs = useRef<Animated.CompositeAnimation[]>([]);
-
-  useEffect(() => {
-    animationRefs.current = animatedValues.map(animatedValue => {
-      const delay = Math.random() * 2000;
-      return Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(animatedValue, {
-            toValue: 1,
-            duration: 3000 + Math.random() * 2000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(animatedValue, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ]),
-      );
-    });
-
-    animationRefs.current.forEach(animation => animation.start());
-
-    return () => {
-      animationRefs.current.forEach(animation => animation.stop());
-    };
-  }, [animatedValues]);
-
-  const drops = animatedValues.map((animatedValue, index) => {
-    const translateY = animatedValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-50, height + 50],
-    });
-
-    const translateX = animatedValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [Math.random() * width, Math.random() * width],
-    });
-
-    return (
-      <Animated.View
-        key={index}
-        style={[
-          styles.drop,
-          {
-            transform: [{translateY}, {translateX}],
-          },
-        ]}
-      />
-    );
-  });
+  const numDrops = 50; // Reduced number of drops
+  const drops = Array.from({ length: numDrops }).map((_, index) => ({
+    delay: Math.random() * 2000,
+    startX: Math.random() * width,
+  }));
 
   return (
-    <View style={StyleSheet.absoluteFill}>
-      {drops}
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {drops.map((drop, index) => (
+        <Drop key={index} delay={drop.delay} startX={drop.startX} />
+      ))}
       <BlurView intensity={20} style={StyleSheet.absoluteFill} />
     </View>
   );

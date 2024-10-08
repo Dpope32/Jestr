@@ -10,9 +10,11 @@ import BottomTabNav from './Stacks/BottomTabNav';
 
 import CustomDrawer from '../components/CustomDrawer/CustomDrawer';
 import Profile from '../screens/AppNav/Profile/Profile';
+import Badges from '../screens/AppNav/Badges/Badges';
 import Settings from '../screens/AppNav/Settings/Settings';
 import Notifications from '../screens/AppNav/Notifications';
-// import {getToken} from '../stores/secureStore';
+import AdminPage from '../screens/AppNav/AdminPage';
+import Conversations from '../screens/AppNav/Inbox/Conversations';
 
 const Drawer = createDrawerNavigator<AppNavParamList>();
 
@@ -43,7 +45,10 @@ const AppNavigator = () => {
       <Drawer.Screen name="Home" component={BottomTabNav} />
       <Drawer.Screen name="Profile" component={Profile} />
       <Drawer.Screen name="Settings" component={Settings} />
+      <Drawer.Screen name="AdminPage" component={AdminPage} />
+      <Drawer.Screen name="Badges" component={Badges} />
       <Drawer.Screen name="Notifications" component={Notifications} />
+      <Drawer.Screen name="Conversations" component={Conversations} />
     </Drawer.Navigator>
   );
 };

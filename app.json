@@ -2,30 +2,47 @@
   "expo": {
     "name": "JestrMobile",
     "slug": "jestrmobile",
+    "splash": {
+      "backgroundColor": "#1C1C1C",
+      "resizeMode": "contain"
+    },
     "owner": "deedaw22",
-    "version": "1.0.0",
-    "assetBundlePatterns": ["**/*"],
+    "version": "1.0.7",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "jsEngine": "hermes",
     "android": {
       "package": "com.jestrmobile.app",
-      "permissions": ["MEDIA_LIBRARY", "MEDIA_LIBRARY_WRITE_ONLY"]
-    },
-    "ios": {
-      "bundleIdentifier": "com.jestrmobile.app",
-      "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "The app accesses your photos to let you share them with your friends.",
-        "NSPhotoLibraryAddUsageDescription": "Allow app to save photos."
-      }
-    },
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1C1C1C"
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "READ_MEDIA_AUDIO",
+        "WRITE_MEDIA_IMAGES",
+        "WRITE_MEDIA_VIDEO",
+        "WRITE_MEDIA_AUDIO",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_ADVERTISE",
+        "BLUETOOTH_CONNECT",
+        "INTERNET",
+        "VIBRATE",
+        "WAKE_LOCK",
+        "FOREGROUND_SERVICE",
+        "REQUEST_INSTALL_PACKAGES",
+        "SYSTEM_ALERT_WINDOW",
+        "RECEIVE_BOOT_COMPLETED",
+        "RECEIVE_USER_PRESENT",
+        "READ_CONTACTS",
+        "USE_FACIAL_RECOGNITION"
+      ]
     },
     "icon": "./assets/icon.png",
     "extra": {
       "eas": {
-        "projectId": "project-id"
+        "projectId": "67868a97-b51c-4a57-a602-7fb4eb32563b"
       }
     },
     "plugins": [
@@ -45,7 +62,35 @@
           "isAccessMediaLocationEnabled": true
         }
       ],
-      "expo-secure-store"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#ffffff",
+          "sounds": [
+            "./assets/notification_sound.wav"
+          ],
+          "androidMode": "default",
+          "androidCollapsedTitle": "#{unread_notifications} new notifications",
+          "iosDisplayInForeground": true
+        }
+      ],
+      "expo-secure-store",
+      "expo-tracking-transparency"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.jestrmobile.app",
+      "buildNumber": "7", 
+      "excludedModules": ["Amplify", "AmplifyCore", "AmplifyAnalytics", "AmplifyAPI", "AmplifyDataStore", "AmplifyStorage"]
+    },
+    "hooks": {
+      "postInstall": "npx pod-install && cd ios && pod install"
+    },
+    "podspecRepos": [
+      {
+        "name": "trunk",
+        "url": "https://cdn.cocoapods.org/"
+      }
     ]
   }
 }

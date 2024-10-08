@@ -27,7 +27,7 @@ const AnimatedLetters = () => {
 
   const calculateFontSize = () => {
     const baseWidth = 375;
-    return Math.min(72, (windowWidth / baseWidth) * 72);
+    return Math.min(60, (windowWidth / baseWidth) * 60);
   };
 
   const fontSize = calculateFontSize();
@@ -36,7 +36,7 @@ const AnimatedLetters = () => {
     fontSize,
     fontWeight: 'bold',
     color: textColor,
-    textShadowColor: 'rgba(0, 255, 0, 0.7)',
+    textShadowColor: 'rgba(0, 255, 0, 1)',
     textShadowOffset: {width: -2, height: 2},
     backgroundColor: 'transparent',
     textShadowRadius: 10,

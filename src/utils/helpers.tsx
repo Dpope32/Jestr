@@ -1,5 +1,6 @@
 import {Dimensions} from 'react-native';
 import Toast from 'react-native-toast-message';
+import {ProfileImage} from '../types/types';
 
 export const windowWidth = Dimensions.get('window').width;
 export const windowHeight = Dimensions.get('window').height;
@@ -26,3 +27,16 @@ export const generateUniqueId = () => {
       position: 'top'
     });
   };
+
+
+  export const getProfilePicUri = (profilePic: string | ProfileImage | null): string => {
+    if (typeof profilePic === 'string') {
+      return profilePic;
+    } else if (profilePic?.url) {
+      return profilePic.url;
+    } else if (profilePic?.uri) {
+      return profilePic.uri;
+    }
+    return 'https://jestr-bucket.s3.us-east-2.amazonaws.com/ProfilePictures/unnamed.png';
+  };
+  

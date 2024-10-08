@@ -10,13 +10,16 @@ const styles = StyleSheet.create({
     height: height,
     width: width,
   },
-  blurInner: {
-    borderRadius: 12,
-  },
   videoWrapper: {
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   memeContainer: {
     flex: 1,
@@ -40,48 +43,17 @@ const styles = StyleSheet.create({
     zIndex: 10,
     elevation: 10,
   },
-  textContainer: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 240 : 150,
-    left: 0,
-    right: 20,
-    flexDirection: 'row',
-    padding: 5,
-    borderRadius: 10,
-  },
   contentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-    paddingBottom: Platform.OS === 'ios' ? 260 : 150,
-  },
-  iconColumn: {
-    position: 'absolute',
-    flexDirection: 'column',
-    right: 0,
-    zIndex: 10,
-    paddingHorizontal: 0,
-    gap: 0,
-    bottom: Platform.OS === 'ios' ? 230 : 150,
-    alignItems: 'center',
+    paddingBottom: Platform.OS === 'ios' ? 150 : 150,
   },
   memeImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
-  },
-  followButton: {
-    position: 'absolute',
-    top: -5,
-    right: 5,
-    backgroundColor: '#1bd40b',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
   },
   followButtonText: {
     color: '#fff',
@@ -113,23 +85,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     top: 0,
   },
-  profilePic: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  profilePicContainer: {
-    position: 'relative',
-  },
-  textContent: {
-    flex: 1,
-  },
-  username: {
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    fontSize: FONT_SIZES.md,
-  },
   video: {
     width: '100%',
     height: '100%',
@@ -142,16 +97,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 10,
-  },
-  caption: {
-    color: COLORS.text,
-    fontSize: FONT_SIZES.sm,
-    marginTop: SPACING.xs,
-  },
-  date: {
-    color: COLORS.textSecondary,
-    fontSize: FONT_SIZES.xs,
-    marginTop: SPACING.xs,
   },
   iconWrapper: {
     alignItems: 'center',
@@ -180,6 +125,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginTop: 4,
+    color: 'white', // Ensure the text color is white (or your desired color)
+    textShadowColor: 'rgba(0, 0, 0, 0.7)', // Set shadow color
+    textShadowOffset: { width: 1, height: 1 }, // Set offset for the shadow
+    textShadowRadius: 3, // Set blur radius for the shadow
   },
   errorText: {
     fontSize: 20,

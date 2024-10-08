@@ -1,18 +1,14 @@
 import React from 'react';
-import {Animated, StyleSheet, View, useWindowDimensions} from 'react-native';
+import {Animated, StyleSheet, View} from 'react-native';
 import {LinearGradient} from 'expo-linear-gradient';
 
-import Particles from '../Particles/Particles';
 import AnimatedLetters from './AnimatedLetters';
 
-const colors = ['rgba(0,255,0,0.3)', 'rgba(0,255,255,0.3)'];
+const colors = ['rgba(0,255,0,0.3)', 'rgba(0,255,255,0)'];
 
 const WelcomeText = () => {
-  const {width: windowWidth, height: windowHeight} = useWindowDimensions();
-
   return (
     <View style={styles.container}>
-      <Particles windowWidth={windowWidth} windowHeight={windowHeight} />
 
       <Animated.View style={styles.textContainer}>
         <LinearGradient colors={colors} style={styles.gradient}>
@@ -35,14 +31,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   gradient: {
-    padding: 20,
+    padding: 30,
     borderRadius: 20,
   },
-  // particle: {
-  //   position: 'absolute',
-  //   backgroundColor: '#00FF00',
-  //   borderRadius: 50,
-  // },
 });
 
 export default React.memo(WelcomeText);

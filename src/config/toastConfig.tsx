@@ -1,51 +1,73 @@
 // src/config/toastConfig.tsx
 
 import React from 'react';
-import {
-  BaseToast,
-  BaseToastProps,
-  ErrorToast,
-} from 'react-native-toast-message';
+import { BaseToast, BaseToastProps, ErrorToast} from 'react-native-toast-message';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { height } = Dimensions.get('window');
+
+const TOAST_TOP_POSITION = height * 0.1;
 
 export const toastConfig = {
   success: (props: BaseToastProps) => (
     <BaseToast
       {...props}
-      style={{
-        borderLeftColor: 'green',
-        backgroundColor: '#1C1C1C',
-        borderRadius: 5,
-        marginTop: 80,
-      }}
-      contentContainerStyle={{paddingHorizontal: 15}}
-      text1Style={{
-        fontSize: 15,
-        fontWeight: '400',
-        color: '#FFFFFF',
-      }}
-      text2Style={{
-        fontSize: 12,
-        color: '#CCCCCC',
-      }}
+      style={[
+        styles.toastContainer,
+        styles.successToast,
+      ]}
+      contentContainerStyle={styles.contentContainer}
+      text1Style={styles.text1}
+      text2Style={styles.text2}
     />
   ),
+  
   error: (props: BaseToastProps) => (
     <ErrorToast
       {...props}
-      style={{
-        borderLeftColor: 'red',
-        backgroundColor: '#2E2E2E',
-        borderRadius: 5,
-        marginTop: 40,
-      }}
-      text1Style={{
-        fontSize: 15,
-        color: '#FFFFFF',
-      }}
-      text2Style={{
-        fontSize: 12,
-        color: '#CCCCCC',
-      }}
+      style={[
+        styles.toastContainer,
+        styles.errorToast,
+      ]}
+      text1Style={styles.text1}
+      text2Style={styles.text2}
     />
   ),
 };
+
+const styles = StyleSheet.create({
+  toastContainer: {
+    borderRadius: 5,
+    width: '80%', 
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5, 
+  },
+  successToast: {
+    backgroundColor: '#1C1C1C', 
+    borderColor: '#00FF00', 
+    borderWidth: 3,
+    marginTop: TOAST_TOP_POSITION, 
+  },
+  errorToast: {
+    backgroundColor: '#2E2E2E', 
+    borderColor: '#00FF00', 
+    borderWidth: 3,
+    marginTop: TOAST_TOP_POSITION, 
+  },
+  contentContainer: {
+    paddingHorizontal: 15,
+  },
+  text1: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF', 
+  },
+  text2: {
+    fontSize: 14,
+    color: '#CCCCCC', 
+  },
+});

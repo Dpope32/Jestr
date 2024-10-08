@@ -1,14 +1,15 @@
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RouteProp} from '@react-navigation/native';
 
-import {User, Conversation} from '../../types/types';
+import {User} from '../../types/types';
+import {Conversation} from '../../types/messageTypes';
 
 export type InboxNavParamList = {
   Inbox: undefined;
   Conversations: {
     partnerUser: User;
-    conversation: Conversation;
-    currentMedia: string;
+    conversation?: Conversation;
+    currentMedia?: string;
   };
 };
 

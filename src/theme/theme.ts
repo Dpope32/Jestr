@@ -1,6 +1,3 @@
-// src/styles/theme.ts
-
-import { SignInOutput } from '@aws-amplify/auth';
 import { Dimensions, PixelRatio } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -15,14 +12,33 @@ export const hp = (percentage: number) => {
 
 export const COLORS = {
   primary: '#1bd40b',
+  secondary: '#0B6623',
   background: '#1C1C1C',
-  surface: '#1C1C1C',
+  surface: '#2A2A2A',
   text: '#FFFFFF',
   textSecondary: '#CCCCCC',
+  textTertiary: '#999999',
   accent: '#FF4081',
-  buttonStart: '#0B6623', // Dark green start
-  buttonEnd: '#1bd40b',   // Light green end
-  textThirdary: '#eeeeee',
+  buttonStart: '#0B6623',
+  buttonEnd: '#1bd40b',
+  black: '#000000',
+  white: '#FFFFFF',
+  darkGray: '#757575',
+  error: '#FF3B30',
+  success: '#4CD964',
+  warning: '#FF9500',
+  info: '#5AC8FA',
+  gold: '#FFD700',
+  lightGray: '#E0E0E0',
+  cardBackground: '#1E1E1E',
+  // Add the missing properties below
+  darkBackgroundStart: '#1E1E1E',
+  darkBackgroundEnd: '#121212',
+  lightBackgroundStart: '#FFFFFF',
+  lightBackgroundEnd: '#F8F8F8',
+  particlesDark: '#333333',
+  particlesLight: '#CCCCCC',
+  iconBackground: '#EFEFEF', // Optional: for icon container background
 };
 
 export const SPACING = {
@@ -43,6 +59,8 @@ export const FONT_SIZES = {
 
 export const FONTS = {
   regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semiBold: 'Inter_600SemiBold',
   bold: 'Inter_700Bold',
 };
 
@@ -56,3 +74,17 @@ export const elevationShadowStyle = (elevation: number) => {
   };
 };
 
+export const hexToRGBA = (hex: string, alpha: number) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+export const getContrastColor = (hexColor: string) => {
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return (yiq >= 128) ? COLORS.black : COLORS.white;
+};

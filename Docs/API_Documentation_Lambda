@@ -1,0 +1,310 @@
+# API Documentation
+
+## adminServices.mjs
+
+/getPopularMemes
+Fetch trending or popular memes for admin page.
+json
+{ "body": "{\"operation\":\"getPopularMemes\"}" }
+
+
+/getTotalMemes
+Get total number of memes in database.
+json
+{ "body": "{\"operation\":\"getTotalMemes\"}" }
+
+
+/deleteMeme
+json
+{ "body": "{\"operation\":\"deleteMeme\",\"memeID\":\"Memes/pope.dawson@gmail.com-meme-6f151af5-0f89-4544-b533-1dc2efd4379f.jpg\",\"userEmail\":\"pope.dawson@gmail.com\"}" }
+
+
+/removeDownloadedMeme
+When user removes a downloaded meme.
+json
+{ "body": "{\"operation\":\"removeDownloadedMeme\",\"userEmail\":\"pope.dawson@gmail.com\",\"memeID\":\"Memes/pope.dawson@gmail.com-meme-8c411201-02da-44b5-aa87-2be2e1ac05da.jpg\"}" }
+
+
+/getTotalUsers
+Get total number of users in DynamoDB.
+json
+{ "body": "{\"operation\":\"getTotalUsers\"}" }
+
+
+/getUserGrowthRate
+Get user growth rate.
+json
+{ "body": "{\"operation\":\"getUserGrowthRate\"}" }
+
+
+/getDAU
+Number of daily active users in the last 3 days.
+json
+{ "body": "{\"operation\":\"getDAU\"}" }
+
+
+## badgeServices.mjs
+
+/checkBadgeEligibility
+json
+{"body": "{\"operation\":\"checkBadgeEligibility\",\"userEmail\":\"pope.dawson@gmail.com\",\"action\":\"memeLiker\"}"}
+
+
+/awardBadge
+json
+{"body": "{\"operation\":\"awardBadge\",\"userEmail\":\"pope.dawson@gmail.com\",\"badgeType\":\"memeLiker\"}"}
+
+json
+{"body": "{\"operation\":\"checkBadgeEligibility\",\"userEmail\":\"pope.dawson@gmail.com\",\"action\":\"socialButterfly\"}"}
+
+json
+{"body": "{\"operation\":\"awardBadge\",\"userEmail\":\"pope.dawson@gmail.com\",\"badgeType\":\"socialButterfly\"}"}
+
+json
+{"body": "{\"operation\":\"checkBadgeEligibility\",\"userEmail\":\"pope.dawson@gmail.com\",\"action\":\"memeMaster\"}"}
+
+json
+{"body": "{\"operation\":\"awardBadge\",\"userEmail\":\"pope.dawson@gmail.com\",\"badgeType\":\"memeMaster\"}"}
+
+json
+{"body": "{\"operation\":\"checkBadgeEligibility\",\"userEmail\":\"pope.dawson@gmail.com\",\"action\":\"trendSetter\"}"}
+
+json
+{"body": "{\"operation\":\"awardBadge\",\"userEmail\":\"pope.dawson@gmail.com\",\"badgeType\":\"trendSetter\"}"}
+
+
+/getUserBadges
+json
+{"body": "{\"operation\":\"getUserBadges\",\"userEmail\":\"pope.dawson@gmail.com\"}"}
+
+
+## dataProcessor
+
+/fetchMemes
+Get memes from S3 and metadata from DynamoDB.
+json
+{ "body": "{\"operation\":\"fetchMemes\",\"userEmail\":\"jestrdev9@gmail.com\",\"limit\":5,\"lastViewedMemeId\":null}" }
+
+
+/requestDataArchive
+Returns user data in the form of URL.
+json
+{"body": "{\"operation\":\"requestDataArchive\",\"email\":\"test@example.com\"}"}
+
+
+/getLikeStatus
+Check if user has liked a specific meme.
+json
+{ "body": "{\"operation\":\"getLikeStatus\",\"memeID\":\"Memes/pope.dawson@gmail.com-meme-8c411201-02da-44b5-aa87-2be2e1ac05da.jpg\",\"userEmail\":\"pope.dawson@gmail.com\"}" }
+
+
+/recordMemeView
+Records each meme view as user scrolls.
+json
+{ "body": "{\"operation\":\"recordMemeView\",\"memeViews\":[{\"email\":\"pope.dawson@gmail.com\",\"memeIDs\":[\"Memes/pope.dawson@gmail.com-meme-8c411201-02da-44b5-aa87-2be2e1ac05da.jpg\"]}]}" }
+
+
+## memeProcessor.mjs
+
+/shareMeme
+When user shares a meme within the app.
+json
+{ "body": "{\"operation\":\"shareMeme\",\"memeID\":\"Memes/pope.dawson@gmail.com-meme-8c411201-02da-44b5-aa87-2be2e1ac05da.jpg\",\"email\":\"pope.dawson@gmail.com\",\"username\":\"PopeDawson\",\"catchUser\":\"jestrdev@gmail.com\",\"message\":\"Check out this meme!\"}" }
+
+
+/getPresignedUrl
+Get URL for uploading meme to S3.
+json
+{ "body": "{\"operation\":\"getPresignedUrl\",\"fileName\":\"test-meme.jpg\",\"fileType\":\"image/jpeg\"}" }
+
+
+/uploadMeme
+When user uploads a meme.
+
+/getUserMemes
+Fetch user's posted memes.
+json
+{ "body": "{\"operation\":\"getUserMemes\",\"email\":\"pope.dawson@gmail.com\"}" }
+
+
+## memeManagement
+
+/updateMemeReaction
+When user likes/unlikes/double-likes a meme.
+json
+{ "body": "{\"operation\":\"updateMemeReaction\",\"memeID\":\"Memes/pope.dawson@gmail.com-meme-8c411201-02da-44b5-aa87-2be2e1ac05da.jpg\",\"incrementLikes\":true,\"doubleLike\":false,\"incrementDownloads\":false,\"email\":\"pope.dawson@gmail.com\"}" }
+
+
+/sendNotification
+Send a notification to a user.
+json
+{ "body": "{\"operation\":\"sendNotification\",\"memeID\":\"Memes/pope.dawson@gmail.com-meme-8c411201-02da-44b5-aa87-2be2e1ac05da.jpg\",\"catchUser\":\"jestrdev@gmail.com\",\"fromUser\":\"PopeDawson\",\"type\":\"share\",\"message\":\"PopeDawson sent you a meme\"}" }
+
+
+/postComment
+When user adds a comment.
+json
+{ "body": "{\"operation\":\"postComment\",\"memeID\":\"Memes/pope.dawson@gmail.com-meme-8c411201-02da-44b5-aa87-2be2e1ac05da.jpg\",\"text\":\"This is a test comment\",\"email\":\"pope.dawson@gmail.com\",\"username\":\"PopeDawson\",\"profilePic\":\"https://example.com/profile.jpg\"}" }
+
+
+/updateCommentReaction
+When user likes/dislikes a comment.
+json
+{ "body": "{\"operation\":\"updateCommentReaction\",\"commentID\":\"5da53357-900c-4727-a08c-832810380164\",\"memeID\":\"Memes/pope.dawson@gmail.com-meme-6c061500-1b4f-46f2-a802-79dba8035a6a.jpg\",\"incrementLikes\":true,\"incrementDislikes\":false}" }
+
+
+/getComments
+Fetch comments for a meme.
+json
+{ "body": "{\"operation\":\"getComments\",\"memeID\":\"Memes/pope.dawson@gmail.com-meme-8c411201-02da-44b5-aa87-2be2e1ac05da.jpg\"}" }
+
+
+## UserManagement.mjs
+
+/deleteAccount
+json
+{"operation": "deleteAccount","username": "testuser123","email": "testuser123@example.com"}
+
+
+/updateUserProfile
+When user updates multiple profile fields.
+json
+{"body": "{\"operation\":\"updateUserProfile\",\"email\":\"kamariewallace1999@gmail.com\",\"username\":\"kdog1999\"}"}
+
+
+/updatePassword
+json
+{"body": "{\"operation\":\"updatePassword\",\"username\":\"dawson1.pope@gmail.com\",\"newPassword\":\"NewSecurePassword123!\"}"}
+
+
+/resendConfirmationCode
+json
+{"body": "{\"operation\":\"resendConfirmationCode\",\"username\":\"jestrdev@gmail.com\"}"}
+
+
+/forgotPassword 
+json
+{"body": "{\"operation\":\"forgotPassword\",\"username\":\"pope.dawson@gmail.com\"}"}
+
+
+/updateProfileImage
+When user changes profile or header picture.
+json
+{ "body": "{\"operation\":\"updateProfileImage\",\"email\":\"jestrdev@gmail.com\",\"imageType\":\"profile\",\"image\":\"base64EncodedImageString\"}" }
+
+
+/confirmForgotPassword
+json
+{"body": "{\"operation\":\"confirmForgotPassword\",\"username\":\"tommyshelbyalex22@gmail.com\",\"confirmationCode\":\"533186\",\"newPassword\":\"UCOboy$8\"}"}
+
+
+/submitFeedback
+
+/updateFeedback
+Admins to update the status of feedbacks.
+
+/getFeedback
+Gets a specific user's feedback forms that are not closed.
+
+/getAllFeedback
+Gets all feedback for the admin page.
+
+## followManagement.mjs
+
+/addFollow
+When user follows another user.
+json
+{ "body": "{\"operation\":\"addFollow\",\"followerId\":\"pope.dawson@gmail.com\",\"followeeId\":\"jestrdev@gmail.com\"}" }
+
+
+/removeFollow
+When user unfollows another user.
+json
+{ "body": "{\"operation\":\"removeFollow\",\"unfollowerId\":\"pope.dawson@gmail.com\",\"unfolloweeId\":\"jestrdev@gmail.com\"}" }
+
+
+/getFollowers
+Fetch user's followers.
+json
+{ "body": "{\"operation\":\"getFollowers\",\"userId\":\"pope.dawson@gmail.com\"}" }
+
+
+/getFollowing
+Fetch users the current user is following.
+json
+{ "body": "{\"operation\":\"getFollowing\",\"userId\":\"pope.dawson@gmail.com\"}" }
+
+
+/checkFollowStatus
+Check if user is following another user.
+json
+{ "body": "{\"operation\":\"checkFollowStatus\",\"followerId\":\"pope.dawson@gmail.com\",\"followeeId\":\"jestrdev@gmail.com\"}" }
+
+
+/batchCheckStatus
+Check if followed on a batch of memes.
+
+## userDetails.mjs
+
+/updateBio
+When user updates their bio.
+json
+{ "body": "{\"operation\":\"updateBio\",\"email\":\"jestrdev@gmail.com\",\"bio\":\"This is my new bio!\"}" }
+
+
+/completeProfile
+Sign the user up in DynamoDB.
+json
+{ "body": "{\"operation\":\"completeProfile\",\"email\":\"newuser5@example.com\",\"username\":\"completeduser\",\"profilePic\":\"base64EncodedImageString\",\"headerPic\":\"base64EncodedImageString\",\"displayName\":\"Completed User\"}" }
+
+
+/getUser
+Fetch user profile.
+json
+{ "body": "{\"operation\":\"getUser\",\"identifier\":\"pope.dawson@gmail.com\"}" }
+
+
+## SocialInteraction.mjs
+
+/sendMessage
+Send a new message.
+json
+{ "body": "{\"operation\":\"sendMessage\",\"senderID\":\"pope.dawson@gmail.com\",\"receiverID\":\"jestrdev@gmail.com\",\"content\":\"Hello, this is a test message!\"}" }
+
+
+/getMessages
+Fetch messages for a conversation.
+json
+{ "body": "{\"operation\":\"getMessages\",\"userID\":\"pope.dawson@gmail.com\",\"conversationID\":\"jestrdev@gmail.com#pope.dawson@gmail.com\"}" }
+
+
+/getConversations
+Fetch user's conversations.
+json
+{ "body": "{\"operation\":\"getConversations\",\"userID\":\"pope.dawson@gmail.com\"}" }
+
+
+## dynamoManagement.mjs
+
+/fetchLikedMemes
+Fetch user's liked memes.
+json
+{ "body": "{\"operation\":\"fetchLikedMemes\",\"email\":\"jestrdev@gmail.com\",\"limit\":10,\"lastEvaluatedKey\":null}" }
+
+
+/fetchDownloadedMemes
+Fetch user's saved memes.
+json
+{ "body": "{\"operation\":\"fetchDownloadedMemes\",\"email\":\"pope.dawson@gmail.com\",\"limit\":10,\"lastEvaluatedKey\":null}" }
+
+
+/fetchViewHistory
+Fetch user's view history.
+json
+{ "body": "{\"operation\":\"fetchViewHistory\",\"email\":\"pope.dawson@gmail.com\",\"limit\":50,\"lastEvaluatedKey\":null}" }
+
+
+/getAllUsers
+With search parameters.
+json
+{ "body": "{\"operation\":\"getAllUsers\"}" }

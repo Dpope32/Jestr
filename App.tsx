@@ -1,9 +1,9 @@
-import React, {useState, useEffect} from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {ErrorBoundary} from 'react-error-boundary';
-import {Inter_400Regular, Inter_700Bold} from '@expo-google-fonts/inter';
-import {activateKeepAwakeAsync, deactivateKeepAwake} from 'expo-keep-awake';
+import React, { useState, useEffect, useRef } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ErrorBoundary } from 'react-error-boundary';
+import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
+import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -20,17 +20,13 @@ import {createMMKVPersister} from './src/utils/mmkvPersister';
 import {ThemeProvider} from './src/theme/ThemeContext';
 import CustomToast from './src/components/ToastMessages/CustomToast';
 import AppNavigator from './src/navigation/AppNavigator';
-import ErrorFallback, {
-  LoadingText,
-} from './src/components/ErrorFallback/ErrorFallback';
-
-const fontz = {
-  Inter_400Regular,
-  Inter_700Bold,
-};
+import ErrorFallback, { LoadingText } from './src/components/ErrorFallback/ErrorFallback';
+import { usePushNotifications } from './src/screens/AppNav/Notifications/usePushNotification';
+const fontz = { Inter_400Regular, Inter_700Bold};
 import awsconfig from './src/aws-exports';
 
 Amplify.configure(awsconfig);
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -80,6 +76,7 @@ const persistOptions = {
 
 const App = () => {
   useReactQueryDevTools(queryClient);
+  usePushNotifications(); 
 
   const [isReady, setIsReady] = useState(false);
 
@@ -104,10 +101,6 @@ const App = () => {
     activateKeepAwakeAsync();
     lockOrientation();
     initializeApp();
-
-    return () => {
-      deactivateKeepAwake();
-    };
   }, []);
 
   if (!isReady) {
@@ -133,5 +126,7 @@ const App = () => {
     </PersistQueryClientProvider>
   );
 };
+
+
 
 export default App;

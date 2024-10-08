@@ -315,12 +315,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#FFFFFF',
     marginBottom: 10,
+  sectionTitle: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    marginBottom: 10,
   },
+  friendsContainer: {
+    paddingVertical: 10,
   friendsContainer: {
     paddingVertical: 10,
   },
   friendItem: {
+  friendItem: {
     alignItems: 'center',
+    marginHorizontal: 10,
     marginHorizontal: 10,
   },
   friendImage: {
@@ -329,6 +337,9 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   friendName: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    marginTop: 5,
     color: '#FFFFFF',
     fontSize: 12,
     marginTop: 5,

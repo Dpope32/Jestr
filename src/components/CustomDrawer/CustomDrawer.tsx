@@ -1,10 +1,10 @@
 import React, { useRef, } from 'react';
-import {View, Text, Image, TouchableOpacity, Animated, Easing} from 'react-native';
-import {Switch} from 'react-native';
-import {DrawerContentScrollView,DrawerItem,DrawerContentComponentProps,} from '@react-navigation/drawer';
-import {useNavigation} from '@react-navigation/native';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faMoon, faCog, faHome, faUser, faBell, faRibbon} from '@fortawesome/free-solid-svg-icons';
+import { View, Text, Image, TouchableOpacity, Animated, Easing } from 'react-native';
+import { Switch } from 'react-native';
+import { DrawerContentScrollView, DrawerItem, DrawerContentComponentProps, } from '@react-navigation/drawer';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faMoon, faCog, faHome, faUser, faRibbon } from '@fortawesome/free-solid-svg-icons';
 
 import styles from './styles';
 import {AppNavParamList} from '../../navigation/NavTypes/RootNavTypes';
@@ -28,17 +28,12 @@ const drawerItems = [
   {
     label: 'Badges',
     icon: faRibbon,
-    navigateTo: 'Profile' as keyof AppNavParamList,
+    navigateTo: 'Badges' as keyof AppNavParamList,
   },
   {
     label: 'Settings',
     icon: faCog,
     navigateTo: 'Settings' as keyof AppNavParamList,
-  },
-  {
-    label: 'Notifications',
-    icon: faBell,
-    navigateTo: 'Notifications' as keyof AppNavParamList,
   },
 ];
 
@@ -47,6 +42,7 @@ const CustomDrawer = (props: DrawerContentComponentProps) => {
   const {isDarkMode, toggleDarkMode} = useTheme();
   const user = useUserStore(state => state as User);
   const spinValue = useRef(new Animated.Value(0)).current;
+
 
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
@@ -93,14 +89,14 @@ const CustomDrawer = (props: DrawerContentComponentProps) => {
             <Text style={styles.username}>@{user?.username || 'Username'}</Text>
           </View>
           <View style={styles.followContainer}>
-            <View style={styles.followCount}>
-              <Text style={styles.followValue}>{0}</Text>
-              <Text style={styles.followLabel}>Followers</Text>
-            </View>
-            <View style={styles.followCount}>
-              <Text style={styles.followValue}>{0}</Text>
-              <Text style={styles.followLabel}>Following</Text>
-            </View>
+          <View style={styles.followCount}>
+            <Text style={styles.followValue}>{user.followersCount || 0}</Text>
+            <Text style={styles.followLabel}>Followers</Text>
+          </View>
+          <View style={styles.followCount}>
+            <Text style={styles.followValue}>{user.followingCount || 0}</Text>
+            <Text style={styles.followLabel}>Following</Text>
+          </View>
           </View>
         </View>
 

@@ -1,87 +1,34 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+import { COLORS } from '../../theme/theme';
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  fullScreenOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  topPanelBlur: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 100, // Adjust height as needed
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-  },
-  uploadingContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lottieAnimation: {
-    width: 200,
-    height: 200,
-  },
-  uploadingText: {
-    color: '#fff',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  title: {
-    fontSize: 18,
-    fontStyle: 'italic',
-    color: '#fff',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  tagsInput: {
-    flex: 1,
-    marginBottom: 0,
-  },
-  generateTagsButton: {
-    padding: 10,
-    marginLeft: 10,
+    paddingHorizontal: 12,
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
   },
   mediaContainer: {
-    aspectRatio: 1,
+    width: '100%',
+    height: Dimensions.get('window').height * 0.5,
     backgroundColor: '#2a2a2a',
     borderRadius: 20,
-    overflow: 'hidden',
     alignItems: 'center',
-    marginBottom: 20,
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#1bd40b',
-    marginTop: -24,
+    position: 'relative',
+    overflow: 'hidden',
   },
   media: {
     width: '100%',
     height: '100%',
+    borderRadius: 10,
+    overflow: 'hidden',
   },
+  
   uploadPrompt: {
     flex: 1,
     justifyContent: 'center',
@@ -96,33 +43,59 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#2a2a2a',
     borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-    fontSize: 16,
+    padding: 20,
+    fontSize: 18,
     color: '#fff',
     width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderColor: COLORS.primary
   },
   uploadButton: {
-    backgroundColor: '#1bd40b',
+    backgroundColor: 'rgba(0,0,0,0.0)',
+    borderWidth: 2,
+    borderColor: COLORS.primary,
     borderRadius: 10,
     padding: 15,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
+    marginTop: 30,
   },
   uploadButtonDisabled: {
-    backgroundColor: '#0f7206',
+    backgroundColor: 'rgba(0,0,0,0.0)',
+    borderWidth: 0,
+    color: 'rgba(0,0,0,0.0)',
   },
   buttonIcon: {
     marginRight: 10,
+    color: COLORS.primary,
   },
   buttonText: {
-    color: '#fff',
+    color: COLORS.primary,
     fontSize: 18,
     fontWeight: 'bold',
   },
+  buttonTextDisabled : {
+    backgroundColor: 'rgba(0,0,0,0.0)',
+    color: 'rgba(0,0,0,0.0)',
+  },
+  clearButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#1bd40b',
+    borderRadius: 20,
+    padding: 5,
+    zIndex: 10,
+  },
+  overlayText: {
+    position: 'absolute',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 });
 
-
-    export default styles;
+export default styles;

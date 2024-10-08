@@ -1,8 +1,10 @@
 // src/types/types.ts
+
 import {View} from 'react-native';
 import {ViewToken} from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Animated} from 'react-native';
+import Friend from '../components/Modals/ShareModal';
 
 export type LandingPageNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -15,7 +17,7 @@ export interface User {
   profilePic: string | ProfileImage | null;
   headerPic: string | ProfileImage | null;
   displayName: string;
-  CreationDate?: string | undefined;
+  CreationDate?: string;
   followersCount: number;
   followingCount: number;
   Bio?: string;
@@ -47,6 +49,7 @@ export type ProfileImage = {
   type?: 'image' | 'video';
   fileName?: string | null;
   fileSize?: number;
+  trim?: boolean;
 };
 
 export interface FetchMemesResult {
@@ -195,6 +198,11 @@ export type ProfilePanelProps = {
   navigation: any;
 };
 
+export interface FriendType {
+  username: string;
+  profilePic: string;
+}
+
 export interface IconsAndContentProps {
   memeUser: any;
   caption: string;
@@ -215,48 +223,22 @@ export interface IconsAndContentProps {
   doubleLiked: boolean;
   handleDownloadPress: () => void;
   isSaved: boolean;
-  toggleCommentFeed: () => void;
   formatDate: (date: string) => string;
   animatedBlurIntensity: Animated.Value;
   iconAreaRef: React.RefObject<View>;
-  onShare: (type: ShareType, username: string, message: string) => void;
+  onShare: (
+    type: ShareType,
+    username: string,
+    message: string,
+  ) => Promise<void>;
   user: User | null;
   memeID: string;
   numOfComments: number;
-}
-
-export type Message = {
-  MessageID: string;
-  SenderID: string;
-  ReceiverID: string;
-  Content: string;
-  Timestamp: string;
-  Status: 'sent' | 'delivered' | 'read';
-  ConversationID: string;
-  sentByMe?: boolean;
-  read?: boolean;
-  reactions?: string[];
-};
-
-export interface Conversation {
-  id: string;
-  ConversationID: string;
-  userEmail: string;
-  username: string;
-  profilePicUrl: string | ProfileImage | null;
-  lastMessage: {
-    Content: string;
-    Timestamp: string;
-  };
-  timestamp: string;
-  messages: any[];
-  UnreadCount: number;
-  LastReadMessageID: string;
-  partnerUser: {
-    email: string;
-    username: string | null;
-    profilePic: string | null;
-  };
+  friends: FriendType[];
+  toggleCommentFeed: () => void;
+  isCommentFeedVisible: boolean;
+  currentMedia: string;
+  isDimmed?: boolean;
 }
 
 export interface FeedbackItem {
@@ -281,11 +263,6 @@ export type MemeListProps = {
   numOfComments: number;
   handleMemeViewed: (memeId: string) => Promise<void>;
 };
-
-export interface FriendType {
-  username: string;
-  profilePic: string;
-}
 
 export type CommentType = {
   commentID: string;

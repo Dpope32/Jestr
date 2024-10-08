@@ -79,7 +79,10 @@ export const usePanResponder = ({
        //   console.log('PanResponder start should set');
           return !isCommentFeedVisible;
         },
-        onMoveShouldSetPanResponder: (_, gestureState) => {
+        onMoveShouldSetPanResponder: (evt, gestureState) => {
+          if (isCommentFeedVisible) {
+            return false; // Disable pan responder when the comment modal is open
+          }
           const shouldSet = Math.abs(gestureState.dy) > 5 && !isCommentFeedVisible;
       //    console.log('PanResponder move should set:', shouldSet);
           return shouldSet;
