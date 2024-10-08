@@ -10,7 +10,7 @@ import BottomTabNav from './Stacks/BottomTabNav';
 
 import CustomDrawer from '../components/CustomDrawer/CustomDrawer';
 import Profile from '../screens/AppNav/Profile/Profile';
-import Badges from '../screens/AppNav/Badges/Badges'
+import Badges from '../screens/AppNav/Badges/Badges';
 import Settings from '../screens/AppNav/Settings/Settings';
 import Notifications from '../screens/AppNav/Notifications';
 import AdminPage from '../screens/AppNav/AdminPage';
@@ -20,7 +20,7 @@ const Drawer = createDrawerNavigator<AppNavParamList>();
 
 const AppNavigator = () => {
   const username = useUserStore(state => state.username);
-  //console.log('AppNavigator - username:', username);
+  // console.log('AppNavigator - username:', username);
 
   const screenOptions = {
     headerShown: false,

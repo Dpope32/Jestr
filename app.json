@@ -11,6 +11,7 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "jsEngine": "hermes",
     "android": {
       "package": "com.jestrmobile.app",
       "permissions": [

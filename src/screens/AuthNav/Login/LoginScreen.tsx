@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, {useState, useRef} from 'react';
 import {
   View,
   Text,
@@ -12,19 +12,19 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/core';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
+import {useNavigation} from '@react-navigation/core';
+import {BlurView} from 'expo-blur';
+import {LinearGradient} from 'expo-linear-gradient';
 
-import { styles } from './componentData';
-import { colorsGradient } from '../LandingPage/componentData';
-import { AuthNavProp } from '../../../navigation/NavTypes/AuthStackTypes';
+import {styles} from './componentData';
+import {colorsGradient} from '../LandingPage/componentData';
+import {AuthNavProp} from '../../../navigation/NavTypes/AuthStackTypes';
 import InputField from '../../../components/Input/InputField';
 import AuthFooterLinks from '../../../components/AuthFooterLinks/AuthFooterLinks';
 import RainEffect from '../../../components/RainEffect/RainEffect';
 import SocialLoginBtns from '../../../components/SocialLoginBtns/SocialLoginBtns';
 import SocialBtnsRow from '../../../components/SocialLoginBtns/SocialBtnsRow';
-import { handleLogin } from '../../../services/authService';
+import {handleLogin} from '../../../services/authService';
 import ForgotPasswordModal from '../../../components/Modals/ForgotPasswordModal';
 
 const LoginScreen = () => {
@@ -33,7 +33,8 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isForgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false);
+  const [isForgotPasswordModalVisible, setForgotPasswordModalVisible] =
+    useState(false);
 
   // Refs for input fields
   const passwordInputRef = useRef<TextInput>(null);
@@ -45,7 +46,10 @@ const LoginScreen = () => {
       await handleLogin(email, password, navigation);
     } catch (error: any) {
       console.log('Error logging in:', error.message);
-      Alert.alert('Login Error', error.message || 'An unexpected error occurred.');
+      Alert.alert(
+        'Login Error',
+        error.message || 'An unexpected error occurred.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -54,16 +58,14 @@ const LoginScreen = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <LinearGradient colors={colorsGradient} style={styles.container}>
-      <RainEffect />
+        <RainEffect />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoidingView}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
           <ScrollView
             contentContainerStyle={styles.scrollView}
-            keyboardShouldPersistTaps="handled"
-          >
+            keyboardShouldPersistTaps="handled">
             <View style={styles.contentContainer}>
               <Text style={styles.signupHeader}>Login</Text>
 
@@ -97,24 +99,23 @@ const LoginScreen = () => {
                 style={styles.button2}
                 disabled={isLoading}
                 accessibilityLabel="Login Button"
-                accessibilityRole="button"
-              >
+                accessibilityRole="button">
                 <Text style={styles.buttonText}>Login</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => navigation.navigate('SignUp')}
                 accessibilityLabel="Navigate to Sign Up"
-                accessibilityRole="button"
-              >
-                <Text style={styles.toggleFormText}>Need an account? Sign up here</Text>
+                accessibilityRole="button">
+                <Text style={styles.toggleFormText}>
+                  Need an account? Sign up here
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => setForgotPasswordModalVisible(true)}
                 accessibilityLabel="Forgot Password"
-                accessibilityRole="button"
-              >
+                accessibilityRole="button">
                 <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </TouchableOpacity>
 
@@ -139,8 +140,7 @@ const LoginScreen = () => {
             intensity={100}
             style={styles.blurView}
             accessibilityLabel="Loading Indicator"
-            accessible={true}
-          >
+            accessible={true}>
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#00ff00" />
               <Text style={styles.loadingText}>Logging in...</Text>

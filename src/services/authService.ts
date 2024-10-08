@@ -1,16 +1,24 @@
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
-import { Alert, Platform } from 'react-native';
+import {Alert, Platform} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User } from '../types/types';
-import { signUp, signOut, resetPassword, getCurrentUser, fetchAuthSession, signIn, confirmResetPassword } from '@aws-amplify/auth';
+import {User} from '../types/types';
+import {
+  signUp,
+  signOut,
+  resetPassword,
+  getCurrentUser,
+  fetchAuthSession,
+  signIn,
+  confirmResetPassword,
+} from '@aws-amplify/auth';
 
-import { useUserStore } from '../stores/userStore';
-import { removeToken } from '../stores/secureStore';
+import {useUserStore} from '../stores/userStore';
+import {removeToken} from '../stores/secureStore';
 import * as SecureStore from 'expo-secure-store';
-import { fetchUserDetails } from './userService';
+import {fetchUserDetails} from './userService';
 //import * as Google from 'expo-auth-session/providers/google';
-import { AuthNavProp } from '../navigation/NavTypes/AuthStackTypes';
+import {AuthNavProp} from '../navigation/NavTypes/AuthStackTypes';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
@@ -25,24 +33,23 @@ export const checkAuthStatus = async () => {
 
 export const registerDevice = async (userID: string) => {
   try {
-
     if (!Device.isDevice) {
       console.log('Skipping device registration on emulator');
       return;
     }
 
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const {status: existingStatus} = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
+      const {status} = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
 
     if (finalStatus !== 'granted') {
       Alert.alert(
         'Permissions Required',
-        'Enable notifications to stay updated with the latest features.'
+        'Enable notifications to stay updated with the latest features.',
       );
       return;
     }
@@ -63,7 +70,7 @@ export const registerDevice = async (userID: string) => {
         body: JSON.stringify({
           operation: 'registerDevice',
           userID: userID,
-          deviceToken: expoPushToken
+          deviceToken: expoPushToken,
         }),
       },
     );
@@ -75,13 +82,19 @@ export const registerDevice = async (userID: string) => {
       Alert.alert('Success', 'Device registered for notifications.');
     } else {
       console.error('Failed to register device:', responseData);
-      Alert.alert('Registration Failed', responseData.message || 'Please try again.');
+      Alert.alert(
+        'Registration Failed',
+        responseData.message || 'Please try again.',
+      );
     }
 
     return responseData;
   } catch (error: any) {
     console.error('Error registering device:', error);
-    Alert.alert('Registration Error', error.message || 'An unknown error occurred.');
+    Alert.alert(
+      'Registration Error',
+      error.message || 'An unknown error occurred.',
+    );
     throw error;
   }
 };
@@ -171,7 +184,7 @@ export const handleLogin = async (
   }
 };
 
-export const handleSignOut = async (navigation: AuthNavProp) => {
+export const handleSignOut = async () => {
   try {
     await signOut({global: true});
     await removeToken('accessToken');
@@ -179,9 +192,6 @@ export const handleSignOut = async (navigation: AuthNavProp) => {
     await AsyncStorage.clear();
     useUserStore.getState().resetUserState();
     console.log('Sign out successful');
-    
-    // Navigate to LandingPage
-    navigation.navigate('LandingPage');
   } catch (error) {
     console.error('Error signing out:', error);
   }
@@ -255,8 +265,8 @@ export const handleSignup = async (
         'Account Already Exists',
         "Looks like you already have an account. Try to sign in or click 'Forgot Password'.",
         [
-          { text: 'OK', onPress: () => {} },
-          { text: 'Sign In', onPress: () => navigation.navigate('Login') },
+          {text: 'OK', onPress: () => {}},
+          {text: 'Sign In', onPress: () => navigation.navigate('Login')},
           {
             text: 'Forgot Password',
             onPress: () => {
@@ -265,7 +275,6 @@ export const handleSignup = async (
           },
         ],
       );
-
     } else {
       Alert.alert(
         'Signup Failed',
@@ -311,10 +320,13 @@ const convertAuthUserToUser = (authUser: any): User => {
 export const handleForgotPassword = async (email: string) => {
   try {
     if (!email) {
-      Alert.alert('Error', 'Please enter your email address on the login screen');
+      Alert.alert(
+        'Error',
+        'Please enter your email address on the login screen',
+      );
       return;
     }
-    await resetPassword({ username: email });
+    await resetPassword({username: email});
     Alert.alert('Success', 'Check your email for password reset instructions');
   } catch (error) {
     console.error('Error in forgotPassword:', error);
@@ -322,9 +334,13 @@ export const handleForgotPassword = async (email: string) => {
   }
 };
 
-export const confirmForgotPassword = async (username: string, code: string, newPassword: string): Promise<void> => {
+export const confirmForgotPassword = async (
+  username: string,
+  code: string,
+  newPassword: string,
+): Promise<void> => {
   try {
-    await confirmResetPassword({ username, confirmationCode: code, newPassword });
+    await confirmResetPassword({username, confirmationCode: code, newPassword});
   } catch (error) {
     console.error('Error confirming reset password:', error);
     throw error;
@@ -333,11 +349,18 @@ export const confirmForgotPassword = async (username: string, code: string, newP
 
 export const updatePassword = async (
   username: string,
-  newPassword: string
+  newPassword: string,
 ): Promise<void> => {
   console.log('Updating password for user:', username);
-  console.log('Full request body:', JSON.stringify({operation: 'updatePassword', username: username, newPassword: newPassword}));
-  
+  console.log(
+    'Full request body:',
+    JSON.stringify({
+      operation: 'updatePassword',
+      username: username,
+      newPassword: newPassword,
+    }),
+  );
+
   try {
     await fetch(
       'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/updatePassword',
@@ -351,7 +374,7 @@ export const updatePassword = async (
           username: username,
           newPassword: newPassword,
         }),
-      }
+      },
     );
 
     // We're not checking the response status here
@@ -378,17 +401,23 @@ export const resendConfirmationCode = async (username: string) => {
           operation: 'resendConfirmationCode',
           username: username,
         }),
-      }
+      },
     );
 
     const responseData = await response.json();
 
-    if ((response.ok || response.status === 500) && responseData.CodeDeliveryDetails) {
+    if (
+      (response.ok || response.status === 500) &&
+      responseData.CodeDeliveryDetails
+    ) {
       // Treat as success if 500 but CodeDeliveryDetails is present
       console.log('Resend confirmation code response:', responseData);
       return true; // Return success without showing a toast
     } else {
-      console.error('Failed to resend confirmation code, status:', response.status);
+      console.error(
+        'Failed to resend confirmation code, status:',
+        response.status,
+      );
       return false; // Return failure without showing a toast
     }
   } catch (error) {

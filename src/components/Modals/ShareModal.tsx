@@ -1,5 +1,5 @@
 // src/components/Modals/ShareModal.tsx
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faTimes,
   faCopy,
@@ -21,62 +21,103 @@ import {
   faE,
   faEnvelope,
 } from '@fortawesome/free-solid-svg-icons';
-import { faFacebookMessenger, faSnapchatGhost, faFacebookF, faXTwitter } from '@fortawesome/free-brands-svg-icons';
+import {
+  faFacebookMessenger,
+  faSnapchatGhost,
+  faFacebookF,
+  faXTwitter,
+} from '@fortawesome/free-brands-svg-icons';
 import Toast from 'react-native-toast-message';
-import { FriendType, ShareType, User } from '../../types/types';
+import {FriendType, ShareType, User} from '../../types/types';
+import {Conversation} from '../../types/messageTypes';
 import NewMessageModal from '../Modals/NewMessageModal';
-import { useInboxStore } from '../../stores/inboxStore';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LastMessage } from '../../types/messageTypes';
-import { CompositeNavigationProp } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { BottomTabNavParamList } from '../../navigation/NavTypes/BottomTabsTypes';
-import { InboxNavParamList } from '../../navigation/NavTypes/InboxStackTypes';
+import {useInboxStore} from '../../stores/inboxStore';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {LastMessage} from '../../types/messageTypes';
+import {CompositeNavigationProp} from '@react-navigation/native';
+import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import {BottomTabNavParamList} from '../../navigation/NavTypes/BottomTabsTypes';
+import {InboxNavParamList} from '../../navigation/NavTypes/InboxStackTypes';
 import * as Haptics from 'expo-haptics';
-const { width, height } = Dimensions.get('window');
+import {useUserStore} from '../../stores/userStore';
+// import {InboxNavProp} from '../../navigation/NavTypes/InboxStackTypes';
+import {TabNavigationProp} from '../../navigation/Stacks/BottomTabNav';
+
+const {width, height} = Dimensions.get('window');
 
 // Define a composite navigation prop to handle nested navigators
-type ShareModalNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<BottomTabNavParamList>,
-  NativeStackNavigationProp<InboxNavParamList>
->;
+// type ShareModalNavigationProp = CompositeNavigationProp<
+//   BottomTabNavigationProp<BottomTabNavParamList>,
+//   NativeStackNavigationProp<InboxNavParamList>
+// >;
 
 interface ShareModalProps {
   visible: boolean;
   onClose: () => void;
   friends?: FriendType[];
-  onShare: (type: ShareType, username?: string, message?: string) => Promise<void>;
   currentMedia: string;
-  user: any;
+  onShare: (
+    type: ShareType,
+    username?: string,
+    message?: string,
+  ) => Promise<void>;
 }
-
+// FIXME: onShare doesn't do anything!
 const ShareModal: React.FC<ShareModalProps> = ({
   visible,
   onClose,
   friends,
   onShare,
   currentMedia,
-  user,
+  // user,
 }) => {
+  const user = useUserStore(state => state);
+
   const [selectedFriend, setSelectedFriend] = useState<FriendType | null>(null);
   const [message, setMessage] = useState('');
-  const [isNewMessageModalVisible, setIsNewMessageModalVisible] = useState(false);
-  const navigation = useNavigation<ShareModalNavigationProp>();
-  const { conversations, pinnedConversations } = useInboxStore();
+  const [isNewMessageModalVisible, setIsNewMessageModalVisible] =
+    useState(false);
+  const navigation = useNavigation<TabNavigationProp>();
+  const {conversations, pinnedConversations} = useInboxStore();
 
   // Hard-coded friends for testing
   const hardCodedFriends: FriendType[] = [
-    { username: 'User 1', profilePic: 'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-headerPic.jpg' },
-    { username: 'User 2', profilePic: 'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-profilePic.jpg' },
-    { username: 'User 3', profilePic: 'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-headerPic.jpg' },
-    { username: 'User 4', profilePic: 'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-profilePic.jpg' },
-    { username: 'User 5', profilePic: 'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-headerPic.jpg' },
-    { username: 'User 6', profilePic: 'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-profilePic.jpg' },
+    {
+      username: 'User 1',
+      profilePic:
+        'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-headerPic.jpg',
+    },
+    {
+      username: 'User 2',
+      profilePic:
+        'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-profilePic.jpg',
+    },
+    {
+      username: 'User 3',
+      profilePic:
+        'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-headerPic.jpg',
+    },
+    {
+      username: 'User 4',
+      profilePic:
+        'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-profilePic.jpg',
+    },
+    {
+      username: 'User 5',
+      profilePic:
+        'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-headerPic.jpg',
+    },
+    {
+      username: 'User 6',
+      profilePic:
+        'https://jestr-bucket.s3.us-east-2.amazonaws.com/pope.dawson%40gmail.com-profilePic.jpg',
+    },
   ];
 
   // Use hard-coded friends if no friends are passed as props
-  const displayFriends = friends && friends.length > 0 ? friends : hardCodedFriends;
+  const displayFriends =
+    friends && friends.length > 0 ? friends : hardCodedFriends;
 
   const handleFriendSelect = (friend: FriendType) => {
     setSelectedFriend(friend);
@@ -103,19 +144,19 @@ const ShareModal: React.FC<ShareModalProps> = ({
   };
 
   const handleUserSelect = (selectedUser: User) => {
-    console.log("Selected user:", selectedUser);
-    console.log("Current media in ShareModal:", currentMedia);
+    console.log('Selected user:', selectedUser);
+    console.log('Current media in ShareModal:', currentMedia);
     Haptics.selectionAsync();
 
     // Find existing conversation or create a new one
     let conversation = [...conversations, ...pinnedConversations].find(
-      conv => conv.userEmail === selectedUser.email
+      conv => conv.userEmail === selectedUser.email,
     );
 
     if (!conversation) {
-      const placeholderLastMessage: LastMessage = {
-        Content: "Start a conversation",
-        Timestamp: new Date().toISOString()
+      const placeholderLastMessage = {
+        Content: 'Start a conversation' as string,
+        Timestamp: new Date().toISOString(),
       };
 
       // Create a new conversation object if it doesn't exist
@@ -123,7 +164,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
         id: `${user.email}-${selectedUser.email}`,
         ConversationID: `${user.email}-${selectedUser.email}`,
         userEmail: selectedUser.email,
-        username: selectedUser.username || "",
+        username: selectedUser.username || '',
         profilePicUrl: selectedUser.profilePic,
         lastMessage: placeholderLastMessage,
         timestamp: new Date().toISOString(),
@@ -133,7 +174,10 @@ const ShareModal: React.FC<ShareModalProps> = ({
         partnerUser: {
           email: selectedUser.email,
           username: selectedUser.username || null,
-          profilePic: typeof selectedUser.profilePic === 'string' ? selectedUser.profilePic : null
+          profilePic:
+            typeof selectedUser.profilePic === 'string'
+              ? selectedUser.profilePic
+              : null,
         },
       };
     }
@@ -141,8 +185,17 @@ const ShareModal: React.FC<ShareModalProps> = ({
     // Navigate to the Conversations screen
     navigation.navigate('Conversations', {
       partnerUser: selectedUser,
-      conversation: conversation,
+      conversation: conversation as Conversation,
       currentMedia: currentMedia, // Make sure this line is present
+    });
+
+    navigation.navigate('InboxStackNav', {
+      screen: 'Conversations',
+      params: {
+        partnerUser: selectedUser,
+        conversation: conversation as Conversation,
+        currentMedia: currentMedia,
+      },
     });
 
     // If you need to pass currentMedia, you can do it through the inboxStore or another method
@@ -158,11 +211,14 @@ const ShareModal: React.FC<ShareModalProps> = ({
       animationType="slide"
       transparent={true}
       visible={visible}
-      onRequestClose={onClose}
-    >
+      onRequestClose={onClose}>
       {/* Instant background opacity */}
       <View style={styles.modalBackground}>
-        <TouchableOpacity style={styles.overlay} onPress={handleClose} activeOpacity={1} />
+        <TouchableOpacity
+          style={styles.overlay}
+          onPress={handleClose}
+          activeOpacity={1}
+        />
 
         <View style={styles.modalContainer}>
           <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
@@ -175,16 +231,14 @@ const ShareModal: React.FC<ShareModalProps> = ({
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.friendsContainer}
-          >
+            contentContainerStyle={styles.friendsContainer}>
             {displayFriends.map((friend, index) => (
               <TouchableOpacity
                 key={index}
                 onPress={() => handleFriendSelect(friend)}
-                style={styles.friendItem}
-              >
+                style={styles.friendItem}>
                 <Image
-                  source={{ uri: friend.profilePic }}
+                  source={{uri: friend.profilePic}}
                   style={styles.friendImage}
                 />
                 <Text style={styles.friendName}>{friend.username}</Text>
@@ -197,13 +251,17 @@ const ShareModal: React.FC<ShareModalProps> = ({
 
           {/* Share Options */}
           <View style={styles.iconsContainer}>
-            {icons.map((iconObj) => (
+            {icons.map(iconObj => (
               <TouchableOpacity
                 key={iconObj.type}
                 onPress={() => handleIconClick(iconObj.type)}
-                style={styles.iconButton}
-              >
-                <FontAwesomeIcon icon={iconObj.icon} size={28} color={iconObj.color} style={styles.icon} />
+                style={styles.iconButton}>
+                <FontAwesomeIcon
+                  icon={iconObj.icon}
+                  size={28}
+                  color={iconObj.color}
+                  style={styles.icon}
+                />
                 <Text style={styles.iconLabel}>{iconObj.label}</Text>
               </TouchableOpacity>
             ))}
@@ -217,9 +275,6 @@ const ShareModal: React.FC<ShareModalProps> = ({
         currentUser={user}
         allUsers={[]} // You might want to fetch this or pass it from a parent component
         existingConversations={[...conversations, ...pinnedConversations]}
-        currentMedia={currentMedia}
-        user={user}
-        navigation={navigation} // Pass navigation if needed
       />
     </Modal>
   );
@@ -289,7 +344,7 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     alignItems: 'center',
-    width: width / 4 - 10, 
+    width: width / 4 - 10,
     marginVertical: 10,
   },
   icon: {
@@ -302,16 +357,25 @@ const styles = StyleSheet.create({
   },
 });
 
-
-const icons: { type: ShareType; icon: any; color: string; label: string }[] = [
-  { type: 'message', icon: faEnvelope, color: '#4CAF50', label: 'Message' },
-  { type: 'snapchat', icon: faSnapchatGhost, color: '#FFFC00', label: 'Snapchat' },
-  { type: 'facebook', icon: faFacebookF, color: '#1877F2', label: 'Facebook' },
-  { type: 'twitter', icon: faXTwitter, color: '#1DA1F2', label: 'Twitter' },
-  { type: 'sms', icon: faSms, color: '#25D366', label: 'SMS' },
-  { type: 'facebookMessenger', icon: faFacebookMessenger, color: '#1877F2', label: 'Messenger' },
-  { type: 'copy', icon: faCopy, color: '#FFFFFF', label: 'Copy Link' },
-  { type: 'report', icon: faFlag, color: '#990000', label: 'Report' },
+const icons: {type: ShareType; icon: any; color: string; label: string}[] = [
+  {type: 'message', icon: faEnvelope, color: '#4CAF50', label: 'Message'},
+  {
+    type: 'snapchat',
+    icon: faSnapchatGhost,
+    color: '#FFFC00',
+    label: 'Snapchat',
+  },
+  {type: 'facebook', icon: faFacebookF, color: '#1877F2', label: 'Facebook'},
+  {type: 'twitter', icon: faXTwitter, color: '#1DA1F2', label: 'Twitter'},
+  {type: 'sms', icon: faSms, color: '#25D366', label: 'SMS'},
+  {
+    type: 'facebookMessenger',
+    icon: faFacebookMessenger,
+    color: '#1877F2',
+    label: 'Messenger',
+  },
+  {type: 'copy', icon: faCopy, color: '#FFFFFF', label: 'Copy Link'},
+  {type: 'report', icon: faFlag, color: '#990000', label: 'Report'},
 ];
 
 export default ShareModal;

@@ -1,10 +1,10 @@
 // src/types/types.ts
 
-import { View } from 'react-native';
-import { ViewToken } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { Animated } from 'react-native';
-import  Friend  from '../components/Modals/ShareModal';
+import {View} from 'react-native';
+import {ViewToken} from 'react-native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {Animated} from 'react-native';
+import Friend from '../components/Modals/ShareModal';
 
 export type LandingPageNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -74,12 +74,12 @@ export type RootStackParamList = {
   Loading: undefined;
   LandingPage: undefined;
   Onboarding: undefined;
-  Feed: { userEmail: string };
-  Settings: { email: string };
-  MemeUploadScreen: { user: any };
-  CompleteProfileScreen: { email: string };
-  Inbox: { user: any };
-  ConfirmSignUp: { email: string };
+  Feed: {userEmail: string};
+  Settings: {email: string};
+  MemeUploadScreen: {user: any};
+  CompleteProfileScreen: {email: string};
+  Inbox: {user: any};
+  ConfirmSignUp: {email: string};
   AdminPage: undefined;
   Conversations: {
     localUser: any;
@@ -118,14 +118,15 @@ export type Meme = {
   profilePicUrl: string;
   isFollowed: boolean;
   email: string;
-  liked?: boolean; 
-  doubleLiked?: boolean; 
+  liked?: boolean;
+  doubleLiked?: boolean;
   memeUser?: Partial<User>;
   downloaded?: boolean;
   followStatus?: {
     isFollowing: boolean;
     canFollow: boolean;
   };
+  likedByUser?: boolean;
 };
 
 export type OnViewableItemsChanged = {
@@ -151,7 +152,7 @@ export type MediaPlayerProps = {
   likedIndices?: Set<number>;
   doubleLikedIndices?: Set<number>;
   downloadedIndices?: Set<number>;
-  likeDislikeCounts?: Record<number, { likeCount: number; dislikeCount: number }>;
+  likeDislikeCounts?: Record<number, {likeCount: number; dislikeCount: number}>;
   currentMediaIndex: number;
   user: User | null;
   likeCount: number;
@@ -171,7 +172,7 @@ export type MediaPlayerProps = {
   };
   onLikeStatusChange: (
     memeID: string,
-    status: { liked: boolean; doubleLiked: boolean },
+    status: {liked: boolean; doubleLiked: boolean},
     newLikeCount: number,
   ) => void;
   liked: boolean;
@@ -225,18 +226,20 @@ export interface IconsAndContentProps {
   formatDate: (date: string) => string;
   animatedBlurIntensity: Animated.Value;
   iconAreaRef: React.RefObject<View>;
-  onShare: (type: ShareType, username: string, message: string) => Promise<void>;
+  onShare: (
+    type: ShareType,
+    username: string,
+    message: string,
+  ) => Promise<void>;
   user: User | null;
   memeID: string;
   numOfComments: number;
-  friends: FriendType[]; 
+  friends: FriendType[];
   toggleCommentFeed: () => void;
   isCommentFeedVisible: boolean;
   currentMedia: string;
   isDimmed?: boolean;
 }
-
-
 
 export interface FeedbackItem {
   FeedbackID: string;
@@ -247,20 +250,19 @@ export interface FeedbackItem {
 }
 
 export type MemeListProps = {
-    memes: Meme[];
-    user: User | null;
-    onEndReached: () => void;
-    toggleCommentFeed: () => void;
-    updateLikeStatus: (memeID: string, status: any, newLikeCount: number) => void;
-    currentMediaIndex: number;
-    setCurrentMediaIndex: (index: number) => void;
-    currentUserId: string | undefined;
-    isCommentFeedVisible: boolean;
-    isLoadingMore: boolean;
-    numOfComments: number;
-    handleMemeViewed: (memeId: string) => Promise<void>;
+  memes: Meme[];
+  user: User | null;
+  onEndReached: () => void;
+  toggleCommentFeed: () => void;
+  updateLikeStatus: (memeID: string, status: any, newLikeCount: number) => void;
+  currentMediaIndex: number;
+  setCurrentMediaIndex: (index: number) => void;
+  currentUserId: string | undefined;
+  isCommentFeedVisible: boolean;
+  isLoadingMore: boolean;
+  numOfComments: number;
+  handleMemeViewed: (memeId: string) => Promise<void>;
 };
-
 
 export type CommentType = {
   commentID: string;

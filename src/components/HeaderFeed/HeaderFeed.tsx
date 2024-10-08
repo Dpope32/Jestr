@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Image, TextInput } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faSearch, faBell, faCog } from '@fortawesome/free-solid-svg-icons';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import React, {useState} from 'react';
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Image,
+  TextInput,
+} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useNavigation, DrawerActions} from '@react-navigation/native';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faSearch, faBell, faCog} from '@fortawesome/free-solid-svg-icons';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 
-import { AppNavProp } from '../../navigation/NavTypes/RootNavTypes';
-import { FONTS } from '../../theme/theme';
-import { User } from '../../types/types';
-import { useUserStore } from '../../stores/userStore';
-import { useNotificationStore } from '../../stores/notificationStore';
+import {AppNavProp} from '../../navigation/NavTypes/RootNavTypes';
+import {FONTS} from '../../theme/theme';
+import {User} from '../../types/types';
+import {useUserStore} from '../../stores/userStore';
+import {useNotificationStore} from '../../stores/notificationStore';
 
 const HeaderFeed = () => {
   const insets = useSafeAreaInsets();
@@ -20,14 +30,16 @@ const HeaderFeed = () => {
   const [selectedTab, setSelectedTab] = useState('Flow');
   const user = useUserStore(state => state as User);
   const isAdmin = useUserStore(state => state.isAdmin);
-  const notificationCount = useNotificationStore(state => state.notifications.filter(n => !n.read).length);
+  const notificationCount = useNotificationStore(
+    state => state.notifications.filter(n => !n.read).length,
+  );
 
   const handleTabClick = (tab: string) => {
     setSelectedTab(tab);
   };
 
   const imgSrc = user.profilePic
-    ? { uri: user.profilePic }
+    ? {uri: user.profilePic}
     : require('../../assets/images/Jestr.jpg');
 
   const handleNotificationPress = () => {
@@ -35,7 +47,7 @@ const HeaderFeed = () => {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       <View style={styles.firstRow}>
         {/* Left Container */}
         <View style={styles.leftContainer}>
@@ -43,15 +55,13 @@ const HeaderFeed = () => {
             onPress={() => {
               navigation.dispatch(DrawerActions.toggleDrawer());
             }}
-            style={styles.profileContainer}
-          >
+            style={styles.profileContainer}>
             <Image source={imgSrc} style={styles.profilePic} />
           </TouchableOpacity>
           {isAdmin && (
             <TouchableOpacity
               style={styles.adminIconContainerLeft}
-              onPress={() => navigation.navigate('AdminPage')}
-            >
+              onPress={() => navigation.navigate('AdminPage')}>
               <FontAwesomeIcon
                 icon={faCog}
                 size={wp('5%')}
@@ -74,7 +84,11 @@ const HeaderFeed = () => {
         {/* Right Container */}
         <View style={styles.rightContainer}>
           {/* Search Bar */}
-          <View style={[styles.searchContainer, isSearchActive && styles.searchContainerActive]}>
+          <View
+            style={[
+              styles.searchContainer,
+              isSearchActive && styles.searchContainerActive,
+            ]}>
             {isSearchActive && (
               <TextInput
                 style={styles.searchInput}
@@ -90,8 +104,7 @@ const HeaderFeed = () => {
               style={styles.searchIconContainer}
               onPress={() => {
                 setIsSearchActive(prev => !prev);
-              }}
-            >
+              }}>
               <FontAwesomeIcon
                 icon={faSearch}
                 size={wp('5%')}
@@ -101,8 +114,14 @@ const HeaderFeed = () => {
           </View>
 
           {/* Notifications */}
-          <TouchableOpacity onPress={handleNotificationPress} style={styles.notificationContainer}>
-            <FontAwesomeIcon icon={faBell} size={wp('5%')} style={styles.notificationIcon} />
+          <TouchableOpacity
+            onPress={handleNotificationPress}
+            style={styles.notificationContainer}>
+            <FontAwesomeIcon
+              icon={faBell}
+              size={wp('5%')}
+              style={styles.notificationIcon}
+            />
             {notificationCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{notificationCount}</Text>
@@ -116,18 +135,24 @@ const HeaderFeed = () => {
       <View style={styles.tabsContainer}>
         <TouchableOpacity
           style={[styles.tab, selectedTab === 'Flow' && styles.activeTab]}
-          onPress={() => handleTabClick('Flow')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'Flow' && styles.activeTabText]}>
+          onPress={() => handleTabClick('Flow')}>
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === 'Flow' && styles.activeTabText,
+            ]}>
             Flow
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, selectedTab === 'Following' && styles.activeTab]}
-          onPress={() => handleTabClick('Following')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'Following' && styles.activeTabText]}>
+          onPress={() => handleTabClick('Following')}>
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === 'Following' && styles.activeTabText,
+            ]}>
             Following
           </Text>
         </TouchableOpacity>
@@ -163,7 +188,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     // Shift left by half the logo's width to center it
-    transform: [{ translateX: -wp('10%') }], // Half of logo width (wp('20%') / 2)
+    transform: [{translateX: -wp('10%')}], // Half of logo width (wp('20%') / 2)
   },
   rightContainer: {
     flexDirection: 'row',

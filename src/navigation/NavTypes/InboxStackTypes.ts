@@ -2,7 +2,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RouteProp} from '@react-navigation/native';
 
 import {User} from '../../types/types';
-import { Conversation } from '../../types/messageTypes';
+import {Conversation} from '../../types/messageTypes';
 
 export type InboxNavParamList = {
   Inbox: undefined;

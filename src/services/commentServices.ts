@@ -1,6 +1,7 @@
-import { CommentType } from '../components/Modals/CommentFeed/CommentFeed';
-import { User } from '../types/types';
-import { API_URL } from './config';
+import axios from 'axios';
+// import {CommentType} from '../components/Modals/CommentFeed';
+import {User, CommentType} from '../types/types';
+import {API_URL} from './config';
 
 // Define specific API endpoints
 const POST_COMMENT_ENDPOINT = `${API_URL}/postComment`;
@@ -44,7 +45,7 @@ export const postComment = async (
 
     const response = await fetch(POST_COMMENT_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(commentData),
     });
 
@@ -68,7 +69,6 @@ export const updateCommentReaction = async (
   memeID: string,
   incrementLikes: boolean,
   incrementDislikes: boolean,
-  userEmail: string
 ): Promise<void> => {
   const requestBody = {
     operation: 'updateCommentReaction',
@@ -76,7 +76,6 @@ export const updateCommentReaction = async (
     memeID,
     incrementLikes,
     incrementDislikes,
-    userEmail,
   };
 
   try {
@@ -85,7 +84,7 @@ export const updateCommentReaction = async (
 
     const response = await fetch(UPDATE_COMMENT_REACTION_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(requestBody),
     });
 
@@ -111,12 +110,12 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
   };
 
   try {
-    // Log the request data
-    logRequest('fetchComments', requestBody);
+    // logRequest('fetchComments', requestBody);
+    console.log('Fetching comments for memeID:', memeID);
 
     const response = await fetch(GET_COMMENTS_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(requestBody),
     });
 
@@ -124,8 +123,7 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
     const clonedResponse = response.clone();
     const data = await clonedResponse.json();
 
-    // Log the response data
-    logResponse('fetchComments', response, data);
+    // logResponse('fetchComments', response, data);
 
     if (!response.ok) {
       console.error(`HTTP error! status: ${response.status}`);
@@ -150,9 +148,7 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
       replies: [],
     }));
 
-    // Optionally log the organized comments
-    console.log('Organized Comments:', organizedComments);
-
+    // console.log('Organized Comments:', organizedComments);
     return organizedComments;
   } catch (error) {
     console.error(`Error fetching comments for memeID ${memeID}:`, error);
@@ -160,42 +156,47 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
   }
 };
 
+// Function to organize comments into threads
 export const organizeCommentsIntoThreads = (
-    flatComments: CommentType[],
-  ): CommentType[] => {
-    console.log('Organizing comments into threads...', { flatComments });
-  
-    const commentMap = new Map<string, CommentType>();
-    const topLevelComments: CommentType[] = [];
-  
-    // First pass: create all comment objects
-    flatComments.forEach(comment => {
-      commentMap.set(comment.commentID, { ...comment, replies: [] });
-    });
-  
-    // Second pass: organize into threads
-    flatComments.forEach(comment => {
-      if (comment.parentCommentID) {
-        const parentComment = commentMap.get(comment.parentCommentID);
-        if (parentComment) {
-          parentComment.replies.push(commentMap.get(comment.commentID)!);
-        } else {
-          console.warn(`Parent comment with ID ${comment.parentCommentID} not found for comment ID ${comment.commentID}`);
-          topLevelComments.push(commentMap.get(comment.commentID)!); // Treat as top-level if parent not found
-        }
-      } else {
-        topLevelComments.push(commentMap.get(comment.commentID)!);
-      }
-    });
-  
-    console.log('Organized Comment Threads:', topLevelComments);
-    return topLevelComments;
-  };
-  
-  
+  flatComments: CommentType[],
+): CommentType[] => {
+  // console.log('Organizing comments into threads...', {flatComments});
 
-// New function to delete a comment
-export const deleteComment = async (commentID: string, memeID: string, email: string): Promise<void> => {
+  const commentMap = new Map<string, CommentType>();
+  const topLevelComments: CommentType[] = [];
+
+  // First pass: create all comment objects
+  flatComments.forEach(comment => {
+    commentMap.set(comment.commentID, {...comment, replies: []});
+  });
+
+  // Second pass: organize into threads
+  flatComments.forEach(comment => {
+    if (comment.parentCommentID) {
+      const parentComment = commentMap.get(comment.parentCommentID);
+      if (parentComment) {
+        parentComment.replies.push(commentMap.get(comment.commentID)!);
+      } else {
+        console.warn(
+          `Parent comment with ID ${comment.parentCommentID} not found for comment ID ${comment.commentID}`,
+        );
+        topLevelComments.push(commentMap.get(comment.commentID)!); // Treat as top-level if parent not found
+      }
+    } else {
+      topLevelComments.push(commentMap.get(comment.commentID)!);
+    }
+  });
+
+  // console.log('Organized Comment Threads:', topLevelComments);
+  return topLevelComments;
+};
+
+// Delete a comment
+export const deleteComment = async (
+  commentID: string,
+  memeID: string,
+  email: string,
+): Promise<void> => {
   const requestBody = {
     operation: 'deleteComment',
     commentID,
@@ -209,7 +210,7 @@ export const deleteComment = async (commentID: string, memeID: string, email: st
 
     const response = await fetch(DELETE_COMMENT_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(requestBody),
     });
 
@@ -228,7 +229,7 @@ export const deleteComment = async (commentID: string, memeID: string, email: st
   }
 };
 
-// New function to reply to a comment
+// Reply to a comment
 export const replyToComment = async (
   memeID: string,
   parentCommentID: string,
@@ -251,7 +252,7 @@ export const replyToComment = async (
 
     const response = await fetch(REPLY_TO_COMMENT_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(requestBody),
     });
 

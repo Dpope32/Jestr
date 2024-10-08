@@ -1,6 +1,7 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import {create} from 'zustand';
+import {persist, createJSONStorage} from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import zustandMMKVStorage from '../utils/zustandMMKVStorage';
 
 interface PrivacySafetySettings {
   allowDMsFromEveryone: boolean;
@@ -8,7 +9,7 @@ interface PrivacySafetySettings {
   allowSearchByEmail: boolean;
   allowSearchByPhone: boolean;
   blockedAccounts: string[];
-  likesPublic: boolean;  
+  likesPublic: boolean;
 }
 
 interface AccessibilitySettings {
@@ -29,55 +30,61 @@ interface SettingsStore {
 }
 
 const DEFAULT_SETTINGS: {
-    privacySafety: PrivacySafetySettings;
-    accessibility: AccessibilitySettings;
-  } = {
-    privacySafety: {
-      allowDMsFromEveryone: false,
-      allowDMsFromFollowersOnly: true,
-      allowSearchByEmail: false,
-      allowSearchByPhone: false,
-      blockedAccounts: [],
-      likesPublic: true,  
-    },
-    accessibility: {
-      fontSize: 1,
-      language: 'en',
-      highContrastMode: false,
-      reduceMotion: false,
-    },
-  };
+  privacySafety: PrivacySafetySettings;
+  accessibility: AccessibilitySettings;
+} = {
+  privacySafety: {
+    allowDMsFromEveryone: false,
+    allowDMsFromFollowersOnly: true,
+    allowSearchByEmail: false,
+    allowSearchByPhone: false,
+    blockedAccounts: [],
+    likesPublic: true,
+  },
+  accessibility: {
+    fontSize: 1,
+    language: 'en',
+    highContrastMode: false,
+    reduceMotion: false,
+  },
+};
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
-    (set) => ({
+    set => ({
       ...DEFAULT_SETTINGS,
 
-      updatePrivacySafety: (settings) => {
-    //    console.log('Updating Privacy Safety Settings...');
-        set((state) => {
-          const newSettings = { ...state.privacySafety, ...settings };
-       //   console.log('Old Privacy Safety:', state.privacySafety);
-      //    console.log('New Privacy Safety:', newSettings);
-          return { privacySafety: newSettings };
+      updatePrivacySafety: settings => {
+        //    console.log('Updating Privacy Safety Settings...');
+        set(state => {
+          const newSettings = {...state.privacySafety, ...settings};
+          //   console.log('Old Privacy Safety:', state.privacySafety);
+          //    console.log('New Privacy Safety:', newSettings);
+          return {privacySafety: newSettings};
         });
       },
 
-      updateAccessibility: (settings) => {
+      updateAccessibility: settings => {
         console.log('Updating Accessibility Settings...');
-        set((state) => {
-          const newSettings = { ...state.accessibility, ...settings };
-        console.log('Old Accessibility:', state.accessibility);
-         console.log('New Accessibility:', newSettings);
-          return { accessibility: newSettings };
+        set(state => {
+          const newSettings = {...state.accessibility, ...settings};
+          console.log('Old Accessibility:', state.accessibility);
+          console.log('New Accessibility:', newSettings);
+          return {accessibility: newSettings};
         });
       },
 
-      blockAccount: (accountId) => {
+      blockAccount: accountId => {
         console.log(`Blocking Account: ${accountId}`);
-        set((state) => {
-          const newBlockedAccounts = [...state.privacySafety.blockedAccounts, accountId];
-          console.log('Blocked Accounts Before:', state.privacySafety.blockedAccounts);
+        set(state => {
+          const newBlockedAccounts = [
+            ...state.privacySafety.blockedAccounts,
+            accountId,
+          ];
+          console.log(
+            'Blocked Accounts Before:',
+            state.privacySafety.blockedAccounts,
+          );
           console.log('Blocked Accounts After:', newBlockedAccounts);
           return {
             privacySafety: {
@@ -88,13 +95,16 @@ export const useSettingsStore = create<SettingsStore>()(
         });
       },
 
-      unblockAccount: (accountId) => {
+      unblockAccount: accountId => {
         console.log(`Unblocking Account: ${accountId}`);
-        set((state) => {
+        set(state => {
           const newBlockedAccounts = state.privacySafety.blockedAccounts.filter(
-            (id) => id !== accountId
+            id => id !== accountId,
           );
-          console.log('Blocked Accounts Before:', state.privacySafety.blockedAccounts);
+          console.log(
+            'Blocked Accounts Before:',
+            state.privacySafety.blockedAccounts,
+          );
           console.log('Blocked Accounts After:', newBlockedAccounts);
           return {
             privacySafety: {
@@ -115,7 +125,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'settings-storage',
-      storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+      storage: createJSONStorage(() => zustandMMKVStorage),
+    },
+  ),
 );
