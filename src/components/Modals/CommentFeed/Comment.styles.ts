@@ -9,9 +9,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginVertical: 5,
     marginHorizontal: 8,
-
-    // borderWidth: 2,
-    // borderColor: '#FFF',
   },
   replyContainer: {
     marginLeft: 30,
@@ -62,14 +59,20 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontSize: 13,
   },
+  timestampContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+  },
   timestamp: {
     color: '#888',
     fontSize: 12,
-    marginLeft: 'auto',
+    marginLeft: 4,
   },
   viewRepliesButton: {
     marginTop: 8,
     paddingVertical: 4,
+    marginLeft: 52, // Align with the comment text
   },
   viewRepliesText: {
     color: '#007AFF',

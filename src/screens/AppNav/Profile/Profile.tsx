@@ -32,7 +32,7 @@ const Profile = React.memo(() => {
     handleDeleteMeme, handleShareProfile, handleRemoveDownloadedMeme, handleTabSelect, openFollowModal, handleImagePress, convertUserStateToUser, 
     setIsFollowModalVisible, setIsEditProfileModalVisible, setFullScreenImage, setIsBlurVisible,setSelectedMeme, setIsCommentFeedVisible,setCurrentMemeIndex,
   } = useProfileLogic(navigation);
-  console.log('Current profilePic URL:', user.profilePic);
+  //console.log('Current profilePic URL:', user.profilePic);
 
   const scrollY = new Animated.Value(0);
   const headerHeight = scrollY.interpolate({inputRange: [0, 200],outputRange: [200, 0], extrapolate: 'clamp',});

@@ -8,6 +8,7 @@ import { useUpdateMemeReaction, useShareMeme, updateMemeReaction } from '../../.
 import { ShareType, User } from '../../../types/types';
 import { useBadgeStore } from '../../../stores/badgeStore';
 import Toast from 'react-native-toast-message';
+import { formatDate } from '../../../utils/dateUtils';
 
 interface UseMediaPlayerLogicProps {
   initialLiked: boolean;
@@ -39,11 +40,7 @@ export const useMediaPlayerLogic = ({
   initialCommentCount,
   user,
   memeID,
-  mediaType,
-  video,
-  status,
   handleDownload,
-  handleSingleTap,
   onLikeStatusChange,
 }: UseMediaPlayerLogicProps) => {
   const [liked, setLiked] = useState(initialLiked);
@@ -76,12 +73,17 @@ export const useMediaPlayerLogic = ({
   
   // Handle Like Press
   const handleLikePress = useCallback(async () => {
+    console.log('handleLikePress triggered');
+    console.log('Initial liked state:', liked, 'Initial doubleLiked state:', doubleLiked);
+    
     if (!user) return;
-
+  
     const newLikedState = !liked;
     let newDoubleLikedState = doubleLiked;
     let newLikeCount = typeof counts.likes === 'string' ? parseInt(counts.likes, 10) : counts.likes;
-
+  
+    console.log('New liked state:', newLikedState, 'New doubleLiked state:', newDoubleLikedState);
+  
     if (newLikedState) {
       if (doubleLiked) {
         newDoubleLikedState = false;
@@ -93,12 +95,13 @@ export const useMediaPlayerLogic = ({
       newDoubleLikedState = false;
       newLikeCount -= 1;
     }
-
+  
     setLiked(newLikedState);
     setDoubleLiked(newDoubleLikedState);
     setCounts(prevCounts => ({ ...prevCounts, likes: newLikeCount }));
-
+  
     try {
+      console.log('Updating meme reaction', { memeID, newLikedState, newDoubleLikedState });
       const result = await updateMemeReactionMutation.mutateAsync({
         memeID,
         incrementLikes: newLikedState,
@@ -106,27 +109,19 @@ export const useMediaPlayerLogic = ({
         incrementDownloads: false,
         email: user.email,
       });
-
+      console.log('Meme reaction update result:', result);
+  
       if (result && result.badgeEarned) {
         badgeStore.earnBadge(result.badgeEarned);
-        Toast.show({
-          type: 'success',
-          text1: 'Congratulations!',
-          text2: `You earned the ${result.badgeEarned.title} badge!`,
-          position: 'top',
-          visibilityTime: 4000,
-        });
       }
-
+  
       onLikeStatusChange(
         memeID,
         { liked: newLikedState, doubleLiked: newDoubleLikedState },
         newLikeCount,
       );
-
     } catch (error) {
       console.error('Error updating meme reaction:', error);
-      // Revert the state changes
       setLiked(!newLikedState);
       setDoubleLiked(!newDoubleLikedState);
       setCounts(prevCounts => ({ ...prevCounts, likes: initialLikeCount }));
@@ -140,11 +135,14 @@ export const useMediaPlayerLogic = ({
     }
   }, [user, liked, doubleLiked, counts.likes, memeID, updateMemeReactionMutation]);
 
-  // Handle Share
   const onShare = useCallback(
     async (type: ShareType, username?: string, message?: string) => {
+      console.log('onShare triggered');
+      console.log('Share details:', { type, username, message });
+  
       if (user && type === 'friend' && username) {
         try {
+          console.log('Sharing meme with', { memeID, username });
           const result = await shareMemeMutation.mutateAsync({
             memeID,
             email: user.email,
@@ -152,12 +150,11 @@ export const useMediaPlayerLogic = ({
             catchUser: username,
             message: message || '',
           });
-
+          console.log('Meme share result:', result);
+  
           setCounts(prev => ({ ...prev, shares: prev.shares + 1 }));
-
-          // Check for ViralSensation badge
           await badgeStore.checkViralSensationBadge(user.email);
-
+  
           Toast.show({
             type: 'success',
             text1: 'Meme Shared!',
@@ -179,12 +176,15 @@ export const useMediaPlayerLogic = ({
     },
     [user, memeID, shareMemeMutation, badgeStore]
   );
-
-  // Handle Download Press
+  
   const handleDownloadPress = useCallback(async () => {
+    console.log('handleDownloadPress triggered');
+    console.log('Initial saved state:', isSaved);
+  
     if (user) {
       try {
         const newSavedState = !isSaved;
+        console.log('Updating download state to:', newSavedState);
         await updateMemeReaction(
           memeID,
           false,
@@ -192,19 +192,20 @@ export const useMediaPlayerLogic = ({
           newSavedState,
           user.email,
         );
+  
         handleDownload();
         setIsSaved(newSavedState);
         setCounts(prev => ({
           ...prev,
           downloads: prev.downloads + (newSavedState ? 1 : -1),
         }));
-
+  
         if (newSavedState) {
-          badgeStore.incrementDownloadCount();
+          badgeStore.incrementDownloadCount(user.email);
         } else {
           badgeStore.decrementDownloadCount();
         }
-
+  
         setToastMessage(
           newSavedState
             ? 'Meme added to your gallery!'
@@ -212,8 +213,7 @@ export const useMediaPlayerLogic = ({
         );
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
-
-        // Check for MemeCollector badge
+  
         await badgeStore.checkMemeCollectorBadge(user.email);
       } catch (error) {
         console.error('Error updating meme reaction:', error);
@@ -233,32 +233,12 @@ export const useMediaPlayerLogic = ({
     isSaved,
     badgeStore,
   ]);
-
   const debouncedHandleLike = useCallback(
     debounce(() => {
       handleLikePress();
     }, 300),
     [handleLikePress],
   );
-
-  const formatDate = useCallback((dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = Math.abs(now.getTime() - date.getTime());
-    const diffMinutes = Math.floor(diff / (1000 * 60));
-    const diffHours = Math.floor(diff / (1000 * 60 * 60));
-    const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (diffMinutes < 60) {
-      return `${diffMinutes} minutes ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours} hours ago`;
-    } else if (diffDays === 1) {
-      return `Yesterday`;
-    } else {
-      return `${diffDays} days ago`;
-    }
-  }, []);
 
   return {
     liked,

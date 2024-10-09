@@ -1,12 +1,18 @@
 // src/config/toastConfig.tsx
 
 import React from 'react';
-import { BaseToast, BaseToastProps, ErrorToast} from 'react-native-toast-message';
+import { BaseToast, BaseToastProps, ErrorToast, ToastConfig, ToastConfigParams } from 'react-native-toast-message';
 import { StyleSheet, Dimensions } from 'react-native';
+import BadgeToast from './BadgeToast'; // Adjust the path if necessary
+import { Badge } from '../stores/badgeStore';
 
 const { height } = Dimensions.get('window');
 
 const TOAST_TOP_POSITION = height * 0.1;
+
+interface CustomToastProps {
+  badge: Badge;
+}
 
 export const toastConfig = {
   success: (props: BaseToastProps) => (
@@ -33,7 +39,12 @@ export const toastConfig = {
       text2Style={styles.text2}
     />
   ),
+
+  custom: ({ props }: ToastConfigParams<CustomToastProps>) => (
+    <BadgeToast badge={props.badge} />
+  ),
 };
+
 
 const styles = StyleSheet.create({
   toastContainer: {

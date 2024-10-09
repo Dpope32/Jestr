@@ -1,7 +1,13 @@
 // badgeServices.mjs
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand, BatchGetCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  QueryCommand,
+  UpdateCommand,
+  BatchGetCommand,
+} from "@aws-sdk/lib-dynamodb";
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -53,15 +59,21 @@ const badgeDetailsMap = {
 const normalizeBadge = (rawBadge) => {
   const badgeType = rawBadge.BadgeType || rawBadge.badgeType;
   if (!badgeType) {
-    console.error('Missing BadgeType in rawBadge:', rawBadge);
-    throw new Error('BadgeType is missing in rawBadge');
+    console.error("Missing BadgeType in rawBadge:", rawBadge);
+    throw new Error("BadgeType is missing in rawBadge");
   }
 
   return {
     BadgeType: badgeType,
-    BadgeName: badgeDetailsMap[badgeType]?.name || rawBadge.BadgeName || `Unknown Badge: ${badgeType}`,
-    Description: badgeDetailsMap[badgeType]?.description || rawBadge.Description || `Description for ${badgeType} badge`,
-    AwardedDate: rawBadge.AwardedDate || rawBadge.awardedDate || '',
+    BadgeName:
+      badgeDetailsMap[badgeType]?.name ||
+      rawBadge.BadgeName ||
+      `Unknown Badge: ${badgeType}`,
+    Description:
+      badgeDetailsMap[badgeType]?.description ||
+      rawBadge.Description ||
+      `Description for ${badgeType} badge`,
+    AwardedDate: rawBadge.AwardedDate || rawBadge.awardedDate || "",
     Earned: rawBadge.Earned === true,
     Progress: rawBadge.Earned ? 100 : rawBadge.Progress || 0,
     HoldersCount: rawBadge.HoldersCount || rawBadge.holdersCount || 0,
@@ -72,14 +84,14 @@ const normalizeBadge = (rawBadge) => {
  * Function to check badge eligibility based on action.
  * @param {string} userEmail - The email of the user.
  * @param {string} action - The badge action to check.
- * @returns {Promise<string|null>} - Returns the badge type if eligible, else null.
+ * @returns {Promise<boolean>} - Returns true if eligible, else false.
  */
 const checkBadgeEligibility = async (userEmail, action) => {
   const badgeCriteria = {
     memeLiker: {
       table: "UserLikes",
       partitionKey: "email",
-      threshold: 5,
+      threshold: 10,
       filterExpression: "Liked = :liked",
       expressionAttributeValues: { ":liked": true },
       countType: "items",
@@ -106,7 +118,7 @@ const checkBadgeEligibility = async (userEmail, action) => {
       countType: "sum",
     },
     messenger: {
-      table: "UserConversations",
+      table: "UserConversations_v2",
       partitionKey: "UserID",
       threshold: 10,
       countType: "items",
@@ -141,8 +153,10 @@ const checkBadgeEligibility = async (userEmail, action) => {
     },
   };
   if (!badgeCriteria[action]) {
-    console.error(`Action '${action}' is not supported or cannot be implemented with current schema.`);
-    return null;
+    console.error(
+      `Action '${action}' is not supported or cannot be implemented with current schema.`
+    );
+    return false;
   }
 
   const {
@@ -158,7 +172,7 @@ const checkBadgeEligibility = async (userEmail, action) => {
 
   if (!table || !partitionKey || !threshold || !countType) {
     console.error(`Incomplete badge criteria for action '${action}'.`);
-    return null;
+    return false;
   }
 
   let count = 0;
@@ -167,9 +181,9 @@ const checkBadgeEligibility = async (userEmail, action) => {
     const params = {
       TableName: table,
       KeyConditionExpression: `${partitionKey} = :partitionValue`,
-      ExpressionAttributeValues: { 
+      ExpressionAttributeValues: {
         ":partitionValue": userEmail,
-        ...expressionAttributeValues
+        ...expressionAttributeValues,
       },
       Select: countType === "items" ? "COUNT" : "SPECIFIC_ATTRIBUTES",
     };
@@ -190,19 +204,19 @@ const checkBadgeEligibility = async (userEmail, action) => {
     const response = await docClient.send(command);
 
     if (countType === "sum" && sumAttribute) {
-      // When using SPECIFIC_ATTRIBUTES, Items will contain only the sumAttribute
-      count = response.Items.reduce((sum, item) => sum + (item[sumAttribute] || 0), 0);
+      count = response.Items.reduce(
+        (sum, item) => sum + (item[sumAttribute] || 0),
+        0
+      );
     } else if (countType === "items") {
       count = response.Count || 0;
     }
-
-    if (count >= threshold) {
-      return action;
-    }
-
-    return null;
+    return count >= threshold;
   } catch (error) {
-    console.error(`Error in checkBadgeEligibility for action '${action}' with userEmail '${userEmail}':`, error);
+    console.error(
+      `Error in checkBadgeEligibility for action '${action}' with userEmail '${userEmail}':`,
+      error
+    );
     throw error;
   }
 };
@@ -219,14 +233,16 @@ const getUserBadge = async (userEmail, badgeType) => {
     KeyConditionExpression: "Email = :email AND BadgeType = :badgeType",
     ExpressionAttributeValues: {
       ":email": userEmail,
-      ":badgeType": badgeType
-    }
+      ":badgeType": badgeType,
+    },
   };
 
   try {
     const { Items } = await docClient.send(new QueryCommand(params));
-    if (Items.length === 0) {
-      console.log(`No badge found for type '${badgeType}' for user '${userEmail}'`);
+    if (!Items || Items.length === 0) {
+      console.log(
+        `No badge found for type '${badgeType}' for user '${userEmail}'`
+      );
       return null;
     }
     const badge = Items[0];
@@ -238,7 +254,10 @@ const getUserBadge = async (userEmail, badgeType) => {
 
     return normalizedBadge;
   } catch (error) {
-    console.error(`Failed to get badge '${badgeType}' for user '${userEmail}':`, error);
+    console.error(
+      `Failed to get badge '${badgeType}' for user '${userEmail}':`,
+      error
+    );
     throw error;
   }
 };
@@ -249,7 +268,6 @@ const getUserBadge = async (userEmail, badgeType) => {
  * @returns {Promise<Array>} - Array of badge items.
  */
 const getUserBadges = async (userEmail) => {
-  console.log(`Fetching badges for user: ${userEmail}`);
   const params = {
     TableName: "UserBadges_v2",
     KeyConditionExpression: "Email = :email",
@@ -258,29 +276,22 @@ const getUserBadges = async (userEmail) => {
 
   try {
     const { Items } = await docClient.send(new QueryCommand(params));
-    console.log(`Raw badges from UserBadges_v2:`, JSON.stringify(Items));
 
     if (!Items || Items.length === 0) {
       console.log(`No badges found for user: ${userEmail}`);
       return [];
     }
 
-    const badgeTypes = Items.map(item => item.BadgeType);
-
-    if (badgeTypes.length === 0) {
-      console.log(`No badge types to fetch holders count for user: ${userEmail}`);
-      return Items.map(item => normalizeBadge(item));
-    }
+    const badgeTypes = Items.map((item) => item.BadgeType);
 
     const holdersCounts = await getBadgeHoldersCounts(badgeTypes);
 
-    const processedBadges = Items.map(item => {
+    const processedBadges = Items.map((item) => {
       const normalizedBadge = normalizeBadge(item);
       normalizedBadge.HoldersCount = holdersCounts[item.BadgeType] || 0;
       return normalizedBadge;
     });
 
-    console.log(`Returning processed badges:`, JSON.stringify(processedBadges));
     return processedBadges;
   } catch (error) {
     console.error(`Failed to get user badges for ${userEmail}:`, error);
@@ -289,60 +300,33 @@ const getUserBadges = async (userEmail) => {
 };
 
 /**
- * Function to award a badge to a user and update holders count.
- * @param {string} userEmail - The email of the user.
- * @param {string} badgeType - The type of the badge to award.
- * @returns {Promise<Object|null>}
+ * Function to increment the holders count for a badge.
+ * @param {string} badgeType - The type of the badge.
+ * @returns {Promise<void>}
  */
-const awardBadge = async (userEmail, badgeType) => {
-  // Check if the badge is already awarded
-  const existingBadge = await getUserBadge(userEmail, badgeType);
-  
-  if (existingBadge && existingBadge.Earned) {
-    console.log(`Badge '${badgeType}' already awarded to ${userEmail}.`);
-    return null; // Do not re-award the badge
-  }
-
-  const badgeDetails = badgeDetailsMap[badgeType];
-
-  if (!badgeDetails) {
-    console.error(`No badge details found for badge type: '${badgeType}'`);
-    return null;
-  }
-
+const incrementBadgeHoldersCount = async (badgeType) => {
   const params = {
-    TableName: "UserBadges_v2", 
-    Item: {
-      Email: userEmail,
-      BadgeType: badgeType,
-      BadgeName: badgeDetails.name,
-      Description: badgeDetails.description,
-      AwardedDate: new Date().toISOString(),
-      Earned: true,
-      Progress: 100
-    },
-    ConditionExpression: "attribute_not_exists(BadgeType) OR Earned = :false",
+    TableName: "BadgeStats",
+    Key: { BadgeType: badgeType },
+    UpdateExpression:
+      "SET HoldersCount = if_not_exists(HoldersCount, :zero) + :inc",
     ExpressionAttributeValues: {
-      ":false": false
-    }
+      ":inc": 1,
+      ":zero": 0,
+    },
+    ReturnValues: "UPDATED_NEW",
   };
 
   try {
-    await docClient.send(new PutCommand(params));
-    await incrementBadgeHoldersCount(badgeType);
-    console.log(`[awardBadge] Badge '${badgeType}' awarded successfully to '${userEmail}'.`);
-    return badgeDetails;
+    const result = await docClient.send(new UpdateCommand(params));
   } catch (error) {
-    if (error.name === 'ConditionalCheckFailedException') {
-      console.log(`Badge '${badgeType}' already awarded to ${userEmail}`);
-      return null;
-    } else {
-      console.error(`Failed to award badge '${badgeType}' to ${userEmail}:`, error);
-      throw error;
-    }
+    console.error(
+      `Failed to update holders count for badge '${badgeType}':`,
+      error
+    );
+    throw error;
   }
 };
-
 
 /**
  * Function to get the holders count for badges.
@@ -351,17 +335,16 @@ const awardBadge = async (userEmail, badgeType) => {
  */
 const getBadgeHoldersCounts = async (badgeTypes) => {
   if (!badgeTypes || badgeTypes.length === 0) {
-    console.log("No badgeTypes provided for holders count.");
     return {};
   }
 
   const params = {
     RequestItems: {
-      "BadgeStats": {
-        Keys: badgeTypes.map(type => ({ BadgeType: type })),
-        ProjectionExpression: "BadgeType, HoldersCount"
-      }
-    }
+      BadgeStats: {
+        Keys: badgeTypes.map((type) => ({ BadgeType: type })),
+        ProjectionExpression: "BadgeType, HoldersCount",
+      },
+    },
   };
 
   try {
@@ -377,32 +360,68 @@ const getBadgeHoldersCounts = async (badgeTypes) => {
 };
 
 /**
- * Function to increment the holders count for a badge.
- * @param {string} badgeType - The type of the badge.
- * @returns {Promise<void>}
+ * Function to award a badge to a user if eligible.
+ * @param {string} userEmail - The email of the user.
+ * @param {string} badgeType - The type of the badge to award.
+ * @returns {Promise<Object|null>}
  */
-const incrementBadgeHoldersCount = async (badgeType) => {
+const awardBadge = async (userEmail, badgeType) => {
+  // Check if the badge is already awarded
+  const existingBadge = await getUserBadge(userEmail, badgeType);
+
+  if (existingBadge && existingBadge.Earned) {
+ //   console.log(`Badge '${badgeType}' already awarded to ${userEmail}.`);
+    return null; // Do not re-award the badge
+  }
+
+  // Check eligibility
+  const isEligible = await checkBadgeEligibility(userEmail, badgeType);
+  if (!isEligible) {
+    console.log(
+      `User '${userEmail}' is not eligible for badge '${badgeType}'.`
+    );
+    return null;
+  }
+
+  const badgeDetails = badgeDetailsMap[badgeType];
+
+  if (!badgeDetails) {
+    console.error(`No badge details found for badge type: '${badgeType}'`);
+    return null;
+  }
+
   const params = {
-    TableName: "BadgeStats",
-    Key: { BadgeType: badgeType },
-    UpdateExpression: "SET HoldersCount = if_not_exists(HoldersCount, :zero) + :inc",
-    ExpressionAttributeValues: {
-      ":inc": 1,
-      ":zero": 0
+    TableName: "UserBadges_v2",
+    Item: {
+      Email: userEmail,
+      BadgeType: badgeType,
+      BadgeName: badgeDetails.name,
+      Description: badgeDetails.description,
+      AwardedDate: new Date().toISOString(),
+      Earned: true,
+      Progress: 100,
     },
-    ReturnValues: "UPDATED_NEW"
+    ConditionExpression:
+      "attribute_not_exists(Email) AND attribute_not_exists(BadgeType)",
   };
 
   try {
-    const result = await docClient.send(new UpdateCommand(params));
-    console.log(`Updated holders count for badge '${badgeType}':`, result.Attributes.HoldersCount);
+    await docClient.send(new PutCommand(params));
+    await incrementBadgeHoldersCount(badgeType);
+
+    return badgeDetails;
   } catch (error) {
-    console.error(`Failed to update holders count for badge '${badgeType}':`, error);
-    throw error;
+    if (error.name === "ConditionalCheckFailedException") {
+      return null;
+    } else {
+      console.error(
+        `Failed to award badge '${badgeType}' to ${userEmail}:`,
+        error
+      );
+      throw error;
+    }
   }
 };
 
 // Export the functions
 export { awardBadge, getUserBadges, checkBadgeEligibility };
-
-

@@ -1,6 +1,6 @@
 // src/utils/typeGuards.ts
 
-import { MessageContent, MemeShareContent } from '../types/types';
+import { MessageContent, MemeShareContent } from '../types/messageTypes';
 
 /**
  * Type guard to check if the content is a MemeShareContent

@@ -59,7 +59,7 @@ export const handleUserSelect = (
   }
 
   toggleNewMessageModal();
-  const conversationID = generateUniqueIdFn();
+  const conversationID = [user.email, selectedUser.email].sort().join("#"); // Corrected conversationID
   navigation.navigate('Conversations', {
     partnerUser: selectedUser,
     conversation: {

@@ -74,4 +74,5 @@ export type MemeShareContent = {
   type: 'meme_share';
   memeID: string;
   message?: string;
+  mediaType?: 'image' | 'video'; // Added mediaType
 };

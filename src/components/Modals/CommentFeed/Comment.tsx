@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Alert,
+  Animated,
 } from 'react-native';
 import DefaultPfp from '../../../assets/images/JestrLogo.jpg';
 import {
@@ -15,6 +16,7 @@ import {
   faReply,
   faTrash,
   faCopy,
+  faClock,
 } from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import moment from 'moment';
@@ -49,7 +51,37 @@ const Comment: React.FC<CommentProps> = ({
   );
   const [likesCount, setLikesCount] = useState(comment.likesCount);
   const [dislikesCount, setDislikesCount] = useState(comment.dislikesCount);
-  const timeAgo = moment(comment.timestamp).fromNow();
+  const [timeAgo, setTimeAgo] = useState(moment(comment.timestamp).fromNow());
+  const [isNew, setIsNew] = useState(false);
+  const [highlightAnimation] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeAgo(moment(comment.timestamp).fromNow());
+      setIsNew(moment().diff(moment(comment.timestamp), 'minutes') < 5);
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, [comment.timestamp]);
+
+  useEffect(() => {
+    if (isNew) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(highlightAnimation, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(highlightAnimation, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ]),
+      ).start();
+    }
+  }, [isNew]);
 
   const handleLike = () => {
     let newReaction: 'like' | 'dislike' | null = null;
@@ -120,13 +152,22 @@ const Comment: React.FC<CommentProps> = ({
     setIsModalVisible(false);
   };
 
+  const interpolatedColor = highlightAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['rgba(60, 60, 60, 0.0)', 'rgba(76, 175, 80, 0.1)'],
+  });
+
   return (
     <View>
       <TouchableOpacity
         activeOpacity={0.7}
         onLongPress={() => setIsModalVisible(true)}>
-        <View
-          style={[styles.commentContainer, depth > 0 && styles.replyContainer]}>
+        <Animated.View
+          style={[
+            styles.commentContainer,
+            depth > 0 && styles.replyContainer,
+            {backgroundColor: interpolatedColor},
+          ]}>
           <Image
             source={
               comment.profilePicUrl ? {uri: comment.profilePicUrl} : DefaultPfp
@@ -162,10 +203,13 @@ const Comment: React.FC<CommentProps> = ({
                 <FontAwesomeIcon icon={faReply} color="#007AFF" size={16} />
                 <Text style={styles.replyText}>Reply</Text>
               </TouchableOpacity>
-              <Text style={styles.timestamp}>{timeAgo}</Text>
+              <View style={styles.timestampContainer}>
+                <FontAwesomeIcon icon={faClock} color="#888" size={12} />
+                <Text style={styles.timestamp}>{timeAgo}</Text>
+              </View>
             </View>
           </View>
-        </View>
+        </Animated.View>
       </TouchableOpacity>
 
       {comment.replies.length > 0 && (
@@ -205,20 +249,20 @@ const Comment: React.FC<CommentProps> = ({
                 <TouchableOpacity
                   style={styles.modalOption}
                   onPress={handleCopyText}>
-                  <FontAwesomeIcon icon={faCopy} size={20} color="#000" />
+                  <FontAwesomeIcon icon={faCopy} size={20} color="#FFF" />
                   <Text style={styles.modalOptionText}>Copy Text</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.modalOption}
                   onPress={handleReplyPress}>
-                  <FontAwesomeIcon icon={faReply} size={20} color="#000" />
+                  <FontAwesomeIcon icon={faReply} size={20} color="#FFF" />
                   <Text style={styles.modalOptionText}>Reply</Text>
                 </TouchableOpacity>
                 {currentUserEmail === comment.email && (
                   <TouchableOpacity
                     style={styles.modalOption}
                     onPress={handleDelete}>
-                    <FontAwesomeIcon icon={faTrash} size={20} color="#000" />
+                    <FontAwesomeIcon icon={faTrash} size={20} color="#FFF" />
                     <Text style={styles.modalOptionText}>Delete</Text>
                   </TouchableOpacity>
                 )}

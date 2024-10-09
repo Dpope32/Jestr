@@ -1,21 +1,25 @@
 // src/screens/AppNav/Badges/BadgeCard.tsx
 
 import React, { useRef, useState } from 'react';
-import { View, Text, Animated, TouchableOpacity, Image, Alert, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  Animated,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
-import * as Progress from 'react-native-progress';
-import { COLORS } from '../../../theme/theme';
 import { Badge, useBadgeStore } from '../../../stores/badgeStore';
-import { getStyles } from './Badges.styles'; 
+import { getStyles } from './Badges.styles';
+import { COLORS } from '../../../theme/theme';
 
-type BadgeCardProps = { badge: Badge; badgeImage: any; isDarkMode: boolean; };
-
-const CARD_MARGIN = 15;
-const NUM_COLUMNS = 2;
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - (NUM_COLUMNS + 1) * CARD_MARGIN) / NUM_COLUMNS;
-const PROGRESS_BAR_WIDTH = CARD_WIDTH - 30;
+type BadgeCardProps = {
+  badge: Badge;
+  badgeImage: any;
+  isDarkMode: boolean;
+};
 
 const BadgeCard: React.FC<BadgeCardProps> = ({ badge, badgeImage, isDarkMode }) => {
   const styles = getStyles(isDarkMode);
@@ -77,11 +81,12 @@ const BadgeCard: React.FC<BadgeCardProps> = ({ badge, badgeImage, isDarkMode }) 
         activeOpacity={1}
         onPress={handleFlip}
         onLongPress={handleLongPress}
-        disabled={!badge.earned}
         accessible
         accessibilityLabel={`Badge: ${badge.title}`}
       >
-        <Animated.View style={[styles.badgeCard, frontAnimatedStyle, { opacity: frontOpacity }]}>
+        <Animated.View
+          style={[styles.badgeCard, frontAnimatedStyle, { opacity: frontOpacity }]}
+        >
           <View style={styles.badgeIconContainer}>
             <Image
               source={badgeImage}
@@ -93,41 +98,28 @@ const BadgeCard: React.FC<BadgeCardProps> = ({ badge, badgeImage, isDarkMode }) 
           </View>
           {!badge.earned && (
             <View style={styles.lockOverlay}>
-              <FontAwesomeIcon icon={faLock} size={20} color={COLORS.error} />
+              <FontAwesomeIcon icon={faLock} size={16} color={COLORS.error} />
             </View>
           )}
           <Text style={styles.badgeTitle}>{badge.title}</Text>
-          <View style={styles.progressSection}>
-            <Progress.Bar
-              progress={badge.progress / 100}
-              width={PROGRESS_BAR_WIDTH}
-              color={COLORS.primary}
-              unfilledColor={isDarkMode ? COLORS.darkGray : COLORS.lightGray}
-              borderWidth={0}
-              height={8}
-              borderRadius={4}
-              animated={true}
-            />
-          </View>
         </Animated.View>
 
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.badgeCard, 
-            styles.badgeBackCard, 
-            backAnimatedStyle, 
+            styles.badgeCard,
+            styles.badgeBackCard,
+            backAnimatedStyle,
             { opacity: backOpacity },
-            badge.earned ? {} : styles.unearnedBadge,
+            !badge.earned ? styles.unearnedBadge : {},
           ]}
         >
           <Text style={styles.badgeBackTitle}>{badge.title}</Text>
           <Text style={styles.badgeDetails}>{badge.description}</Text>
-          <Text style={styles.badgeDetails}>
-            Acquired:{' '}
-            {badge.acquiredDate
-              ? new Date(badge.acquiredDate).toLocaleDateString()
-              : 'N/A'}
-          </Text>
+          {badge.earned && (
+            <Text style={styles.badgeDetails}>
+              Acquired: {new Date(badge.acquiredDate || '').toLocaleDateString()}
+            </Text>
+          )}
         </Animated.View>
       </TouchableOpacity>
     </View>

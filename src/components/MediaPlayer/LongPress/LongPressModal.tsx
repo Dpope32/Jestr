@@ -37,6 +37,7 @@ interface LongPressModalProps {
   onSaveToProfile: () => Promise<void>;
   onShare: () => void;
   onReport: () => void;
+  user?: any;
 }
 
 export const LongPressModal: React.FC<LongPressModalProps> = ({

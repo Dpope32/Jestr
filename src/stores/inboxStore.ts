@@ -1,11 +1,9 @@
 import {create} from 'zustand';
 import {persist, createJSONStorage} from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {fetchConversations as apiFetchConversations} from '../services/socialService';
 import {
   Conversation,
   Message,
-  InboxState,
   ApiConversation,
 } from '../types/messageTypes';
 import zustandMMKVStorage from '../utils/zustandMMKVStorage';

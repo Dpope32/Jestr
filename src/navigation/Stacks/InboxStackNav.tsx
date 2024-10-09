@@ -12,7 +12,10 @@ const InboxStackNav: React.FC = () => {
   };
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator 
+      initialRouteName="Inbox"
+      screenOptions={screenOptions}
+    >
       <Stack.Screen name="Inbox" component={Inbox} />
       <Stack.Screen name="Conversations" component={Conversations} />
     </Stack.Navigator>

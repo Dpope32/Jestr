@@ -191,7 +191,7 @@ export const getAllUsers = async (): Promise<User[]> => {
     }
 
     const responseText = await response.text();
-    console.log('Raw response:', responseText);
+ //   console.log('Raw response:', responseText);
 
     let data;
     try {
@@ -201,7 +201,7 @@ export const getAllUsers = async (): Promise<User[]> => {
       throw new Error('Invalid JSON response');
     }
 
-    console.log('Parsed data:', data);
+  //  console.log('Parsed data:', data);
 
     if (!data.data || !data.data.users || !Array.isArray(data.data.users)) {
       console.error('Unexpected response structure:', data);

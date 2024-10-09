@@ -75,17 +75,19 @@ export const awardBadge = async (userEmail: string, badgeType: BadgeType): Promi
 
 const normalizeBadge = (rawBadge: any): Badge => {
   console.log(`[BadgeServices] Normalizing badge:`, rawBadge);
+  const badgeData = rawBadge.badge || rawBadge; // Handle cases where badge data is nested
   return {
-    id: rawBadge.BadgeType,
-    type: normalizeBadgeType(rawBadge.BadgeType),
-    title: rawBadge.BadgeName,
-    description: rawBadge.Description,
-    earned: rawBadge.Earned === true,
-    progress: rawBadge.Earned ? 100 : (rawBadge.Progress || 0),
-    acquiredDate: rawBadge.AwardedDate,
-    holdersCount: rawBadge.HoldersCount || 0,
+    id: badgeData.BadgeType,
+    type: normalizeBadgeType(badgeData.BadgeType),
+    title: badgeData.BadgeName,
+    description: badgeData.Description,
+    earned: badgeData.Earned === true || badgeData.Progress === 100,
+    progress: badgeData.Progress || 0,
+    acquiredDate: badgeData.AwardedDate,
+    holdersCount: badgeData.HoldersCount || 0,
   };
 };
+
 
 const normalizeBadgeType = (badgeType: string): BadgeType => {
   console.log(`[BadgeServices] Normalizing badge type: ${badgeType}`);

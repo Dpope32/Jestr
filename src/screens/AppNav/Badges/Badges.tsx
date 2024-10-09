@@ -1,25 +1,34 @@
 // src/screens/AppNav/Badges/Badges.tsx
 
 import React, { useEffect } from 'react';
-import { View, Text, Animated, TouchableOpacity, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
+import {
+  View,
+  Text,
+  Animated,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+} from 'react-native';
+import { FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTrophy, faArrowLeft, faLock } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../../theme/ThemeContext';
 import { getStyles, getColors } from './Badges.styles';
-import { useBadgeStore } from '../../../stores/badgeStore';
+import { useBadgeStore, getBadgeStorageContents } from '../../../stores/badgeStore';
 import { AppNavProp } from '../../../navigation/NavTypes/RootNavTypes';
 import * as Progress from 'react-native-progress';
 import { useUserStore } from '../../../stores/userStore';
 import Particles from '../../../components/Particles/Particles';
 import { LinearGradient } from 'expo-linear-gradient';
-import { allBadges } from '../../../constants/uiConstants';
+import { getAllBadges } from './defaultBadges';
 import BadgeCard from './BadgeCard';
 import { badgeImages } from './Badges.types';
 import { useQuery } from '@tanstack/react-query';
-import { fetchUserBadges } from 'services/badgeServices';
+import { fetchUserBadges } from '../../../services/badgeServices';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -30,12 +39,16 @@ const Badges: React.FC = () => {
   const COLORS = getColors(isDarkMode);
 
   const user = useUserStore((state) => state);
-  const { badges, pinnedBadgeId, setBadges } = useBadgeStore();
+  const { badges, pinnedBadgeId } = useBadgeStore();
 
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
-  const createdAtDate = user.creationDate ? new Date(user.creationDate).toLocaleDateString() : 'N/A';
-  const imgSrc = user.profilePic ? { uri: user.profilePic } : require('../../../assets/images/Jestr.jpg');
+  const createdAtDate = user.creationDate
+    ? new Date(user.creationDate).toLocaleDateString()
+    : 'N/A';
+  const imgSrc = user.profilePic
+    ? { uri: user.profilePic }
+    : require('../../../assets/images/Jestr.jpg');
 
   const { isLoading, isError, error } = useQuery({
     queryKey: ['userBadges', user.email],
@@ -46,9 +59,9 @@ const Badges: React.FC = () => {
     },
     enabled: !!user.email,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 10, // Replace  'cacheTime' with gcTime'
+    gcTime: 1000 * 60 * 10, // Replaced 'cacheTime' with 'gcTime'
   });
-  
+
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -57,16 +70,18 @@ const Badges: React.FC = () => {
     }).start();
   }, [fadeAnim]);
 
-  // Handle loading state
+  useEffect(() => {
+    getBadgeStorageContents();
+  }, []);
+
   if (isLoading) {
     return <BadgesSkeletonLoader isDarkMode={isDarkMode} />;
   }
 
-  // Handle error state
   if (isError) {
     return (
       <View style={styles.loadingContainer}>
-        <FontAwesomeIcon icon={faLock} size={50} color={COLORS.error} />
+        <FontAwesomeIcon icon={faTrophy} size={50} color={COLORS.error} />
         <Text style={[styles.loadingText, { color: COLORS.error }]}>
           {error instanceof Error ? error.message : 'An error occurred'}
         </Text>
@@ -74,15 +89,16 @@ const Badges: React.FC = () => {
     );
   }
 
-  const totalBadges = allBadges.length;
-  const earnedBadgesCount = badges.filter(badge => badge.earned).length;
-  const score = Math.round((earnedBadgesCount / totalBadges) * 100);
-  const pinnedBadge = badges.find((badge) => badge.id === pinnedBadgeId);
+  const allBadges = getAllBadges();
   const earnedBadges = badges.filter((badge) => badge.earned);
   const unearnedBadges = allBadges.filter(
-    (badgeType) => !badges.some((badge) => badge.type === badgeType && badge.earned)
+    (badge) => !badges.some((b) => b.type === badge.type && b.earned)
   );
-  
+  const totalBadges = allBadges.length;
+  const earnedBadgesCount = earnedBadges.length;
+  const progress = totalBadges > 0 ? earnedBadgesCount / totalBadges : 0;
+
+  const pinnedBadge = badges.find((badge) => badge.id === pinnedBadgeId);
 
   return (
     <View style={styles.container}>
@@ -128,22 +144,22 @@ const Badges: React.FC = () => {
           <View style={styles.profileSection}>
             <View style={styles.profileRow}>
               <Image source={imgSrc} style={styles.profileImage} />
-              <Text style={styles.profileActiveDays}>
-                Created At: {createdAtDate}
+              <Text style={styles.profileActiveDays}>Joined: {createdAtDate}</Text>
+            </View>
+            <View style={styles.progressContainer}>
+              <Text style={styles.progressText}>
+                Badges Earned: {earnedBadgesCount} / {totalBadges}
               </Text>
-              <View style={styles.scoreContainer}>
-                <Progress.Circle
-                  size={70}
-                  progress={score / 100}
-                  showsText={true}
-                  formatText={() => `${score}`}
-                  textStyle={styles.scoreText}
-                  color={COLORS.primary}
-                  unfilledColor={COLORS.lightGray}
-                  borderWidth={0}
-                  thickness={6}
-                />
-              </View>
+              <Progress.Bar
+                progress={progress}
+                width={null}
+                height={10}
+                color={COLORS.primary}
+                unfilledColor={COLORS.lightGray}
+                borderWidth={0}
+                borderRadius={5}
+                style={styles.progressBar}
+              />
             </View>
             {pinnedBadge && (
               <View style={styles.pinnedBadgeRow}>
@@ -162,8 +178,8 @@ const Badges: React.FC = () => {
 
           <Text style={styles.sectionTitle}>Earned Badges</Text>
           {earnedBadges.length > 0 ? (
-            <View style={styles.flashListContainer}>
-              <FlashList
+            <View style={styles.badgesContainer}>
+              <FlatList
                 data={earnedBadges}
                 renderItem={({ item }) => (
                   <BadgeCard
@@ -173,29 +189,22 @@ const Badges: React.FC = () => {
                   />
                 )}
                 keyExtractor={(item) => item.id}
-                numColumns={2}
-                estimatedItemSize={188}
-                accessibilityLabel="List of earned badges"
+                numColumns={3}
+                columnWrapperStyle={styles.badgesRow}
               />
             </View>
           ) : (
             <View style={styles.noBadgesContainer}>
-              <Text style={styles.noBadgesText}>
-                No badges earned yet. Keep going!
-              </Text>
+              <Text style={styles.noBadgesText}>No badges earned yet. Keep going!</Text>
             </View>
           )}
 
           <Text style={styles.sectionTitle}>Badges to Earn</Text>
-          {unearnedBadges.map((badgeType) => {
-            const badge = badges.find(b => b.type === badgeType) || {
-              id: badgeType,
-              type: badgeType,
-              title: badgeType.replace(/([A-Z])/g, ' $1').trim(),
-              description: `Earn the ${badgeType.replace(/([A-Z])/g, ' $1').trim()} badge`,
-              earned: false,
-              progress: 0
-            };
+          {unearnedBadges.map((badge) => {
+            // Find if the badge exists in the store to get its progress
+            const storedBadge = badges.find((b) => b.type === badge.type);
+            const progressValue = storedBadge ? storedBadge.progress : 0;
+
             return (
               <View key={badge.id} style={styles.badgeTableRow}>
                 <View style={styles.badgeImageContainer}>
@@ -214,9 +223,22 @@ const Badges: React.FC = () => {
                 </View>
                 <View style={styles.badgeTableInfo}>
                   <Text style={styles.badgeTableTitle}>{badge.title}</Text>
-                  <Text style={styles.badgeTableDescription}>
-                  </Text>
-              
+                  <Text style={styles.badgeTableDescription}>{badge.description}</Text>
+                  <View style={styles.badgeProgressContainer}>
+                    <Progress.Bar
+                      progress={progressValue / 100}
+                      width={null}
+                      height={10}
+                      color={COLORS.primary}
+                      unfilledColor={COLORS.lightGray}
+                      borderWidth={0}
+                      borderRadius={5}
+                      style={styles.badgeProgressBar}
+                    />
+                    <Text style={styles.badgeTableProgressText}>
+                      {progressValue}%
+                    </Text>
+                  </View>
                 </View>
               </View>
             );
@@ -231,9 +253,7 @@ interface BadgesSkeletonLoaderProps {
   isDarkMode: boolean;
 }
 
-const BadgesSkeletonLoader: React.FC<BadgesSkeletonLoaderProps> = ({
-  isDarkMode,
-}) => {
+const BadgesSkeletonLoader: React.FC<BadgesSkeletonLoaderProps> = ({ isDarkMode }) => {
   const styles = getStyles(isDarkMode);
   const COLORS = getColors(isDarkMode);
   return (

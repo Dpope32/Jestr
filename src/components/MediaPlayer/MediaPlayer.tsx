@@ -441,7 +441,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           friends={friends}
           onShare={onShare}
           currentMedia={currentMedia}
-          user={user} 
         />
         <Animated.View
           style={[
@@ -466,10 +465,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           onShare={() => setShowShareModal(true)}
           onReport={() => { }}
           user={user}
-          memeID={memeID}
-          isSaved={isSaved}
-          setIsSaved={setIsSaved}
-          setCounts={setCounts}
         />
       </Animated.View>
     );

@@ -1,18 +1,3 @@
-import { BadgeType } from '../screens/AppNav/Badges/Badges.types';
-
-export const allBadges: BadgeType[] = [
-  'memeLiker',
-  'socialButterfly',
-  'memeMaster',
-  'trendSetter',
-  'commentator',
-  'memeCreator',
-  'viralStar',
-  'insightfulUser',
-  'memeExplorer',
-  'communityChampion'
-];
-
 
 
 export const TERMS_OF_SERVICE = `

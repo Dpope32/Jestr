@@ -15,10 +15,8 @@ import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faTimes,
   faCopy,
-  faCommentSms,
   faSms,
   faFlag,
-  faE,
   faEnvelope,
 } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -33,24 +31,11 @@ import {Conversation} from '../../types/messageTypes';
 import NewMessageModal from '../Modals/NewMessageModal';
 import {useInboxStore} from '../../stores/inboxStore';
 import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {LastMessage} from '../../types/messageTypes';
-import {CompositeNavigationProp} from '@react-navigation/native';
-import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
-import {BottomTabNavParamList} from '../../navigation/NavTypes/BottomTabsTypes';
-import {InboxNavParamList} from '../../navigation/NavTypes/InboxStackTypes';
 import * as Haptics from 'expo-haptics';
 import {useUserStore} from '../../stores/userStore';
-// import {InboxNavProp} from '../../navigation/NavTypes/InboxStackTypes';
 import {TabNavigationProp} from '../../navigation/Stacks/BottomTabNav';
 
 const {width, height} = Dimensions.get('window');
-
-// Define a composite navigation prop to handle nested navigators
-// type ShareModalNavigationProp = CompositeNavigationProp<
-//   BottomTabNavigationProp<BottomTabNavParamList>,
-//   NativeStackNavigationProp<InboxNavParamList>
-// >;
 
 interface ShareModalProps {
   visible: boolean;
@@ -63,14 +48,11 @@ interface ShareModalProps {
     message?: string,
   ) => Promise<void>;
 }
-// FIXME: onShare doesn't do anything!
 const ShareModal: React.FC<ShareModalProps> = ({
   visible,
   onClose,
   friends,
-  onShare,
   currentMedia,
-  // user,
 }) => {
   const user = useUserStore(state => state);
 
@@ -115,7 +97,6 @@ const ShareModal: React.FC<ShareModalProps> = ({
     },
   ];
 
-  // Use hard-coded friends if no friends are passed as props
   const displayFriends =
     friends && friends.length > 0 ? friends : hardCodedFriends;
 
@@ -182,12 +163,6 @@ const ShareModal: React.FC<ShareModalProps> = ({
       };
     }
 
-    // Navigate to the Conversations screen
-    navigation.navigate('Conversations', {
-      partnerUser: selectedUser,
-      conversation: conversation as Conversation,
-      currentMedia: currentMedia, // Make sure this line is present
-    });
 
     navigation.navigate('InboxStackNav', {
       screen: 'Conversations',
@@ -197,11 +172,10 @@ const ShareModal: React.FC<ShareModalProps> = ({
         currentMedia: currentMedia,
       },
     });
-
-    // If you need to pass currentMedia, you can do it through the inboxStore or another method
-    // For example, you could set it in the store before navigation:
-    // inboxStore.setCurrentMediaForConversation(conversation.id, currentMedia);
-
+  
+    // Clear any stored navigation state
+    navigation.setParams({ currentMedia: undefined });
+  
     toggleNewMessageModal();
     onClose();
   };

@@ -1,6 +1,6 @@
 // src/screens/AppNav/Inbox/Conversations.tsx
 
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -12,7 +12,10 @@ import {
   Platform, 
   Animated, 
   StyleSheet, 
-  ActivityIndicator 
+  ActivityIndicator,
+  Modal,
+  PanResponder,
+  Dimensions,
 } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowUp, faArrowLeft, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -24,6 +27,7 @@ import LottieView from 'lottie-react-native';
 import Toast from 'react-native-toast-message';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
+import { Video, ResizeMode } from 'expo-av';
 
 import { useTheme } from '../../../theme/ThemeContext';
 import styles from './convoStyles';
@@ -47,7 +51,10 @@ export const Conversations = () => {
   const partnerUser = route.params?.partnerUser as User;
   const conversation = route.params?.conversation as Conversation;
   const badgeStore = useBadgeStore();
-  const memeId = route.params?.currentMedia;
+  
+  // Updated State: Exclude null, use undefined instead
+  const [memeId, setMemeId] = useState<string | undefined>(route.params?.currentMedia);
+
   const queryClient = useQueryClient();
   const { isDarkMode } = useTheme();
   const currentUser = useUserStore((state) => state);
@@ -55,11 +62,16 @@ export const Conversations = () => {
   const inboxStore = useInboxStore();
   const inputRef = useRef<TextInput>(null);
   const [sendButtonScale] = useState(new Animated.Value(1));
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState<string>(''); // Explicitly typed as string
   const [sendingAnimation] = useState(new Animated.Value(0));
   const [messageOpacity] = useState(new Animated.Value(1));
   const [isSending, setIsSending] = useState(false);
   const [showMeme, setShowMeme] = useState(!!memeId);
+  const [isMemeFullscreenVisible, setIsMemeFullscreenVisible] = useState(false);
+  
+  // Updated State: Exclude null, use undefined instead
+  const [fullscreenMemeUrl, setFullscreenMemeUrl] = useState<string | undefined>(undefined);
+  const [fullscreenMediaType, setFullscreenMediaType] = useState<'image' | 'video'>('image');
 
   const sendIcon = isSending ? faCheck : faArrowUp;
 
@@ -73,7 +85,8 @@ export const Conversations = () => {
       }
       const fetchedMessages = await fetchMessages(currentUser.email, conversation.id);
       
-      fetchedMessages.sort((a: Message, b: Message) => new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime());
+      // Sort messages descendingly (newest first)
+      fetchedMessages.sort((a: Message, b: Message) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime());
 
       console.log('Messages fetched from server:', fetchedMessages.length);
       inboxStore.updateConversationMessages(conversation.id, fetchedMessages);
@@ -87,12 +100,14 @@ export const Conversations = () => {
       setTabBarVisibility(false);
       console.log('Conversation screen focused');
       inboxStore.resetUnreadCount(conversation.id);
-      
+  
+      setShowMeme(!!memeId);
+  
       return () => {
         setTabBarVisibility(true);
         console.log('Conversation screen unfocused');
       };
-    }, [setTabBarVisibility, conversation.id])
+    }, [setTabBarVisibility, conversation.id, memeId])
   );
 
   const sendMessageMutation = useMutation({
@@ -180,7 +195,7 @@ export const Conversations = () => {
   
     // Haptic Feedback
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await badgeStore.checkMessengerBadge(currentUser.email); // Corrected method call
+    await badgeStore.checkMessengerBadge(currentUser.email);
     Animated.sequence([
       Animated.timing(sendingAnimation, {
         toValue: 1,
@@ -204,9 +219,9 @@ export const Conversations = () => {
     }).start();
 
     sendMessageMutation.mutate({
-      senderEmail: currentUser.email,
-      receiverEmail: partnerUser.email,
-      content: newMessage,
+      senderEmail: currentUser.email!,
+      receiverEmail: partnerUser.email!,
+      content: newMessage, // Now a string
     }, {
       onSuccess: () => {
         setIsSending(false); // Ensure isSending is reset
@@ -257,14 +272,23 @@ export const Conversations = () => {
     };
   
     sendMessageMutation.mutate({
-      senderEmail: currentUser.email,
-      receiverEmail: partnerUser.email,
+      senderEmail: currentUser.email!,
+      receiverEmail: partnerUser.email!,
       content: JSON.stringify(memeContent)
     }, {
       onSuccess: () => {
         setShowMeme(false);
         setNewMessage('');
+        badgeStore.incrementShareCount(currentUser.email); // Pass userEmail here
         setIsSending(false); 
+        setMemeId(undefined); // Set to undefined instead of null
+
+        // Reset memeId after a short delay to allow re-selection
+        setTimeout(() => {
+          setMemeId(route.params?.currentMedia); // Assuming currentMedia holds the meme ID
+          setShowMeme(!!route.params?.currentMedia);
+        }, 500);
+
         navigation.navigate('Feed' as never);
         Toast.show({
           type: 'success',
@@ -284,7 +308,7 @@ export const Conversations = () => {
       }
     });
 
-  }, [memeId, newMessage, currentUser.email, partnerUser.email, sendMessageMutation, navigation]);
+  }, [memeId, newMessage, currentUser.email, partnerUser.email, sendMessageMutation, navigation, badgeStore, route.params?.currentMedia]);
 
   const renderMessage: ListRenderItem<Message> = useCallback(
     ({ item }) => {
@@ -294,6 +318,7 @@ export const Conversations = () => {
         let content = Content;
         let isMemeShare = false;
         let memeUrl = '';
+        let mediaType: 'image' | 'video' = 'image';
 
         if (Content.trim().startsWith('{')) {
           try {
@@ -304,6 +329,7 @@ export const Conversations = () => {
               memeUrl = parsedContent.memeID.startsWith('http') 
                 ? parsedContent.memeID 
                 : `https://jestr-bucket.s3.amazonaws.com/${parsedContent.memeID}`;
+              mediaType = parsedContent.mediaType || 'image';
             }
           } catch (e) {
             console.log('Failed to parse message content:', e);
@@ -320,11 +346,19 @@ export const Conversations = () => {
             ]}
           >
             {isMemeShare && (
-              <Image
-                source={{ uri: memeUrl }}
-                style={styles.sharedMemeImage}
-                resizeMode="contain"
-              />
+              <TouchableOpacity
+                onPress={() => {
+                  setFullscreenMemeUrl(memeUrl);
+                  setFullscreenMediaType(mediaType);
+                  setIsMemeFullscreenVisible(true);
+                }}
+              >
+                <Image
+                  source={memeUrl ? { uri: memeUrl } : undefined} // Ensure uri is string or undefined
+                  style={styles.sharedMemeImage}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
             )}
             <Text style={styles.messageText}>{content}</Text>
             <Text style={styles.timestamp}>{formatTimestamp(item.Timestamp)}</Text>
@@ -334,6 +368,7 @@ export const Conversations = () => {
         const memeUrl = Content.memeID.startsWith('http') 
           ? Content.memeID 
           : `https://jestr-bucket.s3.amazonaws.com/${Content.memeID}`;
+        const mediaType = Content.mediaType || 'image';
 
         return (
           <View
@@ -344,11 +379,19 @@ export const Conversations = () => {
                 : styles.receivedMessage,
             ]}
           >
-            <Image
-              source={{ uri: memeUrl }}
-              style={styles.sharedMemeImage}
-              resizeMode="contain"
-            />
+            <TouchableOpacity
+              onPress={() => {
+                setFullscreenMemeUrl(memeUrl);
+                setFullscreenMediaType(mediaType);
+                setIsMemeFullscreenVisible(true);
+              }}
+            >
+              <Image
+                source={memeUrl ? { uri: memeUrl } : undefined} // Ensure uri is string or undefined
+                style={styles.sharedMemeImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
             <Text style={styles.messageText}>{Content.message || 'Shared a meme'}</Text>
             <Text style={styles.timestamp}>{formatTimestamp(item.Timestamp)}</Text>
           </View>
@@ -399,14 +442,15 @@ export const Conversations = () => {
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.MessageID}
-          inverted={true} // Inverted for starting at bottom
+          // Remove inverted prop to fix message ordering
+          // inverted={true} 
           estimatedItemSize={79}
-          contentContainerStyle={{ paddingTop: showMeme ? 100 : 10 }} // Adjust paddingTop when inverted
+          contentContainerStyle={{ paddingBottom: showMeme ? 100 : 10 }} // Adjust paddingBottom when not inverted
         />
         {showMeme && (
           <View style={styles.memeContainer}>
             <Image
-              source={{ uri: memeId }}
+              source={memeId ? { uri: memeId } : undefined} // Ensure uri is string or undefined
               style={styles.memeImage}
               resizeMode="contain"
             />
@@ -415,6 +459,7 @@ export const Conversations = () => {
               onPress={() => {
                 console.log("Closing meme preview");
                 setShowMeme(false);
+                setMemeId(undefined); // Reset memeId when closing
               }}
             >
               <FontAwesomeIcon icon={faTimes} size={20} color="#FFF" />
@@ -424,6 +469,20 @@ export const Conversations = () => {
       </>
     );
   }, [isLoading, error, messages, showMeme, memeId, renderMessage]);
+
+  // PanResponder for swipe to close fullscreen meme
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => false,
+    onPanResponderRelease: (evt, gestureState) => {
+      const { dx, dy } = gestureState;
+      const swipeThreshold = 50; // Minimum distance for a swipe
+
+      if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
+        setIsMemeFullscreenVisible(false);
+      }
+    },
+  }), []);
 
   return (
     <KeyboardAvoidingView
@@ -467,7 +526,7 @@ export const Conversations = () => {
             value={newMessage}
             onChangeText={setNewMessage}
             placeholderTextColor="#999"
-            onSubmitEditing={handleSendMessage}
+            onSubmitEditing={showMeme ? handleSendMeme : handleSendMessage}
             returnKeyType="send"
           />
           
@@ -491,6 +550,39 @@ export const Conversations = () => {
           </TouchableOpacity>
 
         </View>
+
+        {/* Fullscreen Meme Modal */}
+        {isMemeFullscreenVisible && (
+          <Modal
+            visible={isMemeFullscreenVisible}
+            transparent={true}
+            onRequestClose={() => setIsMemeFullscreenVisible(false)}
+          >
+            <View style={styles.fullscreenMemeContainer} {...panResponder.panHandlers}>
+              <TouchableOpacity
+                style={styles.fullscreenMemeCloseButton}
+                onPress={() => setIsMemeFullscreenVisible(false)}
+              >
+                <FontAwesomeIcon icon={faTimes} size={30} color="#FFF" />
+              </TouchableOpacity>
+              {fullscreenMediaType === 'image' ? (
+                <Image
+                  source={fullscreenMemeUrl ? { uri: fullscreenMemeUrl } : undefined} // Ensure uri is string or undefined
+                  style={styles.fullscreenMemeImage}
+                  resizeMode={ResizeMode.CONTAIN}
+                />
+              ) : (
+                <Video
+                  source={fullscreenMemeUrl ? { uri: fullscreenMemeUrl } : undefined} // Ensure uri is string or undefined
+                  style={styles.fullscreenMemeVideo}
+                  useNativeControls
+                  resizeMode={ResizeMode.CONTAIN}
+                />
+              )}
+            </View>
+          </Modal>
+        )}
+
       </View>
     </KeyboardAvoidingView>
   );

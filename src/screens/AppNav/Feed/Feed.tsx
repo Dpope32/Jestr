@@ -36,9 +36,9 @@ import LikeAnimation from './LikeAnimation';
 import {LongPressModal} from '../../../components/MediaPlayer/LongPress/LongPressModal';
 import ShareModal from '../../../components/Modals/ShareModal';
 import CommentFeed from '../../../components/Modals/CommentFeed/CommentFeed';
+
 import { checkBadgeEligibility, awardBadge } from '../../../services/badgeServices';
 import { useBadgeStore } from '../../../stores/badgeStore';
-import Toast from 'react-native-toast-message';
 
 const viewabilityConfig = {itemVisiblePercentThreshold: 50};
 
@@ -198,6 +198,9 @@ const Feed: React.FC = () => {
     }
   };
 
+
+
+
   const handleShare = async (
     type: ShareType,
     username?: string,
@@ -227,7 +230,7 @@ const Feed: React.FC = () => {
       viewableItems?.length > 0 &&
       typeof viewableItems[0].index === 'number'
     ) {
-      console.log('CURRENT MEME IDX:', viewableItems[0].index);
+    //  console.log('CURRENT MEME IDX:', viewableItems[0].index);
       const index = viewableItems[0].index;
       setLastViewedIndex(index);
       lastViewedIndexRef.current = index;
@@ -243,79 +246,71 @@ const Feed: React.FC = () => {
     item?.memeID || `meme-${index}`;
 
   // == ITEM IN THE LIST ==
-  const renderItem = ({
-    item,
-    index,
-  }: {
-    item: Meme | undefined;
-    index: number;
-  }) => {
-    // console.log('Rendering item:', item);
+  const renderItem = useCallback(
+    ({item, index}: {item: Meme | undefined; index: number}) => {
 
-    // console.log('Rendering item:', item);
-    // if (!item || !item.url) {
-    //   return null;
-    // }
+      const isVideo =
+        item?.url?.toLowerCase().endsWith('.mp4') ||
+        item?.mediaType === 'video';
 
-    const isVideo =
-      item?.url?.toLowerCase().endsWith('.mp4') || item?.mediaType === 'video';
+      const mediaSource = {uri: item?.url || ''};
+      // console.log('Media Source:', mediaSource);
 
-    const mediaSource = {uri: item?.url || ''};
-    // console.log('Media Source:', mediaSource);
+      const loadMedia = () => {
+        if (isVideo) {
+          return (
+            <Video
+              ref={video}
+              source={mediaSource}
+              style={[StyleSheet.absoluteFill, styles.video]}
+              resizeMode={ResizeMode.COVER}
+              useNativeControls
+              shouldPlay={true}
+              isLooping
+              isMuted={true}
+              videoStyle={{}}
+              // shouldPlay={!isLoading}
+            />
+          );
+        } else {
+          return (
+            <Image
+              source={mediaSource}
+              style={[styles.imgContainer, {height: heightItem}]}
+              resizeMode="contain"
+            />
+          );
+        }
+      };
 
-    const loadMedia = () => {
-      if (isVideo) {
-        return (
-          <Video
-            ref={video}
-            source={mediaSource}
-            style={[StyleSheet.absoluteFill, styles.video]}
-            resizeMode={ResizeMode.COVER}
-            useNativeControls
-            shouldPlay={true}
-            isLooping
-            isMuted={true}
-            videoStyle={{}}
-            // shouldPlay={!isLoading}
-          />
-        );
-      } else {
-        return (
-          <Image
-            source={mediaSource}
-            style={[styles.imgContainer, {height: heightItem}]}
-            resizeMode="contain"
-          />
-        );
-      }
-    };
+      const handleLongPress = () => {
+        setSelectedMeme(item);
+        setIsLongPressModalVisible(true);
+      };
 
-    const handleLongPress = () => {
-      setSelectedMeme(item);
-      setIsLongPressModalVisible(true);
-    };
+      const handlePress = () => {
+        const now = Date.now();
+        if (lastTap.current && now - lastTap.current < 300) {
+          handleDoubleTap();
+        } else {
+          lastTap.current = now;
+        }
+      };
 
-    const handlePress = () => {
-      const now = Date.now();
-      if (lastTap.current && now - lastTap.current < 300) {
-        handleDoubleTap();
-      } else {
-        lastTap.current = now;
-      }
-    };
-
-    return (
-      <TouchableOpacity
-        activeOpacity={1}
-        onPress={handlePress}
-        onLongPress={handleLongPress}
-        style={{
-          height: heightItem,
-        }}>
-        {loadMedia()}
-      </TouchableOpacity>
-    );
-  };
+      return (
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={handlePress}
+          onLongPress={handleLongPress}
+          style={{
+            height: screenHeight,
+          }}>
+          {loadMedia()}
+        </TouchableOpacity>
+      );
+    },
+    [],
+  );
 
   const validInitialScrollIndex =
     lastViewedIndex < memes.length ? lastViewedIndex : 0;
@@ -342,7 +337,7 @@ const Feed: React.FC = () => {
   }
 
   // LOG CURRENT MEME IN VIEW
-  console.log('Current meme:', memes[lastViewedIndex]);
+  //console.log('Current meme:', memes[lastViewedIndex]);
 
   // == M A I N  R E N D E R ==
   return (
@@ -362,11 +357,16 @@ const Feed: React.FC = () => {
         contentContainerStyle={styles.contentCtrStyle}
         pagingEnabled
         showsVerticalScrollIndicator={false}
-        removeClippedSubviews={true}
+        removeClippedSubviews={false}
         ListEmptyComponent={ListEmptyComponent}
         initialNumToRender={3}
         maxToRenderPerBatch={4}
+        windowSize={5}
         updateCellsBatchingPeriod={100}
+        snapToInterval={screenHeight}
+        decelerationRate="fast"
+        snapToAlignment="start"
+        // removeClippedSubviews={Platform.OS !== 'android'}
       />
 
       {/* == M E M E  D E T A I L S == */}
@@ -403,6 +403,7 @@ const Feed: React.FC = () => {
           setIsCommentFeedVisible={setIsCommentFeedVisible}
           memeID={memes[lastViewedIndex]?.memeID}
           userEmail={userEmail}
+          commentsCount={memes[lastViewedIndex]?.commentCount}
           toggleCommentFeed={toggleCommentFeed}
         />
       )}
