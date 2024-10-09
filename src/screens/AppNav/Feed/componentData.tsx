@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     width: '100%',
     // height: '100%',
     // height: screenHeight,
-    // borderWidth: 6,
+    // borderWidth: 3,
     // borderColor: 'yellow',
     // backgroundColor: 'green',
   },
