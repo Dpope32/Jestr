@@ -11,6 +11,9 @@ const verifier = CognitoJwtVerifier.create({
   clientId: process.env.COGNITO_CLIENT_ID,
 });
 
+const CLOUDFRONT_URL = process.env.CLOUDFRONT_URL;
+
+
 const publicOperations = [
    'deleteAccount', 'updateUserProfile', 'updatePassword','resendConfirmationCode', 'forgotPassword', 
    'updateProfileImage', 'confirmForgotPassword', 'submitFeedback', 'updateFeedback', 'getFeedback', 'getAllFeedback', 

@@ -15,11 +15,11 @@ import {PersistQueryClientProvider} from '@tanstack/react-query-persist-client';
 import {ThemeProvider} from './src/theme/ThemeContext';
 import CustomToast from './src/components/ToastMessages/CustomToast';
 import AppNavigator from './src/navigation/AppNavigator';
-import ErrorFallback, {
-  LoadingText,
-} from './src/components/ErrorFallback/ErrorFallback';
+import ErrorFallback, { LoadingText } from './src/components/ErrorFallback/ErrorFallback';
 import {createMMKVPersister} from './src/utils/mmkvPersister';
 import {usePushNotifications} from './src/screens/AppNav/Notifications/usePushNotification';
+import { useUserStore } from 'stores/userStore';
+import { getBadgeStorageContents, useBadgeStore } from 'stores/badgeStore';
 
 const fontz = {Inter_400Regular, Inter_700Bold};
 import awsconfig from './src/aws-exports';
@@ -77,6 +77,8 @@ const App = () => {
   usePushNotifications();
 
   const [isReady, setIsReady] = useState(false);
+  const user = useUserStore((state) => state);
+  const { syncBadgesWithAPI, badges } = useBadgeStore();
 
   const lockOrientation = async () => {
     await ScreenOrientation.lockAsync(
@@ -89,16 +91,21 @@ const App = () => {
       await SplashScreen.preventAutoHideAsync();
       const fontsLoaded = await Font.loadAsync(fontz).then(() => true);
       setIsReady(fontsLoaded);
+      if (user.email && badges.length === 0) {
+        await syncBadgesWithAPI(user.email);
+      }
     } catch (error) {
       console.error('Initialization error', error);
       setIsReady(true);
     }
   };
 
+
   useEffect(() => {
     activateKeepAwakeAsync();
     lockOrientation();
     initializeApp();
+    getBadgeStorageContents();
   }, []);
 
   if (!isReady) {

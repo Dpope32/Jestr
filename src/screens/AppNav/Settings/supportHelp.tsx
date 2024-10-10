@@ -85,11 +85,12 @@ const SupportHelp = () => {
         <View style={styles.formContainer}>
           <Text style={styles.formTitle}>Contact Support</Text>
           <InputField
-            label=""
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-          />
+              label=""
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={setEmail}
+              isEmail={true} // Add this prop
+            />
           <InputField
             label=""
             placeholder="Describe your issue"

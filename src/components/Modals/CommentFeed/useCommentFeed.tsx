@@ -3,7 +3,6 @@ import {useState, useRef, useEffect} from 'react';
 import {Keyboard, TextInput, Animated, Dimensions} from 'react-native';
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
-// import {useTabBarStore} from '../../../stores/tabBarStore';
 
 import {
   fetchComments,
@@ -13,9 +12,8 @@ import {
   organizeCommentsIntoThreads,
 } from '../../../services/commentServices';
 import {Meme} from '../../../types/types';
-
-import {User, ProfileImage, CommentType} from '../../../types/types';
-// import {CommentType} from './CommentFeed';
+import { useBadgeStore } from '../../../stores/badgeStore';
+import {User, CommentType} from '../../../types/types';
 
 const screenHeight = Dimensions.get('window').height;
 
@@ -65,6 +63,7 @@ const useCommentFeed = ({
   const modalY = useRef(new Animated.Value(screenHeight)).current;
   const inputRef = useRef<TextInput>(null);
   const queryClient = useQueryClient();
+  const badgeStore = useBadgeStore();
 
   useEffect(() => {
     if (isCommentFeedVisible) {
@@ -109,7 +108,7 @@ const useCommentFeed = ({
       queryClient.invalidateQueries({queryKey: ['comments', memeID]});
       setNewComment('');
       setReplyingTo(null);
-
+      badgeStore.incrementCommentCount(userEmail)
       queryClient.setQueryData(['memez', userEmail], (oldData: any) => {
         if (!oldData) return oldData;
 
@@ -194,11 +193,11 @@ const useCommentFeed = ({
   const handleAddComment = () => {
     if (newComment.trim() !== '' && user) {
       postCommentMutation.mutate({text: newComment, replyingTo});
+      Keyboard.dismiss(); // Add this line to dismiss the keyboard
     } else if (!user) {
       console.error('User is null, cannot post comment.');
     }
   };
-
   const handleDeleteComment = (commentID: string) => {
     deleteCommentMutation.mutate(commentID);
   };

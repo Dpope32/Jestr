@@ -1,10 +1,25 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Keyboard, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
+// src/components/ContactUs.tsx
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Keyboard,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
+  Platform,
+  Animated,
+  PanResponder,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+
 import InputField from '../../../components/Input/InputField';
 import { submitFeedback } from '../../../services/userService';
 import { showToast } from '../../../utils/helpers';
+import { COLORS } from '../../../theme/theme';
+import { FormStyles } from '../../../components/Modals/ModalStyles/FormStyles'; 
 
 const ContactUs = () => {
   const navigation = useNavigation();
@@ -13,9 +28,44 @@ const ContactUs = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const MAX_CHARS = 500;
 
+  const modalY = useRef(new Animated.Value(0)).current;
+
+  const panResponder = useRef(
+    Platform.OS === 'ios'
+      ? PanResponder.create({
+          onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy > 5,
+          onPanResponderMove: (_, gestureState) => {
+            if (gestureState.dy > 0) {
+              modalY.setValue(gestureState.dy);
+            }
+          },
+          onPanResponderRelease: (_, gestureState) => {
+            if (gestureState.dy > 100) {
+              navigation.goBack();
+            } else {
+              Animated.spring(modalY, {
+                toValue: 0,
+                useNativeDriver: true,
+              }).start();
+            }
+          },
+        })
+      : null
+  ).current;
+
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
   const submitHandler = async () => {
     if (!email || !message) {
       showToast('error', 'Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      showToast('error', 'Invalid Email', 'Please enter a valid email address');
       return;
     }
 
@@ -40,121 +90,84 @@ const ContactUs = () => {
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={styles.modalContent}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={28} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.modalHeader}>Contact Us</Text>
-        </View>
-        <Text style={styles.modalText}>Please fill out the form below:</Text>
+      <View style={FormStyles.container}>
+        <BlurView intensity={90} tint="dark" style={FormStyles.blurContainer}>
+          <Animated.View
+            style={[
+              FormStyles.modalContent,
+              { transform: [{ translateY: modalY }] },
+            ]}
+            {...(Platform.OS === 'ios' ? panResponder?.panHandlers : {})}
+          >
+            <View style={FormStyles.header}>
+              <TouchableOpacity
+                style={FormStyles.backButton}
+                onPress={() => navigation.goBack()}
+                accessibilityLabel="Go Back"
+                accessibilityHint="Navigates to the previous screen"
+              >
+                <Text style={FormStyles.backButtonText}>Back</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={FormStyles.titleContainer}>
+              <Text style={FormStyles.modalHeader}>Contact Us</Text>
+            </View>
 
-        <InputField
-          label=""
-          placeholder="Enter your email"
-          value={email}
-          onChangeText={(text) => setEmail(text)}
-          style={styles.inputField}
-        />
-        <View style={styles.messageContainer}>
-          <InputField
-            label=""
-            placeholder="Enter your message"
-            value={message}
-            onChangeText={(text) => setMessage(text)}
-            multiline
-            numberOfLines={4}
-            style={styles.messageInput}
-            maxLength={MAX_CHARS}
-          />
-          <Text style={styles.charCount}>
-            {`${message.length}/${MAX_CHARS}`}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-          onPress={submitHandler}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Text style={styles.submitButtonText}>Send</Text>
-          )}
-        </TouchableOpacity>
+            <View style={FormStyles.modalTextContainer}>
+              <Text style={FormStyles.modalText}>
+                We'd love to hear from you!
+              </Text>
+              <Text style={FormStyles.modalText}>
+                Please fill out the form below:
+              </Text>
+            </View>
+
+            <InputField
+              label=""
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={setEmail}
+              style={FormStyles.inputField}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            <View style={FormStyles.messageContainer}>
+              <InputField
+                label=""
+                placeholder="Enter your message"
+                value={message}
+                onChangeText={setMessage}
+                multiline
+                numberOfLines={4}
+                style={FormStyles.messageInput}
+                maxLength={MAX_CHARS}
+              />
+              <Text style={FormStyles.charCount}>{`${message.length}/${MAX_CHARS}`}</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                FormStyles.submitButton,
+                isSubmitting && FormStyles.submitButtonDisabled,
+              ]}
+              onPress={submitHandler}
+              disabled={isSubmitting}
+              accessibilityLabel="Send Feedback"
+              accessibilityHint="Submits your feedback"
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <Text style={FormStyles.submitButtonText}>Send</Text>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
+        </BlurView>
       </View>
     </TouchableWithoutFeedback>
   );
 };
-
-const styles = StyleSheet.create({
-  modalContent: {
-    flex: 1,
-    backgroundColor: '#121212',
-    padding: 20,
-    justifyContent: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  backButton: {
-    padding: 10,
-    marginRight: 15,
-  },
-  modalHeader: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    flex: 1,
-  },
-  modalText: {
-    fontSize: 16,
-    color: '#BBBBBB',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  charCount: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-    fontSize: 12,
-    color: '#AAAAAA',
-  },
-  messageContainer: {
-    marginBottom: 20,
-    position: 'relative',
-  },
-  inputField: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 15,
-    color: '#FFFFFF',
-  },
-  messageInput: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 8,
-    padding: 12,
-    height: 100,
-    color: '#FFFFFF',
-  },
-  submitButton: {
-    backgroundColor: '#00ff00',
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#4CAF50AA',
-  },
-  submitButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-});
 
 export default ContactUs;

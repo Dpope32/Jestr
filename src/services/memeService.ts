@@ -1,18 +1,15 @@
 // memeService.tsx
-//omitted other files for brievety, do not remove any imports when returning this code
+
 import * as FileSystem from 'expo-file-system';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 import {API_URL} from './config';
 import {FetchMemesResult} from '../types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useInfiniteQuery, InfiniteData} from '@tanstack/react-query';
-import {User} from '../types/types';
+import {useInfiniteQuery} from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
 
-const COOLDOWN_PERIOD = 24 * 60 * 60 * 1000;
-const CACHE_KEY_PREFIX = 'memes_cache_';
 const LAST_VIEWED_MEME_KEY = 'lastViewedMemeId';
 
 export const uploadMeme = async (
@@ -99,12 +96,8 @@ export const fetchMemes = async (
   limit: number = 10,
   accessToken: string,
 ): Promise<FetchMemesResult> => {
-  console.log(
-    `fetchMemes called for user: ${userEmail}, lastEvaluatedKey: ${lastEvaluatedKey}`,
-  );
-
+  console.log( `fetchMemes called for user: ${userEmail}, lastEvaluatedKey: ${lastEvaluatedKey}`,);
   console.log('Fetching new data from API');
-  // console.log('lastEvaluatedKey:', lastEvaluatedKey);
 
   try {
     const response = await fetch(`${API_URL}/fetchMemes`, {
@@ -121,8 +114,6 @@ export const fetchMemes = async (
       }),
     });
 
-    // console.log('Fetch memes response:', response);
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -138,9 +129,7 @@ export const fetchMemes = async (
       lastEvaluatedKey: data.data.lastViewedMemeId || null,
     };
 
-    console.log(
-      `Fetched ${result.memes.length} memes, new lastViewedMemeId: ${result.lastEvaluatedKey}`,
-    );
+    console.log( `Fetched ${result.memes.length} memes, new lastViewedMemeId: ${result.lastEvaluatedKey}`,);
     return result;
   } catch (error) {
     console.error('Error fetching memes:', error);
@@ -148,83 +137,11 @@ export const fetchMemes = async (
   }
 };
 
-// OLD FUNCTION
-// export const fetchMemes = async (
-//   lastEvaluatedKey: string | null = null,
-//   userEmail: string,
-//   limit: number = 10,
-//   accessToken: string,
-// ): Promise<FetchMemesResult> => {
-//   console.log(
-//     `fetchMemes called for user: ${userEmail}, lastEvaluatedKey: ${lastEvaluatedKey}`,
-//   );
-
-//   const cacheKey = `${CACHE_KEY_PREFIX}${userEmail}`;
-//   const now = Date.now();
-
-//   // Only use cache if it's an initial load (lastEvaluatedKey is null)
-//   if (!lastEvaluatedKey) {
-//     const lastFetchTime = await AsyncStorage.getItem(`${cacheKey}_time`);
-//     if (lastFetchTime && now - parseInt(lastFetchTime) < COOLDOWN_PERIOD) {
-//       console.log('Using cached data for initial load');
-//       const cachedData = await AsyncStorage.getItem(cacheKey);
-//       if (cachedData) {
-//         return JSON.parse(cachedData);
-//       }
-//     }
-//   }
-
-//   try {
-//     console.log('Fetching new data from API');
-//     const response = await fetch(`${API_URL}/fetchMemes`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         Authorization: `Bearer ${accessToken}`,
-//       },
-//       body: JSON.stringify({
-//         operation: 'fetchMemes',
-//         lastEvaluatedKey,
-//         userEmail,
-//         limit,
-//       }),
-//     });
-
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! status: ${response.status}`);
-//     }
-
-//     const data = await response.json();
-//     const result = {
-//       memes: data.data.memes.map((meme: {isFollowed: boolean}) => ({
-//         ...meme,
-//         isFollowed: meme.isFollowed || false,
-//       })),
-//       lastEvaluatedKey: data.data.lastEvaluatedKey,
-//     };
-
-//     // Only cache the result if it's an initial load
-//     if (!lastEvaluatedKey) {
-//       await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
-//       await AsyncStorage.setItem(`${cacheKey}_time`, now.toString());
-//     }
-
-//     console.log(
-//       `Fetched ${result.memes.length} memes, new lastEvaluatedKey: ${result.lastEvaluatedKey}`,
-//     );
-//     return result;
-//   } catch (error) {
-//     console.error('Error fetching memes:', error);
-//     return {memes: [], lastEvaluatedKey: null};
-//   }
-// };
-
 export const useMemes = (
   userEmail: string,
   accessToken: string | null,
   enabled: boolean = true,
 ) => {
-  // const userEmail = user?.email;
 
   const result = useInfiniteQuery<FetchMemesResult, Error>({
     queryKey: ['memes', userEmail],
@@ -529,41 +446,6 @@ export const getLikeStatus = async (memeID: string, userEmail: string) => {
     return null;
   }
 };
-
-// export const updateMemeReaction = async (
-//   memeID: string,
-//   incrementLikes: boolean,
-//   doubleLike: boolean,
-//   incrementDownloads: boolean,
-//   email: string,
-// ): Promise<void> => {
-//   const requestBody = {
-//     operation: 'updateMemeReaction',
-//     memeID,
-//     doubleLike,
-//     incrementLikes,
-//     incrementDownloads,
-//     email,
-//   };
-
-//   // console.log('Updating meme reaction with requestBody:', requestBody);
-
-//   const response = await fetch(`${API_URL}/updateMemeReaction`, {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify(requestBody),
-//   });
-
-//   const data = await response.json();
-//   if (!response.ok) {
-//     console.error('Failed to update meme reaction:', data.message);
-//     throw new Error(data.message);
-//   }
-
-//   // console.log('Meme reaction updated successfully:', data);
-// };
 
 export interface UpdateMemeReactionRequest {
   memeID: string;

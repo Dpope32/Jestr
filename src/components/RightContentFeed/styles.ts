@@ -5,15 +5,14 @@ const styles = StyleSheet.create({
   contentContainer: {
     position: 'absolute',
     flexDirection: 'column',
-    right: 10,
+    right: 5,
     // backgroundColor: 'rgba(0, 0, 0, 0.5)',
 
     // borderWidth: 2,
     // borderColor: 'red',
   },
   profilePicContainer: {
-    // borderWidth: 1,
-    // borderColor: 'blue',
+
   },
   profilePic: {
     width: 40,
@@ -26,6 +25,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
+    marginTop: -10,
     justifyContent: 'center',
     alignItems: 'center',
   },

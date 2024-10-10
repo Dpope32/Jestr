@@ -1,55 +1,56 @@
+// src/services/permissionsHandler.tsx
+
 import React, { useEffect } from 'react';
 import { Alert } from 'react-native';
-import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
+import PushNotificationManager from './PushNotificationManager'; // Import the manager
 
 const PermissionsHandler = () => {
   const requestPermissions = async () => {
-    // Check for stored notification permission status
+    // Push Notifications
     const storedNotificationPermission = await AsyncStorage.getItem('notificationsPermission');
     if (storedNotificationPermission !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert("Permission denied!", "You need to allow notifications to use this feature.", [{ text: "OK" }]);
-        await AsyncStorage.setItem('notificationsPermission', 'denied');
+      const pushToken = await PushNotificationManager.registerForPushNotificationsAsync();
+      if (!pushToken) {
+        // Handle permission denial if necessary
       } else {
-        await AsyncStorage.setItem('notificationsPermission', 'granted');
+        // Optionally, send this token to your backend server here
       }
     }
 
-    // Check for stored media permission status
+    // Media Library
     const storedMediaPermission = await AsyncStorage.getItem('mediaPermission');
     if (storedMediaPermission !== 'granted') {
       const { status: mediaStatus } = await MediaLibrary.requestPermissionsAsync();
       if (mediaStatus !== 'granted') {
-        Alert.alert("Media permission needed", "We need access to your media library to pick images.", [{ text: "OK" }]);
+        Alert.alert("Media Permission Needed", "We need access to your media library to pick images.", [{ text: "OK" }]);
         await AsyncStorage.setItem('mediaPermission', 'denied');
       } else {
         await AsyncStorage.setItem('mediaPermission', 'granted');
       }
     }
 
-    // Check for stored camera permission status
+    // Camera
     const storedCameraPermission = await AsyncStorage.getItem('cameraPermission');
     if (storedCameraPermission !== 'granted') {
       const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
       if (cameraStatus !== 'granted') {
-        Alert.alert("Camera permission needed", "We need access to your camera to take photos.", [{ text: "OK" }]);
+        Alert.alert("Camera Permission Needed", "We need access to your camera to take photos.", [{ text: "OK" }]);
         await AsyncStorage.setItem('cameraPermission', 'denied');
       } else {
         await AsyncStorage.setItem('cameraPermission', 'granted');
       }
     }
 
-    // Check for stored location permission status
+    // Location
     const storedLocationPermission = await AsyncStorage.getItem('locationPermission');
     if (storedLocationPermission !== 'granted') {
       const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
       if (locationStatus !== 'granted') {
-        Alert.alert("Location permission needed", "We need access to your location for better services.", [{ text: "OK" }]);
+        Alert.alert("Location Permission Needed", "We need access to your location for better services.", [{ text: "OK" }]);
         await AsyncStorage.setItem('locationPermission', 'denied');
       } else {
         await AsyncStorage.setItem('locationPermission', 'granted');

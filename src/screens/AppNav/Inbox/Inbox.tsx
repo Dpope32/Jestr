@@ -13,7 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPlus, faThumbtack } from '@fortawesome/free-solid-svg-icons';
 import { User } from '../../../types/types';
 import { Conversation, MessageContent } from '../../../types/messageTypes';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, CommonActions } from '@react-navigation/native';
 import { SwipeListView, RowMap } from 'react-native-swipe-list-view';
 import { useQuery } from '@tanstack/react-query';
 
@@ -79,6 +79,8 @@ const Inbox: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
+      console.log('Inbox screen focused');
+      
       if (user.email && isInitialMount.current) {
         refetchConversations().then((result) => {
           if (result.data) {
@@ -88,8 +90,24 @@ const Inbox: React.FC = () => {
         });
         isInitialMount.current = false;
       }
-    }, [user.email, refetchConversations, fetchConversations])
+
+      const unsubscribe = navigation.addListener('focus', () => {
+        // Reset the navigation state to the Inbox when focused
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Inbox' }],
+          })
+        );
+      });
+
+      return () => {
+        console.log('Inbox screen unfocused');
+        unsubscribe();
+      };
+    }, [navigation, user.email, refetchConversations, fetchConversations])
   );
+
 
   const MessagePreview = useCallback(({ content }: { content: MessageContent }) => {
     if (typeof content === 'string') {
@@ -304,8 +322,6 @@ const Inbox: React.FC = () => {
           existingConversations={[...conversations, ...pinnedConversations]}
           currentUser={user}
           allUsers={[]}
-          user={user}
-          navigation={navigation}
         />
       </Animated.View>
     </KeyboardAvoidingView>

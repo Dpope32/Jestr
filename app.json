@@ -7,7 +7,7 @@
       "resizeMode": "contain"
     },
     "owner": "deedaw22",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -80,8 +80,9 @@
     ],
     "ios": {
       "bundleIdentifier": "com.jestrmobile.app",
-      "buildNumber": "7", 
-      "excludedModules": ["Amplify", "AmplifyCore", "AmplifyAnalytics", "AmplifyAPI", "AmplifyDataStore", "AmplifyStorage"]
+      "buildNumber": "8", 
+      "excludedModules": ["Amplify", "AmplifyCore", "AmplifyAnalytics", "AmplifyAPI", "AmplifyDataStore", "AmplifyStorage"],
+      "usesAppleSignIn": true
     },
     "hooks": {
       "postInstall": "npx pod-install && cd ios && pod install"

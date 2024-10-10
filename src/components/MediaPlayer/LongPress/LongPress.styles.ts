@@ -3,70 +3,65 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width, height } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        top: 100,
-        zIndex: 1000,
-        elevation: 999, // For Android
-      },
-      modalContainer: {
-        width: width * 0.9,
-        maxHeight: height,
-        backgroundColor: '#2E2E2E',
-        borderRadius: 20,
-        alignItems: 'center',
-        zIndex: 10000,
-        elevation: 1000,
-      },
-      memePreview: {
-        width: '100%',
-        height: height * 0.4,
-        borderRadius: 10,
-        overflow: 'hidden',
-        marginVertical: 20,
-      },
-      memeImage: {
-        width: '100%',
-        height: '100%',
-      },
-      caption: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        color: '#fff',
-        padding: 10,
-        fontSize: 14,
-      },
-      optionsContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-      },
-      option: {
-        width: '33%',
-        alignItems: 'center',
-        marginBottom: 15,
-      },
-      iconContainer: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 5,
-      },
-      optionText: {
-        color: '#fff',
-        fontSize: 12,
-        textAlign: 'center',
-      },
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  blurView: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlay: {
+    width: width,
+    height: height,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: width * 0.9,
+    backgroundColor: 'rgba(70, 70, 70, 0.95)', // Semi-transparent dark background
+    borderRadius: 20,
+    paddingVertical: height * 0.025,
+    paddingHorizontal: width * 0.05,
+    alignItems: 'center',
+  },
+  memePreview: {
+    width: '100%',
+    height: height * 0.35,
+    borderRadius: 15,
+    overflow: 'hidden',
+    marginBottom: height * 0.025,
+  },
+  memeImage: {
+    width: '100%',
+    height: '100%',
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  option: {
+    width: '33%',
+    alignItems: 'center',
+    marginBottom: height * 0.02,
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  optionText: {
+    color: '#fff',
+    fontSize: width * 0.032,
+    textAlign: 'center',
+    marginTop: height * 0.005,
+  },
 });
 
 export default styles;

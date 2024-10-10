@@ -1,3 +1,5 @@
+// src/components/MediaPlayer/MediaPlayer.tsx
+
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, Image, Dimensions, Animated, GestureResponderEvent, ActivityIndicator, TouchableWithoutFeedback, StyleSheet, Platform } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -16,6 +18,7 @@ import { useMediaPlayerLogic } from './Logic/useMediaPlayerLogic';
 import { useUserStore } from '../../stores/userStore';
 import { LongPressModal } from './LongPress/LongPressModal';
 import { useTheme } from '../../theme/ThemeContext';
+import { useBadgeStore } from '../../stores/badgeStore';
 
 const SaveSuccessModal = React.lazy(() => import('../Modals/SaveSuccessModal'));
 const ShareModal = React.lazy(() => import('../Modals/ShareModal'));
@@ -49,6 +52,12 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     onLikeStatusChange,
     numOfComments,
   }) => {
+    // Ensure that counts are numbers
+    const parsedInitialLikeCount = typeof initialLikeCount === 'string' ? parseInt(initialLikeCount, 10) : initialLikeCount;
+    const parsedInitialDownloadCount = typeof initialDownloadCount === 'string' ? parseInt(initialDownloadCount, 10) : initialDownloadCount;
+    const parsedInitialShareCount = typeof initialShareCount === 'string' ? parseInt(initialShareCount, 10) : initialShareCount;
+    const parsedInitialCommentCount = typeof initialCommentCount === 'string' ? parseInt(initialCommentCount, 10) : initialCommentCount;
+
     const { isDarkMode } = useTheme();
     const [isCommentFeedVisible, setIsCommentFeedVisible] = useState(false);
     const video = useRef<Video>(null);
@@ -67,6 +76,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
     const [likePosition, setLikePosition] = useState({ x: 0, y: 0 });
     const [showLikeAnimation, setShowLikeAnimation] = useState(false);
     const [viewedMemes, setViewedMemes] = useState<Set<string>>(new Set());
+    const badgeStore = useBadgeStore();
 
     const handleMediaError = useCallback(() => {
       setMediaLoadError(true);
@@ -135,7 +145,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         setViewedMemes(prev => new Set(prev).add(memeID));
       }
       setIsFollowed(memeUser.isFollowed ?? false);
-    }, [loadMedia, nextMedia, prevMedia, memeID, index, currentIndex]);
+    }, [loadMedia, nextMedia, prevMedia, memeID, index, currentIndex, viewedMemes, memeUser]);
 
     const handleSingleTap = useCallback(() => {
       if (mediaType === 'video' && video.current) {
@@ -147,27 +157,54 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       }
     }, [mediaType, status]);
 
-    const { liked, doubleLiked, isSaved, showSaveModal, showShareModal,
-      showToast, toastMessage, counts, friends, debouncedHandleLike, handleDownloadPress,
-      onShare, formatDate, setShowSaveModal, setShowShareModal, setIsSaved, setCounts,
+    const {
+      liked,
+      doubleLiked,
+      isSaved,
+      showSaveModal,
+      showShareModal,
+      showToast,
+      toastMessage,
+      counts,
+      friends,
+      debouncedHandleLike,
+      handleDownloadPress,
+      onShare,
+      formatDate,
+      setShowSaveModal,
+      setShowShareModal,
+      setIsSaved,
+      setCounts,
     } = useMediaPlayerLogic({
-      handleDownload, onLikeStatusChange, handleSingleTap,
-      initialLiked, initialDoubleLiked, initialLikeCount, initialDownloadCount, initialShareCount, initialCommentCount,
-      user, memeID, mediaType, video, status,
+      handleDownload,
+      onLikeStatusChange,
+      handleSingleTap,
+      initialLiked,
+      initialDoubleLiked,
+      initialLikeCount: parsedInitialLikeCount,
+      initialDownloadCount: parsedInitialDownloadCount,
+      initialShareCount: parsedInitialShareCount,
+      initialCommentCount: parsedInitialCommentCount,
+      user,
+      memeID,
+      mediaType,
+      video,
+      status,
     });
 
     const handleSwipeUp = useCallback(() => {
       goToNextMedia();
-    }, [index, goToNextMedia]);
+    }, [goToNextMedia]);
 
     const handleSwipeDown = useCallback(() => {
       goToPrevMedia();
-    }, [index, goToPrevMedia]);
+    }, [goToPrevMedia]);
 
     const handleFollow = useCallback(async () => {
       if (!currentUserId || !memeUser.email) return;
       try {
         await addFollow(currentUserId, memeUser.email);
+        await badgeStore.checkSocialButterflyBadge(currentUserId); // Now exists
         setIsFollowed(true);
         useUserStore.getState().incrementFollowingCount();
         Toast.show({
@@ -185,7 +222,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           visibilityTime: 2000,
         });
       }
-    }, [currentUserId, memeUser.email]);
+    }, [currentUserId, memeUser.email, badgeStore]);
 
     const handleLongPress = useCallback(() => {
       setIsLongPressModalVisible(true);
@@ -195,7 +232,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
         useNativeDriver: true, // Changed to true for better performance
       }).start();
     }, [blurOpacity]);
-    
+
     const closeLongPressModal = useCallback(() => {
       Animated.timing(blurOpacity, {
         toValue: 0,
@@ -398,13 +435,12 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           visible={showSaveModal}
           onClose={() => setShowSaveModal(false)}
         />
-      <ShareModal
+        <ShareModal
           visible={showShareModal}
           onClose={() => setShowShareModal(false)}
           friends={friends}
           onShare={onShare}
           currentMedia={currentMedia}
-          user={user} 
         />
         <Animated.View
           style={[
@@ -429,10 +465,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           onShare={() => setShowShareModal(true)}
           onReport={() => { }}
           user={user}
-          memeID={memeID}
-          isSaved={isSaved}
-          setIsSaved={setIsSaved}
-          setCounts={setCounts}
         />
       </Animated.View>
     );

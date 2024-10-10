@@ -1,6 +1,8 @@
 // src/screens/AppNav/Inbox/convoStyles.ts
 
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet, Platform, Dimensions } from 'react-native';
+
+const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -16,9 +18,36 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? 50 : 30,
     borderBottomColor: '#444',
   },
+  // Add these styles to your existing styles in 'convoStyles.ts'
+
+fullscreenMemeContainer: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+fullscreenMemeImage: {
+  width: width * 0.9,
+  height: height * 0.7,
+},
+
+fullscreenMemeVideo: {
+  width: width * 0.9,
+  height: height * 0.7,
+},
+fullscreenMemeCloseButton: {
+  position: 'absolute',
+  top: 40,
+  right: 20,
+  zIndex: 10,
+},
   backButton: {
     marginRight: 15,
     padding: 5,
+  },
+  errorText: {
+    color:  '#FF3B30',
   },
   profilePic: {
     width: 40,
@@ -112,14 +141,14 @@ const styles = StyleSheet.create({
   },
   memeContainer: {
     position: 'absolute',
-    bottom: 70, // Increased from 20 to provide more spacing above the input
+    bottom: 60,
     left: 10,
     right: 10,
-    height: 250, // Increased height for a larger preview
-    backgroundColor: '#3d3d3d',
-    borderRadius: 20, // More rounded corners
-    overflow: 'hidden',
-    paddingVertical: 15,
+    backgroundColor: '#333',
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+    flexDirection: 'row',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -127,17 +156,13 @@ const styles = StyleSheet.create({
     elevation: 10, // Adds shadow for Android
   },
   memeImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 20, // Match container's border radius
+    width: 50,
+    height: 50,
+    borderRadius: 10,
   },
   closeMemeButton: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    borderRadius: 20, // Larger touch area
-    padding: 8,
+    marginLeft: 10,
+    padding: 5,
   },
   loadingText: {
     color: '#1bd40b',

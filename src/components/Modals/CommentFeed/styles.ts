@@ -1,7 +1,7 @@
-import {StyleSheet, Dimensions, Platform} from 'react-native';
-import {COLORS} from '../../../theme/theme';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
+import { COLORS } from '../../../theme/theme';
 
-const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   modalContainer: {
@@ -11,12 +11,13 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContentWrapper: {
-    height: '70%',
-    maxHeight: screenHeight * 0.8,
+    height: '80%',
+    maxHeight: screenHeight * 0.9,
     width: '100%',
-    backgroundColor: `rgba(0, 0, 0, ${Platform.OS === 'ios' ? 0.0 : 0.8})`, // Opacity based on platform
+    backgroundColor: `rgba(0, 0, 0, ${Platform.OS === 'ios' ? 0.0 : 0.8})`,
   },
   modalContent: {
     flex: 1,
@@ -27,22 +28,14 @@ const styles = StyleSheet.create({
   blurViewStyle: {
     ...StyleSheet.absoluteFillObject,
   },
-  closeButton: {
-    position: 'absolute',
-    right: 15,
-    top: 15,
-    zIndex: 6,
-    padding: 10,
-    backgroundColor: 'rgba(80, 80, 80, 0.5)',
-    borderRadius: 20,
+
+  sortOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
   },
-  commentCount: {
-    alignSelf: 'center',
-    fontSize: 22,
-    fontWeight: 'bold',
+  sortOptionText: {
     color: '#FFF',
-    marginTop: 20,
-    marginBottom: 16,
+    fontSize: 16,
   },
   commentsContainer: {
     flexGrow: 1,
@@ -55,10 +48,8 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingHorizontal: 15,
-    paddingBottom: Platform.OS === 'ios' ? 60 : 10,
-
-    // borderWidth: 3,
-    // borderColor: '#FFF',
+    paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+    backgroundColor: 'rgba(30, 30, 30, 0.8)',
   },
   replyingToContainer: {
     flexDirection: 'row',
@@ -68,9 +59,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     backgroundColor: 'rgba(58, 58, 58, 0.78)',
     borderRadius: 16,
-
-    // borderWidth: 3,
-    // borderColor: '#FFF',
   },
   replyingToText: {
     color: '#FFD700',
@@ -91,12 +79,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
+    paddingVertical: 10,
     backgroundColor: 'transparent',
   },
   newCommentInput: {
     flex: 1,
-    height: 35,
+    height: 40,
     borderColor: 'rgba(255, 255, 255, 0.5)',
     borderWidth: 2,
     borderRadius: 20,
@@ -107,7 +95,7 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     marginLeft: 10,
-    padding: 6,
+    padding: 8,
     backgroundColor: COLORS.primary,
     borderRadius: 20,
   },
@@ -125,134 +113,60 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginRight: 12,
   },
-  activityIndicatorContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-  },
   loader: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   errorText: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  emptyCommentText: {
+    color: '#FFF',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
+
+
+
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 16,
+    paddingHorizontal: 20,
+  },
+  commentCount: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFF',
+    flex: 1,
+    textAlign: 'center',
+  },
+  sortButton: {
+    padding: 10,
+    backgroundColor: 'rgba(80, 80, 80, 0.5)',
+    borderRadius: 20,
+  },
+  closeButton: {
+    padding: 10,
+    backgroundColor: 'rgba(80, 80, 80, 0.5)',
+    borderRadius: 20,
+  },
+  sortOptionsContainer: {
+    position: 'absolute',
+    top: 70,
+    left: 20,
+    backgroundColor: 'rgba(40, 40, 40, 0.9)',
+    borderRadius: 10,
+    padding: 10,
+    zIndex: 10,
   },
 });
-
-// const styles = StyleSheet.create({
-//   inputWrapper: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   inputContainer: {
-//     // borderTopWidth: 1,
-//     // borderTopColor: '#444',
-//     // paddingTop: 10,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   replyingToContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginBottom: 8,
-//     paddingHorizontal: 12,
-//     paddingVertical: 4,
-//     backgroundColor: '#444',
-//     borderRadius: 16,
-//   },
-//   replyingToText: {
-//     color: '#FFF',
-//     marginLeft: 8,
-//     flex: 1,
-//   },
-//   cancelReplyButton: {
-//     marginLeft: 8,
-//   },
-//   cancelReplyText: {
-//     color: '#007AFF',
-//     fontWeight: '600',
-//   },
-//   modalOverlay: {
-//     flex: 1,
-//     justifyContent: 'flex-end',
-//   },
-//   modalContent: {
-//     // flex: 1,
-//     height: '70%',
-//     backgroundColor: '#2A2A2A',
-//     padding: 10,
-//     // borderWidth: 1,
-//     // borderColor: 'red',
-//     borderTopLeftRadius: 20,
-//     borderTopRightRadius: 20,
-//     // alignItems: 'flex-end',
-//     // paddingTop: 10,
-//   },
-//   commentCount: {
-//     alignSelf: 'center',
-//     fontSize: 20,
-//     fontWeight: 'bold',
-//     color: '#FFF',
-//     marginBottom: 12,
-//   },
-//   commentsContainer: {
-//     flex: 1,
-
-//     // borderWidth: 1,
-//     // borderColor: '#444',
-//   },
-//   newCommentInput: {
-//     flex: 1,
-//     height: 40,
-//     borderColor: 'gray',
-//     borderWidth: 1,
-//     borderRadius: 20,
-//     paddingHorizontal: 10,
-//     color: '#000',
-//     // marginBottom: 14,
-//   },
-//   sendButton: {
-//     marginLeft: 10,
-//   },
-//   profilePic: {
-//     width: 44,
-//     height: 44,
-//     borderRadius: 22,
-//     marginRight: 12,
-
-//     borderWidth: 1,
-//     borderColor: '#444',
-//   },
-//   loader: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   errorText: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     color: 'red',
-//   },
-//   activityIndicatorContainer: {
-//     position: 'absolute',
-//     top: 0,
-//     left: 0,
-//     right: 0,
-//     bottom: 0,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-//   },
-// });
 
 export default styles;

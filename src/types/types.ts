@@ -74,12 +74,12 @@ export type RootStackParamList = {
   Loading: undefined;
   LandingPage: undefined;
   Onboarding: undefined;
-  Feed: {userEmail: string};
-  Settings: {email: string};
-  MemeUploadScreen: {user: any};
-  CompleteProfileScreen: {email: string};
-  Inbox: {user: any};
-  ConfirmSignUp: {email: string};
+  Feed: { userEmail: string };
+  Settings: { email: string };
+  MemeUploadScreen: { user: any };
+  CompleteProfile: { email: string; name?: string };
+  Inbox: { user: any };
+  ConfirmSignUp: { email: string };
   AdminPage: undefined;
   Conversations: {
     localUser: any;
@@ -155,10 +155,10 @@ export type MediaPlayerProps = {
   likeDislikeCounts?: Record<number, {likeCount: number; dislikeCount: number}>;
   currentMediaIndex: number;
   user: User | null;
-  likeCount: number;
-  downloadCount: number;
-  commentCount: number;
-  shareCount: number;
+  likeCount: number | string;
+  downloadCount: number | string;
+  commentCount: number | string;
+  shareCount: number | string;
   profilePicUrl: string;
   memeID: string;
   nextMedia: string | null;

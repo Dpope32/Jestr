@@ -1,3 +1,4 @@
+// OnboardingScreen.tsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
@@ -19,7 +20,7 @@ import Backdrop from './Backdrop';
 import Particles from '../../../components/Particles/Particles';
 import Pagination from './Pagination';
 import { useUserStore } from '../../../stores/userStore';
-import { styles } from './styles';
+import AnimatedWord from './AnimatedWord'; // Ensure correct path
 
 const OnboardingScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -34,7 +35,9 @@ const OnboardingScreen: React.FC = () => {
 
   const [hasVisitedFirstSlide, setHasVisitedFirstSlide] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const descriptionOpacities = useRef(slides.map(() => new Animated.Value(0))).current;
+  const descriptionOpacities = useRef(
+    slides.map(() => new Animated.Value(0))
+  ).current;
 
   const btnTxt = currentIndex === slides.length - 1 ? "LET'S MEME" : 'Next';
 
@@ -63,7 +66,72 @@ const OnboardingScreen: React.FC = () => {
     if (currentIndex === 0) {
       setHasVisitedFirstSlide(true);
     }
-  }, [currentIndex]);
+  }, [currentIndex, descriptionOpacities, hasVisitedFirstSlide]);
+
+  // Define renderStyledText inside OnboardingScreen
+  const renderStyledText = (
+    text: string,
+    textColor: string,
+    buttonColor: string,
+    highlightWords: string[] = [],
+    index: number
+  ) => {
+    const words = text.split(' ');
+
+    return words.map((word, i) => {
+      const isHighlighted = highlightWords.some(hw =>
+        word.toLowerCase().includes(hw.toLowerCase())
+      );
+      return (
+        <AnimatedWord
+          key={i}
+          word={word}
+          isHighlighted={isHighlighted}
+          textColor={textColor}
+          buttonColor={buttonColor}
+          delay={i * 100}
+          isActive={currentIndex === index} // Pass isActive prop
+        />
+      );
+    });
+  };
+
+  // Define renderItem inside OnboardingScreen
+  const renderItem = useCallback(
+    ({ item, index }: { item: Slide; index: number }) => {
+      const buttonColor = Color(item.colors[0]).darken(0.2).hex();
+
+      return (
+        <View style={[baseStyles.slide, { width: windowWidth }]}>
+          <View style={baseStyles.contentContainer}>
+            <LottieView
+              source={item.animation}
+              autoPlay
+              loop
+              style={baseStyles.lottieAnimation}
+            />
+            <Animated.View
+              style={[
+                baseStyles.textContainer,
+                { opacity: descriptionOpacities[index] },
+              ]}
+            >
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                {renderStyledText(
+                  item.description,
+                  item.textColor,
+                  buttonColor,
+                  item.highlightWords,
+                  index
+                )}
+              </View>
+            </Animated.View>
+          </View>
+        </View>
+      );
+    },
+    [windowWidth, descriptionOpacities, renderStyledText]
+  );
 
   const viewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -92,65 +160,10 @@ const OnboardingScreen: React.FC = () => {
     }
   };
 
-  const renderStyledText = (text: string, textColor: string, buttonColor: string, highlightWords: string[] = []) => {
-    const words = text.split(' ');
-    return words.map((word, index) => {
-      const isHighlighted = highlightWords.some(hw => word.toLowerCase().includes(hw.toLowerCase()));
-      return (
-        <Text
-          key={index}
-          style={[
-            styles.description,
-            { color: textColor },
-            isHighlighted && {
-              color: Color(buttonColor).isDark() ? '#FFFFFF' : '#000000',
-              fontWeight: 'bold',
-              textShadowColor: buttonColor,
-              textShadowOffset: { width: 1, height: 1 },
-              textShadowRadius: 1,
-              borderRadius: 4,
-              paddingHorizontal: 4,
-              marginHorizontal: 1,
-            }
-          ]}
-        >
-          {word}{' '}
-        </Text>
-      );
-    });
-  };
-
-  const renderItem = ({ item, index }: { item: Slide; index: number }) => {
-    const buttonColor = Color(item.colors[0]).darken(0.2).hex();
-
-    return (
-      <View style={[styles.slide, { width: windowWidth }]}>
-        <View style={styles.contentContainer}>
-          <LottieView
-            source={item.animation}
-            autoPlay
-            loop
-            style={styles.lottieAnimation}
-          />
-          <Animated.View
-            style={[
-              styles.textContainer,
-              { opacity: descriptionOpacities[index] },
-            ]}
-          >
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-              {renderStyledText(item.description, item.textColor, buttonColor, item.highlightWords)}
-            </View>
-          </Animated.View>
-        </View>
-      </View>
-    );
-  };
-
   const buttonColor = Color(slides[currentIndex].colors[0]).lighten(0.2).hex();
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+    <Animated.View style={[baseStyles.container, { opacity: fadeAnim }]}>
       <Backdrop
         scrollX={scrollX}
         windowWidth={windowWidth}
@@ -184,10 +197,10 @@ const OnboardingScreen: React.FC = () => {
           offset: windowWidth * index,
           index,
         })}
-        removeClippedSubviews={false} // Changed from true to false
-        maxToRenderPerBatch={2} // Increased from 1 to 2
+        removeClippedSubviews={false} // Adjusted for better performance
+        maxToRenderPerBatch={2} // Optimized rendering
       />
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
+      <View style={[baseStyles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <Pagination
           slides={slides}
           scrollX={scrollX}
@@ -196,10 +209,17 @@ const OnboardingScreen: React.FC = () => {
         />
 
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: buttonColor }]}
+          style={[baseStyles.button, { backgroundColor: buttonColor }]}
           onPress={scrollToNext}
         >
-          <Text style={[styles.buttonText, { color: slides[currentIndex].textColor }]}>{btnTxt}</Text>
+          <Text
+            style={[
+              baseStyles.buttonText,
+              { color: slides[currentIndex].textColor },
+            ]}
+          >
+            {btnTxt}
+          </Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
