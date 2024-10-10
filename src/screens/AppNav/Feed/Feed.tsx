@@ -1,7 +1,13 @@
 // Feed.tsx
 
 import React, {useState, useCallback, useEffect, useRef} from 'react';
-import {View, StyleSheet, TouchableOpacity, Text, Platform} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  RefreshControl,
+  Platform,
+} from 'react-native';
 import {FlatList, AppState, Animated} from 'react-native';
 import {Video, ResizeMode} from 'expo-av';
 import {Image} from 'react-native';
@@ -354,6 +360,13 @@ const Feed: React.FC = () => {
         initialScrollIndex={validInitialScrollIndex}
         getItemLayout={getItemLayout}
         onEndReached={handleEndReached}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor="#0000ff"
+          />
+        }
         onEndReachedThreshold={0.8}
         viewabilityConfig={viewabilityConfig}
         onViewableItemsChanged={onViewableItemsChanged}
