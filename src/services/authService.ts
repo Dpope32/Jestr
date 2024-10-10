@@ -1,31 +1,35 @@
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
-import { Alert } from 'react-native';
+import {Alert} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User } from '../types/types';
-import { 
-  signUp, 
-  signOut, 
-  resetPassword, 
-  getCurrentUser, 
-  fetchAuthSession, 
-  signIn, 
+import {User} from '../types/types';
+import {
+  signUp,
+  signOut,
+  resetPassword,
+  getCurrentUser,
+  fetchAuthSession,
+  signIn,
   confirmResetPassword,
 } from '@aws-amplify/auth';
-import appleAuth, { AppleRequestScope, AppleRequestOperation } from '@invertase/react-native-apple-authentication';
-import { GoogleSignin  } from '@react-native-google-signin/google-signin';
-import { useNotificationStore } from '../stores/notificationStore';
+import appleAuth, {
+  AppleRequestScope,
+  AppleRequestOperation,
+} from '@invertase/react-native-apple-authentication';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {useNotificationStore} from '../stores/notificationStore';
 
 // Initialize Google Sign-In
-GoogleSignin.configure({
-  webClientId: '667171669430-pcji1fi3ompmhtfr0uv2peh9qeqmo0rl.apps.googleusercontent.com', // Web client ID ?????????
-  offlineAccess: true,
-});
-import { useUserStore } from '../stores/userStore';
-import { removeToken } from '../stores/secureStore';
+// GoogleSignin.configure({
+//   webClientId: '667171669430-pcji1fi3ompmhtfr0uv2peh9qeqmo0rl.apps.googleusercontent.com', // Web client ID ?????????
+//   offlineAccess: true,
+// });
+
+import {useUserStore} from '../stores/userStore';
+import {removeToken} from '../stores/secureStore';
 import * as SecureStore from 'expo-secure-store';
-import { fetchUserDetails } from './userService';
-import { AuthNavProp } from '../navigation/NavTypes/AuthStackTypes';
+import {fetchUserDetails} from './userService';
+import {AuthNavProp} from '../navigation/NavTypes/AuthStackTypes';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
@@ -45,11 +49,11 @@ export const registerDevice = async (userID: string) => {
       return;
     }
 
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const {status: existingStatus} = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
+      const {status} = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
 
@@ -59,7 +63,9 @@ export const registerDevice = async (userID: string) => {
         'Enable notifications to stay updated with the latest features.',
       );
       // Replace setPushEnabled with setNotificationPreferences
-      useNotificationStore.getState().setNotificationPreferences({ pushEnabled: false });
+      useNotificationStore
+        .getState()
+        .setNotificationPreferences({pushEnabled: false});
       return;
     }
 
@@ -92,7 +98,9 @@ export const registerDevice = async (userID: string) => {
     if (response.ok) {
       console.log('Device registered successfully:', responseData);
       // Replace setPushEnabled with setNotificationPreferences
-      useNotificationStore.getState().setNotificationPreferences({ pushEnabled: true });
+      useNotificationStore
+        .getState()
+        .setNotificationPreferences({pushEnabled: true});
     } else {
       console.error('Failed to register device:', responseData);
       Alert.alert(
@@ -100,7 +108,9 @@ export const registerDevice = async (userID: string) => {
         responseData.message || 'Please try again.',
       );
       // Replace setPushEnabled with setNotificationPreferences
-      useNotificationStore.getState().setNotificationPreferences({ pushEnabled: false });
+      useNotificationStore
+        .getState()
+        .setNotificationPreferences({pushEnabled: false});
     }
 
     return responseData;
@@ -111,11 +121,12 @@ export const registerDevice = async (userID: string) => {
       error.message || 'An unknown error occurred.',
     );
     // Replace setPushEnabled with setNotificationPreferences
-    useNotificationStore.getState().setNotificationPreferences({ pushEnabled: false });
+    useNotificationStore
+      .getState()
+      .setNotificationPreferences({pushEnabled: false});
     throw error;
   }
 };
-
 
 export const handleGoogleSignIn = async (navigation: AuthNavProp) => {
   try {
@@ -125,16 +136,16 @@ export const handleGoogleSignIn = async (navigation: AuthNavProp) => {
     if (userInfo.type === 'success') {
       console.log('Google Sign-In success:', userInfo);
     }
-     
+
     // Retrieve the authenticated user's information
     const authUser = await getCurrentUser();
     console.log('authUser after Google sign-in:', authUser);
 
     const user = convertAuthUserToUser(authUser);
     useUserStore.getState().setUserDetails(user);
-    
+
     // Corrected line: Use 'user.email' instead of 'Profile.email'
-    navigation.navigate('CompleteProfile', { email: user.email || '' });
+    navigation.navigate('CompleteProfile', {email: user.email || ''});
   } catch (error: any) {
     console.error('Error in handleGoogleSignIn:', error);
     Alert.alert('Google Sign-In Error', error.message || 'An error occurred');
@@ -148,15 +159,15 @@ export const handleAppleSignIn = async (navigation: AuthNavProp) => {
       requestedScopes: [AppleRequestScope.EMAIL, AppleRequestScope.FULL_NAME],
     });
 
-    const { identityToken, email, fullName } = appleAuthRequestResponse;
+    const {identityToken, email, fullName} = appleAuthRequestResponse;
 
     if (identityToken) {
-      const { isSignedIn, nextStep } = await signIn({
+      const {isSignedIn, nextStep} = await signIn({
         username: email || '',
         password: identityToken,
         options: {
-          authFlowType: "USER_SRP_AUTH"
-        }
+          authFlowType: 'USER_SRP_AUTH',
+        },
       });
 
       if (isSignedIn) {
@@ -165,7 +176,7 @@ export const handleAppleSignIn = async (navigation: AuthNavProp) => {
 
         const user = convertAuthUserToUser(authUser);
         useUserStore.getState().setUserDetails(user);
-        navigation.navigate('CompleteProfile', { email: email || '' });
+        navigation.navigate('CompleteProfile', {email: email || ''});
       } else {
         console.log('Additional steps required:', nextStep);
       }
@@ -204,15 +215,15 @@ export const handleLogin = async (
 
     if (isSignedIn) {
       console.log('User signed in successfully');
-      const { tokens } = await fetchAuthSession();
+      const {tokens} = await fetchAuthSession();
       const accessToken = tokens?.accessToken?.toString();
       console.log('Access token handleLogin:', accessToken);
-    
+
       if (accessToken) {
         await SecureStore.setItemAsync('accessToken', accessToken);
       }
       const userDetails = await fetchUserDetails(username, accessToken || '');
-    
+
       const isAdmin = [
         'pope.dawson@gmail.com',
         'bogdan.georgian370@gmail.com',
@@ -230,7 +241,7 @@ export const handleLogin = async (
       } catch (error) {
         console.error('Failed to register device:', error);
       }
-    
+
       useUserStore.getState().setUserDetails({
         email: userDetails.email,
         username: userDetails.username,

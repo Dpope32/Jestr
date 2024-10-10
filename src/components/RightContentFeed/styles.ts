@@ -11,9 +11,7 @@ const styles = StyleSheet.create({
     // borderWidth: 2,
     // borderColor: 'red',
   },
-  profilePicContainer: {
-
-  },
+  profilePicContainer: {},
   profilePic: {
     width: 40,
     height: 40,
@@ -40,6 +38,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginTop: 4,
+  },
+  overlay: {
+    // top: '50%',
+    backgroundColor: 'red',
+  },
+  gradient: {
+    alignItems: 'center',
   },
 });
 

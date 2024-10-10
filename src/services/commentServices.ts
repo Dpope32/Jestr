@@ -2,6 +2,7 @@ import axios from 'axios';
 // import {CommentType} from '../components/Modals/CommentFeed';
 import {User, CommentType} from '../types/types';
 import {API_URL} from './config';
+import {Badge} from '../stores/badgeStore';
 
 // Define specific API endpoints
 const POST_COMMENT_ENDPOINT = `${API_URL}/postComment`;
@@ -28,7 +29,7 @@ export const postComment = async (
   text: string,
   user: User,
   parentCommentID?: string,
-): Promise<{ comment: CommentType; badgeEarned: Badge | null }> => {
+): Promise<{comment: CommentType; badgeEarned: Badge | null}> => {
   const commentData = {
     operation: 'postComment',
     memeID,
@@ -58,10 +59,10 @@ export const postComment = async (
       console.error('Failed to post comment:', data.message);
       throw new Error(data.message);
     }
-    return { 
-      comment: data.data.comment, 
-      badgeEarned: data.data.badgeEarned 
-    }
+    return {
+      comment: data.data.comment,
+      badgeEarned: data.data.badgeEarned,
+    };
   } catch (error) {
     console.error('Error in postComment:', error);
     throw error;
@@ -221,7 +222,7 @@ export const deleteComment = async (
     const data = await response.json();
 
     // Log the response data
-  //  logResponse('deleteComment', response, data);
+    //  logResponse('deleteComment', response, data);
 
     if (!response.ok) {
       console.error('Failed to delete comment:', data.message);
@@ -252,7 +253,7 @@ export const replyToComment = async (
 
   try {
     // Log the request data
-  //  logRequest('replyToComment', requestBody);
+    //  logRequest('replyToComment', requestBody);
 
     const response = await fetch(REPLY_TO_COMMENT_ENDPOINT, {
       method: 'POST',
