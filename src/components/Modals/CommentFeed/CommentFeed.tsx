@@ -8,7 +8,7 @@ import { useUserStore } from '../../../stores/userStore';
 import Comment from './Comment';
 import { CommentType } from '../../../types/types';
 import useCommentFeed from './useCommentFeed';
-import { ProfileImage } from '../../../types/types';
+import { ProfileImage, User } from '../../../types/types';
 import styles from './styles';
 
 interface CommentFeedProps {
@@ -18,6 +18,7 @@ interface CommentFeedProps {
   userEmail: string;
   toggleCommentFeed: () => void;
   commentsCount: number;
+  user?: User | null; // Add this line
 }
 
 type SortOption = 'newest' | 'oldest' | 'mostLiked';

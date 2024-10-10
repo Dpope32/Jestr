@@ -68,36 +68,11 @@ const CompleteProfileScreen: React.FC = () => {
     checkMediaPermission();
   }, []);
 
-  const handleDarkModeToggle = () => {
+ const handleDarkModeToggle = () => {
     const newMode = !darkMode;
     setDarkModeLocal(newMode);
     toggleDarkMode();
     setDarkMode?.(newMode);
-  };
-
-  const handlePushNotificationsToggle = async (value: boolean) => {
-    setIsPushEnabled(value);
-    setNotificationPreferences({ pushEnabled: value });
-
-    if (value) {
-      // Register for push notifications
-      const pushToken = await PushNotificationManager.registerForPushNotificationsAsync();
-      if (pushToken) {
-        // Optionally, send the pushToken to your backend server here
-        console.log('Push Token:', pushToken);
-      } else {
-        Alert.alert(
-          'Push Notifications',
-          'Failed to register for push notifications. Please try again.',
-          [{ text: 'OK' }],
-        );
-      }
-    } else {
-      // Unregister from push notifications
-      await PushNotificationManager.unregisterPushNotificationsAsync();
-      // Optionally, notify your backend server to disable push notifications for this user
-      console.log('Push notifications have been disabled.');
-    }
   };
 
   const handleImagePick = useCallback(async (type: 'header' | 'profile') => {
@@ -124,7 +99,6 @@ const CompleteProfileScreen: React.FC = () => {
         likesPublic: privacySafety.likesPublic,
         allowDMsFromEveryone: privacySafety.allowDMsFromEveryone,
       });
-      setNotificationPreferences({ pushEnabled: isPushEnabled });
 
       await handleCompleteProfile(
         email,
@@ -137,7 +111,7 @@ const CompleteProfileScreen: React.FC = () => {
         {
           darkMode,
           likesPublic: privacySafety.likesPublic,
-          notificationsEnabled: isPushEnabled,
+          notificationsEnabled: pushEnabled, // Use pushEnabled from store
         },
       );
 
@@ -242,36 +216,25 @@ const CompleteProfileScreen: React.FC = () => {
               />
             </View>
 
-            <View style={styles.preferenceItem}>
-              <FontAwesomeIcon icon={faBell} size={24} color="#1bd40b" />
-              <Text style={styles.preferenceText}>Push Notifications</Text>
-              <Switch
-                value={isPushEnabled}
-                onValueChange={handlePushNotificationsToggle}
-                trackColor={{ false: '#767577', true: '#1bd40b' }}
-                thumbColor={isPushEnabled ? '#f4f3f4' : '#f4f3f4'}
-                accessibilityLabel="Push Notifications Switch"
-                accessibilityRole="switch"
-              />
-            </View>
-
-            <TouchableOpacity
-              onPress={handleCompleteProfileButton}
-              style={styles.button}
-              disabled={isLoading || !displayName.trim() || !username.trim()}
-              accessibilityLabel="Complete Profile Button"
-              accessibilityRole="button"
-            >
-              <LinearGradient
-                colors={['#002400', '#00e100']}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={styles.gradient}
-              >
-                <Text style={styles.buttonText}>Complete Profile</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            {/* Removed Push Notifications Switch */}
           </View>
+
+          <TouchableOpacity
+            onPress={handleCompleteProfileButton}
+            style={styles.button}
+            disabled={isLoading || !displayName.trim() || !username.trim()}
+            accessibilityLabel="Complete Profile Button"
+            accessibilityRole="button"
+          >
+            <LinearGradient
+              colors={['#002400', '#00e100']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.gradient}
+            >
+              <Text style={styles.buttonText}>Complete Profile</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
           {error && <Text style={styles.errorText}>{error}</Text>}
         </View>

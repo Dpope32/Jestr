@@ -7,18 +7,19 @@ import {
   Animated,
   TouchableOpacity,
   Image,
-  ScrollView,
   StyleSheet,
   Dimensions,
+  SectionList,
+  SectionListRenderItem,
+  SectionListData,
 } from 'react-native';
-import { FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTrophy, faArrowLeft, faLock } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../../theme/ThemeContext';
 import { getStyles, getColors } from './Badges.styles';
-import { useBadgeStore, getBadgeStorageContents } from '../../../stores/badgeStore';
+import { useBadgeStore, getBadgeStorageContents, Badge } from '../../../stores/badgeStore';
 import { AppNavProp } from '../../../navigation/NavTypes/RootNavTypes';
 import * as Progress from 'react-native-progress';
 import { useUserStore } from '../../../stores/userStore';
@@ -31,6 +32,8 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchUserBadges } from '../../../services/badgeServices';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+type SectionData = SectionListData<Badge>;
 
 const Badges: React.FC = () => {
   const navigation = useNavigation<AppNavProp>();
@@ -50,16 +53,16 @@ const Badges: React.FC = () => {
     ? { uri: user.profilePic }
     : require('../../../assets/images/Jestr.jpg');
 
-  const { isLoading, isError, error } = useQuery({
+  const { isLoading, isError, error } = useQuery<Badge[]>({
     queryKey: ['userBadges', user.email],
     queryFn: async () => {
-      const badges = await fetchUserBadges(user.email);
-      useBadgeStore.getState().setBadges(badges);
-      return badges;
+      const fetchedBadges = await fetchUserBadges(user.email);
+      useBadgeStore.getState().setBadges(fetchedBadges);
+      return fetchedBadges;
     },
     enabled: !!user.email,
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 10, // Replaced 'cacheTime' with 'gcTime'
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
   });
 
   useEffect(() => {
@@ -100,6 +103,86 @@ const Badges: React.FC = () => {
 
   const pinnedBadge = badges.find((badge) => badge.id === pinnedBadgeId);
 
+  // Prepare sections for SectionList
+  const sections: SectionData[] = [];
+
+  if (earnedBadges.length > 0) {
+    sections.push({
+      title: 'Earned Badges',
+      data: earnedBadges,
+    });
+  }
+
+  if (unearnedBadges.length > 0) {
+    sections.push({
+      title: 'Badges to Earn',
+      data: unearnedBadges,
+    });
+  }
+
+  // Correctly type the renderSectionHeader
+  const renderSectionHeader = ({ section }: { section: SectionData }) => {
+    return <Text style={styles.sectionTitle}>{section.title}</Text>;
+  };
+
+  // Correctly type the renderItem
+  const renderItem: SectionListRenderItem<Badge> = ({ item, section }) => {
+    if (section.title === 'Earned Badges') {
+      return (
+        <BadgeCard
+          badge={item}
+          badgeImage={badgeImages[item.type]}
+          isDarkMode={isDarkMode}
+        />
+      );
+    } else if (section.title === 'Badges to Earn') {
+      const storedBadge = badges.find((b) => b.type === item.type);
+      const progressValue = storedBadge ? storedBadge.progress : 0;
+
+      return (
+        <View key={item.id} style={styles.badgeTableRow}>
+          <View style={styles.badgeImageContainer}>
+            <Image
+              source={badgeImages[item.type]}
+              style={styles.badgeTableImage}
+              resizeMode="contain"
+            />
+            <View style={styles.badgeOverlay} />
+            <FontAwesomeIcon
+              icon={faLock}
+              size={24}
+              color={COLORS.white}
+              style={styles.lockIcon}
+            />
+          </View>
+          <View style={styles.badgeTableInfo}>
+            <Text style={styles.badgeTableTitle}>{item.title}</Text>
+            <Text style={styles.badgeTableDescription}>{item.description}</Text>
+            <View style={styles.badgeProgressContainer}>
+              <Progress.Bar
+                progress={progressValue / 100}
+                width={null}
+                height={10}
+                color={COLORS.primary}
+                unfilledColor={COLORS.lightGray}
+                borderWidth={0}
+                borderRadius={5}
+                style={styles.badgeProgressBar}
+              />
+              <Text style={styles.badgeTableProgressText}>
+                {progressValue}%
+              </Text>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    return null;
+  };
+
+  const keyExtractor = (item: Badge) => item.id;
+
   return (
     <View style={styles.container}>
       {isDarkMode ? (
@@ -137,113 +220,50 @@ const Badges: React.FC = () => {
           </View>
         </BlurView>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollViewContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.profileSection}>
-            <View style={styles.profileRow}>
-              <Image source={imgSrc} style={styles.profileImage} />
-              <Text style={styles.profileActiveDays}>Joined: {createdAtDate}</Text>
-            </View>
-            <View style={styles.progressContainer}>
-              <Text style={styles.progressText}>
-                Badges Earned: {earnedBadgesCount} / {totalBadges}
-              </Text>
-              <Progress.Bar
-                progress={progress}
-                width={null}
-                height={10}
-                color={COLORS.primary}
-                unfilledColor={COLORS.lightGray}
-                borderWidth={0}
-                borderRadius={5}
-                style={styles.progressBar}
-              />
-            </View>
-            {pinnedBadge && (
-              <View style={styles.pinnedBadgeRow}>
-                <Text style={styles.pinnedBadgeLabel}>Pinned Badge:</Text>
-                <View style={styles.pinnedBadge}>
-                  <Image
-                    source={badgeImages[pinnedBadge.type]}
-                    style={styles.pinnedBadgeImage}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.pinnedBadgeName}>{pinnedBadge.title}</Text>
-                </View>
+        <SectionList
+          sections={sections}
+          keyExtractor={keyExtractor}
+          renderSectionHeader={renderSectionHeader}
+          renderItem={renderItem}
+          ListHeaderComponent={
+            <View style={styles.profileSection}>
+              <View style={styles.profileRow}>
+                <Image source={imgSrc} style={styles.profileImage} />
+                <Text style={styles.profileActiveDays}>Joined: {createdAtDate}</Text>
               </View>
-            )}
-          </View>
-
-          <Text style={styles.sectionTitle}>Earned Badges</Text>
-          {earnedBadges.length > 0 ? (
-            <View style={styles.badgesContainer}>
-              <FlatList
-                data={earnedBadges}
-                renderItem={({ item }) => (
-                  <BadgeCard
-                    badge={item}
-                    badgeImage={badgeImages[item.type]}
-                    isDarkMode={isDarkMode}
-                  />
-                )}
-                keyExtractor={(item) => item.id}
-                numColumns={3}
-                columnWrapperStyle={styles.badgesRow}
-              />
-            </View>
-          ) : (
-            <View style={styles.noBadgesContainer}>
-              <Text style={styles.noBadgesText}>No badges earned yet. Keep going!</Text>
-            </View>
-          )}
-
-          <Text style={styles.sectionTitle}>Badges to Earn</Text>
-          {unearnedBadges.map((badge) => {
-            // Find if the badge exists in the store to get its progress
-            const storedBadge = badges.find((b) => b.type === badge.type);
-            const progressValue = storedBadge ? storedBadge.progress : 0;
-
-            return (
-              <View key={badge.id} style={styles.badgeTableRow}>
-                <View style={styles.badgeImageContainer}>
-                  <Image
-                    source={badgeImages[badge.type]}
-                    style={styles.badgeTableImage}
-                    resizeMode="contain"
-                  />
-                  <View style={styles.badgeOverlay} />
-                  <FontAwesomeIcon
-                    icon={faLock}
-                    size={24}
-                    color={COLORS.white}
-                    style={styles.lockIcon}
-                  />
-                </View>
-                <View style={styles.badgeTableInfo}>
-                  <Text style={styles.badgeTableTitle}>{badge.title}</Text>
-                  <Text style={styles.badgeTableDescription}>{badge.description}</Text>
-                  <View style={styles.badgeProgressContainer}>
-                    <Progress.Bar
-                      progress={progressValue / 100}
-                      width={null}
-                      height={10}
-                      color={COLORS.primary}
-                      unfilledColor={COLORS.lightGray}
-                      borderWidth={0}
-                      borderRadius={5}
-                      style={styles.badgeProgressBar}
+              <View style={styles.progressContainer}>
+                <Text style={styles.progressText}>
+                  Badges Earned: {earnedBadgesCount} / {totalBadges}
+                </Text>
+                <Progress.Bar
+                  progress={progress}
+                  width={null}
+                  height={10}
+                  color={COLORS.primary}
+                  unfilledColor={COLORS.lightGray}
+                  borderWidth={0}
+                  borderRadius={5}
+                  style={styles.progressBar}
+                />
+              </View>
+              {pinnedBadge && (
+                <View style={styles.pinnedBadgeRow}>
+                  <Text style={styles.pinnedBadgeLabel}>Pinned Badge:</Text>
+                  <View style={styles.pinnedBadge}>
+                    <Image
+                      source={badgeImages[pinnedBadge.type]}
+                      style={styles.pinnedBadgeImage}
+                      resizeMode="contain"
                     />
-                    <Text style={styles.badgeTableProgressText}>
-                      {progressValue}%
-                    </Text>
+                    <Text style={styles.pinnedBadgeName}>{pinnedBadge.title}</Text>
                   </View>
                 </View>
-              </View>
-            );
-          })}
-        </ScrollView>
+              )}
+            </View>
+          }
+          ListFooterComponent={<View style={{ height: 20 }} />} // Optional spacing at the bottom
+          showsVerticalScrollIndicator={false}
+        />
       </Animated.View>
     </View>
   );
@@ -277,27 +297,37 @@ const BadgesSkeletonLoader: React.FC<BadgesSkeletonLoaderProps> = ({ isDarkMode 
           </View>
         </BlurView>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollViewContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.skeletonProfileSection}>
-            <View style={styles.skeletonProfileImage} />
-            <View style={styles.skeletonProfileInfo} />
-          </View>
-
-          <View style={styles.skeletonSectionTitle} />
-          {[1, 2, 3, 4, 5].map((_, index) => (
-            <View key={index} style={styles.skeletonBadgeRow}>
-              <View style={styles.skeletonBadgeImage} />
-              <View style={styles.skeletonBadgeInfo}>
-                <View style={styles.skeletonBadgeTitle} />
-                <View style={styles.skeletonBadgeDescription} />
-                <View style={styles.skeletonProgressBar} />
+        <SectionList
+          sections={[
+            {
+              title: '',
+              data: [], // No data for skeleton loader
+            },
+          ]}
+          renderSectionHeader={() => null}
+          renderItem={() => (
+            <>
+              <View style={styles.skeletonProfileSection}>
+                <View style={styles.skeletonProfileImage} />
+                <View style={styles.skeletonProfileInfo} />
               </View>
-            </View>
-          ))}
-        </ScrollView>
+
+              <View style={styles.skeletonSectionTitle} />
+              {[1, 2, 3, 4, 5].map((_, index) => (
+                <View key={index} style={styles.skeletonBadgeRow}>
+                  <View style={styles.skeletonBadgeImage} />
+                  <View style={styles.skeletonBadgeInfo}>
+                    <View style={styles.skeletonBadgeTitle} />
+                    <View style={styles.skeletonBadgeDescription} />
+                    <View style={styles.skeletonProgressBar} />
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
+          keyExtractor={(_, index) => `skeleton-${index}`}
+          showsVerticalScrollIndicator={false}
+        />
       </View>
     </View>
   );

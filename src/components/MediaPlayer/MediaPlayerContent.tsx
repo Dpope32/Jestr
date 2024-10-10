@@ -1,20 +1,13 @@
 import React, { useCallback, useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import {
-  faThumbsUp,
-  faComment,
-  faShare,
-  faPlus,
-  IconDefinition,
-} from '@fortawesome/free-solid-svg-icons';
+import { faThumbsUp, faComment, faShare, faPlus, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { BlurView } from 'expo-blur';
 import { Animated } from 'react-native';
 import styles from './MPContent.styles';
 import { IconsAndContentProps, ShareType } from '../../types/types';
 import { COLORS } from '../../theme/theme';
 import ShareModal from '../Modals/ShareModal';
-import CommentFeed from '../Modals/CommentFeed/CommentFeed';
 
 interface IconButtonProps {
   icon: IconDefinition;
@@ -31,8 +24,6 @@ const IconButton: React.FC<IconButtonProps> = React.memo(
     count,
     onPress,
     color = COLORS.primary,
-    memeID,
-    isDimmed,
   }) => {
     return (
       <TouchableOpacity
@@ -68,9 +59,7 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(
     friends,
     currentMedia,
     isDimmed,
-    isCommentFeedVisible,
     toggleCommentFeed,
-    user,
   }) => {
     const [isShareModalVisible, setShareModalVisible] = useState(false);
     const isActive = index === currentIndex;
@@ -186,15 +175,6 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(
                 onPress={handleSharePress}
               />
             </View>
-            {isCommentFeedVisible && (
-          <CommentFeed
-            memeID={memeID}
-            profilePicUrl={user?.profilePic || ''}
-            user={user}
-            isCommentFeedVisible={isCommentFeedVisible}
-            toggleCommentFeed={toggleCommentFeed}
-          />
-        )}
           </BlurView>
         </Animated.View>
 
@@ -205,7 +185,6 @@ export const IconsAndContent: React.FC<IconsAndContentProps> = React.memo(
           friends={friends || []}
           onShare={handleShare}
           currentMedia={currentMedia}
-          user={user}
         />
       </>
     );

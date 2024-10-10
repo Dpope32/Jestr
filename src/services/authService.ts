@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
-import {Alert, Platform} from 'react-native';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types/types';
 import { 
@@ -13,11 +13,12 @@ import {
   confirmResetPassword,
 } from '@aws-amplify/auth';
 import appleAuth, { AppleRequestScope, AppleRequestOperation } from '@invertase/react-native-apple-authentication';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { GoogleSignin  } from '@react-native-google-signin/google-signin';
+import { useNotificationStore } from '../stores/notificationStore';
 
 // Initialize Google Sign-In
 GoogleSignin.configure({
-  webClientId: '667171669430-pcji1fi3ompmhtfr0uv2peh9qeqmo0rl.apps.googleusercontent.com', // Web client ID
+  webClientId: '667171669430-pcji1fi3ompmhtfr0uv2peh9qeqmo0rl.apps.googleusercontent.com', // Web client ID ?????????
   offlineAccess: true,
 });
 import { useUserStore } from '../stores/userStore';
@@ -44,11 +45,11 @@ export const registerDevice = async (userID: string) => {
       return;
     }
 
-    const {status: existingStatus} = await Notifications.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
-      const {status} = await Notifications.requestPermissionsAsync();
+      const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
 
@@ -57,12 +58,17 @@ export const registerDevice = async (userID: string) => {
         'Permissions Required',
         'Enable notifications to stay updated with the latest features.',
       );
+      // Replace setPushEnabled with setNotificationPreferences
+      useNotificationStore.getState().setNotificationPreferences({ pushEnabled: false });
       return;
     }
 
     // Get the Expo Push Token
     const tokenData = await Notifications.getExpoPushTokenAsync();
     const expoPushToken = tokenData.data;
+    if (expoPushToken) {
+      console.log('Expo Push Token:', expoPushToken);
+    }
     await AsyncStorage.setItem('expoPushToken', expoPushToken);
 
     // Send the token to your backend
@@ -85,13 +91,16 @@ export const registerDevice = async (userID: string) => {
 
     if (response.ok) {
       console.log('Device registered successfully:', responseData);
-      //Alert.alert('Success', 'Device registered for notifications.');
+      // Replace setPushEnabled with setNotificationPreferences
+      useNotificationStore.getState().setNotificationPreferences({ pushEnabled: true });
     } else {
       console.error('Failed to register device:', responseData);
       Alert.alert(
         'Registration Failed',
         responseData.message || 'Please try again.',
       );
+      // Replace setPushEnabled with setNotificationPreferences
+      useNotificationStore.getState().setNotificationPreferences({ pushEnabled: false });
     }
 
     return responseData;
@@ -101,9 +110,12 @@ export const registerDevice = async (userID: string) => {
       'Registration Error',
       error.message || 'An unknown error occurred.',
     );
+    // Replace setPushEnabled with setNotificationPreferences
+    useNotificationStore.getState().setNotificationPreferences({ pushEnabled: false });
     throw error;
   }
 };
+
 
 export const handleGoogleSignIn = async (navigation: AuthNavProp) => {
   try {
@@ -128,7 +140,6 @@ export const handleGoogleSignIn = async (navigation: AuthNavProp) => {
     Alert.alert('Google Sign-In Error', error.message || 'An error occurred');
   }
 };
-
 
 export const handleAppleSignIn = async (navigation: AuthNavProp) => {
   try {
@@ -167,14 +178,12 @@ export const handleAppleSignIn = async (navigation: AuthNavProp) => {
   }
 };
 
-
-
 export const handleLogin = async (
   username: string,
   password: string,
   navigation: AuthNavProp,
 ) => {
-  console.log('Logging in with username:', username);
+  //console.log('Logging in with username:', username);
   // console.log('Logging in with password:', password);
   try {
     await signOut();
@@ -195,15 +204,15 @@ export const handleLogin = async (
 
     if (isSignedIn) {
       console.log('User signed in successfully');
-      const {tokens} = await fetchAuthSession();
+      const { tokens } = await fetchAuthSession();
       const accessToken = tokens?.accessToken?.toString();
       console.log('Access token handleLogin:', accessToken);
-
+    
       if (accessToken) {
         await SecureStore.setItemAsync('accessToken', accessToken);
       }
       const userDetails = await fetchUserDetails(username, accessToken || '');
-
+    
       const isAdmin = [
         'pope.dawson@gmail.com',
         'bogdan.georgian370@gmail.com',
@@ -212,6 +221,7 @@ export const handleLogin = async (
         'bogdan.georgian001@gmail.com',
         'popebardy@gmail.com',
         'tpope918@aol.com',
+        'poperevo@gmail.com',
       ].includes(userDetails.email);
 
       // await AsyncStorage.setItem('isAdmin', JSON.stringify(isAdmin));
@@ -220,6 +230,7 @@ export const handleLogin = async (
       } catch (error) {
         console.error('Failed to register device:', error);
       }
+    
       useUserStore.getState().setUserDetails({
         email: userDetails.email,
         username: userDetails.username,
