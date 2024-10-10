@@ -96,6 +96,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   overlay: {
+    position: 'absolute',
     top: '50%',
     // backgroundColor: 'red',
   },

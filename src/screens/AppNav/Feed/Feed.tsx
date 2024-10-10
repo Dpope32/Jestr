@@ -304,8 +304,14 @@ const Feed: React.FC = () => {
           onLongPress={handleLongPress}
           style={{
             height: screenHeight,
+            // borderWidth: 1,
+            // borderColor: 'yellow',
           }}>
           {loadMedia()}
+          <LinearGradient
+            pointerEvents="none"
+            colors={['transparent', 'rgba(0,0,0,0.9)']}
+            style={[StyleSheet.absoluteFill, styles.overlay]}></LinearGradient>
         </TouchableOpacity>
       );
     },
@@ -367,31 +373,26 @@ const Feed: React.FC = () => {
       />
 
       {/* MEME DETAILS */}
-      <LinearGradient
-        pointerEvents="box-none"
-        colors={['transparent', 'rgba(0,0,0,0.9)']}
-        style={[StyleSheet.absoluteFillObject, styles.overlay]}>
-        <LeftContentFeed
-          username={memes[lastViewedIndex]?.username ?? ''}
-          caption={memes[lastViewedIndex]?.caption ?? ''}
-          uploadTimestamp={memes[lastViewedIndex]?.uploadTimestamp ?? ''}
-        />
+      <LeftContentFeed
+        username={memes[lastViewedIndex]?.username ?? ''}
+        caption={memes[lastViewedIndex]?.caption ?? ''}
+        uploadTimestamp={memes[lastViewedIndex]?.uploadTimestamp ?? ''}
+      />
 
-        <RightContentFeed
-          isFollowing={memes[lastViewedIndex]?.isFollowed}
-          likesCount={memes[lastViewedIndex]?.likeCount}
-          sharesCount={memes[lastViewedIndex]?.shareCount}
-          commentsCount={memes[lastViewedIndex]?.commentCount}
-          userImgSrc={memes[lastViewedIndex]?.profilePicUrl}
-          memeUserEmail={memes[lastViewedIndex]?.email}
-          userEmail={userEmail}
-          memeUsername={memes[lastViewedIndex]?.username}
-          currentMemeID={memes[lastViewedIndex]?.memeID}
-          likedByUser={memes[lastViewedIndex]?.likedByUser ?? false}
-          onShare={() => setShowShareModal(true)}
-          setIsCommentFeedVisible={setIsCommentFeedVisible}
-        />
-      </LinearGradient>
+      <RightContentFeed
+        isFollowing={memes[lastViewedIndex]?.isFollowed}
+        likesCount={memes[lastViewedIndex]?.likeCount}
+        sharesCount={memes[lastViewedIndex]?.shareCount}
+        commentsCount={memes[lastViewedIndex]?.commentCount}
+        userImgSrc={memes[lastViewedIndex]?.profilePicUrl}
+        memeUserEmail={memes[lastViewedIndex]?.email}
+        userEmail={userEmail}
+        memeUsername={memes[lastViewedIndex]?.username}
+        currentMemeID={memes[lastViewedIndex]?.memeID}
+        likedByUser={memes[lastViewedIndex]?.likedByUser ?? false}
+        onShare={() => setShowShareModal(true)}
+        setIsCommentFeedVisible={setIsCommentFeedVisible}
+      />
 
       {/* COMMENT FEED MODAL */}
       {isCommentFeedVisible && (

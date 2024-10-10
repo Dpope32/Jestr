@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@aws-amplify/auth": "^6.5.0",
-    "@aws-amplify/react-native": "^1.1.5",
+    "@aws-amplify/react-native": "^1.1.6",
     "@azure/core-asynciterator-polyfill": "^1.0.2",
     "@dev-plugins/react-query": "^0.0.7",
     "@expo-google-fonts/inter": "^0.2.3",
