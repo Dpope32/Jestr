@@ -102,7 +102,7 @@ export const pruneCache = (
 
     queryClient.setQueryData(queryKey, newQueryData);
 
-    console.log('Cache pruned. Pages kept:', pagesToKeep.length);
+  //  console.log('Cache pruned. Pages kept:', pagesToKeep.length);
   }
 };
 

@@ -41,8 +41,8 @@ export const getStyles = (isDarkMode: boolean) => {
       height: SCREEN_HEIGHT,
       backgroundColor: COLORS.background,
     },
-     // Styles for the badge table
-     badgeTableRow: {
+    // Styles for the badge table
+    badgeTableRow: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: COLORS.cardBackground,
@@ -66,7 +66,7 @@ export const getStyles = (isDarkMode: boolean) => {
     badgeTableImage: {
       width: 70,
       height: 70,
-      opacity: 0.5,
+      opacity: 0.8, // Increased opacity for better visibility
     },
     badgeOverlay: {
       position: 'absolute',
@@ -84,8 +84,10 @@ export const getStyles = (isDarkMode: boolean) => {
       paddingHorizontal: 10,
     },
     badgesRow: {
-      justifyContent: 'space-around',
-      marginBottom: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginHorizontal: 20,
+      marginBottom: 15,
     },
     noBadgesContainer: {
       height: 200,
@@ -106,7 +108,7 @@ export const getStyles = (isDarkMode: boolean) => {
     },
     badgeTableTitle: {
       fontSize: 18,
-      fontWeight: '700',
+      fontWeight: 'bold', // Made text bold for better emphasis
       color: COLORS.textPrimary,
     },
     badgeTableDescription: {
@@ -262,8 +264,14 @@ export const getStyles = (isDarkMode: boolean) => {
     // Badge styles
     badgeContainer: {
       margin: 5,
-      width: (SCREEN_WIDTH - 40) / 3,
+      width: (SCREEN_WIDTH - 80) / 3, // Adjusted for margins
       alignItems: 'center',
+    },
+    earnedBadgeContainer: {
+      margin: 5,
+      width: (SCREEN_WIDTH - 80) / 3, // Adjusted for margins
+      alignItems: 'center',
+      flexDirection: 'column',
     },
     badgeCard: {
       width: '100%',
@@ -342,94 +350,94 @@ export const getStyles = (isDarkMode: boolean) => {
     unearnedBadge: {
       opacity: 0.5,
     },
-        // Skeleton styles
-        skeletonBackButton: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: COLORS.skeletonBackground,
-        },
-        skeletonHeaderTitle: {
-          width: 150,
-          height: 30,
-          borderRadius: 15,
-          backgroundColor: COLORS.skeletonBackground,
-        },
-        skeletonTrophy: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: COLORS.skeletonBackground,
-        },
-        skeletonProfileSection: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          padding: 20,
-          backgroundColor: COLORS.cardBackground,
-          marginHorizontal: 20,
-          borderRadius: 15,
-          marginTop: 120,
-        },
-        skeletonProfileImage: {
-          width: 70,
-          height: 70,
-          borderRadius: 35,
-          backgroundColor: COLORS.skeletonBackground,
-        },
-        skeletonProfileInfo: {
-          flex: 1,
-          marginLeft: 20,
-          height: 60,
-          borderRadius: 8,
-          backgroundColor: COLORS.skeletonBackground,
-        },
-        skeletonSectionTitle: {
-          width: 150,
-          height: 30,
-          borderRadius: 15,
-          backgroundColor: COLORS.skeletonBackground,
-          marginHorizontal: 20,
-          marginTop: 30,
-          marginBottom: 15,
-        },
-        skeletonBadgeRow: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: COLORS.cardBackground,
-          padding: 15,
-          marginHorizontal: 20,
-          borderRadius: 15,
-          marginBottom: 15,
-        },
-        skeletonBadgeImage: {
-          width: 70,
-          height: 70,
-          borderRadius: 35,
-          backgroundColor: COLORS.skeletonBackground,
-        },
-        skeletonBadgeInfo: {
-          flex: 1,
-          marginLeft: 20,
-        },
-        skeletonBadgeTitle: {
-          width: '60%',
-          height: 20,
-          borderRadius: 10,
-          backgroundColor: COLORS.skeletonBackground,
-          marginBottom: 10,
-        },
-        skeletonBadgeDescription: {
-          width: '80%',
-          height: 15,
-          borderRadius: 8,
-          backgroundColor: COLORS.skeletonBackground,
-          marginBottom: 10,
-        },
-        skeletonProgressBar: {
-          width: '100%',
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: COLORS.skeletonBackground,
-        },
+    // Skeleton styles
+    skeletonBackButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: COLORS.skeletonBackground,
+    },
+    skeletonHeaderTitle: {
+      width: 150,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: COLORS.skeletonBackground,
+    },
+    skeletonTrophy: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: COLORS.skeletonBackground,
+    },
+    skeletonProfileSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 20,
+      backgroundColor: COLORS.cardBackground,
+      marginHorizontal: 20,
+      borderRadius: 15,
+      marginTop: 120,
+    },
+    skeletonProfileImage: {
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      backgroundColor: COLORS.skeletonBackground,
+    },
+    skeletonProfileInfo: {
+      flex: 1,
+      marginLeft: 20,
+      height: 60,
+      borderRadius: 8,
+      backgroundColor: COLORS.skeletonBackground,
+    },
+    skeletonSectionTitle: {
+      width: 150,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: COLORS.skeletonBackground,
+      marginHorizontal: 20,
+      marginTop: 30,
+      marginBottom: 15,
+    },
+    skeletonBadgeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: COLORS.cardBackground,
+      padding: 15,
+      marginHorizontal: 20,
+      borderRadius: 15,
+      marginBottom: 15,
+    },
+    skeletonBadgeImage: {
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      backgroundColor: COLORS.skeletonBackground,
+    },
+    skeletonBadgeInfo: {
+      flex: 1,
+      marginLeft: 20,
+    },
+    skeletonBadgeTitle: {
+      width: '60%',
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: COLORS.skeletonBackground,
+      marginBottom: 10,
+    },
+    skeletonBadgeDescription: {
+      width: '80%',
+      height: 15,
+      borderRadius: 8,
+      backgroundColor: COLORS.skeletonBackground,
+      marginBottom: 10,
+    },
+    skeletonProgressBar: {
+      width: '100%',
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: COLORS.skeletonBackground,
+    },
   });
 };

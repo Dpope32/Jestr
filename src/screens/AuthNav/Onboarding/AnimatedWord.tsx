@@ -30,7 +30,7 @@ const AnimatedWord: React.FC<AnimatedWordProps> = ({
 
       Animated.timing(opacityAnim, {
         toValue: 1,
-        duration: 500,
+        duration: 2000,
         delay,
         useNativeDriver: true,
       }).start();

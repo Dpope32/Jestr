@@ -23,6 +23,7 @@ interface BadgeStore {
   badges: Badge[];
   pinnedBadgeId: string | null;
   likeCount: number;
+  isBadgesLoaded: boolean;
   downloadCount: number;
   shareCount: number;
   commentCount: number;
@@ -59,15 +60,6 @@ const defaultBadges: Badge[] = [
     progress: 100,
     acquiredDate: new Date().toISOString(),
   },
-  //{
-  //  id: 'memeCollector',
-  //  type: 'memeCollector',
-  //  title: 'Meme Collector',
-  //  description: 'Collected a significant number of memes',
-  //  earned: true,
-  //  progress: 100,
- //   acquiredDate: new Date().toISOString(),
-  //},
   {
     id: 'trendSetter',
     type: 'trendSetter',
@@ -79,47 +71,6 @@ const defaultBadges: Badge[] = [
   },
 ];
 
-export interface Badge {
-  id: string;
-  type: BadgeType;
-  title: string;
-  description: string;
-  earned: boolean;
-  progress: number; // Progress as a percentage (0 to 100)
-  acquiredDate?: string;
-  holdersCount?: number;
-}
-
-interface BadgeStore {
-  badges: Badge[];
-  pinnedBadgeId: string | null;
-  likeCount: number;
-  downloadCount: number;
-  shareCount: number;
-  commentCount: number;
-  setBadges: (badges: Badge[]) => void;
-  earnBadge: (badge: Badge) => void;
-  updateBadgeProgress: (badgeId: string, progress: number) => void;
-  setPinnedBadge: (badgeId: string) => void;
-  syncBadgesWithAPI: (userEmail: string) => Promise<void>;
-  checkAndUpdateBadge: (userEmail: string, badgeType: BadgeType) => Promise<void>;
-  incrementLikeCount: (userEmail: string) => void;
-  decrementLikeCount: () => void;
-  incrementDownloadCount: (userEmail: string) => void;
-  decrementDownloadCount: () => void;
-  incrementShareCount: (userEmail: string) => void;
-  decrementShareCount: () => void;
-  incrementCommentCount: (userEmail: string) => void;
-  decrementCommentCount: () => void;
-  checkMemeLikerBadge: (userEmail: string) => Promise<void>;
-  checkMemeCollectorBadge: (userEmail: string) => Promise<void>;
-  checkViralSensationBadge: (userEmail: string) => Promise<void>;
-  checkSocialButterflyBadge: (userEmail: string) => Promise<void>;
-  checkCommentatorBadge: (userEmail: string) => Promise<void>;
-  checkMessengerBadge: (userEmail: string) => Promise<void>;
-  calculateAndUpdateProgress: () => void; // New function to calculate progress
-}
-
 export const useBadgeStore = create<BadgeStore>()(
   persist(
     (set, get) => ({
@@ -128,10 +79,11 @@ export const useBadgeStore = create<BadgeStore>()(
       likeCount: 0,
       downloadCount: 0,
       shareCount: 0,
+      isBadgesLoaded: false,
       commentCount: 0,
 
       setBadges: (fetchedBadges: Badge[]) => {
-        console.log('[BadgeStore] Setting badges:', fetchedBadges);
+        console.log('[BadgeStore] Setting badges ***********FROM SERVER **************:');
         set((state) => {
           const mergedBadges = [...defaultBadges];
           fetchedBadges.forEach((fetchedBadge) => {
@@ -146,7 +98,7 @@ export const useBadgeStore = create<BadgeStore>()(
           setTimeout(() => {
             get().calculateAndUpdateProgress();
           }, 0);
-          return { badges: mergedBadges };
+          return { badges: mergedBadges, isBadgesLoaded: true };
         });
       },
 
@@ -171,7 +123,7 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       updateBadgeProgress: (badgeId: string, progress: number) => {
-        console.log(`[BadgeStore] Updating badge progress. badgeId: ${badgeId}, progress: ${progress}`);
+        console.log(`[BadgeStore] Updating badge progress. badgeId: ${badgeId}, progress: ${progress} ********** NOT SERVER **********`);
         set((state) => ({
           badges: state.badges.map((b) =>
             b.id === badgeId ? { ...b, progress: Math.min(progress, 100) } : b
@@ -180,12 +132,13 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       setPinnedBadge: (badgeId: string) => {
-        console.log(`[BadgeStore] Setting pinnedBadgeId to: ${badgeId}`);
+        console.log(`[BadgeStore] Setting pinnedBadgeId to: ${badgeId} ********** NOT SERVER **********`);
         set({ pinnedBadgeId: badgeId });
       },
 
       // New function to calculate and update progress for all badges
       calculateAndUpdateProgress: () => {
+        console.log('[BadgeStore] Calculating and updating badge progress ********** NOT SERVER **********');
         const { badges, likeCount, downloadCount, shareCount, commentCount } = get();
         const updatedBadges = badges.map((badge) => {
           if (badge.earned) {
@@ -229,13 +182,15 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       syncBadgesWithAPI: async (userEmail: string) => {
-        console.log(`[BadgeStore] syncBadgesWithAPI called for userEmail: ${userEmail}`);
+        console.log(`[BadgeStore] syncBadgesWithAPI called for userEmail: ${userEmail} ********** TOUCHES SERVER **********`);
         try {
           const apiBadges = await fetchUserBadges(userEmail);
           console.log('[BadgeStore] Fetched badges from API:', apiBadges);
           get().setBadges(apiBadges);
         } catch (error) {
           console.error('[BadgeStore] Error syncing badges with API:', error);
+          // Even if there's an error, we set isBadgesLoaded to true to prevent infinite loading
+          set({ isBadgesLoaded: true });
           Toast.show({
             type: 'error',
             text1: 'Error',
@@ -247,30 +202,18 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       checkAndUpdateBadge: async (userEmail: string, badgeType: BadgeType) => {
-        console.log(`[BadgeStore] checkAndUpdateBadge called for userEmail: ${userEmail}, badgeType: ${badgeType}`);
+        console.log(`[BadgeStore] checkAndUpdateBadge called for userEmail: ${userEmail}, badgeType: ${badgeType} ********** NOT SERVER **********`);
         try {
-          // Check if the badge is one of the default earned badges
-          if (['insightfulUser', 'memeCollector', 'trendSetter'].includes(badgeType)) {
-            console.log(`[BadgeStore] Badge ${badgeType} is a default earned badge. No need to check.`);
-            return;
-          }
-
-          // Check if the badge exists in local state
           const existingBadge = get().badges.find((b) => b.type === badgeType);
-          console.log(`[BadgeStore] Existing badge for type ${badgeType}:`, existingBadge);
-
-          // If badge is already earned, no need to check eligibility
           if (existingBadge?.earned) {
-            console.log(`[BadgeStore] Badge of type ${badgeType} already earned.`);
+            console.log(`[BadgeStore] Badge of type ${badgeType} already earned. ********** NOT SERVER **********`);
             return;
           }
 
-          // Proceed to check eligibility via API
+          console.log(`[BadgeStore] Badge ${badgeType} not earned yet. Checking eligibility. ********** TOUCHES SERVER **********`);
           const eligibleBadgeType = await checkBadgeEligibility(userEmail, badgeType);
-          console.log(`[BadgeStore] Eligible badgeType returned from API: ${eligibleBadgeType}`);
           if (eligibleBadgeType) {
             const awardedBadge = await awardBadge(userEmail, eligibleBadgeType);
-            console.log(`[BadgeStore] Awarded badge:`, awardedBadge);
             if (awardedBadge) {
               get().earnBadge(awardedBadge);
               Toast.show({
@@ -280,6 +223,7 @@ export const useBadgeStore = create<BadgeStore>()(
                 visibilityTime: 4000,
                 props: {
                   badge: awardedBadge,
+                  onDismiss: () => Toast.hide(), // Add onDismiss callback
                 },
               });
             }
@@ -297,7 +241,7 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       incrementLikeCount: (userEmail: string) => {
-        console.log('[BadgeStore] Incrementing likeCount');
+        console.log('[BadgeStore] Incrementing likeCount ********** NOT SERVER **********');
         set((state) => ({ likeCount: state.likeCount + 1 }));
         get().checkMemeLikerBadge(userEmail);
         // Update progress after increment
@@ -307,7 +251,7 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       decrementLikeCount: () => {
-        console.log('[BadgeStore] Decrementing likeCount');
+        console.log('[BadgeStore] Decrementing likeCount ********** NOT SERVER **********');
         set((state) => ({ likeCount: Math.max(0, state.likeCount - 1) }));
         // Update progress after decrement
         setTimeout(() => {
@@ -316,7 +260,7 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       incrementDownloadCount: (userEmail: string) => {
-        console.log('[BadgeStore] Incrementing downloadCount');
+        console.log('[BadgeStore] Incrementing downloadCount ********** NOT SERVER **********');
         set((state) => ({ downloadCount: state.downloadCount + 1 }));
         get().checkMemeCollectorBadge(userEmail);
         // Update progress after increment
@@ -326,7 +270,7 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       decrementDownloadCount: () => {
-        console.log('[BadgeStore] Decrementing downloadCount');
+        console.log('[BadgeStore] Decrementing downloadCount ********** NOT SERVER **********');
         set((state) => ({ downloadCount: Math.max(0, state.downloadCount - 1) }));
         // Update progress after decrement
         setTimeout(() => {
@@ -335,7 +279,7 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       incrementShareCount: (userEmail: string) => {
-        console.log('[BadgeStore] Incrementing shareCount');
+        console.log('[BadgeStore] Incrementing shareCount ********** NOT SERVER **********');
         set((state) => ({ shareCount: state.shareCount + 1 }));
         get().checkViralSensationBadge(userEmail);
         // Update progress after increment
@@ -345,7 +289,7 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       decrementShareCount: () => {
-        console.log('[BadgeStore] Decrementing shareCount');
+        console.log('[BadgeStore] Decrementing shareCount ********** NOT SERVER **********');
         set((state) => ({ shareCount: Math.max(0, state.shareCount - 1) }));
         // Update progress after decrement
         setTimeout(() => {
@@ -354,7 +298,7 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       incrementCommentCount: (userEmail: string) => {
-        console.log('[BadgeStore] Incrementing commentCount');
+        console.log('[BadgeStore] Incrementing commentCount ********** NOT SERVER **********');
         set((state) => ({ commentCount: state.commentCount + 1 }));
         get().checkCommentatorBadge(userEmail);
         // Update progress after increment
@@ -364,7 +308,7 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       decrementCommentCount: () => {
-        console.log('[BadgeStore] Decrementing commentCount');
+        console.log('[BadgeStore] Decrementing commentCount ********** NOT SERVER **********');
         set((state) => ({ commentCount: Math.max(0, state.commentCount - 1) }));
         // Update progress after decrement
         setTimeout(() => {
@@ -373,32 +317,32 @@ export const useBadgeStore = create<BadgeStore>()(
       },
 
       checkMemeLikerBadge: async (userEmail: string) => {
-        console.log('[BadgeStore] Checking MemeLiker badge');
+        console.log('[BadgeStore] Checking MemeLiker badge ********** NOT SERVER **********');
         await get().checkAndUpdateBadge(userEmail, 'memeLiker');
       },
 
       checkMemeCollectorBadge: async (userEmail: string) => {
-        console.log('[BadgeStore] Checking MemeCollector badge');
+        console.log('[BadgeStore] Checking MemeCollector badge ********** NOT SERVER **********');
         await get().checkAndUpdateBadge(userEmail, 'memeCollector');
       },
 
       checkViralSensationBadge: async (userEmail: string) => {
-        console.log('[BadgeStore] Checking ViralSensation badge');
+        console.log('[BadgeStore] Checking ViralSensation badge ********** NOT SERVER **********');
         await get().checkAndUpdateBadge(userEmail, 'viralSensation');
       },
 
       checkSocialButterflyBadge: async (userEmail: string) => {
-        console.log('[BadgeStore] Checking SocialButterfly badge');
+        console.log('[BadgeStore] Checking SocialButterfly badge ********** NOT SERVER **********');
         await get().checkAndUpdateBadge(userEmail, 'socialButterfly');
       },
 
       checkCommentatorBadge: async (userEmail: string) => {
-        console.log('[BadgeStore] Checking Commentator badge');
+        console.log('[BadgeStore] Checking Commentator badge ********** NOT SERVER **********');
         await get().checkAndUpdateBadge(userEmail, 'commentator');
       },
 
       checkMessengerBadge: async (userEmail: string) => {
-        console.log('[BadgeStore] Checking Messenger badge');
+        console.log('[BadgeStore] Checking Messenger badge ********** NOT SERVER **********');
         await get().checkAndUpdateBadge(userEmail, 'messenger');
       },
     }),
@@ -409,6 +353,7 @@ export const useBadgeStore = create<BadgeStore>()(
         badges: state.badges,
         likeCount: state.likeCount,
         downloadCount: state.downloadCount,
+        isBadgesLoaded: state.isBadgesLoaded,
         shareCount: state.shareCount,
         commentCount: state.commentCount,
         pinnedBadgeId: state.pinnedBadgeId,

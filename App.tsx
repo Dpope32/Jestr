@@ -78,7 +78,7 @@ const App = () => {
 
   const [isReady, setIsReady] = useState(false);
   const user = useUserStore((state) => state);
-  const { syncBadgesWithAPI, badges } = useBadgeStore();
+  const { syncBadgesWithAPI, isBadgesLoaded } = useBadgeStore();
 
   const lockOrientation = async () => {
     await ScreenOrientation.lockAsync(
@@ -90,10 +90,10 @@ const App = () => {
     try {
       await SplashScreen.preventAutoHideAsync();
       const fontsLoaded = await Font.loadAsync(fontz).then(() => true);
-      setIsReady(fontsLoaded);
-      if (user.email && badges.length === 0) {
+      if (user.email && !isBadgesLoaded) {
         await syncBadgesWithAPI(user.email);
       }
++     setIsReady(fontsLoaded);
     } catch (error) {
       console.error('Initialization error', error);
       setIsReady(true);

@@ -83,60 +83,54 @@ const useCommentFeed = ({
 
   // QUERY: Fetch comments for memeID
   const {
-    data: fetchedComments = [],
+    data: comments = [],
     isLoading,
     isError,
+    refetch: refetchComments,
   } = useQuery({
-    enabled: isCommentFeedVisible,
     queryKey: ['comments', memeID],
     queryFn: () => fetchComments(memeID),
+    enabled: isCommentFeedVisible && !!memeID, // Only fetch when visible and memeID is available
   });
 
-  // Organize comments into threads
-  const comments = organizeCommentsIntoThreads(fetchedComments || []);
+ // MUTATION: Post a new comment
+ const postCommentMutation = useMutation({
+  mutationFn: (newCommentData: {text: string; replyingTo: string | null}) =>
+    postComment(
+      memeID,
+      newCommentData.text,
+      user!,
+      newCommentData.replyingTo || undefined,
+    ),
+  onSuccess: () => {
+    setNewComment('');
+    setReplyingTo(null);
+    badgeStore.incrementCommentCount(userEmail);
+    refetchComments(); // Refetch comments after posting
+    queryClient.setQueryData(['memez', userEmail], (oldData: any) => {
+      if (!oldData) return oldData;
 
-  // MUTATION: Post a new comment
-  const postCommentMutation = useMutation({
-    mutationFn: (newCommentData: {text: string; replyingTo: string | null}) =>
-      postComment(
-        memeID,
-        newCommentData.text,
-        user!,
-        newCommentData.replyingTo || undefined,
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['comments', memeID]});
-      setNewComment('');
-      setReplyingTo(null);
-      badgeStore.incrementCommentCount(userEmail)
-      queryClient.setQueryData(['memez', userEmail], (oldData: any) => {
-        if (!oldData) return oldData;
-
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
-            ...page,
-            memes: page.memes.map((meme: Meme) => {
-              if (meme.memeID === memeID) {
-                return {
-                  ...meme,
-                  commentCount: meme.commentCount + 1,
-                };
-              }
-              return meme;
-            }),
-          })),
-        };
-      });
-    },
-    onError: error => {
-      console.error('Failed to post comment:', error);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({queryKey: ['comments', memeID]});
-    },
-  });
-
+      return {
+        ...oldData,
+        pages: oldData.pages.map((page: any) => ({
+          ...page,
+          memes: page.memes.map((meme: Meme) => {
+            if (meme.memeID === memeID) {
+              return {
+                ...meme,
+                commentCount: meme.commentCount + 1,
+              };
+            }
+            return meme;
+          }),
+        })),
+      };
+    });
+  },
+  onError: error => {
+    console.error('Failed to post comment:', error);
+  },
+});
   // MUTATION: Update comment reaction
   const updateCommentReactionMutation = useMutation({
     mutationFn: (params: {
@@ -193,11 +187,12 @@ const useCommentFeed = ({
   const handleAddComment = () => {
     if (newComment.trim() !== '' && user) {
       postCommentMutation.mutate({text: newComment, replyingTo});
-      Keyboard.dismiss(); // Add this line to dismiss the keyboard
+      Keyboard.dismiss();
     } else if (!user) {
       console.error('User is null, cannot post comment.');
     }
   };
+  
   const handleDeleteComment = (commentID: string) => {
     deleteCommentMutation.mutate(commentID);
   };

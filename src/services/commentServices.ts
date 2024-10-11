@@ -115,7 +115,6 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
   };
 
   try {
-    // logRequest('fetchComments', requestBody);
     console.log('Fetching comments for memeID:', memeID);
 
     const response = await fetch(GET_COMMENTS_ENDPOINT, {
@@ -124,14 +123,13 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
       body: JSON.stringify(requestBody),
     });
 
-    // Clone the response for logging without affecting the original response
-    const clonedResponse = response.clone();
-    const data = await clonedResponse.json();
+    const data = await response.json();
 
-    // logResponse('fetchComments', response, data);
+    console.log('Raw response data:', data);
 
     if (!response.ok) {
       console.error(`HTTP error! status: ${response.status}`);
+      console.error('Response data:', data);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -140,21 +138,46 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
       return [];
     }
 
-    const organizedComments = data.data.comments.map((comment: any) => ({
-      commentID: comment.CommentID || '',
-      text: comment.Text || '',
-      username: comment.Username || 'Unknown user',
-      profilePicUrl: comment.ProfilePicUrl,
-      likesCount: parseInt(comment.LikesCount) || 0,
-      dislikesCount: parseInt(comment.DislikesCount) || 0,
-      timestamp: comment.Timestamp || '',
-      parentCommentID: comment.ParentCommentID || null,
-      email: comment.Email || '',
-      replies: [],
-    }));
+    const commentMap = new Map<string, CommentType>();
+    const topLevelComments: CommentType[] = [];
 
-    // console.log('Organized Comments:', organizedComments);
-    return organizedComments;
+    // First pass: create all comment objects
+    data.data.comments.forEach((comment: any) => {
+      const commentObj: CommentType = {
+        commentID: comment.CommentID || '',
+        text: comment.Text || '',
+        username: comment.Username || 'Unknown user',
+        profilePicUrl: comment.ProfilePicUrl,
+        likesCount: parseInt(comment.LikesCount) || 0,
+        dislikesCount: parseInt(comment.DislikesCount) || 0,
+        timestamp: comment.Timestamp || '',
+        parentCommentID: comment.ParentCommentID || null,
+        email: comment.Email || '',
+        replies: [],
+        userReaction: null,
+      };
+      commentMap.set(commentObj.commentID, commentObj);
+    });
+
+    // Second pass: organize into threads
+    commentMap.forEach(comment => {
+      if (comment.parentCommentID) {
+        const parentComment = commentMap.get(comment.parentCommentID);
+        if (parentComment) {
+          parentComment.replies.push(comment);
+        } else {
+          console.warn(
+            `Parent comment with ID ${comment.parentCommentID} not found for comment ID ${comment.commentID}`,
+          );
+          topLevelComments.push(comment);
+        }
+      } else {
+        topLevelComments.push(comment);
+      }
+    });
+
+    console.log('Organized Comments:', topLevelComments);
+    return topLevelComments;
   } catch (error) {
     console.error(`Error fetching comments for memeID ${memeID}:`, error);
     throw error;

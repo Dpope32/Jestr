@@ -437,7 +437,7 @@ export const getLikeStatus = async (memeID: string, userEmail: string) => {
         LikeCount: data.data.LikeCount,
         ShareCount: data.data.ShareCount,
         CommentCount: data.data.CommentCount,
-        DownloadsCount: data.data.DownloadsCount,
+        DownloadsCount: data.data.DownloadCount,
         UploadTimestamp: data.data.UploadTimestamp,
       },
     };

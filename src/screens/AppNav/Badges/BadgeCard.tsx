@@ -76,7 +76,7 @@ const BadgeCard: React.FC<BadgeCardProps> = ({ badge, badgeImage, isDarkMode }) 
   });
 
   return (
-    <View style={styles.badgeContainer}>
+    <View style={styles.earnedBadgeContainer}>
       <TouchableOpacity
         activeOpacity={1}
         onPress={handleFlip}

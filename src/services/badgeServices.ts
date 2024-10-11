@@ -1,9 +1,11 @@
+// src/services/badgeServices.ts
+
 import { API_URL } from './config';
 import { Badge, BadgeType } from '../screens/AppNav/Badges/Badges.types';
 
 export const fetchUserBadges = async (userEmail: string): Promise<Badge[]> => {
   try {
-    console.log(`[BadgeServices] Fetching user badges for: ${userEmail}`);
+    console.log(`[BadgeServices] Fetching user badges for: ${userEmail} ********** TOUCHES SERVER **********`);
     const response = await fetch(`${API_URL}/getUserBadges`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -25,13 +27,12 @@ export const fetchUserBadges = async (userEmail: string): Promise<Badge[]> => {
 
 export const checkBadgeEligibility = async (userEmail: string, action: BadgeType): Promise<BadgeType | null> => {
   try {
-    console.log(`[BadgeServices] Checking badge eligibility for user: ${userEmail}, action: ${action}`);
+    console.log(`[BadgeServices] Checking badge eligibility for user: ${userEmail}, action: ${action} ********** TOUCHES SERVER **********`);
     const response = await fetch(`${API_URL}/checkBadgeEligibility`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ operation: 'checkBadgeEligibility', userEmail, action }),
     });
-
 
     if (!response.ok) {
       if (response.status === 500) {
@@ -53,7 +54,7 @@ export const checkBadgeEligibility = async (userEmail: string, action: BadgeType
 
 export const awardBadge = async (userEmail: string, badgeType: BadgeType): Promise<Badge | null> => {
   try {
-    console.log(`[BadgeServices] Awarding badge for user: ${userEmail}, badgeType: ${badgeType}`);
+    console.log(`[BadgeServices] Awarding badge for user: ${userEmail}, badgeType: ${badgeType} ********** TOUCHES SERVER **********`);
     const response = await fetch(`${API_URL}/awardBadge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -87,7 +88,6 @@ const normalizeBadge = (rawBadge: any): Badge => {
     holdersCount: badgeData.HoldersCount || 0,
   };
 };
-
 
 const normalizeBadgeType = (badgeType: string): BadgeType => {
   console.log(`[BadgeServices] Normalizing badge type: ${badgeType}`);

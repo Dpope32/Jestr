@@ -1,4 +1,4 @@
-// src/screens/AppNav/Badges/Badges.tsx
+// Badges.tsx
 
 import React, { useEffect } from 'react';
 import {
@@ -28,8 +28,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getAllBadges } from './defaultBadges';
 import BadgeCard from './BadgeCard';
 import { badgeImages } from './Badges.types';
-import { useQuery } from '@tanstack/react-query';
-import { fetchUserBadges } from '../../../services/badgeServices';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -42,7 +40,7 @@ const Badges: React.FC = () => {
   const COLORS = getColors(isDarkMode);
 
   const user = useUserStore((state) => state);
-  const { badges, pinnedBadgeId } = useBadgeStore();
+  const { badges, pinnedBadgeId, isBadgesLoaded } = useBadgeStore();
 
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
@@ -53,17 +51,6 @@ const Badges: React.FC = () => {
     ? { uri: user.profilePic }
     : require('../../../assets/images/Jestr.jpg');
 
-  const { isLoading, isError, error } = useQuery<Badge[]>({
-    queryKey: ['userBadges', user.email],
-    queryFn: async () => {
-      const fetchedBadges = await fetchUserBadges(user.email);
-      useBadgeStore.getState().setBadges(fetchedBadges);
-      return fetchedBadges;
-    },
-    enabled: !!user.email,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
-  });
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -77,32 +64,25 @@ const Badges: React.FC = () => {
     getBadgeStorageContents();
   }, []);
 
-  if (isLoading) {
+  if (!isBadgesLoaded) {
     return <BadgesSkeletonLoader isDarkMode={isDarkMode} />;
-  }
-
-  if (isError) {
-    return (
-      <View style={styles.loadingContainer}>
-        <FontAwesomeIcon icon={faTrophy} size={50} color={COLORS.error} />
-        <Text style={[styles.loadingText, { color: COLORS.error }]}>
-          {error instanceof Error ? error.message : 'An error occurred'}
-        </Text>
-      </View>
-    );
   }
 
   const allBadges = getAllBadges();
   const earnedBadges = badges.filter((badge) => badge.earned);
-  const unearnedBadges = allBadges.filter(
-    (badge) => !badges.some((b) => b.type === badge.type && b.earned)
-  );
+  const unearnedBadges = allBadges.filter((badge) => !badges.some((b) => b.type === badge.type && b.earned));
   const totalBadges = allBadges.length;
   const earnedBadgesCount = earnedBadges.length;
   const progress = totalBadges > 0 ? earnedBadgesCount / totalBadges : 0;
 
   const pinnedBadge = badges.find((badge) => badge.id === pinnedBadgeId);
-
+const chunkArray = <T,>(array: T[], chunkSize: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+};
   // Prepare sections for SectionList
   const sections: SectionData[] = [];
 

@@ -345,6 +345,19 @@ const sendNotification = async (receiverID, senderID, type, content, relatedID =
 
     return { success: true, notificationID };
   } catch (error) {
+    if (error.name === 'InvalidParameter' || error.name === 'EndpointDisabled') {
+      // Remove the invalid endpointArn from the user's profile
+      await docClient.send(new UpdateCommand({
+        TableName: 'Profiles',
+        Key: { email: receiverID },
+        UpdateExpression: 'REMOVE endpointArn',
+      }));
+      // Invalidate the cache
+      await redis.del(`userProfile:${receiverID}`);
+      console.error(`EndpointArn disabled or invalid for user ${receiverID}, removed from profile.`);
+    } else {
+      console.error(`Failed to send notification: ${error.message}`);
+    }
     console.error('Error sending notification:', error);
     return { success: false, error: error.message };
   }
@@ -474,7 +487,7 @@ const registerDevice = async (userID, deviceToken) => {
     const updateParams = {
       TableName: 'Profiles',
       Key: { email: userID },
-      UpdateExpression: 'set EndpointArn = :e',
+      UpdateExpression: 'set endpointArn = :e',
       ExpressionAttributeValues: {
         ':e': EndpointArn
       },

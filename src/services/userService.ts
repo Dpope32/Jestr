@@ -447,7 +447,7 @@ export const fetchMemes = async (
       caption: item.Caption || '',
       uploadTimestamp: item.UploadTimestamp || item.Timestamp || '',
       likeCount: item.LikeCount || 0,
-      downloadCount: item.DownloadsCount || 0,
+      downloadCount: item.DownloadCount || 0,
       commentCount: item.CommentCount || 0,
       shareCount: item.ShareCount || 0,
       username: item.Username || '',

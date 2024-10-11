@@ -99,7 +99,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
       Toast.show({
         type: 'success',
         text1: 'Link Copied',
-        text2: 'Meme link copied to clipboard',
+        text2: 'Send that sucker out ;)',
       });
       onClose();
     } catch (error) {
