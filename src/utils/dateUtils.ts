@@ -13,7 +13,10 @@ export const formatTimestamp = (timestamp: string) => {
   if (isToday(date)) {
     return format(date, 'h:mm a');
   } else {
-    return formatDistanceToNow(date, {addSuffix: true});
+    // FIXME: This is crashing the app
+    // "ERROR  RangeError: Invalid time value"
+    // return formatDistanceToNow(date, {addSuffix: true});
+    return '';
   }
 };
 

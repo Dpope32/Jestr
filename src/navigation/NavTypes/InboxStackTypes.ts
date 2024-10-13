@@ -13,5 +13,14 @@ export type InboxNavParamList = {
   };
 };
 
+// export type ConversationNavParams = {
+//   screen: string,
+//       params: {
+//         partnerUser: any,
+//         conversation: any,
+//         currentMedia: any,
+//       },
+// };
+
 export type InboxNavProp = NativeStackNavigationProp<InboxNavParamList>;
 export type InboxNavRouteProp = RouteProp<InboxNavParamList>;

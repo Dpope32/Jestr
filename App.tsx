@@ -11,15 +11,19 @@ import {Amplify} from 'aws-amplify';
 import {Mutation, Query, QueryClient} from '@tanstack/react-query';
 import {useReactQueryDevTools} from '@dev-plugins/react-query';
 import {PersistQueryClientProvider} from '@tanstack/react-query-persist-client';
+import {StatusBar} from 'expo-status-bar';
 
 import {ThemeProvider} from './src/theme/ThemeContext';
 import CustomToast from './src/components/ToastMessages/CustomToast';
 import AppNavigator from './src/navigation/AppNavigator';
-import ErrorFallback, { LoadingText } from './src/components/ErrorFallback/ErrorFallback';
+import ErrorFallback, {
+  LoadingText,
+} from './src/components/ErrorFallback/ErrorFallback';
 import {createMMKVPersister} from './src/utils/mmkvPersister';
 import {usePushNotifications} from './src/screens/AppNav/Notifications/usePushNotification';
-import { useUserStore } from 'stores/userStore';
-import { getBadgeStorageContents, useBadgeStore } from 'stores/badgeStore';
+import {useUserStore} from 'stores/userStore';
+import {getBadgeStorageContents, useBadgeStore} from 'stores/badgeStore';
+import {useTheme} from 'theme/ThemeContext';
 
 const fontz = {Inter_400Regular, Inter_700Bold};
 import awsconfig from './src/aws-exports';
@@ -75,10 +79,12 @@ const persistOptions = {
 const App = () => {
   useReactQueryDevTools(queryClient);
   usePushNotifications();
+  const {isDarkMode} = useTheme();
+  const bgdCol = isDarkMode ? '#1C1C1C' : '#1C1C1C';
 
   const [isReady, setIsReady] = useState(false);
-  const user = useUserStore((state) => state);
-  const { syncBadgesWithAPI, isBadgesLoaded } = useBadgeStore();
+  const user = useUserStore(state => state);
+  const {syncBadgesWithAPI, isBadgesLoaded} = useBadgeStore();
 
   const lockOrientation = async () => {
     await ScreenOrientation.lockAsync(
@@ -93,13 +99,12 @@ const App = () => {
       if (user.email && !isBadgesLoaded) {
         await syncBadgesWithAPI(user.email);
       }
-+     setIsReady(fontsLoaded);
+      +setIsReady(fontsLoaded);
     } catch (error) {
       console.error('Initialization error', error);
       setIsReady(true);
     }
   };
-
 
   useEffect(() => {
     activateKeepAwakeAsync();
@@ -121,6 +126,7 @@ const App = () => {
           <NavigationContainer onReady={() => SplashScreen.hideAsync()}>
             <SafeAreaProvider>
               <React.Suspense fallback={<LoadingText />}>
+                <StatusBar translucent={true} backgroundColor={bgdCol} />
                 <AppNavigator />
               </React.Suspense>
             </SafeAreaProvider>

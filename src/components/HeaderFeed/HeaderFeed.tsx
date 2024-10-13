@@ -1,10 +1,20 @@
 import React, {useState} from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Image, TextInput } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Image,
+  TextInput,
+} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useNavigation, DrawerActions} from '@react-navigation/native';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faSearch, faBell, faCog} from '@fortawesome/free-solid-svg-icons';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp} from 'react-native-responsive-screen';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 
 import {AppNavProp} from '../../navigation/NavTypes/RootNavTypes';
 import {FONTS} from '../../theme/theme';
@@ -17,16 +27,16 @@ const HeaderFeed = () => {
   const navigation = useNavigation<AppNavProp>();
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchText, setSearchText] = useState('');
- // const [selectedTab, setSelectedTab] = useState('Flow');
+  // const [selectedTab, setSelectedTab] = useState('Flow');
   const user = useUserStore(state => state as User);
   const isAdmin = useUserStore(state => state.isAdmin);
   const notificationCount = useNotificationStore(
     state => state.notifications.filter(n => !n.read).length,
   );
 
- // const handleTabClick = (tab: string) => {
- //   setSelectedTab(tab);
- // };
+  // const handleTabClick = (tab: string) => {
+  //   setSelectedTab(tab);
+  // };
 
   const imgSrc = user.profilePic
     ? {uri: user.profilePic}
@@ -37,7 +47,13 @@ const HeaderFeed = () => {
   };
 
   return (
-    <View style={[styles.container, {paddingTop: insets.top}]}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+        },
+      ]}>
       <View style={styles.firstRow}>
         {/* Left Container */}
         <View style={styles.leftContainer}>

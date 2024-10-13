@@ -26,6 +26,7 @@ import {
   faXTwitter,
 } from '@fortawesome/free-brands-svg-icons';
 import Toast from 'react-native-toast-message';
+import {CommonActions} from '@react-navigation/native';
 import {FriendType, ShareType, User} from '../../types/types';
 import {Conversation} from '../../types/messageTypes';
 import NewMessageModal from '../Modals/NewMessageModal';
@@ -33,7 +34,12 @@ import {useInboxStore} from '../../stores/inboxStore';
 import {useNavigation} from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import {useUserStore} from '../../stores/userStore';
-import {TabNavigationProp} from '../../navigation/Stacks/BottomTabNav';
+import {
+  BottomNavProp,
+  BottomTabNavParamList,
+} from '../../navigation/NavTypes/BottomTabsTypes';
+import {FeedNavProp} from '../../navigation/NavTypes/FeedTypes';
+// import {ConversationNavParams} from '../../navigation/NavTypes/InboxStackTypes';
 
 const {width, height} = Dimensions.get('window');
 
@@ -60,7 +66,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
   const [message, setMessage] = useState('');
   const [isNewMessageModalVisible, setIsNewMessageModalVisible] =
     useState(false);
-  const navigation = useNavigation<TabNavigationProp>();
+  const navigation = useNavigation<FeedNavProp>();
   const {conversations, pinnedConversations} = useInboxStore();
 
   // Hard-coded friends for testing
@@ -163,19 +169,15 @@ const ShareModal: React.FC<ShareModalProps> = ({
       };
     }
 
-
-    navigation.navigate('InboxStackNav', {
-      screen: 'Conversations',
-      params: {
-        partnerUser: selectedUser,
-        conversation: conversation as Conversation,
-        currentMedia: currentMedia,
-      },
+    navigation.push('Conversations', {
+      partnerUser: selectedUser,
+      conversation: conversation as Conversation,
+      currentMedia: currentMedia,
     });
-  
+
     // Clear any stored navigation state
-    navigation.setParams({ currentMedia: undefined });
-  
+    navigation.setParams({currentMedia: undefined});
+
     toggleNewMessageModal();
     onClose();
   };
