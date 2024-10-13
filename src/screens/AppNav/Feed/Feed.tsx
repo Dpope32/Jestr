@@ -15,6 +15,7 @@ import {LinearGradient} from 'expo-linear-gradient';
 import {useQueryClient} from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
+// import {StatusBar} from 'expo-status-bar';
 
 import {User, Meme, ShareType} from '../../../types/types';
 import styles, {
@@ -282,7 +283,15 @@ const Feed: React.FC = () => {
           return (
             <Image
               source={mediaSource}
-              style={[styles.imgContainer, {height: heightItem}]}
+              style={[
+                styles.imgContainer,
+                {
+                  // height: heightItem,
+                  height: screenHeight,
+                  // height: '100%',
+                  // backgroundColor: 'green',
+                },
+              ]}
               resizeMode="contain"
             />
           );
@@ -309,7 +318,8 @@ const Feed: React.FC = () => {
           onPress={handlePress}
           onLongPress={handleLongPress}
           style={{
-            height: screenHeight,
+            // height: screenHeight,
+            height: heightItem,
             // borderWidth: 1,
             // borderColor: 'yellow',
           }}>
@@ -352,6 +362,7 @@ const Feed: React.FC = () => {
   // MAIN RENDER
   return (
     <View style={[styles.container, {backgroundColor: bgdCol}]}>
+      {/* <StatusBar translucent={true} backgroundColor={bgdCol} /> */}
       {/* MEMES LIST */}
       <FlatList
         keyExtractor={keyExtractor}
@@ -378,9 +389,14 @@ const Feed: React.FC = () => {
         ListEmptyComponent={ListEmptyComponent}
         initialNumToRender={3}
         maxToRenderPerBatch={4}
-        windowSize={5}
+        // windowSize={1}
+        windowSize={Platform.select({
+          ios: 5,
+          android: 1,
+        })}
         updateCellsBatchingPeriod={100}
         snapToInterval={screenHeight}
+        // snapToInterval={heightItem}
         decelerationRate="fast"
         snapToAlignment="start"
       />

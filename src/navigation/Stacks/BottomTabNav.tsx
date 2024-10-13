@@ -20,12 +20,13 @@ import {faHome, faPlus, faEnvelope} from '@fortawesome/free-solid-svg-icons';
 import {useTabBarStore} from '../../stores/tabBarStore';
 import HeaderFeed from '../../components/HeaderFeed/HeaderFeed';
 import * as Haptics from 'expo-haptics';
+import {BottomTabNavParamList} from '../NavTypes/BottomTabsTypes';
 
 import FeedStackNav from '../Stacks/FeedStackNav';
 import UploadStackNav from '../Stacks/UploadStackNav';
 import InboxStackNav from '../Stacks/InboxStackNav';
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<BottomTabNavParamList>();
 
 export type TabNavigationProp =
   | BottomTabNavigationProp<ParamListBase>

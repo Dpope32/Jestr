@@ -78,12 +78,14 @@ const styles = StyleSheet.create({
   },
   flatlistStyle: {
     flex: 1,
+    // height: screenHeight,
     // borderWidth: 12,
     // borderColor: 'red',
     // backgroundColor: 'red',
   },
   contentCtrStyle: {
     flexGrow: 1,
+    // height: screenHeight,
     // borderWidth: 1,
     // borderColor: 'blue',
     // backgroundColor: 'green',
