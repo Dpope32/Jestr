@@ -15,53 +15,65 @@ const docClient = DynamoDBDocumentClient.from(ddbClient);
 const badgeDetailsMap = {
   memeLiker: {
     name: "Meme Liker",
-    description: "Liked 5 memes.",
+    description: "Liked 10 memes.",
+    threshold: 10,
   },
   socialButterfly: {
     name: "Social Butterfly",
     description: "Have 10 relationships (followers or following).",
+    threshold: 10,
   },
   memeMaster: {
     name: "Meme Master",
     description: "Uploaded 5 memes.",
+    threshold: 5,
   },
   trendSetter: {
     name: "Trend Setter",
     description: "Accumulated 100 likes on memes.",
+    threshold: 100,
   },
   messenger: {
     name: "Messenger",
     description: "Participated in 10 conversations.",
+    threshold: 10,
   },
   commentator: {
     name: "Commentator",
     description: "Commented on 10 memes.",
+    threshold: 10,
   },
   memeCreator: {
     name: "Meme Creator",
     description: "Created 10 memes.",
+    threshold: 10,
   },
   viralSensation: {
     name: "Viral Sensation",
-    description: "Had memes shared 100 times in total.",
+    description: "Had memes shared 25 times in total.",
+    threshold: 25,
   },
   memeCollector: {
     name: "Meme Collector",
     description: "Downloaded 50 memes.",
+    threshold: 50,
   },
 };
+
 
 /**
  * Function to normalize a badge object.
  * @param {Object} rawBadge - Raw badge data from DynamoDB.
  * @returns {Object} - Normalized badge object.
  */
-const normalizeBadge = (rawBadge) => {
+const normalizeBadge = (rawBadge, currentCounts = 0) => {
   const badgeType = rawBadge.BadgeType || rawBadge.badgeType;
   if (!badgeType) {
     console.error("Missing BadgeType in rawBadge:", rawBadge);
     throw new Error("BadgeType is missing in rawBadge");
   }
+
+  const threshold = badgeDetailsMap[badgeType]?.threshold || 1; // Avoid division by zero
 
   return {
     BadgeType: badgeType,
@@ -75,10 +87,13 @@ const normalizeBadge = (rawBadge) => {
       `Description for ${badgeType} badge`,
     AwardedDate: rawBadge.AwardedDate || rawBadge.awardedDate || "",
     Earned: rawBadge.Earned === true,
-    Progress: rawBadge.Earned ? 100 : rawBadge.Progress || 0,
+    Progress: rawBadge.Earned
+      ? 100
+      : Math.min(Math.floor((currentCounts / threshold) * 100), 100),
     HoldersCount: rawBadge.HoldersCount || rawBadge.holdersCount || 0,
   };
 };
+
 
 /**
  * Function to check badge eligibility based on action.
@@ -274,30 +289,33 @@ const getUserBadges = async (userEmail) => {
     ExpressionAttributeValues: { ":email": userEmail },
   };
 
-  try {
-    const { Items } = await docClient.send(new QueryCommand(params));
+  const { Items } = await docClient.send(new QueryCommand(params));
 
-    if (!Items || Items.length === 0) {
-      console.log(`No badges found for user: ${userEmail}`);
-      return [];
-    }
-
-    const badgeTypes = Items.map((item) => item.BadgeType);
-
-    const holdersCounts = await getBadgeHoldersCounts(badgeTypes);
-
-    const processedBadges = Items.map((item) => {
-      const normalizedBadge = normalizeBadge(item);
-      normalizedBadge.HoldersCount = holdersCounts[item.BadgeType] || 0;
-      return normalizedBadge;
-    });
-
-    return processedBadges;
-  } catch (error) {
-    console.error(`Failed to get user badges for ${userEmail}:`, error);
-    throw error;
+  if (!Items || Items.length === 0) {
+    console.log(`No badges found for user: ${userEmail}`);
+    return [];
   }
+
+  const badgeTypes = Object.keys(badgeDetailsMap);
+  const holdersCounts = await getBadgeHoldersCounts(badgeTypes);
+
+  const processedBadges = await Promise.all(
+    badgeTypes.map(async (badgeType) => {
+      const existingBadge = Items.find((item) => item.BadgeType === badgeType);
+      const currentCounts = await getCurrentCounts(userEmail, badgeType);
+
+      const normalizedBadge = normalizeBadge(existingBadge, currentCounts);
+
+      normalizedBadge.HoldersCount = holdersCounts[badgeType] || 0;
+      normalizedBadge.currentCounts = currentCounts;
+
+      return normalizedBadge;
+    })
+  );
+
+  return processedBadges;
 };
+
 
 /**
  * Function to increment the holders count for a badge.
@@ -327,6 +345,62 @@ const incrementBadgeHoldersCount = async (badgeType) => {
     throw error;
   }
 };
+
+const getCurrentCounts = async (userEmail, badgeType) => {
+  const badgeCriteria = {
+    memeLiker: { table: "UserLikes", countAttribute: "Liked" },
+    socialButterfly: { table: "UserRelationships", countAttribute: null },
+    memeMaster: { table: "Memes", countAttribute: null },
+    trendSetter: { table: "Memes", sumAttribute: "LikeCount", countType: "sum" },
+    messenger: { table: "UserConversations_v2", countAttribute: null },
+    commentator: { table: "Comments", countAttribute: null },
+    memeCreator: { table: "Memes", countAttribute: null },
+    viralSensation: { table: "Memes", sumAttribute: "ShareCount", countType: "sum" },
+    memeCollector: { table: "UserDownloads", countAttribute: null },
+  };
+
+  const { table, countAttribute, sumAttribute, countType } = badgeCriteria[badgeType] || {};
+
+  if (!table) {
+    console.log(`No table found for badge type: ${badgeType}`);
+    return 0;
+  }
+
+  const params = {
+    TableName: table,
+    KeyConditionExpression: "email = :email",
+    ExpressionAttributeValues: { ":email": userEmail },
+    Select: countType === "sum" ? "SPECIFIC_ATTRIBUTES" : "COUNT",
+  };
+
+  if (countAttribute) {
+    params.FilterExpression = `${countAttribute} = :true`;
+    params.ExpressionAttributeValues[":true"] = true;
+  }
+
+  if (sumAttribute && countType === "sum") {
+    params.ProjectionExpression = sumAttribute;
+  }
+
+  if (badgeCriteria[badgeType].indexName) {
+    params.IndexName = badgeCriteria[badgeType].indexName;
+  }
+
+  try {
+    const result = await docClient.send(new QueryCommand(params));
+
+    if (countType === "sum" && sumAttribute) {
+      const sum = result.Items.reduce((acc, item) => acc + (item[sumAttribute] || 0), 0);
+      return sum;
+    } else {
+      return result.Count || 0;
+    }
+  } catch (error) {
+    console.error(`Error getting count for badge '${badgeType}':`, error);
+    return 0;
+  }
+};
+
 
 /**
  * Function to get the holders count for badges.

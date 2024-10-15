@@ -3,6 +3,10 @@
 import { API_URL } from './config';
 import { Badge, BadgeType } from '../screens/AppNav/Badges/Badges.types';
 
+export interface BadgeWithCounts extends Badge {
+  currentCounts: number;
+}
+
 export const fetchUserBadges = async (userEmail: string): Promise<Badge[]> => {
   try {
     console.log(`[BadgeServices] Fetching user badges for: ${userEmail} ********** TOUCHES SERVER **********`);
@@ -24,6 +28,7 @@ export const fetchUserBadges = async (userEmail: string): Promise<Badge[]> => {
     throw error;
   }
 };
+
 
 export const checkBadgeEligibility = async (userEmail: string, action: BadgeType): Promise<BadgeType | null> => {
   try {
@@ -75,7 +80,7 @@ export const awardBadge = async (userEmail: string, badgeType: BadgeType): Promi
 };
 
 const normalizeBadge = (rawBadge: any): Badge => {
-  console.log(`[BadgeServices] Normalizing badge:`, rawBadge);
+//  console.log(`[BadgeServices] Normalizing badge:`, rawBadge);
   const badgeData = rawBadge.badge || rawBadge; // Handle cases where badge data is nested
   return {
     id: badgeData.BadgeType,
@@ -86,10 +91,11 @@ const normalizeBadge = (rawBadge: any): Badge => {
     progress: badgeData.Progress || 0,
     acquiredDate: badgeData.AwardedDate,
     holdersCount: badgeData.HoldersCount || 0,
+    currentCounts: rawBadge.currentCounts || 0,
   };
 };
 
 const normalizeBadgeType = (badgeType: string): BadgeType => {
-  console.log(`[BadgeServices] Normalizing badge type: ${badgeType}`);
+  //console.log(`[BadgeServices] Normalizing badge type: ${badgeType}`);
   return badgeType as BadgeType;
 };

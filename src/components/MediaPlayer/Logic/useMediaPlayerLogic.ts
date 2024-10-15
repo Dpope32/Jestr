@@ -153,7 +153,7 @@ export const useMediaPlayerLogic = ({
           console.log('Meme share result:', result);
   
           setCounts(prev => ({ ...prev, shares: prev.shares + 1 }));
-          await badgeStore.checkViralSensationBadge(user.email);
+          badgeStore.incrementCount('shareCount', user.email);
   
           Toast.show({
             type: 'success',
@@ -201,9 +201,9 @@ export const useMediaPlayerLogic = ({
         }));
   
         if (newSavedState) {
-          badgeStore.incrementDownloadCount(user.email);
+          badgeStore.incrementCount('downloadCount', user.email);
         } else {
-          badgeStore.decrementDownloadCount();
+          badgeStore.decrementCount('downloadCount');
         }
   
         setToastMessage(
@@ -214,7 +214,6 @@ export const useMediaPlayerLogic = ({
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
   
-        await badgeStore.checkMemeCollectorBadge(user.email);
       } catch (error) {
         console.error('Error updating meme reaction:', error);
         Toast.show({

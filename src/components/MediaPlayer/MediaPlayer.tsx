@@ -204,7 +204,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
       if (!currentUserId || !memeUser.email) return;
       try {
         await addFollow(currentUserId, memeUser.email);
-        await badgeStore.checkSocialButterflyBadge(currentUserId); // Now exists
+       badgeStore.incrementCount('followerCount', currentUserId);
         setIsFollowed(true);
         useUserStore.getState().incrementFollowingCount();
         Toast.show({
@@ -464,7 +464,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = React.memo(
           onSaveToProfile={handleDownloadPress}
           onShare={() => setShowShareModal(true)}
           onReport={() => { }}
-          user={user}
         />
       </Animated.View>
     );

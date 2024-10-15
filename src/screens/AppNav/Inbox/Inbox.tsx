@@ -1,4 +1,6 @@
-import React, {useState, useCallback, useEffect, useRef, useMemo} from 'react';
+// src/screens/AppNav/Inbox/Inbox.tsx
+
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,29 +11,28 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faPlus, faThumbtack} from '@fortawesome/free-solid-svg-icons';
-import {User} from '../../../types/types';
-import {Conversation, MessageContent} from '../../../types/messageTypes';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faPlus, faThumbtack } from '@fortawesome/free-solid-svg-icons';
+import { User } from '../../../types/types';
+import { Conversation, MessageContent, MemeShareContent } from '../../../types/messageTypes';
 import {
   useFocusEffect,
   useNavigation,
   CommonActions,
 } from '@react-navigation/native';
-import {SwipeListView, RowMap} from 'react-native-swipe-list-view';
-import {useQuery} from '@tanstack/react-query';
+import { SwipeListView, RowMap } from 'react-native-swipe-list-view';
+import { useQuery } from '@tanstack/react-query';
 
 import styles from './Inbox.styles';
 import NewMessageModal from '../../../components/Modals/NewMessageModal';
-import {formatTimestamp} from '../../../utils/dateUtils';
-import {generateUniqueId} from '../../../utils/helpers';
-import {useTheme} from '../../../theme/ThemeContext';
-import {useUserStore} from '../../../stores/userStore';
-import {useInboxStore} from '../../../stores/inboxStore';
-import {fetchConversations as apiFetchConversations} from '../../../services/socialService';
-import {InboxNavProp} from '../../../navigation/NavTypes/InboxStackTypes';
-import {AppNavProp} from '../../../navigation/NavTypes/RootNavTypes';
-import {isMemeShareContent} from '../../../utils/typeGuards';
+import { formatTimestamp } from '../../../utils/dateUtils';
+import { generateUniqueId } from '../../../utils/helpers';
+import { useTheme } from '../../../theme/ThemeContext';
+import { useUserStore } from '../../../stores/userStore';
+import { useInboxStore } from '../../../stores/inboxStore';
+import { fetchConversations as apiFetchConversations } from '../../../services/inboxServices';
+import { InboxNavProp } from '../../../navigation/NavTypes/InboxStackTypes';
+import { AppNavProp } from '../../../navigation/NavTypes/RootNavTypes';
 import {
   handleThreadClick,
   handleProfileClick,
@@ -41,18 +42,17 @@ import {
   handleDeleteConversation,
   toggleNewMessageModalHandler,
 } from './inboxHandlers';
-import {DEFAULT_PROFILE_PIC_URL} from '../../../constants/uiConstants';
+import { DEFAULT_PROFILE_PIC_URL } from '../../../constants/uiConstants';
 
 const Inbox: React.FC = () => {
   const navigation = useNavigation<InboxNavProp>();
   const drawerNavigation = useNavigation<AppNavProp>();
-  const {isDarkMode} = useTheme();
+  const { isDarkMode } = useTheme();
   const user = useUserStore(state => state);
   const isInitialMount = useRef(true);
   const [searchQuery, setSearchQuery] = useState('');
   const fadeAnim = useState(new Animated.Value(0))[0];
-  const [isNewMessageModalVisible, setIsNewMessageModalVisible] =
-    useState(false);
+  const [isNewMessageModalVisible, setIsNewMessageModalVisible] = useState(false);
 
   const {
     conversations,
@@ -105,74 +105,63 @@ const Inbox: React.FC = () => {
         isInitialMount.current = false;
       }
 
-      // const unsubscribe = navigation.addListener('focus', () => {
-      //   // Reset the navigation state to the Inbox when focused
-      //   navigation.dispatch(
-      //     CommonActions.reset({
-      //       index: 0,
-      //       routes: [{ name: 'Inbox' }],
-      //     })
-      //   );
-      // });
-
       return () => {
         console.log('Inbox screen unfocused');
-        // unsubscribe();
       };
     }, [navigation, user.email, refetchConversations, fetchConversations]),
   );
 
-  const MessagePreview = useCallback(({content}: {content: MessageContent}) => {
-    if (typeof content === 'string') {
-      try {
-        const parsedContent = JSON.parse(content);
-        if (isMemeShareContent(parsedContent)) {
-          const memeUrl = parsedContent.memeID.startsWith('http')
-            ? parsedContent.memeID
-            : `https://jestr-bucket.s3.amazonaws.com/${parsedContent.memeID}`;
-
-          return (
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Text style={styles.preview}>{parsedContent.message}</Text>
-              <Image
-                source={{uri: memeUrl}}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 5,
-                  marginTop: -20,
-                  marginLeft: 20,
-                }}
-              />
-            </View>
-          );
-        }
-      } catch (e) {
-        // If parsing fails, it's not a JSON string, so we keep the original content
-      }
-      return <Text style={styles.preview}>{content}</Text>;
-    } else if (isMemeShareContent(content)) {
-      const memeUrl = content.memeID.startsWith('http')
-        ? content.memeID
-        : `https://jestr-bucket.s3.amazonaws.com/${content.memeID}`;
-
+  const MessagePreview = useCallback(({ content }: { content: MessageContent }) => {
+    const renderMemeShare = (memeContent: MemeShareContent) => {
+      const memeUrl = memeContent.memeID.startsWith('http')
+        ? memeContent.memeID
+        : `https://jestr-bucket.s3.amazonaws.com/${memeContent.memeID}`;
+  
+      console.log('Rendering meme share content:', memeContent);
+  
       return (
-        <View style={{flexDirection: 'row', alignItems: 'flex-end'}}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.preview}>{memeContent.message || 'Shared a meme'}</Text>
           <Image
-            source={{uri: memeUrl}}
-            style={{width: 10, height: 10, borderRadius: 5, marginRight: 5}}
+            source={{ uri: memeUrl }}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 5,
+              marginTop: -20,
+              marginLeft: 20,
+            }}
           />
-          <Text style={styles.preview}>{content.message}</Text>
         </View>
       );
-    } else {
-      return <Text style={styles.preview}>Unknown message type</Text>;
+    };
+  
+    if (typeof content === 'string') {
+      return <Text style={styles.preview}>{content}</Text>;
+    } else if (typeof content === 'object') {
+      if (content.type === 'meme_share') {
+        return renderMemeShare(content);
+      } else if (content.type === 'text') {
+        return <Text style={styles.preview}>{content.message}</Text>;
+      }
     }
+  
+    console.warn('Unknown message content type:', content);
+    return <Text style={styles.preview}>Unknown message type</Text>;
   }, []);
-
+  /**
+   * Renders each conversation item in the SwipeListView.
+   */
   const renderItem = useCallback(
-    ({item}: {item: Conversation}) => {
+    ({ item }: { item: Conversation }) => {
       const isPinned = pinnedConversations.some(conv => conv.id === item.id);
+      const lastMessageTimestamp = item.lastMessage?.Timestamp || '';
+  
+      // Ensure lastMessage.Content is properly parsed if it's a string
+      const lastMessageContent = typeof item.lastMessage.Content === 'string' 
+        ? JSON.parse(item.lastMessage.Content) 
+        : item.lastMessage.Content;
+  
       return (
         <TouchableOpacity
           activeOpacity={1}
@@ -197,9 +186,9 @@ const Inbox: React.FC = () => {
                 />
               )}
             </View>
-            <MessagePreview content={item.lastMessage.Content} />
+            <MessagePreview content={lastMessageContent} />
             <Text style={styles.timestamp}>
-              {formatTimestamp(item?.lastMessage?.Timestamp) || 'N/A'}
+              {formatTimestamp(lastMessageTimestamp) || 'N/A'}
             </Text>
           </View>
           {item.UnreadCount > 0 && (
@@ -212,9 +201,11 @@ const Inbox: React.FC = () => {
     },
     [pinnedConversations, user, navigation, MessagePreview],
   );
-
+  /**
+   * Renders the hidden item (for swipe actions) in the SwipeListView.
+   */
   const renderHiddenItem = useCallback(
-    ({item}: {item: Conversation}, rowMap: RowMap<Conversation>) => {
+    ({ item }: { item: Conversation }, rowMap: RowMap<Conversation>) => {
       const isPinned = pinnedConversations.some(conv => conv.id === item.id);
       return (
         <View style={styles.rowBack}>
@@ -249,6 +240,9 @@ const Inbox: React.FC = () => {
     ],
   );
 
+  /**
+   * Toggles the visibility of the New Message Modal.
+   */
   const toggleNewMessageModal = useCallback(() => {
     toggleNewMessageModalHandler(
       isNewMessageModalVisible,
@@ -256,9 +250,13 @@ const Inbox: React.FC = () => {
     );
   }, [isNewMessageModalVisible]);
 
+  /**
+   * SkeletonLoader Component
+   * Displays a loading skeleton while conversations are being fetched.
+   */
   const SkeletonLoader = () => (
     <View>
-      {Array.from({length: 1}).map((_, index) => (
+      {Array.from({ length: 1 }).map((_, index) => (
         <View key={index} style={styles.skeletonContainer}>
           <View style={styles.skeletonProfilePic} />
           <View style={styles.skeletonTextContainer}>
@@ -270,11 +268,15 @@ const Inbox: React.FC = () => {
     </View>
   );
 
+  /**
+   * Determines the content to display based on the loading and error states.
+   */
   const content = useMemo(() => {
     if (isStoreLoading || isServerLoading) {
       return <SkeletonLoader />;
     }
     if (error) {
+      console.error('Error loading conversations:', error);
       return <Text>Error loading conversations</Text>;
     }
     return (
@@ -291,7 +293,7 @@ const Inbox: React.FC = () => {
               disableLeftSwipe={false}
               disableRightSwipe={false}
               keyExtractor={item => item.id}
-              contentContainerStyle={{paddingBottom: 10}}
+              contentContainerStyle={{ paddingBottom: 10 }}
             />
           </View>
         )}
@@ -304,7 +306,7 @@ const Inbox: React.FC = () => {
             leftOpenValue={75}
             rightOpenValue={-75}
             keyExtractor={item => item.id}
-            contentContainerStyle={{paddingBottom: 80}}
+            contentContainerStyle={{ paddingBottom: 80 }}
           />
         </View>
       </>
@@ -321,12 +323,12 @@ const Inbox: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={{flex: 1}}
-      behavior={Platform.select({ios: 'padding', android: undefined})}>
+      style={{ flex: 1 }}
+      behavior={Platform.select({ ios: 'padding', android: undefined })}>
       <Animated.View
         style={[
           styles.container,
-          {opacity: fadeAnim, backgroundColor: isDarkMode ? '#000' : '#1E1E1E'},
+          { opacity: fadeAnim, backgroundColor: isDarkMode ? '#000' : '#1E1E1E' },
         ]}>
         <View style={styles.header}>
           <Text style={styles.sectionHeaderIn}>Inbox</Text>

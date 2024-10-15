@@ -1,6 +1,13 @@
-import {format, formatDistanceToNow, isToday} from 'date-fns';
+// src/utils/dateUtils.ts
 
-export const getDaysSinceCreation = (creationDate: string) => {
+import { format, formatDistanceToNow, isToday, isValid } from 'date-fns';
+
+/**
+ * Calculates the number of days since the creation date.
+ * @param creationDate - The creation date as a string.
+ * @returns Number of days since creation.
+ */
+export const getDaysSinceCreation = (creationDate: string): number => {
   const startDate = new Date(creationDate);
   const currentDate = new Date();
   const diffTime = Math.abs(currentDate.getTime() - startDate.getTime());
@@ -8,33 +15,64 @@ export const getDaysSinceCreation = (creationDate: string) => {
   return diffDays;
 };
 
-export const formatTimestamp = (timestamp: string) => {
+/**
+ * Formats the timestamp for display.
+ * @param timestamp - The timestamp as a string.
+ * @returns A formatted date string or 'Invalid date' if the timestamp is invalid.
+ */
+export const formatTimestamp = (timestamp: string): string => {
+  if (!timestamp) {
+    console.error('Invalid timestamp provided: Empty string');
+    return 'Invalid date';
+  }
+
   const date = new Date(timestamp);
+
+  // Safeguard to prevent crashes if the date is invalid
+  if (!isValid(date)) {
+    console.error('Invalid timestamp provided:', timestamp);
+    return 'Invalid date';
+  }
+
   if (isToday(date)) {
-    return format(date, 'h:mm a');
+    return format(date, 'h:mm a'); // Format as time for today
   } else {
-    // FIXME: This is crashing the app
-    // "ERROR  RangeError: Invalid time value"
-    // return formatDistanceToNow(date, {addSuffix: true});
-    return '';
+    // Use formatDistanceToNow to show how long ago the message was created
+    return formatDistanceToNow(date, { addSuffix: true });
   }
 };
 
-export const formatDate = (dateString: string) => {
+/**
+ * Formats the date string into a relative time description.
+ * @param dateString - The date string to format.
+ * @returns A formatted relative time string.
+ */
+export const formatDate = (dateString: string): string => {
+  if (!dateString) {
+    console.error('Invalid date string provided: Empty string');
+    return 'Invalid date';
+  }
+
   const date = new Date(dateString);
   const now = new Date();
+
+  if (!isValid(date)) {
+    console.error('Invalid date string provided:', dateString);
+    return 'Invalid date';
+  }
+
   const diff = Math.abs(now.getTime() - date.getTime());
   const diffMinutes = Math.floor(diff / (1000 * 60));
   const diffHours = Math.floor(diff / (1000 * 60 * 60));
   const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
 
   if (diffMinutes < 60) {
-    return `${diffMinutes} minutes ago`;
+    return `${diffMinutes} minute(s) ago`;
   } else if (diffHours < 24) {
-    return `${diffHours} hours ago`;
+    return `${diffHours} hour(s) ago`;
   } else if (diffDays === 1) {
     return `Yesterday`;
   } else {
-    return `${diffDays} days ago`;
+    return `${diffDays} day(s) ago`;
   }
 };

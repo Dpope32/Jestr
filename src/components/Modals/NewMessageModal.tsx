@@ -129,35 +129,47 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
     const existingConversation = existingConversations.find(
       (conv) => conv.userEmail === item.email
     );
-
+  
     let messageContent = 'No message';
     let memeURL = '';
-
+  
     if (existingConversation?.lastMessage) {
       const content = existingConversation.lastMessage.Content;
-
+      let parsedContent: any = null;
+  
       if (typeof content === 'string') {
         try {
-          const parsedContent = JSON.parse(content);
-          if (parsedContent.type === 'meme_share') {
+          parsedContent = JSON.parse(content);
+        } catch (e) {
+          console.error('Failed to parse message content:', e);
+          // Fallback: Treat the entire content as plain text
+          messageContent = content;
+        }
+      } else if (typeof content === 'object') {
+        parsedContent = content;
+      }
+  
+      if (parsedContent) {
+        switch (parsedContent.type) {
+          case 'meme_share':
             messageContent = parsedContent.message || 'Shared a meme';
             memeURL = parsedContent.memeID.startsWith('http')
               ? parsedContent.memeID
               : `https://jestr-bucket.s3.amazonaws.com/${parsedContent.memeID}`;
-          } else {
-            messageContent = content;
-          }
-        } catch (e) {
-          messageContent = content;
+            break;
+  
+          case 'text':
+            messageContent = parsedContent.message || 'No message';
+            break;
+  
+          // Handle other message types here if necessary
+          default:
+            messageContent = 'Unsupported message type';
+            break;
         }
-      } else if (content?.type === 'meme_share') {
-        messageContent = content.message || 'Shared a meme';
-        memeURL = content.memeID.startsWith('http')
-          ? content.memeID
-          : `https://jestr-bucket.s3.amazonaws.com/${content.memeID}`;
       }
     }
-
+  
     return (
       <TouchableOpacity onPress={() => handleSelectUser(item)}>
         <View style={styles.userItem}>
@@ -184,6 +196,7 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
       </TouchableOpacity>
     );
   };
+  
 
   return (
     <Modal visible={isVisible} transparent animationType="slide">
@@ -208,6 +221,10 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
                     ],
                   },
                 ]}
+                onLayout={(event) => {
+                  const { width, height } = event.nativeEvent.layout;
+                  console.log('Animated.View dimensions:', width, height);
+                }}
               >
                 <View style={styles.header}>
                   <Text style={styles.headerTitle}>New Chat Message</Text>
@@ -230,43 +247,63 @@ const NewMessageModal: React.FC<NewMessageModalProps> = ({
                   />
                 </View>
                 <View style={styles.listContainer}>
-                  <FlashList
-                    data={filteredUsers}
-                    renderItem={renderUserItem}
-                    estimatedItemSize={73}
-                    keyboardShouldPersistTaps="handled"
-                    keyExtractor={(item) => item.email}
-                  />
+                  {filteredUsers.length > 0 ? (
+                    <View style={{ flex: 1 }}>
+                      <FlashList
+                        data={filteredUsers}
+                        renderItem={renderUserItem}
+                        estimatedItemSize={73}
+                        keyboardShouldPersistTaps="handled"
+                        keyExtractor={(item) => item.email}
+                        contentContainerStyle={{ paddingHorizontal: 10 }}
+                        onLayout={(event) => {
+                          const { width, height } = event.nativeEvent.layout;
+                          console.log('FlashList (filteredUsers) dimensions:', width, height);
+                        }}
+                      />
+                    </View>
+                  ) : (
+                    <Text style={styles.noResultsText}>No users found.</Text>
+                  )}
                 </View>
                 <View style={styles.suggestionsContainer}>
-                  <Text style={styles.suggestionsTitle}>Suggested Users</Text>
-                  <FlashList
-                    data={suggestedUsers}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        onPress={() => handleSelectUser(item)}
-                        style={styles.suggestionItem}
-                      >
-                        <Image
-                          source={getImageSource(item.profilePic)}
-                          style={styles.suggestionAvatar}
-                        />
-                        <Text
-                          style={styles.suggestionUsername}
-                          numberOfLines={1}
-                          ellipsizeMode="tail"
-                        >
-                          {item.username}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                    estimatedItemSize={85}
-                    horizontal
-                    keyboardShouldPersistTaps="handled"
-                    keyExtractor={(item) => item.email}
-                    showsHorizontalScrollIndicator={false}
-                  />
-                </View>
+  <Text style={styles.suggestionsTitle}>Suggested Users</Text>
+  {/* Set a fixed height for the FlashList container */}
+  <View style={styles.suggestedListContainer}>
+    <FlashList
+      data={suggestedUsers}
+      renderItem={({ item }) => (
+        <TouchableOpacity
+          onPress={() => handleSelectUser(item)}
+          style={styles.suggestionItem}
+        >
+          <Image
+            source={getImageSource(item.profilePic)}
+            style={styles.suggestionAvatar}
+          />
+          <Text
+            style={styles.suggestionUsername}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {item.username}
+          </Text>
+        </TouchableOpacity>
+      )}
+      estimatedItemSize={85}
+      horizontal
+      keyboardShouldPersistTaps="handled"
+      keyExtractor={(item) => item.email}
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ paddingHorizontal: 10 }}
+      onLayout={(event) => {
+        const { width, height } = event.nativeEvent.layout;
+        console.log('FlashList (suggestedUsers) dimensions:', width, height);
+      }}
+    />
+  </View>
+</View>
+
               </Animated.View>
             </View>
           </TouchableWithoutFeedback>

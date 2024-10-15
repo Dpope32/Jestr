@@ -11,7 +11,21 @@ import Toast from 'react-native-toast-message';
 import axios from 'axios';
 
 const LAST_VIEWED_MEME_KEY = 'lastViewedMemeId';
+const UPLOAD_TIMEOUT = 30000; 
 
+
+/**
+ * Uploads a meme by obtaining a presigned URL, uploading the file to S3,
+ * and then processing the metadata with the backend.
+ *
+ * @param mediaUri - The URI of the media file to upload.
+ * @param userEmail - The email of the user uploading the meme.
+ * @param username - The username of the user uploading the meme.
+ * @param caption - Optional caption for the meme.
+ * @param tags - Optional tags for the meme.
+ * @param mediaType - The type of media ('image' or 'video').
+ * @returns An object containing the URL of the uploaded meme.
+ */
 export const uploadMeme = async (
   mediaUri: string,
   userEmail: string,
@@ -19,16 +33,21 @@ export const uploadMeme = async (
   caption: string = '',
   tags: string[] = [],
   mediaType: 'image' | 'video',
+  onProgress: (progress: number) => void
 ) => {
+  console.log('uploadMeme: Function called');
+  
   try {
-    const fileName = `${userEmail}-meme-${Date.now()}.${
-      mediaType === 'video' ? 'mp4' : 'jpg'
-    }`;
+    // Generate a unique filename
+    const timestamp = Date.now();
+    const fileExtension = mediaType === 'video' ? 'mp4' : 'jpg';
+    const fileName = `${userEmail}-meme-${timestamp}.${fileExtension}`;
     const contentType = mediaType === 'video' ? 'video/mp4' : 'image/jpeg';
 
+    // Request a presigned URL from the backend
     const presignedUrlResponse = await fetch(`${API_URL}/getPresignedUrl`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         operation: 'getPresignedUrl',
         fileName,
@@ -37,32 +56,27 @@ export const uploadMeme = async (
     });
 
     if (!presignedUrlResponse.ok) {
-      const errorText = await presignedUrlResponse.text();
-      console.error('Presigned URL error response:', errorText);
-      throw new Error(
-        `Failed to get presigned URL: ${presignedUrlResponse.status} ${presignedUrlResponse.statusText}`,
-      );
+      throw new Error(`Failed to get presigned URL: ${presignedUrlResponse.status}`);
     }
 
     const presignedData = await presignedUrlResponse.json();
-    const {uploadURL, fileKey} = presignedData.data;
+    const { uploadURL, fileKey } = presignedData.data;
 
-    if (!uploadURL) {
-      throw new Error('Received null or undefined uploadURL');
-    }
-
+    // Upload the file to S3 using the presigned URL
     const uploadResult = await FileSystem.uploadAsync(uploadURL, mediaUri, {
       httpMethod: 'PUT',
-      headers: {'Content-Type': contentType},
+      headers: { 'Content-Type': contentType },
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
     });
 
     if (uploadResult.status !== 200) {
       throw new Error(`Failed to upload file to S3: ${uploadResult.status}`);
     }
 
+    // Notify the backend to start processing the uploaded meme metadata
     const metadataResponse = await fetch(`${API_URL}/uploadMeme`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         operation: 'uploadMeme',
         email: userEmail,
@@ -75,20 +89,19 @@ export const uploadMeme = async (
     });
 
     if (!metadataResponse.ok) {
-      const errorText = await metadataResponse.text();
-      console.error('Metadata response:', errorText);
-      throw new Error(
-        `Failed to process metadata: ${metadataResponse.status} ${metadataResponse.statusText}`,
-      );
+      throw new Error(`Failed to initiate metadata processing: ${metadataResponse.status}`);
     }
 
-    const data = await metadataResponse.json();
-    return {url: data.data.url};
-  } catch (error) {
-    console.error('Error uploading meme:', error);
+    const metadataData = await metadataResponse.json();
+    const memeUrl = metadataData.data?.url || `${API_URL}/${fileKey}`;
+    
+    return { url: memeUrl, status: 'processing' };
+  } catch (error: unknown) {
+    console.error('uploadMeme: Error uploading meme:', error);
     throw error;
   }
 };
+
 
 export const fetchMemes = async (
   lastEvaluatedKey: string | null = null,
@@ -437,7 +450,7 @@ export const getLikeStatus = async (memeID: string, userEmail: string) => {
         LikeCount: data.data.LikeCount,
         ShareCount: data.data.ShareCount,
         CommentCount: data.data.CommentCount,
-        DownloadsCount: data.data.DownloadCount,
+        DownloadCount: data.data.DownloadCount,
         UploadTimestamp: data.data.UploadTimestamp,
       },
     };

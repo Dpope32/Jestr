@@ -1,6 +1,6 @@
 import {create} from 'zustand';
 import {persist, createJSONStorage} from 'zustand/middleware';
-import {fetchConversations as apiFetchConversations} from '../services/socialService';
+import {fetchConversations as apiFetchConversations} from '../services/inboxServices';
 import {
   Conversation,
   Message,

@@ -105,7 +105,7 @@ const useCommentFeed = ({
   onSuccess: () => {
     setNewComment('');
     setReplyingTo(null);
-    badgeStore.incrementCommentCount(userEmail);
+    badgeStore.incrementCount('commentCount', userEmail);
     refetchComments(); // Refetch comments after posting
     queryClient.setQueryData(['memez', userEmail], (oldData: any) => {
       if (!oldData) return oldData;

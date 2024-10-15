@@ -36,7 +36,7 @@ const CompleteProfileScreen: React.FC = () => {
   const { pushEnabled, setNotificationPreferences } = useNotificationStore();
 
   const email = route.params?.email;
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const { isDarkMode, setIsDarkMode } = useUserStore();
 
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
@@ -68,11 +68,9 @@ const CompleteProfileScreen: React.FC = () => {
     checkMediaPermission();
   }, []);
 
- const handleDarkModeToggle = () => {
-    const newMode = !darkMode;
-    setDarkModeLocal(newMode);
-    toggleDarkMode();
-    setDarkMode?.(newMode);
+  const handleDarkModeToggle = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
   };
 
   const handleImagePick = useCallback(async (type: 'header' | 'profile') => {

@@ -26,6 +26,7 @@ import {useNotificationStore} from '../stores/notificationStore';
 // });
 
 import {useUserStore} from '../stores/userStore';
+import {useBadgeStore} from '../stores/badgeStore';
 import {removeToken} from '../stores/secureStore';
 import * as SecureStore from 'expo-secure-store';
 import {fetchUserDetails} from './userService';
@@ -217,7 +218,7 @@ export const handleLogin = async (
       console.log('User signed in successfully');
       const {tokens} = await fetchAuthSession();
       const accessToken = tokens?.accessToken?.toString();
-      console.log('Access token handleLogin:', accessToken);
+    //  console.log('Access token handleLogin:', accessToken);
 
       if (accessToken) {
         await SecureStore.setItemAsync('accessToken', accessToken);
@@ -254,6 +255,10 @@ export const handleLogin = async (
         followingCount: userDetails.FollowingCount,
         isAdmin: isAdmin,
       });
+        // Synchronize badges after successful login
+        const badgeStore = useBadgeStore.getState();
+        await badgeStore.syncBadgesWithAPI(userDetails.email);
+        console.log('Badges synchronized after login');
 
       // await storeUserIdentifier(userDetails.email);
       // await logStorageContents();
@@ -528,4 +533,9 @@ export const fetchAllUsers = async (): Promise<User[]> => {
   // Implement your API call here
   // For now, return an empty array
   return [];
+};
+
+
+export const handleChangePassword = async (username: string, oldPassword: string, newPassword: string): Promise<void> => {
+  // Implement your API call here
 };

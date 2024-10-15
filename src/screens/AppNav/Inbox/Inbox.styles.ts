@@ -62,6 +62,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
   },
+  errorText: {
+    color:  '#FF3B30',
+  },
   notificationIcon: {
     marginRight: 10,
   },
@@ -125,43 +128,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#4d4c4c',
     borderRadius: 4,
   },
-  // Styles for the conversation items
-  rowFront: {
-    backgroundColor: '#1C1C1C',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#4d4c4c',
-    zIndex: 2, // Ensure the front row is above the hidden row
-  },
-  conversationInfo: {
-    flex: 1,
-    marginLeft: 15,
-    justifyContent: 'center',
-  },
-  nameAndPin: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   pinIcon: {
     marginLeft: 5,
-  },
-  username: {
-    fontWeight: '600',
-    fontSize: 16,
-    color: '#FFFF',
-  },
-  preview: {
-    fontSize: 15,
-    color: '#999',
-    marginTop: 2,
-  },
-  timestamp: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 2,
   },
   unreadBadge: {
     backgroundColor: 'blue',
@@ -218,6 +186,57 @@ const styles = StyleSheet.create({
   },
   pinnedConversation: {
     backgroundColor: '#333',
+  },
+  rowFront: {
+    backgroundColor: '#1C1C1C',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#4d4c4c',
+    zIndex: 2, // Ensure the front row is above the hidden row
+  },
+  conversationInfo: {
+    flex: 1,
+    marginLeft: 15,
+    justifyContent: 'center',
+  },
+  nameAndPin: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  username: {
+    fontWeight: '600',
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  preview: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 2,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.5)',
+    marginTop: 4,
+  },
+  memePreviewContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  memePreviewText: {
+    flex: 1,
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  memePreviewImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 5,
+    marginLeft: 10,
   },
 });
 

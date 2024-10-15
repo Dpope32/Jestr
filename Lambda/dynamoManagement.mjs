@@ -94,7 +94,7 @@ export const handler = async (event) => {
                                 Username: memeItem.Username || '',
                                 Caption: memeItem.Caption || '',
                                 LikeCount: memeItem.LikeCount || 0,
-                                DownloadsCount: memeItem.DownloadsCount || 0,
+                                DownloadCount: memeItem.DownloadCount || 0,
                                 CommentCount: memeItem.CommentCount || 0,
                                 ShareCount: memeItem.ShareCount || 0,
                                 mediaType: memeItem.mediaType || 'image' 
@@ -156,7 +156,7 @@ export const handler = async (event) => {
                             Username: memeItem.Username || '',
                             Caption: memeItem.Caption || '',
                             LikeCount: memeItem.LikeCount || 0,
-                            DownloadsCount: memeItem.DownloadsCount || 0,
+                            DownloadCount: memeItem.DownloadCount || 0,
                             CommentCount: memeItem.CommentCount || 0,
                             ShareCount: memeItem.ShareCount || 0,
                             mediaType: memeItem.mediaType || 'image', 

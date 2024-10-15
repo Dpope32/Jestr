@@ -13,16 +13,18 @@ export type BadgeType =
   | 'memeExplorer'
   | 'communityChampion'
 
-export interface Badge {
-  id: string;
-  type: BadgeType;
-  title: string;
-  description: string;
-  earned: boolean;
-  progress: number;
-  acquiredDate?: string;
-  holdersCount?: number;
-}
+  export interface Badge {
+    id: string;
+    type: BadgeType;
+    title: string;
+    description: string;
+    earned: boolean;
+    progress: number;
+    acquiredDate?: string;
+    holdersCount?: number;
+    currentCounts: number;
+  }
+  
 
 export const badgeImages: { [key in BadgeType]: any } = {
   memeLiker: require('../../../assets/images/9.png'),
@@ -101,8 +103,6 @@ export const badgeDetailsMap: { [key: string]: BadgeDetails } = {
   insightfulUser: {
     name: "Insightful User",
     description: "Awarded for providing valuable insights.",
-    // Assuming this is a default earned badge, set goal to 0 or omit it
-    // Here, we'll omit 'goal' since it's earned automatically
   },
   memeExplorer: {
     name: "Meme Explorer",

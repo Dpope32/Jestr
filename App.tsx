@@ -22,7 +22,6 @@ import ErrorFallback, {
 import {createMMKVPersister} from './src/utils/mmkvPersister';
 import {usePushNotifications} from './src/screens/AppNav/Notifications/usePushNotification';
 import {useUserStore} from 'stores/userStore';
-import {getBadgeStorageContents, useBadgeStore} from 'stores/badgeStore';
 import {useTheme} from 'theme/ThemeContext';
 
 const fontz = {Inter_400Regular, Inter_700Bold};
@@ -84,7 +83,6 @@ const App = () => {
 
   const [isReady, setIsReady] = useState(false);
   const user = useUserStore(state => state);
-  const {syncBadgesWithAPI, isBadgesLoaded} = useBadgeStore();
 
   const lockOrientation = async () => {
     await ScreenOrientation.lockAsync(
@@ -96,9 +94,6 @@ const App = () => {
     try {
       await SplashScreen.preventAutoHideAsync();
       const fontsLoaded = await Font.loadAsync(fontz).then(() => true);
-      if (user.email && !isBadgesLoaded) {
-        await syncBadgesWithAPI(user.email);
-      }
       +setIsReady(fontsLoaded);
     } catch (error) {
       console.error('Initialization error', error);
@@ -110,7 +105,6 @@ const App = () => {
     activateKeepAwakeAsync();
     lockOrientation();
     initializeApp();
-    getBadgeStorageContents();
   }, []);
 
   if (!isReady) {

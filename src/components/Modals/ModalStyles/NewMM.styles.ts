@@ -20,6 +20,12 @@ const createStyles = (isDarkMode: boolean) => {
       flex: 1,
       backgroundColor: COLORS.background,
     },
+    noResultsText: {
+      textAlign: 'center',
+      color: COLORS.textSecondary,
+      marginTop: 20,
+    },
+    
     keyboardAvoidingView: {
       flex: 1,
     },
@@ -114,7 +120,7 @@ const createStyles = (isDarkMode: boolean) => {
       backgroundColor: COLORS.suggestionsBackground,
       paddingHorizontal: 10,
       paddingBottom: 10,
-      height: 120, // Set a fixed height for the suggestions container
+      height: 120, // Ensure this is sufficient for the title and FlashList
     },
     suggestionsTitle: {
       fontSize: 16,
@@ -122,8 +128,9 @@ const createStyles = (isDarkMode: boolean) => {
       marginBottom: 5,
       color: COLORS.textPrimary,
     },
-    horizontalListContainer: {
-      height: 120, // Increased height
+    // New style for the FlashList container
+    suggestedListContainer: {
+      height: 80, // Adjust as needed
     },
     suggestionItem: {
       alignItems: 'center',
@@ -156,5 +163,6 @@ const createStyles = (isDarkMode: boolean) => {
     },
   });
 };
+
 
 export default createStyles;

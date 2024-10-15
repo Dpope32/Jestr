@@ -60,7 +60,7 @@ const DeactivateAccount: React.FC<{ closeModal: () => void }> = ({ closeModal })
 
               if (response.ok) {
                 console.log('Account deletion successful, signing out...');
-                await handleSignOut(navigation);
+                await handleSignOut();
                 Toast.show({
                   type: 'success',
                   text1: 'Account Deleted',

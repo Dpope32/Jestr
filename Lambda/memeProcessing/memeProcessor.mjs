@@ -5,7 +5,7 @@ import { shareMeme } from './shareMeme.mjs';
 import { getPresignedUrl, createResponse } from './utils.mjs';
 import { uploadMeme } from './uploadMeme.mjs';
 import { getUserMemes } from './dbServices.mjs';
-import { awardBadge } from './badgeServices.mjs';
+import { awardBadge, getUserBadges } from './badgeServices.mjs';
 
 const verifier = CognitoJwtVerifier.create({
   userPoolId: process.env.COGNITO_USER_POOL_ID,
@@ -13,7 +13,7 @@ const verifier = CognitoJwtVerifier.create({
   clientId: process.env.COGNITO_CLIENT_ID,
 });
 
-const publicOperations = ["shareMeme", "getPresignedUrl", "uploadMeme", "getUserMemes"];
+const publicOperations = ["shareMeme", "getPresignedUrl", "uploadMeme", "getUserMemes", "getUserBadges", ];
 
 /**
  * Main Lambda handler function.
@@ -21,7 +21,7 @@ const publicOperations = ["shareMeme", "getPresignedUrl", "uploadMeme", "getUser
  * @returns {Object} - The response object.
  */
 export const handler = async (event) => {
-  console.log("Received event in memeProcessor:", JSON.stringify(event, null, 2));
+  //console.log("Received event in memeProcessor:", JSON.stringify(event, null, 2));
 
   try {
     let requestBody;
@@ -103,6 +103,21 @@ export const handler = async (event) => {
           return createResponse(500, 'Failed to fetch user memes.', { memes: [], lastEvaluatedKey: null });
         }
       }
+
+      case 'getUserBadges': { 
+        const { userEmail } = requestBody;
+        if (!userEmail) {
+          return createResponse(400, 'Email is required to fetch user badges.');
+        }
+        try {
+          const badges = await getUserBadges(userEmail);
+          return createResponse(200, 'User badges retrieved successfully.', { badges });
+        } catch (error) {
+          console.error('Error fetching user badges:', error);
+          return createResponse(500, 'Failed to fetch user badges.');
+        }
+      }
+      
 
       default:
         console.warn(`Unsupported operation: ${operation}`);

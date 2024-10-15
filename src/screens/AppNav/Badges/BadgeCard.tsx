@@ -1,4 +1,4 @@
-// src/screens/AppNav/Badges/BadgeCard.tsx
+// BadgeCard.tsx
 
 import React, { useRef, useState } from 'react';
 import {
@@ -12,8 +12,8 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import { Badge, useBadgeStore } from '../../../stores/badgeStore';
-import { getStyles } from './Badges.styles';
-import { COLORS } from '../../../theme/theme';
+import { badgeDetailsMap } from '../../../screens/AppNav/Badges/Badges.types';
+import { getStyles, getColors } from './Badges.styles';
 
 type BadgeCardProps = {
   badge: Badge;
@@ -23,11 +23,13 @@ type BadgeCardProps = {
 
 const BadgeCard: React.FC<BadgeCardProps> = ({ badge, badgeImage, isDarkMode }) => {
   const styles = getStyles(isDarkMode);
+  const COLORS = getColors(isDarkMode);
   const setPinnedBadge = useBadgeStore((state) => state.setPinnedBadge);
   const flipAnim = useRef(new Animated.Value(0)).current;
   const [isFront, setIsFront] = useState(true);
 
   const handleFlip = () => {
+    if (!badge.earned) return; // Prevent flipping if badge is not earned
     Animated.spring(flipAnim, {
       toValue: isFront ? 1 : 0,
       friction: 8,
@@ -84,8 +86,13 @@ const BadgeCard: React.FC<BadgeCardProps> = ({ badge, badgeImage, isDarkMode }) 
         accessible
         accessibilityLabel={`Badge: ${badge.title}`}
       >
+        {/* Front Side */}
         <Animated.View
-          style={[styles.badgeCard, frontAnimatedStyle, { opacity: frontOpacity }]}
+          style={[
+            styles.badgeCard,
+            frontAnimatedStyle,
+            { opacity: frontOpacity },
+          ]}
         >
           <View style={styles.badgeIconContainer}>
             <Image
@@ -104,17 +111,20 @@ const BadgeCard: React.FC<BadgeCardProps> = ({ badge, badgeImage, isDarkMode }) 
           <Text style={styles.badgeTitle}>{badge.title}</Text>
         </Animated.View>
 
+        {/* Back Side */}
         <Animated.View
           style={[
             styles.badgeCard,
             styles.badgeBackCard,
             backAnimatedStyle,
             { opacity: backOpacity },
-            !badge.earned ? styles.unearnedBadge : {},
           ]}
         >
           <Text style={styles.badgeBackTitle}>{badge.title}</Text>
           <Text style={styles.badgeDetails}>{badge.description}</Text>
+          <Text style={styles.badgeDetails}>
+            Progress: {badge.currentCounts}/{badgeDetailsMap[badge.type]?.goal || 0}
+          </Text>
           {badge.earned && (
             <Text style={styles.badgeDetails}>
               Acquired: {new Date(badge.acquiredDate || '').toLocaleDateString()}
@@ -126,4 +136,4 @@ const BadgeCard: React.FC<BadgeCardProps> = ({ badge, badgeImage, isDarkMode }) 
   );
 };
 
-export default BadgeCard;
+export default React.memo(BadgeCard);

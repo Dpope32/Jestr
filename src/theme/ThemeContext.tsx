@@ -1,6 +1,6 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import * as SecureStore from 'expo-secure-store';
-import { COLORS } from './theme'; // Import COLORS from your theme file
+import React, { createContext, useContext } from 'react';
+import { useUserStore } from '../stores/userStore';
+import { COLORS } from './theme'; 
 
 interface ThemeColors {
   background: string;
@@ -66,21 +66,7 @@ const ThemeContext = createContext<ThemeContextProps>({
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    SecureStore.getItemAsync('isDarkMode').then((value) => {
-      if (value !== null) {
-        setIsDarkMode(JSON.parse(value));
-      }
-    });
-  }, []);
-
-  const toggleDarkMode = async () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    await SecureStore.setItemAsync('isDarkMode', JSON.stringify(newMode));
-  };
+  const { isDarkMode, toggleDarkMode } = useUserStore();
 
   const colors = isDarkMode ? darkColors : lightColors;
 

@@ -42,7 +42,7 @@ export const postComment = async (
 
   try {
     // Log the request data
-    logRequest('postComment', commentData);
+    //logRequest('postComment', commentData);
 
     const response = await fetch(POST_COMMENT_ENDPOINT, {
       method: 'POST',
@@ -53,7 +53,7 @@ export const postComment = async (
     const data = await response.json();
 
     // Log the response data
-    logResponse('postComment', response, data);
+    //logResponse('postComment', response, data);
 
     if (!response.ok) {
       console.error('Failed to post comment:', data.message);
@@ -85,7 +85,7 @@ export const updateCommentReaction = async (
 
   try {
     // Log the request data
-    logRequest('updateCommentReaction', requestBody);
+    //logRequest('updateCommentReaction', requestBody);
 
     const response = await fetch(UPDATE_COMMENT_REACTION_ENDPOINT, {
       method: 'POST',
@@ -96,7 +96,7 @@ export const updateCommentReaction = async (
     const data = await response.json();
 
     // Log the response data
-    logResponse('updateCommentReaction', response, data);
+    //logResponse('updateCommentReaction', response, data);
 
     if (!response.ok) {
       console.error('Failed to update comment reaction:', data.message);
@@ -115,7 +115,7 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
   };
 
   try {
-    console.log('Fetching comments for memeID:', memeID);
+    //console.log('Fetching comments for memeID:', memeID);
 
     const response = await fetch(GET_COMMENTS_ENDPOINT, {
       method: 'POST',
@@ -125,7 +125,7 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
 
     const data = await response.json();
 
-    console.log('Raw response data:', data);
+    //console.log('Raw response data:', data);
 
     if (!response.ok) {
       console.error(`HTTP error! status: ${response.status}`);
@@ -176,7 +176,7 @@ export const fetchComments = async (memeID: string): Promise<CommentType[]> => {
       }
     });
 
-    console.log('Organized Comments:', topLevelComments);
+  //  console.log('Organized Comments:', topLevelComments);
     return topLevelComments;
   } catch (error) {
     console.error(`Error fetching comments for memeID ${memeID}:`, error);
@@ -234,7 +234,7 @@ export const deleteComment = async (
 
   try {
     // Log the request data
-    logRequest('deleteComment', requestBody);
+    //logRequest('deleteComment', requestBody);
 
     const response = await fetch(DELETE_COMMENT_ENDPOINT, {
       method: 'POST',

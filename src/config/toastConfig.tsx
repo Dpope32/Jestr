@@ -9,7 +9,7 @@ import Toast from 'react-native-toast-message';
 
 const { height } = Dimensions.get('window');
 
-const TOAST_TOP_POSITION = height * 0.1;
+export const TOAST_TOP_POSITION = height * 0.1;
 
 interface CustomToastProps {
   badge: Badge;

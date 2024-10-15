@@ -183,9 +183,8 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
+    paddingTop: 100,
     paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 40,
   },
   overlay: {
     position: 'absolute',
@@ -223,7 +222,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   card: {
-    flex: 1,
+    flex: 1,  // Allow the card to take up available space
     width: '100%',
     backgroundColor: '#2a2a2a',
     borderTopLeftRadius: 20,
@@ -235,6 +234,7 @@ const styles = StyleSheet.create({
     elevation: 8,
     paddingVertical: 30,
     marginTop: 10,
+    paddingBottom: 80,  // Add padding to account for the bottom navigation bar
   },
   profileText: {
     color: '#fff',
@@ -270,5 +270,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
+
+
 
 export default MemeUploadScreen;

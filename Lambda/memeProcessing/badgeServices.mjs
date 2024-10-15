@@ -16,52 +16,64 @@ const badgeDetailsMap = {
   memeLiker: {
     name: "Meme Liker",
     description: "Liked 5 memes.",
+    threshold: 5
   },
   socialButterfly: {
     name: "Social Butterfly",
     description: "Have 10 relationships (followers or following).",
+    threshold: 10
   },
   memeMaster: {
     name: "Meme Master",
     description: "Uploaded 5 memes.",
+    threshold: 5
   },
   trendSetter: {
     name: "Trend Setter",
     description: "Accumulated 100 likes on memes.",
+    threshold: 100
   },
   messenger: {
     name: "Messenger",
     description: "Participated in 10 conversations.",
+    threshold: 10
   },
   commentator: {
     name: "Commentator",
     description: "Commented on 10 memes.",
+    threshold: 10
   },
   memeCreator: {
     name: "Meme Creator",
     description: "Created 10 memes.",
+    threshold: 10
   },
   viralSensation: {
     name: "Viral Sensation",
-    description: "Had memes shared 100 times in total.",
+    description: "Shared memes 25 times.",
+    threshold: 25
   },
   memeCollector: {
     name: "Meme Collector",
     description: "Downloaded 50 memes.",
+    threshold: 50
   },
 };
 
 /**
  * Function to normalize a badge object.
  * @param {Object} rawBadge - Raw badge data from DynamoDB.
+ * @param {number} currentCounts - The current count towards the badge threshold.
  * @returns {Object} - Normalized badge object.
  */
-const normalizeBadge = (rawBadge) => {
+const normalizeBadge = (rawBadge, currentCounts = 0) => {
   const badgeType = rawBadge.BadgeType || rawBadge.badgeType;
   if (!badgeType) {
     console.error("Missing BadgeType in rawBadge:", rawBadge);
     throw new Error("BadgeType is missing in rawBadge");
   }
+
+  const threshold = badgeDetailsMap[badgeType]?.threshold || 1; // Avoid division by zero
 
   return {
     BadgeType: badgeType,
@@ -75,7 +87,9 @@ const normalizeBadge = (rawBadge) => {
       `Description for ${badgeType} badge`,
     AwardedDate: rawBadge.AwardedDate || rawBadge.awardedDate || "",
     Earned: rawBadge.Earned === true,
-    Progress: rawBadge.Earned ? 100 : rawBadge.Progress || 0,
+    Progress: rawBadge.Earned
+      ? 100
+      : Math.min(Math.floor((currentCounts / threshold) * 100), 100),
     HoldersCount: rawBadge.HoldersCount || rawBadge.holdersCount || 0,
   };
 };
@@ -87,137 +101,114 @@ const normalizeBadge = (rawBadge) => {
  * @returns {Promise<boolean>} - Returns true if eligible, else false.
  */
 const checkBadgeEligibility = async (userEmail, action) => {
+  console.log(`Checking eligibility for badge: ${action}, user: ${userEmail}`);
+
   const badgeCriteria = {
-    memeLiker: {
-      table: "UserLikes",
-      partitionKey: "email",
-      threshold: 10,
+    memeLiker: { 
+      table: "UserLikes", 
+      partitionKey: "email", 
       filterExpression: "Liked = :liked",
       expressionAttributeValues: { ":liked": true },
-      countType: "items",
+      threshold: 5
+    },
+    memeCollector: { 
+      table: "UserDownloads", 
+      partitionKey: "email",
+      threshold: 50
+    },
+    viralSensation: { 
+      table: "Shares", 
+      indexName: "UserEmail-index",
+      partitionKey: "UserEmail",
+      threshold: 25,
+      aggregateAttribute: "ShareCount"
+    },
+    commentator: { 
+      table: "Comments", 
+      indexName: "Email-index", 
+      partitionKey: "Email",
+      threshold: 10
+    },
+    memeMaster: { 
+      table: "Memes", 
+      indexName: "Email-UploadTimestamp-index", 
+      partitionKey: "Email",
+      threshold: 5
+    },
+    trendSetter: { 
+      table: "Memes", 
+      indexName: "Email-UploadTimestamp-index", 
+      partitionKey: "Email", 
+      aggregateAttribute: "LikeCount",
+      threshold: 100
     },
     socialButterfly: {
       table: "UserRelationships",
       partitionKey: "UserID",
-      threshold: 10,
-      countType: "items",
-    },
-    memeMaster: {
-      table: "Memes",
-      indexName: "Email-UploadTimestamp-index",
-      partitionKey: "Email",
-      threshold: 5,
-      countType: "items",
-    },
-    trendSetter: {
-      table: "Memes",
-      indexName: "Email-UploadTimestamp-index",
-      partitionKey: "Email",
-      threshold: 100,
-      sumAttribute: "LikeCount",
-      countType: "sum",
+      threshold: 10
     },
     messenger: {
       table: "UserConversations_v2",
       partitionKey: "UserID",
-      threshold: 10,
-      countType: "items",
-    },
-    commentator: {
-      table: "Comments",
-      indexName: "Username-index",
-      partitionKey: "Username",
-      threshold: 10,
-      countType: "items",
+      threshold: 10
     },
     memeCreator: {
       table: "Memes",
       indexName: "Email-UploadTimestamp-index",
       partitionKey: "Email",
-      threshold: 10,
-      countType: "items",
-    },
-    viralSensation: {
-      table: "Memes",
-      indexName: "Email-UploadTimestamp-index",
-      partitionKey: "Email",
-      threshold: 25,
-      sumAttribute: "ShareCount",
-      countType: "sum",
-    },
-    memeCollector: {
-      table: "UserDownloads",
-      partitionKey: "email",
-      threshold: 50,
-      countType: "items",
-    },
+      threshold: 10
+    }
   };
-  if (!badgeCriteria[action]) {
-    console.error(
-      `Action '${action}' is not supported or cannot be implemented with current schema.`
-    );
+
+  const { table, partitionKey, filterExpression, expressionAttributeValues, indexName, aggregateAttribute, threshold } = badgeCriteria[action] || {};
+  
+  if (!table || !partitionKey || !threshold) {
+    console.log(`No criteria found for badge: ${action}`);
     return false;
   }
 
-  const {
-    table,
-    indexName,
-    partitionKey,
-    threshold,
-    filterExpression,
-    expressionAttributeValues = {},
-    sumAttribute,
-    countType,
-  } = badgeCriteria[action];
+  const params = {
+    TableName: table,
+    KeyConditionExpression: `${partitionKey} = :partitionValue`,
+    ExpressionAttributeValues: { 
+      ":partitionValue": userEmail,
+      ...expressionAttributeValues
+    },
+    Select: aggregateAttribute ? "SPECIFIC_ATTRIBUTES" : "COUNT",
+  };
 
-  if (!table || !partitionKey || !threshold || !countType) {
-    console.error(`Incomplete badge criteria for action '${action}'.`);
-    return false;
+  if (indexName) {
+    params.IndexName = indexName;
   }
 
-  let count = 0;
+  if (filterExpression) {
+    params.FilterExpression = filterExpression;
+  }
+
+  if (aggregateAttribute) {
+    params.ProjectionExpression = aggregateAttribute;
+  }
+
+  console.log(`Query params for ${action}:`, JSON.stringify(params, null, 2));
 
   try {
-    const params = {
-      TableName: table,
-      KeyConditionExpression: `${partitionKey} = :partitionValue`,
-      ExpressionAttributeValues: {
-        ":partitionValue": userEmail,
-        ...expressionAttributeValues,
-      },
-      Select: countType === "items" ? "COUNT" : "SPECIFIC_ATTRIBUTES",
-    };
+    const result = await docClient.send(new QueryCommand(params));
+    console.log(`Query result for ${action}:`, JSON.stringify(result, null, 2));
 
-    if (countType === "sum" && sumAttribute) {
-      params.ProjectionExpression = sumAttribute;
+    let count;
+    if (aggregateAttribute) {
+      count = result.Items.reduce((sum, item) => sum + (item[aggregateAttribute] || 0), 0);
+    } else {
+      count = result.Count;
     }
 
-    if (indexName) {
-      params.IndexName = indexName;
-    }
-
-    if (filterExpression && countType !== "sum") {
-      params.FilterExpression = filterExpression;
-    }
-
-    const command = new QueryCommand(params);
-    const response = await docClient.send(command);
-
-    if (countType === "sum" && sumAttribute) {
-      count = response.Items.reduce(
-        (sum, item) => sum + (item[sumAttribute] || 0),
-        0
-      );
-    } else if (countType === "items") {
-      count = response.Count || 0;
-    }
+    console.log(`Count for ${action}: ${count}`);
+    console.log(`Threshold for ${action}: ${threshold}`);
+    console.log(`Eligibility result: ${count >= threshold}`);
     return count >= threshold;
   } catch (error) {
-    console.error(
-      `Error in checkBadgeEligibility for action '${action}' with userEmail '${userEmail}':`,
-      error
-    );
-    throw error;
+    console.error(`Error checking eligibility for ${action}:`, error);
+    return false;
   }
 };
 
@@ -243,10 +234,25 @@ const getUserBadge = async (userEmail, badgeType) => {
       console.log(
         `No badge found for type '${badgeType}' for user '${userEmail}'`
       );
-      return null;
+      // Even if no badge exists, show progress based on current counts
+      const currentCounts = await getCurrentCounts(userEmail, badgeType);
+      const threshold = badgeDetailsMap[badgeType].threshold;
+      const progress = Math.min(Math.floor((currentCounts / threshold) * 100), 100);
+
+      return {
+        BadgeType: badgeType,
+        BadgeName: badgeDetailsMap[badgeType].name,
+        Description: badgeDetailsMap[badgeType].description,
+        AwardedDate: "",
+        Earned: false,
+        Progress: progress,
+        HoldersCount: (await getBadgeHoldersCounts([badgeType]))[badgeType] || 0,
+        currentCounts: currentCounts,
+      };
     }
     const badge = Items[0];
-    const normalizedBadge = normalizeBadge(badge);
+    const currentCounts = await getCurrentCounts(userEmail, badgeType);
+    const normalizedBadge = normalizeBadge(badge, currentCounts);
 
     // Fetch HoldersCount separately to ensure accuracy
     const holdersCount = await getBadgeHoldersCounts([badgeType]);
@@ -279,22 +285,39 @@ const getUserBadges = async (userEmail) => {
 
     if (!Items || Items.length === 0) {
       console.log(`No badges found for user: ${userEmail}`);
-      return [];
     }
 
-    const badgeTypes = Items.map((item) => item.BadgeType);
-
+    const badgeTypes = Object.keys(badgeDetailsMap);
     const holdersCounts = await getBadgeHoldersCounts(badgeTypes);
 
-    const processedBadges = Items.map((item) => {
-      const normalizedBadge = normalizeBadge(item);
-      normalizedBadge.HoldersCount = holdersCounts[item.BadgeType] || 0;
-      return normalizedBadge;
-    });
+    const processedBadges = await Promise.all(
+      badgeTypes.map(async (badgeType) => {
+        const existingBadge = Items.find(item => item.BadgeType === badgeType);
+        const currentCounts = await getCurrentCounts(userEmail, badgeType);
+
+        let normalizedBadge;
+        if (existingBadge && existingBadge.BadgeType) {
+          normalizedBadge = normalizeBadge(existingBadge, currentCounts);
+        } else {
+          normalizedBadge = {
+            BadgeType: badgeType,
+            BadgeName: badgeDetailsMap[badgeType].name,
+            Description: badgeDetailsMap[badgeType].description,
+            Earned: false,
+            Progress: Math.min(Math.floor((currentCounts / badgeDetailsMap[badgeType].threshold) * 100), 100),
+          };
+        }
+
+        normalizedBadge.HoldersCount = holdersCounts[badgeType] || 0;
+        normalizedBadge.currentCounts = currentCounts;
+
+        return normalizedBadge;
+      })
+    );
 
     return processedBadges;
   } catch (error) {
-    console.error(`Failed to get user badges for ${userEmail}:`, error);
+    console.error(`Failed to get badges for user '${userEmail}':`, error);
     throw error;
   }
 };
@@ -318,13 +341,114 @@ const incrementBadgeHoldersCount = async (badgeType) => {
   };
 
   try {
-    const result = await docClient.send(new UpdateCommand(params));
+    await docClient.send(new UpdateCommand(params));
   } catch (error) {
     console.error(
       `Failed to update holders count for badge '${badgeType}':`,
       error
     );
     throw error;
+  }
+};
+
+const getCurrentCounts = async (userEmail, badgeType) => {
+  console.log(`Getting count for badge: ${badgeType}, user: ${userEmail}`);
+
+  const badgeCriteria = {
+    memeLiker: { 
+      table: "UserLikes", 
+      partitionKey: "email", 
+      filterExpression: "Liked = :liked",
+      expressionAttributeValues: { ":liked": true }
+    },
+    memeCollector: { 
+      table: "UserDownloads", 
+      partitionKey: "email" 
+    },
+    viralSensation: { 
+      table: "Shares", 
+      indexName: "UserEmail-index",
+      partitionKey: "UserEmail",
+      aggregateAttribute: "ShareCount"
+    },
+    commentator: { 
+      table: "Comments", 
+      indexName: "Email-index", 
+      partitionKey: "Email" 
+    },
+    memeMaster: { 
+      table: "Memes", 
+      indexName: "Email-UploadTimestamp-index", 
+      partitionKey: "Email" 
+    },
+    trendSetter: { 
+      table: "Memes", 
+      indexName: "Email-UploadTimestamp-index", 
+      partitionKey: "Email", 
+      aggregateAttribute: "LikeCount" 
+    },
+    socialButterfly: {
+      table: "UserRelationships",
+      partitionKey: "UserID"
+    },
+    messenger: {
+      table: "UserConversations_v2",
+      partitionKey: "UserID"
+    },
+    memeCreator: {
+      table: "Memes",
+      indexName: "Email-UploadTimestamp-index",
+      partitionKey: "Email"
+    }
+  };
+
+  const { table, partitionKey, filterExpression, expressionAttributeValues, indexName, aggregateAttribute } = badgeCriteria[badgeType] || {};
+  
+  if (!table || !partitionKey) {
+    console.log(`No criteria found for badge: ${badgeType}`);
+    return 0;
+  }
+
+  const params = {
+    TableName: table,
+    KeyConditionExpression: `${partitionKey} = :partitionValue`,
+    ExpressionAttributeValues: { 
+      ":partitionValue": userEmail,
+      ...expressionAttributeValues
+    },
+    Select: aggregateAttribute ? "SPECIFIC_ATTRIBUTES" : "COUNT",
+  };
+
+  if (indexName) {
+    params.IndexName = indexName;
+  }
+
+  if (filterExpression) {
+    params.FilterExpression = filterExpression;
+  }
+
+  if (aggregateAttribute) {
+    params.ProjectionExpression = aggregateAttribute;
+  }
+
+  console.log(`Query params for ${badgeType}:`, JSON.stringify(params, null, 2));
+
+  try {
+    const result = await docClient.send(new QueryCommand(params));
+    console.log(`Query result for ${badgeType}:`, JSON.stringify(result, null, 2));
+
+    let count;
+    if (aggregateAttribute) {
+      count = result.Items.reduce((sum, item) => sum + (item[aggregateAttribute] || 0), 0);
+    } else {
+      count = result.Count;
+    }
+
+    console.log(`Count for ${badgeType}: ${count}`);
+    return count;
+  } catch (error) {
+    console.error(`Error getting count for badge '${badgeType}':`, error);
+    return 0;
   }
 };
 
@@ -370,7 +494,7 @@ const awardBadge = async (userEmail, badgeType) => {
   const existingBadge = await getUserBadge(userEmail, badgeType);
 
   if (existingBadge && existingBadge.Earned) {
- //   console.log(`Badge '${badgeType}' already awarded to ${userEmail}.`);
+    // console.log(`Badge '${badgeType}' already awarded to ${userEmail}.`);
     return null; // Do not re-award the badge
   }
 

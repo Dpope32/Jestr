@@ -1,27 +1,26 @@
-// src/screens/AppNav/Badges/Badges.styles.tsx
-
 import { StyleSheet, Platform, Dimensions } from 'react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const getColors = (isDarkMode: boolean) => ({
-  primary: '#4A90E2',
+  primary: '#39FF14', // Bright green
   secondary: '#50E3C2',
-  background: isDarkMode ? '#121212' : '#FFFFFF',
-  cardBackground: isDarkMode ? '#1E1E1E' : '#FFFFFF',
+  background: isDarkMode ? '#151515' : '#8C8C8C', // Light gray instead of pure white
+  cardBackground: isDarkMode ? '#1E1E1E' : '#E0E0E0', // Slightly darker gray for cards in light mode
   white: '#FFFFFF',
   black: '#000000',
-  textPrimary: '#FFFFFF',
-  textSecondary: isDarkMode ? '#B0B0C0' : '#707070',
+  textPrimary: isDarkMode ? '#FFFFFF' : '#000000', // Black text in light mode
+  textSecondary: isDarkMode ? '#B0B0C0' : '#333333', // Dark gray text in light mode
   gold: '#FFD700',
   lightGray: '#E0E0E0',
   darkGray: '#2A2A2A',
   error: '#FF4D4D',
   success: '#4CAF50',
   particlesDark: '#39FF14',
-  badgeBackground: isDarkMode ? '#1E1E2E' : '#012178',
+  particlesLight: '#707070', // Darker gray for particles in light mode for better visibility
+  badgeBackground: isDarkMode ? '#1E1E2E' : '#F8F8F8', // Lighter gray for badge background in light mode
   overlayBackground: 'rgba(0, 0, 0, 0.7)',
-  skeletonBackground: isDarkMode ? '#2A2A2A' : '#E0E0E0',
+  skeletonBackground: isDarkMode ? '#2A2A2A' : '#D3D3D3', // Adjusted for light mode
 });
 
 export const getStyles = (isDarkMode: boolean) => {
@@ -41,7 +40,10 @@ export const getStyles = (isDarkMode: boolean) => {
       height: SCREEN_HEIGHT,
       backgroundColor: COLORS.background,
     },
-    // Styles for the badge table
+    lightBackground: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: COLORS.background,
+    },
     badgeTableRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -53,8 +55,10 @@ export const getStyles = (isDarkMode: boolean) => {
       elevation: 4,
       shadowColor: isDarkMode ? COLORS.white : COLORS.black,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
+      shadowOpacity: 0.1,
       shadowRadius: 4,
+      borderWidth: isDarkMode ? 0 : 2,
+      borderColor: isDarkMode ? 'transparent' : COLORS.primary,
     },
     badgeImageContainer: {
       position: 'relative',
@@ -66,7 +70,7 @@ export const getStyles = (isDarkMode: boolean) => {
     badgeTableImage: {
       width: 70,
       height: 70,
-      opacity: 0.8, // Increased opacity for better visibility
+      opacity: 0.9,
     },
     badgeOverlay: {
       position: 'absolute',
@@ -77,28 +81,6 @@ export const getStyles = (isDarkMode: boolean) => {
       backgroundColor: COLORS.overlayBackground,
       borderRadius: 40,
     },
-    badgesContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      paddingHorizontal: 10,
-    },
-    badgesRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginHorizontal: 20,
-      marginBottom: 15,
-    },
-    noBadgesContainer: {
-      height: 200,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: isDarkMode
-        ? 'rgba(30, 30, 46, 0.6)'
-        : 'rgba(255, 255, 255, 0.6)',
-      borderRadius: 15,
-      marginHorizontal: 20,
-    },
     lockIcon: {
       position: 'absolute',
     },
@@ -108,7 +90,7 @@ export const getStyles = (isDarkMode: boolean) => {
     },
     badgeTableTitle: {
       fontSize: 18,
-      fontWeight: 'bold', // Made text bold for better emphasis
+      fontWeight: 'bold',
       color: COLORS.textPrimary,
     },
     badgeTableDescription: {
@@ -129,12 +111,6 @@ export const getStyles = (isDarkMode: boolean) => {
       color: COLORS.textPrimary,
       fontWeight: '600',
     },
-    noBadgesText: {
-      color: COLORS.textPrimary,
-      fontSize: 18,
-      textAlign: 'center',
-      fontWeight: '600',
-    },
     headerBlur: {
       ...StyleSheet.absoluteFillObject,
       top: 0,
@@ -148,8 +124,8 @@ export const getStyles = (isDarkMode: boolean) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 20,
-      paddingTop: Platform.OS === 'ios' ? 50 : 20,
-      height: 100,
+      paddingTop: Platform.OS === 'ios' ? 20 : 60,
+      height: 120,
       backgroundColor: COLORS.cardBackground,
     },
     backButton: {
@@ -162,10 +138,6 @@ export const getStyles = (isDarkMode: boolean) => {
       textAlign: 'center',
       marginVertical: 10,
     },
-    scrollViewContent: {
-      flexGrow: 1,
-      paddingBottom: 40,
-    },
     profileSection: {
       flexDirection: 'column',
       alignItems: 'center',
@@ -173,11 +145,11 @@ export const getStyles = (isDarkMode: boolean) => {
       backgroundColor: COLORS.cardBackground,
       marginHorizontal: 20,
       borderRadius: 15,
-      marginTop: 120,
+      marginTop: 140,
       elevation: 8,
       shadowColor: isDarkMode ? COLORS.white : COLORS.black,
       shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.3,
+      shadowOpacity: 0.2,
       shadowRadius: 8,
     },
     profileRow: {
@@ -249,36 +221,21 @@ export const getStyles = (isDarkMode: boolean) => {
       marginTop: 30,
       marginBottom: 15,
     },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: COLORS.background,
-    },
-    loadingText: {
-      marginTop: 15,
-      fontSize: 18,
-      fontWeight: '500',
-      color: COLORS.textPrimary,
-    },
-    // Badge styles
-    badgeContainer: {
-      margin: 5,
-      width: (SCREEN_WIDTH - 80) / 3, // Adjusted for margins
-      alignItems: 'center',
+    earnedBadgesContainer: {
+      paddingHorizontal: 10,
     },
     earnedBadgeContainer: {
       margin: 5,
-      width: (SCREEN_WIDTH - 80) / 3, // Adjusted for margins
+      width: (SCREEN_WIDTH - 50) / 3,
       alignItems: 'center',
       flexDirection: 'column',
     },
     badgeCard: {
-      width: '100%',
-      aspectRatio: 1,
+      width: 120,
+      height: 120,
       backgroundColor: COLORS.badgeBackground,
       borderRadius: 12,
-      padding: 6,
+      padding: 5,
       alignItems: 'center',
       justifyContent: 'space-between',
       elevation: 3,
@@ -287,6 +244,8 @@ export const getStyles = (isDarkMode: boolean) => {
       shadowOpacity: 0.1,
       shadowRadius: 4,
       backfaceVisibility: 'hidden',
+      borderWidth: isDarkMode ? 0 : 2,
+      borderColor: isDarkMode ? 'transparent' : COLORS.primary,
     },
     badgeIconContainer: {
       width: '80%',
@@ -333,6 +292,8 @@ export const getStyles = (isDarkMode: boolean) => {
       shadowRadius: 4,
       backfaceVisibility: 'hidden',
       transform: [{ rotateY: '180deg' }],
+      borderWidth: isDarkMode ? 0 : 2,
+      borderColor: isDarkMode ? 'transparent' : COLORS.primary,
     },
     badgeBackTitle: {
       fontSize: 14,
@@ -346,9 +307,6 @@ export const getStyles = (isDarkMode: boolean) => {
       textAlign: 'center',
       color: COLORS.textSecondary,
       marginBottom: 5,
-    },
-    unearnedBadge: {
-      opacity: 0.5,
     },
     // Skeleton styles
     skeletonBackButton: {

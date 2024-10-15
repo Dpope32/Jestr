@@ -9,6 +9,7 @@ export const defaultBadges: Badge[] = [
     earned: true,
     progress: 100,
     acquiredDate: new Date().toISOString(),
+    currentCounts: 0,
   },
   {
     id: 'memeCollector',
@@ -18,6 +19,7 @@ export const defaultBadges: Badge[] = [
     earned: true,
     progress: 100,
     acquiredDate: new Date().toISOString(),
+    currentCounts: 0,
   },
   {
     id: 'trendSetter',
@@ -27,6 +29,7 @@ export const defaultBadges: Badge[] = [
     earned: true,
     progress: 100,
     acquiredDate: new Date().toISOString(),
+      currentCounts: 0,
   },
 ];
 
@@ -49,7 +52,9 @@ export const getAllBadges = (): Badge[] => {
       title: type.replace(/([A-Z])/g, ' $1').trim(),
       description: `Earn the ${type.replace(/([A-Z])/g, ' $1').trim()} badge`,
       earned: false,
-      progress: 0
+      progress: 0,
+      currentCounts: 0,
+
     };
   });
 };

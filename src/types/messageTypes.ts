@@ -45,7 +45,7 @@ export type Message = {
   reactions?: string[];
 };
 
-export type MessageContent = string | MemeShareContent;
+export type MessageContent = string | TextMessage | MemeShareContent;
 
 export type LastMessage = {
   Content: MessageContent;
@@ -73,6 +73,11 @@ export interface Conversation {
 export type MemeShareContent = {
   type: 'meme_share';
   memeID: string;
-  message?: string;
-  mediaType?: 'image' | 'video'; // Added mediaType
+  message: string; // Made required
+  mediaType?: 'image' | 'video'; // Optional
+};
+
+export type TextMessage = {
+  type: 'text';
+  message: string;
 };

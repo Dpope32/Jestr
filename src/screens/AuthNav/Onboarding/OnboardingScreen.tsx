@@ -58,7 +58,7 @@ const OnboardingScreen: React.FC = () => {
     // Animate the description for the current slide
     Animated.timing(descriptionOpacities[currentIndex], {
       toValue: 1,
-      duration: 2500, // Slowed down animation
+      duration: 2000, // Slowed down animation
       delay: currentIndex === 0 && !hasVisitedFirstSlide ? 3000 : 100,
       useNativeDriver: true,
     }).start();

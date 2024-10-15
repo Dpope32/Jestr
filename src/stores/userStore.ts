@@ -38,7 +38,11 @@ export interface UserState {
   decrementFollowersCount: () => void;
   incrementFollowingCount: () => void;
   decrementFollowingCount: () => void;
+  isDarkMode: boolean;
+  setIsDarkMode: (isDarkMode: boolean) => void;
+  toggleDarkMode: () => void;
 }
+
 export const useUserStore = create(
   persist(
     immer<UserState>(set => ({
@@ -119,7 +123,10 @@ export const useUserStore = create(
           isAdmin: undefined,
           userId: undefined,
         }),
-    })),
+        isDarkMode: false,
+        setIsDarkMode: (isDarkMode: boolean) => set({ isDarkMode }),
+        toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
+      })),
     {
       name: 'user-storage',
       storage: createJSONStorage(() => zustandMMKVStorage),

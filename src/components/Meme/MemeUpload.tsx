@@ -19,7 +19,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faUpload, faTimes } from '@fortawesome/free-solid-svg-icons';
 import * as MediaLibrary from 'expo-media-library';
-
+import Toast from 'react-native-toast-message';
+import { TOAST_TOP_POSITION } from '../../config/toastConfig';
 import styles from './MemeUpload.styles';
 import MediaEditor from './MediaEditor';
 import { uploadMeme } from '../../services/memeService';
@@ -122,36 +123,77 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
     }
   }, [onImageSelect]);
 
-  const handleUpload = async () => {
-    if (!media) {
-      Alert.alert('Error', 'Please select a media file first');
-      return;
+// Inside MemeUpload.tsx
+
+const handleUpload = async () => {
+  if (!media) {
+    Alert.alert('Error', 'Please select a media file first');
+    return;
+  }
+  try {
+    setIsUploading(true);
+    Toast.show({
+      type: 'success',
+      text1: 'Uploading Meme',
+      text2: 'Please wait while we upload your meme...',
+      position: 'top',
+      visibilityTime: 3000,
+      topOffset: TOAST_TOP_POSITION,
+    });
+    const result = await uploadMeme(
+      media.uri,
+      userEmail,
+      username,
+      caption,
+      [],
+      media.type,
+      (progress) => {
+        console.log(`Upload progress: ${progress}%`);
+      }
+    );
+    setIsUploading(false);
+    if (result.status === 'processing') {
+      Toast.show({
+        type: 'success',
+        text1: 'Meme Uploaded',
+        text2: 'Your meme is being processed and will be available shortly.',
+        position: 'top',
+        visibilityTime: 3000,
+        topOffset: TOAST_TOP_POSITION,
+      });
+    } else {
+      Toast.show({
+        type: 'success',
+        text1: 'Meme Uploaded',
+        text2: 'Your meme has been uploaded successfully!',
+        position: 'top',
+        visibilityTime: 3000,
+        topOffset: TOAST_TOP_POSITION,
+      });
     }
-  
-    try {
-      setIsUploading(true);
-      const result = await uploadMeme(
-        media.uri,
-        userEmail,
-        username,
-        caption,
-        [],
-        media.type
-      );
-      setIsUploading(false);
-      onUploadSuccess(result.url);
-      await badgeStore.checkMemeMasterBadge(userEmail);
-      await badgeStore.checkMemeCreatorBadge(userEmail);
-    } catch (error) {
-      setIsUploading(false);
-      console.error('Upload failed:', error);
-      Alert.alert('Upload Failed', 'Please try again later.');
-    }
-  };
+    onUploadSuccess(result.url);
+
+    // **Increment Badge Counts Here**
+    badgeStore.incrementCount('memeCreationCount', userEmail);
+    badgeStore.incrementCount('memeUploadCount', userEmail);
+  } catch (error) {
+    setIsUploading(false);
+    console.error('Upload failed:', error);
+    Toast.show({
+      type: 'error',
+      text1: 'Upload Failed',
+      text2: 'Please try again later.',
+      position: 'top',
+      visibilityTime: 3000,
+      topOffset: TOAST_TOP_POSITION,
+    });
+  }
+};
+
 
   const renderMediaPreview = () => {
     if (!media) return null;
-    console.log('Rendering media preview:', media);
+   // console.log('Rendering media preview:', media);
 
     switch (media.type) {
       case 'image':

@@ -27,10 +27,10 @@ export const useLikeMutation = (userEmail: string) => {
       console.log('onSuccess called with data:', data);
       console.log('onSuccess called with variables:', variables);
 
-      badgeStore.incrementLikeCount(userEmail);
+      badgeStore.incrementCount('likeCount', userEmail);
       const queryKey = ['memez', userEmail];
       queryClient.setQueryData(queryKey, (oldData: any) => {
-        console.log('oldData before updating:', oldData);
+       // console.log('oldData before updating:', oldData);
 
         if (!oldData) return oldData;
 
@@ -39,7 +39,7 @@ export const useLikeMutation = (userEmail: string) => {
             if (meme.memeID === variables.memeID) {
               const newLikeCount =
                 meme.likeCount + (variables.incrementLikes ? 1 : -1);
-              console.log('Updating meme like count for memeID:', meme.memeID, 'New likeCount:', newLikeCount);
+           //   console.log('Updating meme like count for memeID:', meme.memeID, 'New likeCount:', newLikeCount);
 
               return {
                 ...meme,
@@ -53,7 +53,7 @@ export const useLikeMutation = (userEmail: string) => {
         });
 
         const updatedData = { ...oldData, pages: updatedPages };
-        console.log('Updated data after setQueryData:', updatedData);
+      //  console.log('Updated data after setQueryData:', updatedData);
         return updatedData;
       });
 

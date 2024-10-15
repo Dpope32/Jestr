@@ -1,5 +1,3 @@
-// src/screens/AppNav/Inbox/convoStyles.ts
-
 import { StyleSheet, Platform, Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -18,36 +16,12 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? 50 : 30,
     borderBottomColor: '#444',
   },
-  // Add these styles to your existing styles in 'convoStyles.ts'
-
-fullscreenMemeContainer: {
-  flex: 1,
-  backgroundColor: 'rgba(0, 0, 0, 0.9)',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-
-fullscreenMemeImage: {
-  width: width * 0.9,
-  height: height * 0.7,
-},
-
-fullscreenMemeVideo: {
-  width: width * 0.9,
-  height: height * 0.7,
-},
-fullscreenMemeCloseButton: {
-  position: 'absolute',
-  top: 40,
-  right: 20,
-  zIndex: 10,
-},
   backButton: {
     marginRight: 15,
     padding: 5,
   },
   errorText: {
-    color:  '#FF3B30',
+    color: '#FF3B30',
   },
   profilePic: {
     width: 40,
@@ -55,7 +29,6 @@ fullscreenMemeCloseButton: {
     borderRadius: 20,
     marginRight: 10,
     padding: 2,
-    paddingTop: 10,
     borderWidth: 1,
     borderColor: '#1bd40b',
   },
@@ -63,13 +36,6 @@ fullscreenMemeCloseButton: {
     fontSize: 22,
     color: 'white',
     fontWeight: 'bold',
-  },
-  messagesContainer: {
-    flexGrow: 1,
-    justifyContent: 'flex-start',
-    paddingHorizontal: 10,
-    paddingBottom: 20,
-    paddingTop: Platform.OS === 'android' ? 15 : 15,
   },
   messageBubble: {
     maxWidth: '80%',
@@ -82,6 +48,36 @@ fullscreenMemeCloseButton: {
     alignSelf: 'flex-end',
     backgroundColor: '#043458',
   },
+  memeContainer: {
+    position: 'absolute',
+    bottom: 80,
+    left: 10,
+    right: 10,
+    backgroundColor: '#2C2C2C',
+    borderRadius: 20,
+    padding: 15,
+    alignItems: 'center',
+    flexDirection: 'row',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 15,
+    zIndex: 100,
+  },
+  memeImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 15,
+    marginRight: 15,
+  },
+  closeMemeButton: {
+    padding: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   receivedMessage: {
     alignSelf: 'flex-start',
     backgroundColor: '#1C1C1C',
@@ -92,7 +88,7 @@ fullscreenMemeCloseButton: {
   },
   timestamp: {
     fontSize: 12,
-    color: 'white',
+    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 5,
     alignSelf: 'flex-end',
   },
@@ -124,12 +120,6 @@ fullscreenMemeCloseButton: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  sharedMemeImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 5,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -139,35 +129,43 @@ fullscreenMemeCloseButton: {
     width: 200,
     height: 200,
   },
-  memeContainer: {
-    position: 'absolute',
-    bottom: 60,
-    left: 10,
-    right: 10,
-    backgroundColor: '#333',
-    borderRadius: 10,
-    padding: 10,
-    alignItems: 'center',
-    flexDirection: 'row',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 10, // Adds shadow for Android
-  },
-  memeImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 10,
-  },
-  closeMemeButton: {
-    marginLeft: 10,
-    padding: 5,
-  },
   loadingText: {
     color: '#1bd40b',
     fontSize: 18,
     marginTop: 10,
+  },
+  sharedMemeImage: {
+    width: width * 0.6,
+    height: width * 0.6,
+    borderRadius: 10,
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  fullscreenMemeContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullscreenMemeImage: {
+    width: width * 0.9,
+    height: height * 0.8,
+    resizeMode: 'contain',
+  },
+  fullscreenMemeCloseButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullscreenMemeVideo: {
+    width: width * 0.9,
+    height: height * 0.7,
   },
 });
 

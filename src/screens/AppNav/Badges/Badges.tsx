@@ -7,11 +7,12 @@ import {
   Animated,
   TouchableOpacity,
   Image,
-  StyleSheet,
   Dimensions,
   SectionList,
   SectionListRenderItem,
   SectionListData,
+  FlatList,
+  StyleSheet,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
@@ -19,13 +20,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTrophy, faArrowLeft, faLock } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../../theme/ThemeContext';
 import { getStyles, getColors } from './Badges.styles';
-import { useBadgeStore, getBadgeStorageContents, Badge } from '../../../stores/badgeStore';
+import { useBadgeStore, Badge } from '../../../stores/badgeStore';
+import { badgeDetailsMap } from '../../../screens/AppNav/Badges/Badges.types';
 import { AppNavProp } from '../../../navigation/NavTypes/RootNavTypes';
 import * as Progress from 'react-native-progress';
 import { useUserStore } from '../../../stores/userStore';
 import Particles from '../../../components/Particles/Particles';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getAllBadges } from './defaultBadges';
 import BadgeCard from './BadgeCard';
 import { badgeImages } from './Badges.types';
 
@@ -51,7 +52,6 @@ const Badges: React.FC = () => {
     ? { uri: user.profilePic }
     : require('../../../assets/images/Jestr.jpg');
 
-
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -60,29 +60,25 @@ const Badges: React.FC = () => {
     }).start();
   }, [fadeAnim]);
 
-  useEffect(() => {
-    getBadgeStorageContents();
-  }, []);
-
   if (!isBadgesLoaded) {
     return <BadgesSkeletonLoader isDarkMode={isDarkMode} />;
   }
 
-  const allBadges = getAllBadges();
-  const earnedBadges = badges.filter((badge) => badge.earned);
-  const unearnedBadges = allBadges.filter((badge) => !badges.some((b) => b.type === badge.type && b.earned));
+  const allBadges = badges; // Use badges from store directly
+
+  // Include badges with 100% progress as earned
+  const earnedBadges = allBadges.filter(
+    (badge) => badge.earned || badge.progress >= 100
+  );
+  const unearnedBadges = allBadges.filter(
+    (badge) => !badge.earned && badge.progress < 100
+  );
+
   const totalBadges = allBadges.length;
   const earnedBadgesCount = earnedBadges.length;
   const progress = totalBadges > 0 ? earnedBadgesCount / totalBadges : 0;
 
   const pinnedBadge = badges.find((badge) => badge.id === pinnedBadgeId);
-const chunkArray = <T,>(array: T[], chunkSize: number): T[][] => {
-  const chunks: T[][] = [];
-  for (let i = 0; i < array.length; i += chunkSize) {
-    chunks.push(array.slice(i, i + chunkSize));
-  }
-  return chunks;
-};
   // Prepare sections for SectionList
   const sections: SectionData[] = [];
 
@@ -100,24 +96,43 @@ const chunkArray = <T,>(array: T[], chunkSize: number): T[][] => {
     });
   }
 
-  // Correctly type the renderSectionHeader
+  // If there are no badges at all, display all badges as unearned
+  if (sections.length === 0) {
+    sections.push({
+      title: 'Badges to Earn',
+      data: allBadges,
+    });
+  }
+
   const renderSectionHeader = ({ section }: { section: SectionData }) => {
-    return <Text style={styles.sectionTitle}>{section.title}</Text>;
+    return (
+      <View>
+        <Text style={styles.sectionTitle}>{section.title}</Text>
+        {section.title === 'Earned Badges' ? (
+          <FlatList
+            data={section.data}
+            keyExtractor={(item) => item.id}
+            horizontal
+            renderItem={({ item }) => (
+              <BadgeCard
+                badge={item}
+                badgeImage={badgeImages[item.type]}
+                isDarkMode={isDarkMode}
+              />
+            )}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.earnedBadgesContainer}
+          />
+        ) : null}
+      </View>
+    );
   };
 
-  // Correctly type the renderItem
   const renderItem: SectionListRenderItem<Badge> = ({ item, section }) => {
-    if (section.title === 'Earned Badges') {
-      return (
-        <BadgeCard
-          badge={item}
-          badgeImage={badgeImages[item.type]}
-          isDarkMode={isDarkMode}
-        />
-      );
-    } else if (section.title === 'Badges to Earn') {
-      const storedBadge = badges.find((b) => b.type === item.type);
-      const progressValue = storedBadge ? storedBadge.progress : 0;
+    if (section.title === 'Badges to Earn') {
+      const details = badgeDetailsMap[item.type];
+      const currentCount = item.currentCounts;
+      const goalCount = details?.goal || 0;
 
       return (
         <View key={item.id} style={styles.badgeTableRow}>
@@ -127,20 +142,24 @@ const chunkArray = <T,>(array: T[], chunkSize: number): T[][] => {
               style={styles.badgeTableImage}
               resizeMode="contain"
             />
-            <View style={styles.badgeOverlay} />
-            <FontAwesomeIcon
-              icon={faLock}
-              size={24}
-              color={COLORS.white}
-              style={styles.lockIcon}
-            />
+            {!item.earned && (
+              <>
+                <View style={styles.badgeOverlay} />
+                <FontAwesomeIcon
+                  icon={faLock}
+                  size={24}
+                  color={COLORS.white}
+                  style={styles.lockIcon}
+                />
+              </>
+            )}
           </View>
           <View style={styles.badgeTableInfo}>
             <Text style={styles.badgeTableTitle}>{item.title}</Text>
             <Text style={styles.badgeTableDescription}>{item.description}</Text>
             <View style={styles.badgeProgressContainer}>
               <Progress.Bar
-                progress={progressValue / 100}
+                progress={item.progress / 100}
                 width={null}
                 height={10}
                 color={COLORS.primary}
@@ -150,14 +169,13 @@ const chunkArray = <T,>(array: T[], chunkSize: number): T[][] => {
                 style={styles.badgeProgressBar}
               />
               <Text style={styles.badgeTableProgressText}>
-                {progressValue}%
+                {currentCount}/{goalCount} ({item.progress.toFixed(0)}%)
               </Text>
             </View>
           </View>
         </View>
       );
     }
-
     return null;
   };
 
@@ -165,21 +183,14 @@ const chunkArray = <T,>(array: T[], chunkSize: number): T[][] => {
 
   return (
     <View style={styles.container}>
-      {isDarkMode ? (
-        <View style={StyleSheet.absoluteFillObject}>
-          <Particles
-            windowWidth={SCREEN_WIDTH}
-            windowHeight={SCREEN_HEIGHT}
-            density={0.005}
-            color={COLORS.particlesDark}
-          />
-        </View>
-      ) : (
-        <LinearGradient
-          colors={['#013026', '#014760', '#107e57']}
-          style={StyleSheet.absoluteFillObject}
+      <View style={StyleSheet.absoluteFill}>
+        <Particles
+          windowWidth={SCREEN_WIDTH}
+          windowHeight={SCREEN_HEIGHT}
+          density={0.005}
+          color={isDarkMode ? COLORS.particlesDark : COLORS.particlesLight}
         />
-      )}
+      </View>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <BlurView
           intensity={99}
@@ -241,7 +252,7 @@ const chunkArray = <T,>(array: T[], chunkSize: number): T[][] => {
               )}
             </View>
           }
-          ListFooterComponent={<View style={{ height: 20 }} />} // Optional spacing at the bottom
+          ListFooterComponent={<View style={{ height: 20 }} />}
           showsVerticalScrollIndicator={false}
         />
       </Animated.View>
@@ -281,7 +292,7 @@ const BadgesSkeletonLoader: React.FC<BadgesSkeletonLoaderProps> = ({ isDarkMode 
           sections={[
             {
               title: '',
-              data: [], // No data for skeleton loader
+              data: [],
             },
           ]}
           renderSectionHeader={() => null}

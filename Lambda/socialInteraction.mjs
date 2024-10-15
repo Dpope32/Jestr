@@ -119,37 +119,17 @@ const getMessages = async (userID, conversationID) => {
       return [];
     }
 
-    const processedContent = result.Items.map(item => {
-      console.log("Processing item:", JSON.stringify(item, null, 2));
-      let content = item.Content;
-      
-      if (typeof content === 'string') {
-        try {
-          const parsed = JSON.parse(content);
-          if (parsed && parsed.type === 'meme_share') {
-            content = {
-              type: 'meme_share',
-              memeID: parsed.memeID,
-              message: parsed.message
-            };
-          }
-        } catch (e) {
-          console.log("Error parsing message content:", e);
-        }
-      }
-      
-      return {
-        ...item,
-        Content: content
-      };
-    });
+    const processedMessages = result.Items.map(item => ({
+      ...item,
+      Content: item.Content, // Already an object
+    }));
 
-    console.log("Processed messages:", JSON.stringify(processedContent, null, 2));
+    console.log("Processed messages:", JSON.stringify(processedMessages, null, 2));
 
     // Cache the messages for 5 minutes
-    await redis.set(cacheKey, JSON.stringify(processedContent), 'EX', 300);
+    await redis.set(cacheKey, JSON.stringify(processedMessages), 'EX', 300);
 
-    return processedContent;
+    return processedMessages;
   } catch (error) {
     console.error("Error in getMessages:", error);
     throw new Error(`Failed to get messages: ${error.message}`);
@@ -202,9 +182,38 @@ const getConversations = async (userID) => {
         );
 
         // 2b. Fetch last message
-        let lastMessage = { Content: "No message", Timestamp: "" };
+        const lastMessage = conversationData?.LastMessage || { Content: { type: 'text', message: 'No message' }, Timestamp: '' };
         if (conversationData && conversationData.LastMessage) {
-          lastMessage = conversationData.LastMessage;
+          // Ensure LastMessage.Content is a JSON string representing an object
+          if (typeof conversationData.LastMessage.Content === 'string') {
+            try {
+              const parsed = JSON.parse(conversationData.LastMessage.Content);
+              if (parsed && typeof parsed === 'object') {
+                lastMessage = {
+                  Content: JSON.stringify(parsed),
+                  Timestamp: conversationData.LastMessage.Timestamp
+                };
+              } else {
+                // Fallback to default structure
+                lastMessage = {
+                  Content: JSON.stringify({ type: "text", message: "No message" }),
+                  Timestamp: conversationData.LastMessage.Timestamp
+                };
+              }
+            } catch (e) {
+              console.log("Error parsing LastMessage.Content:", e);
+              lastMessage = {
+                Content: JSON.stringify({ type: "text", message: "No message" }),
+                Timestamp: conversationData.LastMessage.Timestamp
+              };
+            }
+          } else {
+            // If LastMessage.Content is not a string, assume it's an object
+            lastMessage = {
+              Content: JSON.stringify(conversationData.LastMessage.Content),
+              Timestamp: conversationData.LastMessage.Timestamp
+            };
+          }
         }
 
         // 2c. Identify partner user
@@ -222,7 +231,7 @@ const getConversations = async (userID) => {
           userEmail: item.UserID === userID ? item.UserID : partnerUserID,
           username: partnerUserDetails?.username || "Unknown",
           profilePicUrl: partnerUserDetails?.profilePic || null,
-          lastMessage: lastMessage, // This should now be a properly formatted LastMessage
+          lastMessage: lastMessage, // Now a JSON string
           timestamp: conversationData?.LastUpdated || "",
           messages: [], // Populate as needed or implement pagination
           UnreadCount: item.UnreadCount || 0,
@@ -245,7 +254,6 @@ const getConversations = async (userID) => {
     throw error;
   }
 };
-
 /**
  * Function to update UserConversations table with caching.
  * @param {string} userId - User's email.
@@ -370,6 +378,7 @@ const sendNotification = async (receiverID, senderID, type, content, relatedID =
  * @param {Object} content - Message content.
  * @returns {Promise<Object>} - Result of the sendMessage operation.
  */
+
 const sendMessage = async (senderID, receiverID, content) => {
   const messageID = uuidv4();
   const timestamp = new Date().toISOString();
@@ -377,6 +386,16 @@ const sendMessage = async (senderID, receiverID, content) => {
   
   console.log(`sendMessage called with: senderID=${senderID}, receiverID=${receiverID}, content=${JSON.stringify(content)}`);
   console.log(`Generated messageID=${messageID}, conversationID=${conversationID}`);
+
+  // Ensure content is an object with 'type' and 'message'
+  let messageContent;
+  if (typeof content === 'string') {
+    messageContent = { type: 'text', message: content };
+  } else if (typeof content === 'object') {
+    messageContent = content;
+  } else {
+    throw new Error("Invalid content type. Must be a string or an object.");
+  }
 
   try {
     // 1. Insert message into Messages table
@@ -386,7 +405,7 @@ const sendMessage = async (senderID, receiverID, content) => {
         MessageID: messageID,
         SenderID: senderID,
         ReceiverID: receiverID,
-        Content: JSON.stringify(content),
+        Content: messageContent, // Store as an object, not a JSON string
         Timestamp: timestamp,
         Status: "sent",
         ConversationID: conversationID
@@ -396,14 +415,18 @@ const sendMessage = async (senderID, receiverID, content) => {
     await docClient.send(new PutCommand(messageParams));
     console.log("Message inserted successfully.");
 
-    // 2. Update Conversations table
+    // 2. Update Conversations table with LastMessage content and timestamp
     const conversationParams = {
       TableName: "Conversations",
       Key: { ConversationID: conversationID },
-      UpdateExpression: "SET LastMessageID = :messageID, LastUpdated = :timestamp",
+      UpdateExpression: "SET LastMessageID = :messageID, LastUpdated = :timestamp, LastMessage = :lastMessage",
       ExpressionAttributeValues: {
         ":messageID": messageID,
-        ":timestamp": timestamp
+        ":timestamp": timestamp,
+        ":lastMessage": {
+          Content: messageContent, // Store as an object, not a JSON string
+          Timestamp: timestamp
+        }
       },
     };
     console.log("Updating Conversations table:", JSON.stringify(conversationParams, null, 2));
@@ -430,13 +453,13 @@ const sendMessage = async (senderID, receiverID, content) => {
             default: JSON.stringify({
               messageId: messageID,
               senderEmail: senderID,
-              content: content
+              content: messageContent
             }),
             GCM: JSON.stringify({
               data: {
                 messageId: messageID,
                 senderEmail: senderID,
-                content: content
+                content: messageContent
               }
             })
           }),
@@ -456,6 +479,7 @@ const sendMessage = async (senderID, receiverID, content) => {
     throw error;
   }
 };
+
 
 /**
  * Function to get conversations with caching.

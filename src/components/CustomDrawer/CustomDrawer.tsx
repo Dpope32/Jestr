@@ -39,7 +39,7 @@ const drawerItems = [
 
 const CustomDrawer = (props: DrawerContentComponentProps) => {
   const navigation = useNavigation<AppNavProp>();
-  const {isDarkMode, toggleDarkMode} = useTheme();
+  const { isDarkMode, toggleDarkMode } = useUserStore();
   const user = useUserStore(state => state as User);
   const spinValue = useRef(new Animated.Value(0)).current;
 
