@@ -73,7 +73,7 @@ Jestr is a full-stack mobile platform for meme enthusiasts, built with cutting-e
 To get started with Jestr, follow these steps:
 
 Clone the repository:
-Copygit clone https://github.com/your-username/jestr.git
+Copygit clone https://github.com/dpope32/jestr.git
 
 Navigate to the project directory:
 Copycd jestr
