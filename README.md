@@ -1,16 +1,10 @@
 # Jestr - The Ultimate Meme Sharing Platform 🎭
-
-![Jestr Logo](https://path-to-your-logo.png)
+(in progress)
 
 Jestr is a full-stack mobile platform for meme enthusiasts, built with cutting-edge technologies to provide a seamless and engaging user experience.
 
 ## 📱 App Screenshots
-
-| Home Feed | Meme Editor | Profile |
-|:---------:|:-----------:|:-------:|
-| ![Home Feed](https://path-to-screenshot1.png) | ![Meme Editor](https://path-to-screenshot2.png) | ![Profile](https://path-to-screenshot3.png) |
-| Messaging | Badges | Upload |
-| ![Messaging](https://path-to-screenshot4.png) | ![Badges](https://path-to-screenshot5.png) | ![Upload](https://path-to-screenshot6.png) |
+(coming soon)
 
 ## 🚀 Features
 
