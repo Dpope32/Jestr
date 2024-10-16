@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faMoon, faHeart, faBell } from '@fortawesome/free-solid-svg-icons';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { ProfileImage } from '../../../types/types';
 import HeaderPicUpload from '../../../components/Upload/HeaderPicUpload';
 import ProfilePicUpload from '../../../components/Upload/ProfilePicUpload';
@@ -43,7 +44,6 @@ const CompleteProfileScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [darkMode, setDarkModeLocal] = useState(isDarkMode);
-  const [isPushEnabled, setIsPushEnabled] = useState(pushEnabled);
 
   const { pickImage } = useImagePicker(); // Use the custom hook
 

@@ -1,18 +1,39 @@
 // src/components/Meme/MediaEditor.tsx
 
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, Dimensions, PanResponder, Animated, Image, GestureResponderEvent, LayoutChangeEvent,} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  Dimensions,
+  PanResponder,
+  Animated,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Alert,
+} from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../theme/theme'; 
+import { COLORS } from '../../theme/theme';
 import { captureRef } from 'react-native-view-shot';
+
+interface MediaState {
+  uri: string;
+  type: 'image' | 'video';
+}
 
 interface MediaEditorProps {
   media: {
     uri: string;
     type: 'image' | 'video';
   };
+  setMedia: React.Dispatch<React.SetStateAction<MediaState | null>>; // Add this line
   onComplete: (
     editedUri: string,
     overlayText: string,
@@ -20,20 +41,22 @@ interface MediaEditorProps {
     textScale: number,
     textColor: string
   ) => void;
+  onCancel: () => void;
 }
 
 const { width, height } = Dimensions.get('window');
 
-const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete }) => {
+const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete, onCancel }) => {
   const [overlayText, setOverlayText] = useState('');
   const [textColor, setTextColor] = useState('#FFFFFF');
   const [isTextInputVisible, setIsTextInputVisible] = useState(false);
   const [shouldPlay, setShouldPlay] = useState(true);
+  const [isCropping, setIsCropping] = useState(false);
 
   const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const scale = useRef(new Animated.Value(1)).current;
   const mediaRef = useRef<View>(null);
-  const [mediaSize, setMediaSize] = useState({ width: width, height: height * 0.5 });
+  const [mediaSize, setMediaSize] = useState({ width: width, height: height * 0.7 });
   const [textSize, setTextSize] = useState({ width: 0, height: 0 });
 
   const lastScale = useRef(1);
@@ -76,10 +99,27 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete }) => {
     };
   }, [pan.x, pan.y, scale]);
 
+  const handleCropPress = async () => {
+    try {
+   //   const croppedImage = await ImagePicker.openCropper({
+    //    path: media.uri,
+   //     width: 300,
+   //     height: 400,
+   //   });
+      console.log('need to implement');
+    //  setMedia({ uri: croppedImage.path, type: 'image' });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to crop image.');
+    }
+  };
+
   // PanResponder for handling text overlay interactions
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => overlayText !== '',
-    onPanResponderGrant: (evt: GestureResponderEvent) => {
+    onStartShouldSetPanResponderCapture: () => true,
+    onMoveShouldSetPanResponder: () => overlayText !== '',
+    onMoveShouldSetPanResponderCapture: () => true,
+    onPanResponderGrant: (evt) => {
       pan.setOffset({
         x: currentPosition.current.x,
         y: currentPosition.current.y,
@@ -96,7 +136,7 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete }) => {
         initialDistance.current = null;
       }
     },
-    onPanResponderMove: (evt: GestureResponderEvent, gestureState) => {
+    onPanResponderMove: (evt, gestureState) => {
       if (evt.nativeEvent.touches.length === 2 && initialDistance.current) {
         const touches = evt.nativeEvent.touches;
         const dx = touches[0].pageX - touches[1].pageX;
@@ -109,14 +149,14 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete }) => {
         const newX = gestureState.dx + currentPosition.current.x;
         const newY = gestureState.dy + currentPosition.current.y;
 
-        // Expanded constraints (twice the media size, centered)
+        // Constrain the text within the media bounds
         const constrainedX = Math.max(
-          -mediaSize.width / 2,
-          Math.min(newX, mediaSize.width * 1.5 - textSize.width * lastScale.current)
+          0,
+          Math.min(newX, mediaSize.width - textSize.width * lastScale.current)
         );
         const constrainedY = Math.max(
-          -mediaSize.height / 2,
-          Math.min(newY, mediaSize.height * 1.5 - textSize.height * lastScale.current)
+          0,
+          Math.min(newY, mediaSize.height - textSize.height * lastScale.current)
         );
 
         pan.x.setValue(constrainedX - currentPosition.current.x);
@@ -128,6 +168,7 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete }) => {
       initialDistance.current = null;
     },
   });
+
   // Cycle through predefined text colors
   const cycleTextColor = () => {
     Haptics.selectionAsync();
@@ -141,6 +182,7 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete }) => {
   const toggleTextInput = () => {
     setIsTextInputVisible(!isTextInputVisible);
   };
+
   // Handle completion of editing
   const handleComplete = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -155,7 +197,7 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete }) => {
 
       onComplete(
         editedUri,
-        overlayText, 
+        overlayText,
         { x: currentPosition.current.x, y: currentPosition.current.y },
         lastScale.current,
         textColor
@@ -171,113 +213,153 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete }) => {
     }
   };
 
+  // Handle keyboard visibility
+  const keyboardVerticalOffset = Platform.OS === 'ios' ? 100 : 0;
+
   return (
-    <View style={styles.container}>
-      {/* Media Preview Section */}
-      <View
-        ref={mediaRef}
-        style={styles.mediaPreview}
-        onLayout={(event: LayoutChangeEvent) => {
-          const { width, height } = event.nativeEvent.layout;
-          setMediaSize({ width, height });
-        }}
-      >
-        {media.type === 'video' ? (
-          <TouchableOpacity
-            style={{ flex: 1 }}
-            onPress={() => {
-              setShouldPlay((prev) => !prev);
-            }}
-          >
-            <Video
-              source={{ uri: media.uri }}
-              style={styles.media}
-              resizeMode={ResizeMode.CONTAIN}
-              shouldPlay={shouldPlay}
-              isLooping
-              useNativeControls={false}
-            />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior="padding"
+      keyboardVerticalOffset={keyboardVerticalOffset}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.innerContainer}>
+          {/* Cancel Button */}
+          <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
+            <Ionicons name="close" size={30} color="#fff" />
           </TouchableOpacity>
-        ) : (
-          <Image source={{ uri: media.uri }} style={styles.media} />
-        )}
-        {overlayText !== '' && (
-          <Animated.Text
-            style={[
-              styles.overlayText,
-              {
-                color: textColor,
-                transform: [
-                  { translateX: pan.x },
-                  { translateY: pan.y },
-                  { scale: scale },
-                ],
-              },
-            ]}
-            {...panResponder.panHandlers}
+
+          {/* Media Preview Section */}
+          <View
+            ref={mediaRef}
+            style={styles.mediaPreview}
             onLayout={(event) => {
               const { width, height } = event.nativeEvent.layout;
-              setTextSize({ width, height });
+              setMediaSize({ width, height });
             }}
           >
-            {overlayText}
-          </Animated.Text>
-        )}
-      </View>
+            {media.type === 'video' ? (
+              <TouchableOpacity
+                style={{ flex: 1 }}
+                onPress={() => {
+                  setShouldPlay((prev) => !prev);
+                }}
+              >
+                <Video
+                  source={{ uri: media.uri }}
+                  style={styles.media}
+                  resizeMode={ResizeMode.CONTAIN}
+                  shouldPlay={shouldPlay}
+                  isLooping
+                  useNativeControls={false}
+                  isMuted={false}
+                  volume={1}
+                />
+              </TouchableOpacity>
+            ) : (
+              <Image source={{ uri: media.uri }} style={styles.media} />
+            )}
+            {overlayText !== '' && (
+              <Animated.Text
+                style={[
+                  styles.overlayText,
+                  {
+                    color: textColor,
+                    transform: [
+                      { translateX: pan.x },
+                      { translateY: pan.y },
+                      { scale: scale },
+                    ],
+                  },
+                ]}
+                {...panResponder.panHandlers}
+                onLayout={(event) => {
+                  const { width, height } = event.nativeEvent.layout;
+                  setTextSize({ width, height });
+                }}
+              >
+                {overlayText}
+              </Animated.Text>
+            )}
+          </View>
 
-      {/* Controls Section */}
-      <View style={styles.controlsContainer}>
-        {/* Text Input Toggle Button */}
-        <TouchableOpacity onPress={toggleTextInput} style={styles.iconButton}>
-          <Ionicons name="text" size={28} color="#FFFFFF" />
-        </TouchableOpacity>
+          {/* Controls Section */}
+          <View style={styles.controlsContainer}>
+            {/* Text Input Toggle Button */}
+            <TouchableOpacity onPress={toggleTextInput} style={styles.iconButton}>
+              <Ionicons name="text" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
 
-        {/* Text Color Cycle Button */}
-        <TouchableOpacity onPress={cycleTextColor} style={styles.iconButton}>
-          <Ionicons name="color-palette" size={28} color="#FFFFFF" />
-        </TouchableOpacity>
-      
-      </View>
+            {/* Text Color Cycle Button */}
+            <TouchableOpacity onPress={cycleTextColor} style={styles.iconButton}>
+              <Ionicons name="color-palette" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
 
-      {/* Text Input Section */}
-      {isTextInputVisible && (
-        <View style={styles.textInputContainer}>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Add overlay text"
-            placeholderTextColor="#999"
-            value={overlayText}
-            onChangeText={setOverlayText}
-            onSubmitEditing={() => setIsTextInputVisible(false)}
-            autoFocus
-          />
+            {/* Crop Image Button */}
+            {media.type === 'image' && (
+              <TouchableOpacity onPress={handleCropPress} style={styles.iconButton} disabled={true}>
+                <Ionicons name="crop" size={28} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+
+            {/* Future Feature Button */}
+            <TouchableOpacity style={styles.iconButton}>
+              <Ionicons name="happy-outline" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Text Input Section */}
+          {isTextInputVisible && (
+            <View style={styles.textInputContainer}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Add overlay text"
+                placeholderTextColor="#999"
+                value={overlayText}
+                onChangeText={setOverlayText}
+                onSubmitEditing={() => setIsTextInputVisible(false)}
+                autoFocus
+              />
+            </View>
+          )}
+
+          {/* "Done Editing" Button */}
+          <View
+            style={[
+              styles.doneButtonContainer,
+              { marginTop: isTextInputVisible ? 20 : 10 },
+            ]}
+          >
+            <TouchableOpacity style={styles.doneButton} onPress={handleComplete}>
+              <Text style={styles.buttonText}>Done Editing</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      )}
-
-      {/* "Done Editing" Button */}
-      <View
-        style={[
-          styles.doneButtonContainer,
-          { marginTop: isTextInputVisible ? 20 : 10 },
-        ]}
-      >
-        <TouchableOpacity style={styles.doneButton} onPress={handleComplete}>
-          <Text style={styles.buttonText}>Done Editing</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2a2a2a',
-    justifyContent: 'flex-start',
+  },
+  innerContainer: {
+    flex: 1,
+    backgroundColor: '#1C1C1C',
+  },
+  cancelButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 25,
+    zIndex: 10,
   },
   mediaPreview: {
     width: '100%',
-    height: height * 0.5, 
+    height: height * 0.62,
     borderRadius: 10,
     marginBottom: 20,
     overflow: 'hidden',
@@ -285,7 +367,6 @@ const styles = StyleSheet.create({
   media: {
     width: '100%',
     height: '100%',
-    borderRadius: 15, 
   },
   controlsContainer: {
     flexDirection: 'row',
@@ -296,24 +377,25 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 10,
     borderRadius: 10,
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#2a2a2a',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 5, 
+    elevation: 5,
   },
   textInputContainer: {
     width: '100%',
     marginBottom: 10,
+    paddingHorizontal: 15
   },
   textInput: {
     height: 50,
     borderColor: '#1bd40b',
     borderWidth: 2,
     borderRadius: 10,
-    paddingHorizontal: 15,
     color: '#fff',
+    paddingHorizontal: 15,
     fontSize: 16,
     backgroundColor: '#3a3a3a',
   },
@@ -334,46 +416,15 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,
-    width: '100%',
+    width: '90%',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#1bd40b',
   },
   buttonText: {
-    color: COLORS.primary, 
+    color: COLORS.primary,
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#1C1C1C',
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 22,
-    color: '#fff',
-    marginBottom: 15,
-    fontWeight: 'bold',
-  },
-  closeModalButton: {
-    marginTop: 20,
-    backgroundColor: '#FF5733',
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 20,
-  },
-  closeModalText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
 

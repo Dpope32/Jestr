@@ -59,7 +59,7 @@ export const uploadMeme = async (email, username, caption, tags, mediaType, meme
 
     // Process the meme
     console.log("uploadMeme: Processing meme");
-    const processedData = await processMeme(memeKey, mediaType);
+    const processedData = await processMeme(memeKey, mediaType, tags);
 
     // Update DynamoDB with processed information
     console.log("uploadMeme: Updating DynamoDB with processed information");
@@ -91,7 +91,7 @@ export const uploadMeme = async (email, username, caption, tags, mediaType, meme
   }
 };
 
-const processMeme = async (memeKey, mediaType) => {
+const processMeme = async (memeKey, mediaType, tagsFromClient) => {
   console.log(`processMeme: Starting processing for meme ${memeKey}`);
   let generatedTags = [];
   let detectedText = "";
@@ -135,7 +135,7 @@ const processMeme = async (memeKey, mediaType) => {
       .join(' ')
       .substring(0, 100);
   } else {
-    generatedTags = ["Video", "Unclassified"];
+    generatedTags = tagsFromClient || ["Video", "Unclassified"];
   }
 
   console.log(`processMeme: Successfully processed meme ${memeKey}`);
@@ -163,4 +163,4 @@ const createResponse = (statusCode, message, data = null) => {
     },
     body: JSON.stringify({ message, data }),
   };
-};
+}; 

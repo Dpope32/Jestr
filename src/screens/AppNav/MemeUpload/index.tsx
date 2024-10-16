@@ -1,8 +1,15 @@
-// src/screens/MemeUploadScreen.tsx
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import {  View,  Text,  StyleSheet, StatusBar, Alert, Animated, TouchableOpacity, Easing,} from 'react-native';
-import Toast from 'react-native-toast-message'; // Import Toast
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Alert,
+  Animated,
+  TouchableOpacity,
+  Easing,
+} from 'react-native';
+import Toast from 'react-native-toast-message';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,9 +29,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
   const { isDarkMode } = useTheme();
   const user = useUserStore((state) => state);
 
-  const [imageUploaded, setImageUploaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [imageSelected, setImageSelected] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -44,20 +49,14 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
 
   const handleUploadSuccess = (url: string) => {
     console.log('Meme uploaded successfully:', url);
-    setImageUploaded(true);
-    // Show the toast
     Toast.show({
       type: 'success',
       text1: 'Meme uploaded successfully',
-      visibilityTime: 3000, // Toast will be visible for 3 seconds
-      position: 'top', // Position is handled in the toastConfig, but you can adjust here if needed
+      visibilityTime: 3000,
+      position: 'top',
     });
     navigation.goBack();
   };
-
-  const handleImageSelect = useCallback((selected: boolean) => {
-    setImageSelected(selected);
-  }, []);
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -136,7 +135,7 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
             userEmail={user.email}
             username={user.username}
             onUploadSuccess={handleUploadSuccess}
-            onImageSelect={handleImageSelect}
+            onImageSelect={() => {}}
             isDarkMode={isDarkMode}
             creationDate={user.creationDate}
             setIsUploading={setIsUploading}
@@ -168,79 +167,50 @@ const MemeUploadScreen: React.FC<MemeUploadScreenProps> = () => {
 const styles = StyleSheet.create({
   darkBackground: {
     flex: 1,
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#1a1a1a',
   },
   background: {
     flex: 1,
-    backgroundColor: '#1C1C1C',
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    width: '100%',
+    backgroundColor: '#2a2a2a',
   },
   titleContainer: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingTop: 100,
+    paddingTop: 30, // Reduced padding for better spacing
     paddingHorizontal: 20,
+    alignItems: 'center',
+    marginBottom: 10, // Added to provide space under title
   },
-  overlay: {
+  backButton: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    left: 15, // Adjusted for consistent placement
+    top: 5,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26, // Adjusted to fit better in the view
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
     textAlign: 'center',
     fontFamily: FONTS.regular,
   },
   better: {
     color: COLORS.accent,
     textShadowColor: '#000',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
+    textShadowOffset: { width: 2, height: 2 }, // Increased for better visibility
+    textShadowRadius: 2,
     fontFamily: FONTS.bold,
-  },
-  backButton: {
-    position: 'absolute',
-    left: 10,
-    top: 10,
-    marginRight: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#ccc',
-    textAlign: 'center',
-    marginBottom: 5,
+    fontSize: 28, // Emphasized BETTER text
   },
   card: {
-    flex: 1,  // Allow the card to take up available space
-    width: '100%',
-    backgroundColor: '#2a2a2a',
+    flex: 1,
+    width: '95%', // Reduced width for better margin
+    backgroundColor: '#333333',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-    paddingVertical: 30,
-    marginTop: 10,
-    paddingBottom: 80,  // Add padding to account for the bottom navigation bar
-  },
-  profileText: {
-    color: '#fff',
-    fontSize: 24,
-    fontFamily: FONTS.regular,
-    fontWeight: 'bold',
+    paddingVertical: 20,
+    marginVertical: 50, // Added top and bottom margin
+    alignSelf: 'center', // Centered the card
   },
   fullScreenOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -250,27 +220,26 @@ const styles = StyleSheet.create({
   },
   gradientBackground: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)', // Added opacity for better focus on loading
   },
   uploadingContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
     height: '100%',
-    fontFamily: FONTS.regular,
   },
   lottieAnimation: {
-    width: 200,
-    height: 200,
+    width: 180, // Reduced size for better placement
+    height: 180,
   },
   uploadingText: {
     color: '#fff',
     fontSize: 18,
     textAlign: 'center',
+    marginTop: 15, // Reduced margin to tighten text
     fontFamily: FONTS.regular,
-    marginTop: 20,
   },
 });
-
 
 
 export default MemeUploadScreen;

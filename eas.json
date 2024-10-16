@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 3.13.3"
+    "version": ">= 3.13.3",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -30,6 +31,7 @@
     },
     "production": {
       "distribution": "store",
+      "autoIncrement": true,
       "env": {
         "REACT_APP_AWS_COGNITO_IDENTITY_POOL_ID": "@REACT_APP_AWS_COGNITO_IDENTITY_POOL_ID",
         "REACT_APP_AWS_COGNITO_REGION": "@REACT_APP_AWS_COGNITO_REGION",

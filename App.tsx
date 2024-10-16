@@ -79,7 +79,7 @@ const App = () => {
   useReactQueryDevTools(queryClient);
   usePushNotifications();
   const {isDarkMode} = useTheme();
-  const bgdCol = isDarkMode ? '#1C1C1C' : '#1C1C1C';
+  const bgdCol = isDarkMode ? '#1e1e1e' : '#494949';
 
   const [isReady, setIsReady] = useState(false);
   const user = useUserStore(state => state);
