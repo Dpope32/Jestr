@@ -16,12 +16,12 @@ Jestr is a full-stack mobile platform for meme enthusiasts, built with cutting-e
 - [x] Zero loading time when fetching media
 - [x] Follow/Unfollow other users
 - [x] Earn badges based on interaction thresholds
+- [x] Client-side video processing (MLKit)
+- [x] React Native Vision Camera for in-app photo capture
 - [ ] Visit other profiles
 - [ ] Search all memes based on tags
 - [ ] Deep linking
 - [ ] AdMob integration
-- [ ] Client-side video processing (MLKit)
-- [ ] React Native Vision Camera for in-app photo capture
 
 ## 🔄 App Flow
 
