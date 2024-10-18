@@ -1,3 +1,5 @@
+// CommentFeed.tsx
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableWithoutFeedback, FlatList, Animated } from 'react-native';
 import { TextInput, Modal, KeyboardAvoidingView, Keyboard, Platform, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
@@ -52,6 +54,7 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
     modalY,
     inputRef,
   } = useCommentFeed({
+    commentCount: commentsCount,
     memeID,
     user,
     isCommentFeedVisible,
@@ -86,9 +89,9 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
 
   const getImageSource = (profilePic: string | ProfileImage | null) => {
     if (typeof profilePic === 'string') {
-      return {uri: profilePic};
+      return { uri: profilePic };
     } else if (profilePic && 'uri' in profilePic) {
-      return {uri: profilePic.uri};
+      return { uri: profilePic.uri };
     } else {
       return require('../../../assets/images/apple.jpg');
     }
@@ -108,10 +111,8 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
     setShowSortOptions(false);
   };
 
-  if (isError) {
-    return <Text style={styles.errorText}>Error loading comments.</Text>;
-  }
-
+  // Remove the loading indicator related to posting comments
+  // Only show ActivityIndicator when fetching comments
   return (
     <Modal
       visible={isCommentFeedVisible}
@@ -120,7 +121,7 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
       onRequestClose={() => setIsCommentFeedVisible(false)}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{flex: 1}}
+        style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
         <TouchableWithoutFeedback onPress={handlePressOutside}>
           <View style={styles.modalContainer}>
@@ -129,7 +130,7 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
                 <Animated.View
                   style={[
                     styles.modalContentWrapper,
-                    {transform: [{translateY: modalY}]},
+                    { transform: [{ translateY: modalY }] },
                   ]}>
                   <BlurView
                     intensity={99}
@@ -180,12 +181,20 @@ const CommentFeed: React.FC<CommentFeedProps> = ({
                     )}
 
                     {isLoading ? (
+                      // Show loading only when fetching comments
                       <ActivityIndicator style={styles.loader} color="#FFF" size="large" />
+                    ) : commentsCount === 0 ? (
+                      // Handle no comments
+                      <View style={styles.commentsContainer}>
+                        <Text style={styles.emptyCommentText}>
+                          No comments yet. Be the first to comment!
+                        </Text>
+                      </View>
                     ) : (
                       <FlatList
                         data={sortedComments}
-                        renderItem={({item}) => renderComment(item)}
-                        keyExtractor={item => item.commentID}
+                        renderItem={({ item }) => renderComment(item)}
+                         keyExtractor={(item) => item.commentID}
                         contentContainerStyle={styles.commentsContainer}
                         ListEmptyComponent={
                           <Text style={styles.emptyCommentText}>

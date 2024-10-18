@@ -8,6 +8,7 @@ import {useMemo} from 'react';
 
 import {API_URL} from '../../../services/config';
 import {FetchMemesResult, Meme} from '../../../types/types';
+import { useFollowStore } from '../../../stores/followStore';
 
 export const fetchMemes = async (
   lastEvaluatedKey: string | null = null,
@@ -15,11 +16,11 @@ export const fetchMemes = async (
   limit: number = 10,
   accessToken: string,
 ): Promise<FetchMemesResult> => {
-  console.log(
-    `fetchMemes called for user: ${userEmail}, lastEvaluatedKey: ${lastEvaluatedKey}`,
-  );
+ // console.log(
+ //   `fetchMemes called for user: ${userEmail}, lastEvaluatedKey: ${lastEvaluatedKey}`,
+ // );
 
-  console.log('Fetching new data from API');
+  //console.log('Fetching new data from API');
 
   try {
     const response = await axios.post(
@@ -49,11 +50,11 @@ export const fetchMemes = async (
     };
 
     console.log(
-      `Fetched ${result.memes.length} memes, new lastViewedMemeId: ${result.lastEvaluatedKey}`,
+      `Fetched ${result.memes.length} memes`,
     );
     return result;
   } catch (error) {
-    console.error('Error fetching memes:', error);
+  //  console.error('Error fetching memes:', error);
     return {memes: [], lastEvaluatedKey: null};
   }
 };
@@ -68,7 +69,7 @@ export const pruneCache = (
     queryClient.getQueryData<InfiniteData<FetchMemesResult>>(queryKey);
 
   if (queryData) {
-    const {pages, pageParams} = queryData;
+    const { pages, pageParams } = queryData;
 
     // Find the page index where lastViewedIndex is
     let cumulativeIndex = 0;
@@ -87,11 +88,14 @@ export const pruneCache = (
       cumulativeIndex += pageLength;
     }
 
-    // Keep up to 2 pages from pageIndexToKeep
-    const pagesToKeep = pages.slice(pageIndexToKeep, pageIndexToKeep + 2);
+    // Adjusted to keep pages before and after the current page
+    const startPageIndex = Math.max(pageIndexToKeep - 2, 0);
+    const endPageIndex = Math.min(pageIndexToKeep + 2, pages.length - 1);
+
+    const pagesToKeep = pages.slice(startPageIndex, endPageIndex + 1);
     const pageParamsToKeep = pageParams.slice(
-      pageIndexToKeep,
-      pageIndexToKeep + 2,
+      startPageIndex,
+      endPageIndex + 1,
     );
 
     // Update the query data
@@ -102,7 +106,7 @@ export const pruneCache = (
 
     queryClient.setQueryData(queryKey, newQueryData);
 
-  //  console.log('Cache pruned. Pages kept:', pagesToKeep.length);
+    //console.log(`Cache pruned. Pages kept: ${pagesToKeep.length}, from index ${startPageIndex} to ${endPageIndex}`);
   }
 };
 
@@ -117,6 +121,8 @@ export const useFetchMemes = ({
   userEmail,
   lastViewedMemeId,
 }: UseFetchMemesOptions) => {
+  const following = useFollowStore(state => state.following);
+  const followedEmails = following.map(user => user.email);
   const queryResult = useInfiniteQuery({
     enabled: !!accessToken,
     queryKey: ['memez', userEmail],
@@ -138,12 +144,16 @@ export const useFetchMemes = ({
   });
 
   const memes = useMemo(() => {
-    // console.log('Data useMEMO:', queryResult.data);
     if (queryResult.data?.pages) {
-      return queryResult.data.pages.flatMap(page => page.memes);
+      return queryResult.data.pages.flatMap(page =>
+        page.memes.map(meme => ({
+          ...meme,
+          isFollowed: followedEmails.includes(meme.email),
+        })),
+      );
     }
     return [];
-  }, [queryResult.data]);
+  }, [queryResult.data, followedEmails]);
 
   return {
     ...queryResult,

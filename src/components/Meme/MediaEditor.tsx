@@ -1,5 +1,3 @@
-// src/components/Meme/MediaEditor.tsx
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -20,8 +18,11 @@ import {
 import { Video, ResizeMode } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { COLORS } from '../../theme/theme';
 import { captureRef } from 'react-native-view-shot';
+import Slider from '@react-native-community/slider';
+import { useUserStore } from 'stores/userStore';
 
 interface MediaState {
   uri: string;
@@ -29,11 +30,8 @@ interface MediaState {
 }
 
 interface MediaEditorProps {
-  media: {
-    uri: string;
-    type: 'image' | 'video';
-  };
-  setMedia: React.Dispatch<React.SetStateAction<MediaState | null>>; // Add this line
+  media: MediaState;
+  setMedia: React.Dispatch<React.SetStateAction<MediaState | null>>;
   onComplete: (
     editedUri: string,
     overlayText: string,
@@ -42,21 +40,32 @@ interface MediaEditorProps {
     textColor: string
   ) => void;
   onCancel: () => void;
+  isDarkMode: boolean;
 }
 
 const { width, height } = Dimensions.get('window');
 
-const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete, onCancel }) => {
+const MediaEditor: React.FC<MediaEditorProps> = ({
+  media,
+  onComplete,
+  onCancel,
+  isDarkMode,
+}) => {
   const [overlayText, setOverlayText] = useState('');
   const [textColor, setTextColor] = useState('#FFFFFF');
   const [isTextInputVisible, setIsTextInputVisible] = useState(false);
   const [shouldPlay, setShouldPlay] = useState(true);
   const [isCropping, setIsCropping] = useState(false);
+  const [isColorSliderVisible, setIsColorSliderVisible] = useState(false);
+  const [isCcOverlay, setIsCcOverlay] = useState(false);
 
   const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const scale = useRef(new Animated.Value(1)).current;
   const mediaRef = useRef<View>(null);
-  const [mediaSize, setMediaSize] = useState({ width: width, height: height * 0.7 });
+  const [mediaSize, setMediaSize] = useState({
+    width: width,
+    height: height * 0.67,
+  });
   const [textSize, setTextSize] = useState({ width: 0, height: 0 });
 
   const lastScale = useRef(1);
@@ -65,21 +74,24 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete, onCancel }
   const initialDistance = useRef<number | null>(null);
   const initialScale = useRef<number>(1);
 
-  // Center the text overlay when media and text sizes are known
+  const username = useUserStore((state) => state.username);
+
   useEffect(() => {
     if (
       mediaSize.width > 0 &&
       mediaSize.height > 0 &&
       textSize.width > 0 &&
-      textSize.height > 0
+      textSize.height > 0 &&
+      !isCcOverlay
     ) {
-      const centerX = (mediaSize.width - textSize.width * lastScale.current) / 2;
-      const centerY = (mediaSize.height - textSize.height * lastScale.current) / 2;
+      const centerX =
+        (mediaSize.width - textSize.width * lastScale.current) / 2;
+      const centerY =
+        (mediaSize.height - textSize.height * lastScale.current) / 2;
       pan.setValue({ x: centerX, y: centerY });
     }
-  }, [mediaSize, textSize]);
+  }, [mediaSize, textSize, isCcOverlay]);
 
-  // Listeners for pan and scale values
   useEffect(() => {
     const xListenerId = pan.x.addListener(({ value }) => {
       currentPosition.current.x = value;
@@ -101,89 +113,110 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete, onCancel }
 
   const handleCropPress = async () => {
     try {
-   //   const croppedImage = await ImagePicker.openCropper({
-    //    path: media.uri,
-   //     width: 300,
-   //     height: 400,
-   //   });
-      console.log('need to implement');
-    //  setMedia({ uri: croppedImage.path, type: 'image' });
+      console.log('Crop functionality not implemented yet.');
     } catch (error) {
       Alert.alert('Error', 'Failed to crop image.');
     }
   };
 
-  // PanResponder for handling text overlay interactions
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => overlayText !== '',
-    onStartShouldSetPanResponderCapture: () => true,
-    onMoveShouldSetPanResponder: () => overlayText !== '',
-    onMoveShouldSetPanResponderCapture: () => true,
-    onPanResponderGrant: (evt) => {
-      pan.setOffset({
-        x: currentPosition.current.x,
-        y: currentPosition.current.y,
-      });
-      pan.setValue({ x: 0, y: 0 });
+  // HSV to RGB conversion
+  const hsvToRgb = (h: number, s: number, v: number): string => {
+    let r: number, g: number, b: number;
+    let i = Math.floor(h / 60) % 6;
+    let f = h / 60 - i;
+    let p = v * (1 - s);
+    let q = v * (1 - f * s);
+    let t = v * (1 - (1 - f) * s);
 
-      if (evt.nativeEvent.touches.length === 2) {
-        const touches = evt.nativeEvent.touches;
-        const dx = touches[0].pageX - touches[1].pageX;
-        const dy = touches[0].pageY - touches[1].pageY;
-        initialDistance.current = Math.sqrt(dx * dx + dy * dy);
-        initialScale.current = lastScale.current;
-      } else {
-        initialDistance.current = null;
-      }
-    },
-    onPanResponderMove: (evt, gestureState) => {
-      if (evt.nativeEvent.touches.length === 2 && initialDistance.current) {
-        const touches = evt.nativeEvent.touches;
-        const dx = touches[0].pageX - touches[1].pageX;
-        const dy = touches[0].pageY - touches[1].pageY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+    switch (i) {
+      case 0:
+        r = v;
+        g = t;
+        b = p;
+        break;
+      case 1:
+        r = q;
+        g = v;
+        b = p;
+        break;
+      case 2:
+        r = p;
+        g = v;
+        b = t;
+        break;
+      case 3:
+        r = p;
+        g = q;
+        b = v;
+        break;
+      case 4:
+        r = t;
+        g = p;
+        b = v;
+        break;
+      case 5:
+      default:
+        r = v;
+        g = p;
+        b = q;
+        break;
+    }
 
-        const scaleFactor = (distance / initialDistance.current) * initialScale.current;
-        scale.setValue(scaleFactor);
-      } else if (evt.nativeEvent.touches.length === 1) {
-        const newX = gestureState.dx + currentPosition.current.x;
-        const newY = gestureState.dy + currentPosition.current.y;
+    r = Math.round(r * 255);
+    g = Math.round(g * 255);
+    b = Math.round(b * 255);
 
-        // Constrain the text within the media bounds
-        const constrainedX = Math.max(
-          0,
-          Math.min(newX, mediaSize.width - textSize.width * lastScale.current)
-        );
-        const constrainedY = Math.max(
-          0,
-          Math.min(newY, mediaSize.height - textSize.height * lastScale.current)
-        );
-
-        pan.x.setValue(constrainedX - currentPosition.current.x);
-        pan.y.setValue(constrainedY - currentPosition.current.y);
-      }
-    },
-    onPanResponderRelease: () => {
-      pan.flattenOffset();
-      initialDistance.current = null;
-    },
-  });
-
-  // Cycle through predefined text colors
-  const cycleTextColor = () => {
-    Haptics.selectionAsync();
-    const colors = ['#FFFFFF', '#FF5733', '#33FF57', '#3357FF', '#F1C40F'];
-    const currentIndex = colors.indexOf(textColor);
-    const nextIndex = (currentIndex + 1) % colors.length;
-    setTextColor(colors[nextIndex]);
+    return `rgb(${r}, ${g}, ${b})`;
   };
 
-  // Toggle visibility of text input
+  // Updated handleColorChange function
+  const handleColorChange = (value: number) => {
+    let color;
+
+    if (value <= 0.1) {
+      const t = value / 0.1;
+      const v = t;
+      color = hsvToRgb(0, 1, v);
+    } else if (value >= 0.9) {
+      const t = (value - 0.9) / 0.1;
+      const s = 1 - t;
+      color = hsvToRgb(360, s, 1);
+    } else {
+      const t = (value - 0.1) / 0.8;
+      const h = t * 360;
+      color = hsvToRgb(h, 1, 1);
+    }
+
+    setTextColor(color);
+  };
+
+  const toggleColorSlider = () => {
+    setIsColorSliderVisible(!isColorSliderVisible);
+  };
+
   const toggleTextInput = () => {
     setIsTextInputVisible(!isTextInputVisible);
+    if (isCcOverlay) {
+      setIsCcOverlay(false);
+    }
   };
 
-  // Handle completion of editing
+  const handleCcPress = () => {
+    if (!username) {
+      Alert.alert('Error', 'Username not found.');
+      return;
+    }
+    const ccText = `cc: ${username} @jextr`;
+    setOverlayText(ccText);
+    setIsCcOverlay(true);
+    setIsColorSliderVisible(false);
+    setIsTextInputVisible(false);
+    const x = -40;
+    const y = mediaSize.height - 40;
+    pan.setValue({ x, y });
+    scale.setValue(0.5);
+  };
+
   const handleComplete = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
@@ -213,8 +246,66 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete, onCancel }
     }
   };
 
-  // Handle keyboard visibility
-  const keyboardVerticalOffset = Platform.OS === 'ios' ? 100 : 0;
+  const keyboardVerticalOffset = Platform.OS === 'ios' ? 0 : 0;
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => overlayText !== '',
+    onStartShouldSetPanResponderCapture: () => true,
+    onMoveShouldSetPanResponder: () => overlayText !== '',
+    onMoveShouldSetPanResponderCapture: () => true,
+    onPanResponderGrant: (evt, gestureState) => {
+      if (isCcOverlay) return;
+      pan.setOffset({
+        x: (pan.x as any)._value,
+        y: (pan.y as any)._value,
+      });
+      pan.setValue({ x: 0, y: 0 });
+  
+      if (evt.nativeEvent.touches.length === 2) {
+        const touches = evt.nativeEvent.touches;
+        const dx = touches[0].pageX - touches[1].pageX;
+        const dy = touches[0].pageY - touches[1].pageY;
+        initialDistance.current = Math.sqrt(dx * dx + dy * dy);
+        initialScale.current = lastScale.current;
+      } else {
+        initialDistance.current = null;
+      }
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      if (isCcOverlay) return;
+  
+      if (evt.nativeEvent.touches.length === 2 && initialDistance.current) {
+        const touches = evt.nativeEvent.touches;
+        const dx = touches[0].pageX - touches[1].pageX;
+        const dy = touches[0].pageY - touches[1].pageY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+  
+        const scaleFactor =
+          (distance / initialDistance.current) * initialScale.current;
+        scale.setValue(scaleFactor);
+      } else if (evt.nativeEvent.touches.length === 1) {
+        const layout = pan.getLayout();
+        let newX = gestureState.dx + (layout.left as any)._value;
+        let newY = gestureState.dy + (layout.top as any)._value;
+  
+        const maxX =
+          mediaSize.width - textSize.width * lastScale.current;
+        const maxY =
+          mediaSize.height - textSize.height * lastScale.current;
+  
+        newX = Math.max(0, Math.min(newX, maxX));
+        newY = Math.max(0, Math.min(newY, maxY));
+  
+        pan.x.setValue(newX - (layout.left as any)._value);
+        pan.y.setValue(newY - (layout.top as any)._value);
+      }
+    },
+    onPanResponderRelease: () => {
+      if (isCcOverlay) return;
+      pan.flattenOffset();
+      initialDistance.current = null;
+    },
+  });
 
   return (
     <KeyboardAvoidingView
@@ -222,20 +313,25 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete, onCancel }
       behavior="padding"
       keyboardVerticalOffset={keyboardVerticalOffset}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.innerContainer}>
-          {/* Cancel Button */}
-          <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-            <Ionicons name="close" size={30} color="#fff" />
-          </TouchableOpacity>
-
-          {/* Media Preview Section */}
+  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <View style={[styles.innerContainer, { backgroundColor: isDarkMode ? '#1e1e1e' : '#494949' }]}>
+      {/* Cancel Button */}
+      <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
+        <Ionicons name="close" size={30} color="#fff" />
+      </TouchableOpacity>
+      
+    {/* Media Preview Section */}
           <View
             ref={mediaRef}
             style={styles.mediaPreview}
             onLayout={(event) => {
               const { width, height } = event.nativeEvent.layout;
               setMediaSize({ width, height });
+              if (isCcOverlay) {
+                const x = 10;
+                const y = height - 40;
+                pan.setValue({ x, y });
+              }
             }}
           >
             {media.type === 'video' ? (
@@ -272,7 +368,7 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete, onCancel }
                     ],
                   },
                 ]}
-                {...panResponder.panHandlers}
+                {...(isCcOverlay ? {} : panResponder.panHandlers)}
                 onLayout={(event) => {
                   const { width, height } = event.nativeEvent.layout;
                   setTextSize({ width, height });
@@ -290,23 +386,46 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete, onCancel }
               <Ionicons name="text" size={28} color="#FFFFFF" />
             </TouchableOpacity>
 
-            {/* Text Color Cycle Button */}
-            <TouchableOpacity onPress={cycleTextColor} style={styles.iconButton}>
+            {/* Text Color Slider Toggle Button */}
+            <TouchableOpacity onPress={toggleColorSlider} style={styles.iconButton}>
               <Ionicons name="color-palette" size={28} color="#FFFFFF" />
             </TouchableOpacity>
 
             {/* Crop Image Button */}
             {media.type === 'image' && (
-              <TouchableOpacity onPress={handleCropPress} style={styles.iconButton} disabled={true}>
+              <TouchableOpacity
+                onPress={handleCropPress}
+                style={styles.iconButton}
+                disabled={true}
+              >
                 <Ionicons name="crop" size={28} color="#FFFFFF" />
               </TouchableOpacity>
             )}
 
-            {/* Future Feature Button */}
-            <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="happy-outline" size={28} color="#FFFFFF" />
+            {/* Cc Button */}
+            <TouchableOpacity onPress={handleCcPress} style={styles.iconButton}>
+              <FontAwesome5 name="copyright" size={24} color="white" />
             </TouchableOpacity>
           </View>
+
+          {/* Color Slider */}
+          {isColorSliderVisible && (
+            <View style={styles.sliderContainer}>
+              <Slider
+                style={{ width: '80%', height: 40 }}
+                minimumValue={0}
+                maximumValue={1}
+                minimumTrackTintColor="#FFFFFF"
+                maximumTrackTintColor="#000000"
+                thumbTintColor={textColor}
+                onValueChange={handleColorChange}
+                value={0}
+              />
+              <TouchableOpacity onPress={toggleColorSlider}>
+                <Ionicons name="checkmark-circle" size={32} color="#1bd40b" />
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Text Input Section */}
           {isTextInputVisible && (
@@ -316,7 +435,12 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete, onCancel }
                 placeholder="Add overlay text"
                 placeholderTextColor="#999"
                 value={overlayText}
-                onChangeText={setOverlayText}
+                onChangeText={(text) => {
+                  setOverlayText(text);
+                  if (isCcOverlay) {
+                    setIsCcOverlay(false);
+                  }
+                }}
                 onSubmitEditing={() => setIsTextInputVisible(false)}
                 autoFocus
               />
@@ -331,7 +455,7 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ media, onComplete, onCancel }
             ]}
           >
             <TouchableOpacity style={styles.doneButton} onPress={handleComplete}>
-              <Text style={styles.buttonText}>Done Editing</Text>
+              <Text style={styles.buttonText}>Next</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -346,12 +470,11 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     flex: 1,
-    backgroundColor: '#1C1C1C',
   },
   cancelButton: {
     position: 'absolute',
-    top: 20,
-    left: 20,
+    top: 60,
+    right: 20,
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 10,
     borderRadius: 25,
@@ -359,9 +482,7 @@ const styles = StyleSheet.create({
   },
   mediaPreview: {
     width: '100%',
-    height: height * 0.62,
-    borderRadius: 10,
-    marginBottom: 20,
+    height: height * 0.6,
     overflow: 'hidden',
   },
   media: {
@@ -373,6 +494,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     marginBottom: 10,
+    paddingVertical: 10,
   },
   iconButton: {
     padding: 10,
@@ -384,10 +506,17 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  sliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
   textInputContainer: {
     width: '100%',
     marginBottom: 10,
-    paddingHorizontal: 15
+    paddingHorizontal: 15,
   },
   textInput: {
     height: 50,

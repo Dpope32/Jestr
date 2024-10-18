@@ -9,7 +9,6 @@ import {
   postComment,
   deleteComment,
   updateCommentReaction,
-  organizeCommentsIntoThreads,
 } from '../../../services/commentServices';
 import {Meme} from '../../../types/types';
 import { useBadgeStore } from '../../../stores/badgeStore';
@@ -23,6 +22,7 @@ type UseCommentFeedProps = {
   user: User | null;
   isCommentFeedVisible: boolean;
   toggleCommentFeed: () => void;
+  commentCount: number;
 };
 
 type UseCommentFeedReturn = {
@@ -54,6 +54,7 @@ const useCommentFeed = ({
   isCommentFeedVisible,
   toggleCommentFeed,
   userEmail,
+  commentCount, 
 }: UseCommentFeedProps): UseCommentFeedReturn => {
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -81,17 +82,17 @@ const useCommentFeed = ({
     }
   }, [isCommentFeedVisible, modalY]);
 
-  // QUERY: Fetch comments for memeID
-  const {
-    data: comments = [],
-    isLoading,
-    isError,
-    refetch: refetchComments,
-  } = useQuery({
-    queryKey: ['comments', memeID],
-    queryFn: () => fetchComments(memeID),
-    enabled: isCommentFeedVisible && !!memeID, // Only fetch when visible and memeID is available
-  });
+    // QUERY: Fetch comments for memeID
+    const {
+      data: comments = [],
+      isLoading,
+      isError,
+      refetch: refetchComments,
+    } = useQuery({
+      queryKey: ['comments', memeID],
+      queryFn: () => fetchComments(memeID),
+      enabled: isCommentFeedVisible && !!memeID && commentCount > 0, // Only fetch when the comment count is greater than 0
+    });
 
  // MUTATION: Post a new comment
  const postCommentMutation = useMutation({
@@ -186,14 +187,17 @@ const useCommentFeed = ({
 
   const handleAddComment = () => {
     if (newComment.trim() !== '' && user) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       postCommentMutation.mutate({text: newComment, replyingTo});
       Keyboard.dismiss();
     } else if (!user) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       console.error('User is null, cannot post comment.');
     }
   };
   
   const handleDeleteComment = (commentID: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     deleteCommentMutation.mutate(commentID);
   };
 
@@ -201,6 +205,7 @@ const useCommentFeed = ({
     commentID: string,
     reaction: 'like' | 'dislike' | null,
   ) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     updateCommentReactionMutation.mutate({commentID, reaction});
   };
 
@@ -213,16 +218,18 @@ const useCommentFeed = ({
   };
 
   const cancelReply = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setReplyingTo(null);
     setReplyingToUsername(null);
     setNewComment('');
   };
 
   const closeModal = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Keyboard.dismiss();
     Animated.timing(modalY, {
       toValue: screenHeight,
-      duration: 300,
+      duration: 100,
       useNativeDriver: true,
     }).start(() => {
       toggleCommentFeed();

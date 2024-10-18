@@ -1,9 +1,11 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
-import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
+// LeftContentFeed.tsx
 
-import {COLORS, SPACING, FONT_SIZES} from '../../theme/theme';
-import {formatDate} from '../../utils/dateUtils';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+
+import { COLORS, SPACING, FONT_SIZES } from '../../theme/theme';
+import { formatTimeAgo } from '../../utils/dateUtils'; // Updated import
 
 interface LeftContentFeedProps {
   username: string;
@@ -19,10 +21,10 @@ const LeftContentFeed: React.FC<LeftContentFeedProps> = ({
   const tabBarHeight = useBottomTabBarHeight();
 
   return (
-    <View style={[styles.textContainer, {bottom: tabBarHeight + 30}]}>
+    <View style={[styles.textContainer, { bottom: tabBarHeight + 30 }]}>
       <Text style={styles.username}>{username || 'Anonymous'}</Text>
       {caption && <Text style={styles.caption}>{caption}</Text>}
-      <Text style={styles.date}>{formatDate(uploadTimestamp) || 'N/A'}</Text>
+      <Text style={styles.date}>{formatTimeAgo(uploadTimestamp) || 'N/A'}</Text>
     </View>
   );
 };
@@ -33,7 +35,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     bottom: 0,
     left: 15,
-    width: '60%',
+    width: '80%',
   },
   username: {
     fontWeight: 'bold',

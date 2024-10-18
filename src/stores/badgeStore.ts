@@ -160,7 +160,7 @@ const createBadgeStore = () => {
             const progress = Math.min((badge.currentCounts / details.goal) * 100, 100);
             
             // Log the progress calculation for each badge
-            logger.info(`[BadgeStore] Calculated progress for badge type "${badge.type}": ${progress}%`);
+           // logger.info(`[BadgeStore] Calculated progress for badge type "${badge.type}": ${progress}%`);
         
             return { ...badge, progress };
           });
@@ -193,7 +193,7 @@ const createBadgeStore = () => {
           try {
             const existingBadge = get().badges.find((b) => b.type === badgeType);
             if (existingBadge?.earned) {
-              logger.info(`[BadgeStore] Badge of type ${badgeType} already earned. No action needed.`);
+            //  logger.info(`[BadgeStore] Badge of type ${badgeType} already earned. No action needed.`);
               return;
             }
 
@@ -264,22 +264,35 @@ const createBadgeStore = () => {
         },
 
         incrementCount: (countType: CountType, userEmail?: string) => {
-          logger.info(`[BadgeStore] Incrementing ${countType}`);
           set((state) => ({ [countType]: state[countType] + 1 }));
           if (userEmail) {
-            get().checkBadge(countType as BadgeType, userEmail);
+            const countTypeToBadgeType: Record<CountType, BadgeType> = {
+              likeCount: 'memeLiker',
+              downloadCount: 'memeCollector',
+              shareCount: 'viralSensation',
+              commentCount: 'commentator',
+              followerCount: 'socialButterfly',
+              conversationCount: 'messenger',
+              memeUploadCount: 'memeMaster',
+              memeCreationCount: 'memeCreator',
+            };
+            const badgeType = countTypeToBadgeType[countType];
+            if (badgeType) {
+              get().checkBadge(badgeType, userEmail);
+            }
           }
           get().calculateAndUpdateProgress();
         },
+        
 
         decrementCount: (countType: CountType) => {
-          logger.info(`[BadgeStore] Decrementing ${countType}`);
+      //    logger.info(`[BadgeStore] Decrementing ${countType}`);
           set((state) => ({ [countType]: Math.max(0, state[countType] - 1) }));
           get().calculateAndUpdateProgress();
         },
 
         checkBadge: async (badgeType: BadgeType, userEmail: string) => {
-          logger.info(`[BadgeStore] Checking ${badgeType} badge`);
+      //    logger.info(`[BadgeStore] Checking ${badgeType} badge`);
           await get().checkAndUpdateBadge(userEmail, badgeType);
         },
       }),

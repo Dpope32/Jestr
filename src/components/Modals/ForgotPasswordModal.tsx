@@ -1,13 +1,26 @@
 // src/components/ForgotPasswordModal.tsx
 
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, Animated, Easing, TouchableWithoutFeedback, Keyboard,} from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  Animated,
+  Easing,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
 import Toast from 'react-native-toast-message';
 import { handleForgotPassword as forgotPassword, confirmForgotPassword } from '../../services/authService';
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from 'react-native-confirmation-code-field';
 import styles from './ModalStyles/ForgotPW.styles';
 
-interface ForgotPasswordModalProps { isVisible: boolean; onClose: () => void;}
+interface ForgotPasswordModalProps {
+  isVisible: boolean;
+  onClose: () => void;
+}
 
 const CELL_COUNT = 6;
 
@@ -17,7 +30,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isVisible, on
   const [newPassword, setNewPassword] = useState<string>('');
   const [step, setStep] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const ref = useBlurOnFulfill({ value: confirmationCode, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
@@ -44,7 +57,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isVisible, on
     }
   }, [isVisible, fadeAnim]);
 
-  const handleForgotPassword = async () => {
+  const handleForgotPasswordClick = async () => {
     if (!email) {
       Toast.show({
         type: 'error',
@@ -75,7 +88,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isVisible, on
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: 'Failed to send code. Try again.',
+        text2: error.message || 'Failed to send code. Try again.',
         visibilityTime: 2000,
         autoHide: true,
         topOffset: 30,
@@ -86,7 +99,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isVisible, on
     }
   };
 
-  const handleConfirmForgotPassword = async () => {
+  const handleConfirmForgotPasswordClick = async () => {
     if (!confirmationCode || !newPassword) {
       Toast.show({
         type: 'error',
@@ -117,7 +130,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isVisible, on
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: 'Failed to reset password. Try again.',
+        text2: error.message || 'Failed to reset password. Try again.',
         visibilityTime: 2000,
         autoHide: true,
         topOffset: 30,
@@ -149,7 +162,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isVisible, on
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
-                <TouchableOpacity onPress={handleForgotPassword} style={styles.button} disabled={loading}>
+                <TouchableOpacity onPress={handleForgotPasswordClick} style={styles.button} disabled={loading}>
                   <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Reset Password'}</Text>
                 </TouchableOpacity>
               </>
@@ -186,7 +199,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isVisible, on
                     onChangeText={setNewPassword}
                   />
                 )}
-                <TouchableOpacity onPress={handleConfirmForgotPassword} style={styles.button} disabled={loading}>
+                <TouchableOpacity onPress={handleConfirmForgotPasswordClick} style={styles.button} disabled={loading}>
                   <Text style={styles.buttonText}>{loading ? 'Resetting...' : 'Confirm Password Reset'}</Text>
                 </TouchableOpacity>
               </>

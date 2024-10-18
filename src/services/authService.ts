@@ -12,6 +12,9 @@ import {
   signIn,
   confirmResetPassword,
 } from '@aws-amplify/auth';
+import Auth from '@aws-amplify/auth';
+
+
 import appleAuth, {
   AppleRequestScope,
   AppleRequestOperation,
@@ -195,9 +198,8 @@ export const handleLogin = async (
   password: string,
   navigation: AuthNavProp,
 ) => {
-  //console.log('Logging in with username:', username);
-  // console.log('Logging in with password:', password);
   try {
+    // Reset any existing authentication state
     await signOut();
     await SecureStore.deleteItemAsync('accessToken');
     await AsyncStorage.removeItem('userIdentifier');
@@ -206,7 +208,8 @@ export const handleLogin = async (
 
     const lowercaseUsername = username.toLowerCase();
 
-    const {isSignedIn, nextStep} = await signIn({
+    // Attempt to sign in the user
+    const { isSignedIn, nextStep } = await signIn({
       username: lowercaseUsername,
       password,
       options: {
@@ -216,16 +219,16 @@ export const handleLogin = async (
 
     if (isSignedIn) {
       console.log('User signed in successfully');
-      const {tokens} = await fetchAuthSession();
+      const { tokens } = await fetchAuthSession();
       const accessToken = tokens?.accessToken?.toString();
-    //  console.log('Access token handleLogin:', accessToken);
 
       if (accessToken) {
         await SecureStore.setItemAsync('accessToken', accessToken);
       }
-      const userDetails = await fetchUserDetails(username, accessToken || '');
 
-      const isAdmin = [
+      const userDetails = await fetchUserDetails(lowercaseUsername, accessToken || '');
+
+      const adminEmails = [
         'pope.dawson@gmail.com',
         'bogdan.georgian370@gmail.com',
         'kamariewallace1999@gmail.com',
@@ -234,9 +237,10 @@ export const handleLogin = async (
         'popebardy@gmail.com',
         'tpope918@aol.com',
         'poperevo@gmail.com',
-      ].includes(userDetails.email);
+      ];
 
-      // await AsyncStorage.setItem('isAdmin', JSON.stringify(isAdmin));
+      const isAdmin = adminEmails.includes(userDetails.email);
+
       try {
         await registerDevice(userDetails.email);
       } catch (error) {
@@ -250,34 +254,46 @@ export const handleLogin = async (
         profilePic: userDetails.profilePic,
         headerPic: userDetails.headerPic,
         bio: userDetails.bio,
-        creationDate: userDetails.CreationDate,
+        creationDate: userDetails.creationDate,
         followersCount: userDetails.FollowersCount,
         followingCount: userDetails.FollowingCount,
         isAdmin: isAdmin,
       });
-        // Synchronize badges after successful login
-        const badgeStore = useBadgeStore.getState();
-        await badgeStore.syncBadgesWithAPI(userDetails.email);
-        console.log('Badges synchronized after login');
 
-      // await storeUserIdentifier(userDetails.email);
-      // await logStorageContents();
+      // Synchronize badges after successful login
+      const badgeStore = useBadgeStore.getState();
+      await badgeStore.syncBadgesWithAPI(userDetails.email);
+      console.log('Badges synchronized after login');
+
     } else if (
       nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
     ) {
       console.log('User must change password');
-      console.log('Next step:', nextStep);
       navigation.navigate('ChangePassword', {
-        username,
+        username: lowercaseUsername,
         nextStep: nextStep,
       });
     } else {
-      Alert.alert('Login Failed', 'Unexpected authentication step');
+      // Handle unexpected authentication steps
+      Alert.alert('Login Failed', 'An unexpected authentication step occurred. Please try again.');
     }
   } catch (error: any) {
     console.error('Login error:', error);
-    Alert.alert('Login Failed', error.message || 'An unknown error occurred');
-  } finally {
+
+    // Determine the type of error and display an appropriate message
+    if (error.code === 'NotAuthorizedException') {
+      // Incorrect username or password
+      Alert.alert('Login Failed', 'Invalid email or password. Please try again.');
+    } else if (error.code === 'UserNotFoundException') {
+      // User does not exist
+      Alert.alert('Login Failed', 'Invalid email or password. Please try again.');
+    } else if (error.code === 'NetworkError') {
+      // Network-related error
+      Alert.alert('Login Failed', 'Network error. Please check your connection and try again.');
+    } else {
+      // Generic error message for all other cases
+      Alert.alert('Login Failed', 'An unexpected error occurred. Please try again.');
+    }
   }
 };
 

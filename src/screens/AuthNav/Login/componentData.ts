@@ -18,7 +18,7 @@ export const styles = StyleSheet.create({
   },
   contentContainer: {
     width: '100%',
-    maxWidth: 300,
+    maxWidth: SCREEN_WIDTH * 0.9,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: SPACING.lg,

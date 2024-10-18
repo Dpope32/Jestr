@@ -29,7 +29,6 @@ interface LongPressModalProps {
     url: string;
   };
   onSaveToProfile: () => Promise<void>;
-  onShare: () => void;
   onReport: () => void;
   onFavorite?: () => void; // Optional prop
 }
@@ -39,7 +38,6 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
   onClose,
   meme,
   onSaveToProfile,
-  onShare,
   onReport,
   onFavorite, // Optional prop
 }) => {
@@ -178,7 +176,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
       Toast.show({
         type: 'success',
         text1: 'Meme Saved',
-        text2: 'Saved image to your profile gallery.',
+        text2: 'Saved image your profile gallery.',
       });
     } catch (error) {
       console.error('Save to Profile Error:', error);
@@ -197,37 +195,25 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
       iconName: 'link-outline',
       text: 'Copy Link',
       onPress: copyLink,
-      color: '#4A90E2', // Blue
+      color: '#4A90E2', 
     },
     {
       iconName: 'bookmark-outline',
       text: 'Bookmark',
       onPress: handleSaveToProfile,
-      color: '#FFA500', // Orange
+      color: '#FFA500', 
     },
     {
       iconName: 'download-outline',
-      text: 'Save',
+      text: 'Download',
       onPress: saveToGallery,
-      color: '#50C878', // Green
-    },
-    {
-      iconName: 'share-social-outline',
-      text: 'Share',
-      onPress: onShare,
-      color: '#FF69B4', // Pink
+      color: '#50C878', 
     },
     {
       iconName: 'flag-outline',
       text: 'Report',
       onPress: onReport,
-      color: '#FF6347', // Red
-    },
-    {
-      iconName: 'heart-outline',
-      text: 'Favorite',
-      onPress: onFavorite || (() => {}),
-      color: '#FF4500', // Deep Orange
+      color: '#FF6347', 
     },
   ];
 
@@ -237,7 +223,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
         key={index}
         style={styles.option}
         onPress={option.onPress}
-        activeOpacity={0.7}
+        activeOpacity={0.8}
       >
         <View style={styles.iconContainer}>
           <Ionicons name={option.iconName as keyof typeof Ionicons.glyphMap} size={28} color={option.color} />
@@ -250,7 +236,7 @@ export const LongPressModal: React.FC<LongPressModalProps> = ({
 
   return (
     <View style={styles.container}>
-      <BlurView intensity={80} style={styles.blurView} tint="dark">
+      <BlurView intensity={90} style={styles.blurView} tint="dark">
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={styles.overlay}>
             <TouchableWithoutFeedback>

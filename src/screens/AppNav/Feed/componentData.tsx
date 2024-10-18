@@ -7,16 +7,12 @@ import {
   ActivityIndicator,
   ViewStyle,
 } from 'react-native';
-import {FONTS} from '../../../theme/theme';
+import { FONTS } from '../../../theme/theme';
 
-export const {width: screenWidth, height: screenHeight} =
-  Dimensions.get('window');
-
-// console.log('Screen Height:', screenHeight);
+export const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export type ViewableItemsType = {
   viewableItems: ViewToken[];
-  // changed: ViewToken[];
 };
 
 export const ListEmptyComponent = () => (
@@ -25,7 +21,7 @@ export const ListEmptyComponent = () => (
   </View>
 );
 
-export const LoadingComponent = ({style}: {style: ViewStyle}) => {
+export const LoadingComponent = ({ style }: { style: ViewStyle }) => {
   console.log('Loading...STATUS IS PENDING');
   return (
     <View style={[styles.loadingContainer, style]}>
@@ -44,101 +40,95 @@ export const ErrorComponent = ({
   console.log('ERROR FEED QUERY:', error);
   return (
     <View style={[styles.errorContainer, style]}>
-      <Text>Error: {error?.message || 'Something went wrong'}</Text>
-      <Text>Please try again later.</Text>
+      <Text style={styles.errorText}>Error: {error?.message || 'Something went wrong'}</Text>
+      <Text style={styles.errorText}>Please try again later.</Text>
     </View>
   );
 };
 
-export const NoDataComponent = ({style}: {style: ViewStyle}) => {
+export const NoDataComponent = ({ style }: { style: ViewStyle }) => {
   return (
     <View style={[styles.loadingContainer, style]}>
-      <Text style={{color: '#FFF', fontSize: 26}}>
-        NO MEMES FROM BACKEND !!!
-      </Text>
+      <Text style={styles.noDataText}>NO MEMES AVAILABLE!</Text>
     </View>
   );
 };
 
 export const lottieStyle = {
-  // position: 'absolute',
-  // left: 0,
-  // top: 0,
-  width: 200,
-  height: 200,
-  // zindex: 1099990,
+  width: 150,
+  height: 150,
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: '#000',
-    // borderWidth: 1,
-    // borderColor: 'yellow',
+  },
+  gradientContainer: {
+    flex:1
   },
   flatlistStyle: {
     flex: 1,
-    // height: screenHeight,
-    // borderWidth: 12,
-    // borderColor: 'red',
-    // backgroundColor: 'red',
   },
   contentCtrStyle: {
     flexGrow: 1,
-    // height: screenHeight,
-    // borderWidth: 1,
-    // borderColor: 'blue',
-    // backgroundColor: 'green',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'transparent',
     fontFamily: FONTS.regular,
   },
   overlay: {
     position: 'absolute',
     top: '50%',
-    // backgroundColor: 'red',
   },
   video: {
     width: '100%',
     height: '100%',
-    // borderWidth: 3,
-    // borderColor: 'blue',
   },
   imgContainer: {
     width: '100%',
-    // height: '100%',
-    // height: screenHeight,
-    // borderWidth: 3,
-    // borderColor: 'yellow',
-    // backgroundColor: 'green',
   },
   errorContainer: {
-    backgroundColor: 'gray',
+    backgroundColor: 'transparent',
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  errorText: {
+    color: '#FFF',
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+  },
   overlayContainer: {
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
+    pointerEvents: 'none',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     height: screenHeight,
-    color: '#FFF',
   },
   emptyTxt: {
     color: '#FFF',
     fontFamily: FONTS.regular,
     fontSize: 16,
+  },
+  noDataText: {
+    color: '#FFF',
+    fontSize: 26,
+  },
+  animationContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    pointerEvents: 'none',
   },
 });
 

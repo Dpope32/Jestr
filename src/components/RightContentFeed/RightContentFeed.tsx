@@ -1,16 +1,21 @@
-import React from 'react';
-import {View, Text, TouchableOpacity, Image} from 'react-native';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faThumbsUp, faComment} from '@fortawesome/free-solid-svg-icons';
-import {faShare, faPlus} from '@fortawesome/free-solid-svg-icons';
-import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
-import {useMutation, useQueryClient} from '@tanstack/react-query';
+// RightContentFeed.tsx
+
+import React, { useCallback } from 'react';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faThumbsUp, faComment, faShare, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useMutation } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
 
 import styles from './styles';
-import {COLORS} from '../../theme/theme';
-import {addFollow} from '../../services/socialService';
-import {useLikeMutation} from '../../screens/AppNav/Feed/useLikeMutation';
-// import {ShareType, User} from '../../types/types';
+import { COLORS } from '../../theme/theme';
+import { addFollow } from '../../services/socialService';
+import { useLikeMutation } from '../../screens/AppNav/Feed/useLikeMutation';
+import { useUserStore } from '../../stores/userStore';
+import { useFollowStore } from '../../stores/followStore';
+import { useBadgeStore } from '../../stores/badgeStore';
+import { getUser } from '../../services/userService';
 
 interface IconButtonProps {
   icon: any;
@@ -32,22 +37,76 @@ interface IconsAndContentProps {
   onShare: () => void;
   memeUsername: string;
   setIsCommentFeedVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  // onShare: (type: ShareType, username: string, message: string) => void;
 }
 
 const IconButton: React.FC<IconButtonProps> = React.memo(
-  ({icon, count, onPress, color = COLORS.primary}) => {
+  ({ icon, count, onPress, color = COLORS.white }) => {
     return (
       <TouchableOpacity
         onPress={onPress}
         style={styles.iconWrapper}
-        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
         <FontAwesomeIcon icon={icon} size={28} color={color} />
-        <Text style={[styles.iconText, {color: '#FFFFFF'}]}>{count}</Text>
+        <Text style={[styles.iconText, { color: COLORS.white }]}>{count}</Text>
       </TouchableOpacity>
     );
   },
 );
+
+const useAddFollowMutation = (userEmail: string, memeUserEmail: string) => {
+  const incrementFollowing = useUserStore((state) => state.incrementFollowingCount);
+  const addFollowing = useFollowStore((state) => state.addFollowing);
+  const incrementFollowerBadge = useBadgeStore((state) => state.incrementCount);
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await addFollow(userEmail, memeUserEmail);
+      return result;
+    },
+    onSuccess: async (data) => {
+      if (data.success) {
+        Toast.show({
+          type: 'success',
+          text1: 'Followed Successfully',
+          text2: `You are now following ${memeUserEmail}`,
+          position: 'top',
+          visibilityTime: 3000,
+        });
+
+        incrementFollowing();
+        incrementFollowerBadge('followerCount');
+
+        // Fetch full user data
+        const userData = await getUser(memeUserEmail);
+        if (userData) {
+          await addFollowing(userEmail, userData);
+        } else {
+          console.error('Failed to fetch user data for', memeUserEmail);
+        }
+      } else {
+        console.error('Failed to add follow:', data.message);
+        Toast.show({
+          type: 'error',
+          text1: 'Follow Failed',
+          text2: data.message || 'Unable to follow the user.',
+          position: 'top',
+          visibilityTime: 3000,
+        });
+      }
+    },
+    onError: (error) => {
+      console.error('Error in addFollow mutation:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Follow Failed',
+        text2: 'Unable to follow the user. Please try again.',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    },
+  });
+};
 
 export const RightContentFeed: React.FC<IconsAndContentProps> = ({
   isFollowing,
@@ -63,53 +122,19 @@ export const RightContentFeed: React.FC<IconsAndContentProps> = ({
   memeUsername,
   setIsCommentFeedVisible,
 }) => {
-  const queryClient = useQueryClient();
   const tabBarHeight = useBottomTabBarHeight();
   const likeMutation = useLikeMutation(userEmail);
 
+  const addFollowMutation = useAddFollowMutation(userEmail, memeUserEmail);
+
   const imgSrc = userImgSrc
-    ? {uri: userImgSrc}
+    ? { uri: userImgSrc }
     : require('../../assets/images/Jestr.jpg');
 
-  const addFollowMutation = useMutation({
-    mutationFn: ({
-      followerId,
-      followeeId,
-    }: {
-      followerId: string;
-      followeeId: string;
-    }) => addFollow(followerId, followeeId),
-    onSuccess: (data, variables) => {
-      if (data.success) {
-        const queryKey = ['memez', userEmail];
-        queryClient.setQueryData(queryKey, (oldData: any) => {
-          if (!oldData) return oldData;
-
-          const updatedPages = oldData.pages.map((page: any) => {
-            const updatedMemes = page.memes.map((meme: any) => {
-              if (meme.email === variables.followeeId) {
-                return {...meme, isFollowed: true};
-              }
-              return meme;
-            });
-            return {...page, memes: updatedMemes};
-          });
-
-          return {...oldData, pages: updatedPages};
-        });
-      }
-    },
-    onError: error => {
-      console.error('Error in addFollow mutation:', error);
-    },
-  });
-
-  const handleFollow = () => {
-    addFollowMutation.mutate({
-      followerId: userEmail,
-      followeeId: memeUserEmail,
-    });
-  };
+  const handleFollow = useCallback(() => {
+    console.log('Follow button pressed');
+    addFollowMutation.mutate();
+  }, [addFollowMutation]);
 
   const handleLikePress = () => {
     console.log('Like button pressed');
@@ -124,14 +149,13 @@ export const RightContentFeed: React.FC<IconsAndContentProps> = ({
   };
 
   const handleCommentPress = () => {
+    console.log('Comment button pressed');
     setIsCommentFeedVisible(true);
   };
 
   const handleSharePress = () => {
-    // Here onShare only triggers the share modal
-    // needs clarification!
+    console.log('Share button pressed');
     if (memeUsername) {
-      // onShare('friend', memeUsername, 'Check out this meme!');
       onShare();
     }
   };
@@ -139,12 +163,13 @@ export const RightContentFeed: React.FC<IconsAndContentProps> = ({
   return (
     <View
       pointerEvents="auto"
-      style={[styles.contentContainer, {bottom: tabBarHeight + 10}]}>
+      style={[styles.contentContainer, { bottom: tabBarHeight + 10 }]}
+    >
       {/* === MEME USER AVATAR + FOLLOW BUTTON ==== */}
       <View style={styles.profilePicContainer}>
         {!isFollowing && (
           <TouchableOpacity onPress={handleFollow} style={styles.followButton}>
-            <FontAwesomeIcon icon={faPlus} size={12} color="#FFFFFF" />
+            <FontAwesomeIcon icon={faPlus} size={12} color="#F3F4F8" />
           </TouchableOpacity>
         )}
         <Image source={imgSrc} style={styles.profilePic} />
@@ -154,7 +179,7 @@ export const RightContentFeed: React.FC<IconsAndContentProps> = ({
         icon={faThumbsUp}
         count={likesCount}
         onPress={handleLikePress}
-        color={likedByUser ? '#023020' : COLORS.primary}
+        color={likedByUser ? COLORS.primary : '#F3F4F8'}
       />
       {/* == COMMENTS BUTTON ==  */}
       <IconButton

@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderColor: COLORS.primary,
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 8,
     backgroundColor: '#1c1c1c',
   },
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     paddingVertical: SCREEN_HEIGHT * 0.01,
-    paddingHorizontal: SCREEN_WIDTH * 0.04,
+    paddingHorizontal: SCREEN_WIDTH * 0.02,
     color: '#fff', 
   },
   eyeIcon: {

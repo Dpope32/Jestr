@@ -7,30 +7,33 @@ import {
   TextInput,
   Alert,
   KeyboardAvoidingView,
-  ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
-  Animated,
+  Platform,
   SafeAreaView,
+  ActivityIndicator,
+  Dimensions,
+  StyleSheet,
 } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faUpload, faCamera, faSyncAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faUpload, faCamera, faSyncAlt, faTimes, faSearch } from '@fortawesome/free-solid-svg-icons';
 import * as MediaLibrary from 'expo-media-library';
 import Toast from 'react-native-toast-message';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import ImageLabeling from '@react-native-ml-kit/image-labeling';
-import VideoThumbnails from 'expo-video-thumbnails';
+import * as VideoThumbnails from 'expo-video-thumbnails';
 
-import { TOAST_TOP_POSITION } from '../../config/toastConfig';
-import styles from './MemeUpload.styles';
 import MediaEditor from './MediaEditor';
 import { uploadMeme } from '../../services/memeService';
 import { useBadgeStore } from '../../stores/badgeStore';
 import VideoScanner from './VideoScanner';
 import { useTabBarStore } from '../../stores/tabBarStore';
+
+const windowHeight = Dimensions.get('window').height;
+const windowWidth = Dimensions.get('window').width;
 
 interface MemeUploadProps {
   userEmail: string;
@@ -40,6 +43,7 @@ interface MemeUploadProps {
   isDarkMode: boolean;
   creationDate: string;
   setIsUploading: (isUploading: boolean) => void;
+  navigation: any;
 }
 
 type MLKitResult = {
@@ -59,6 +63,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
   onImageSelect,
   setIsUploading,
   isDarkMode,
+  navigation,
 }) => {
   const [media, setMedia] = useState<MediaState | null>(null);
   const [caption, setCaption] = useState('');
@@ -78,6 +83,7 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
   const cameraRef = useRef<Camera>(null);
   const setTabBarVisible = useTabBarStore((state) => state.setTabBarVisible);
   const [videoDuration, setVideoDuration] = useState<number | null>(null);
+  const [mediaContainerHeight, setMediaContainerHeight] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -129,7 +135,6 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
 
     if (!result.canceled && result.assets && result.assets[0]) {
       const asset = result.assets[0];
-      console.log('Selected asset:', JSON.stringify(asset, null, 2));
 
       if (asset.type === 'video') {
         const durationInMilliseconds = asset.duration ? asset.duration : 0;
@@ -241,68 +246,99 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
       Alert.alert('Error', 'Please select a media file first');
       return;
     }
-    try {
-      setIsUploading(true);
-
-      let tags: string[] = [];
-
-      if (media.type === 'video') {
-        if (videoDuration) {
-          await processVideoWithMLKit(media.uri, videoDuration);
-          tags = mlKitResult?.labels || [];
-        } else {
-          console.error('Video duration is not available');
-        }
-      }
-
-      const result = await uploadMeme(
-        media.uri,
-        userEmail,
-        username,
-        caption,
-        tags,
-        media.type,
-        (progress: number) => {
-          console.log(`Upload progress: ${progress}%`);
-        }
-      );
-      setIsUploading(false);
-      if (result.status === 'processing') {
-        Toast.show({
-          type: 'success',
-          text1: 'Meme Uploaded',
-          text2: 'Your meme is being processed and will be available shortly.',
-          position: 'top',
-          visibilityTime: 3000,
-          topOffset: TOAST_TOP_POSITION,
-        });
-      } else {
+  
+    if (media.type === 'image') {
+      // For images, we handle the upload synchronously
+      try {
+        setIsUploading(true);
+  
+        const result = await uploadMeme(
+          media.uri,       // The URI of the image
+          userEmail,       // User's email
+          username,        // User's username
+          caption,         // Caption entered by the user
+          [],              // Empty tags array for images
+          'image',         // Media type is 'image'
+          (progress: number) => {
+            console.log(`Upload progress: ${progress}%`);
+          }
+        );
+  
+        setIsUploading(false);
+  
         Toast.show({
           type: 'success',
           text1: 'Meme Uploaded',
           text2: 'Your meme has been uploaded successfully!',
-          position: 'top',
-          visibilityTime: 3000,
-          topOffset: TOAST_TOP_POSITION,
+        });
+  
+        onUploadSuccess(result.url);
+  
+        // Increment Badge Counts
+        badgeStore.incrementCount('memeCreationCount', userEmail);
+        badgeStore.incrementCount('memeUploadCount', userEmail);
+      } catch (error) {
+        setIsUploading(false);
+        console.error('Upload failed:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Upload Failed',
+          text2: 'Please try again later.',
         });
       }
-      onUploadSuccess(result.url);
-
-      // Increment Badge Counts
-      badgeStore.incrementCount('memeCreationCount', userEmail);
-      badgeStore.incrementCount('memeUploadCount', userEmail);
-    } catch (error) {
-      setIsUploading(false);
-      console.error('Upload failed:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Upload Failed',
-        text2: 'Please try again later.',
-        position: 'top',
-        visibilityTime: 3000,
-        topOffset: TOAST_TOP_POSITION,
-      });
+    } else if (media.type === 'video') {
+      // For videos, we start the laser animation and upload in the background
+      setIsScanning(true);
+  
+      // Start processing and uploading in the background
+      (async () => {
+        try {
+          // Process the video to get labels
+          await processVideoWithMLKit(media.uri, videoDuration || 0);
+  
+          const tags = mlKitResult?.labels || [];
+  
+          // Upload the meme with the obtained tags
+          await uploadMeme(
+            media.uri,       // The URI of the video
+            userEmail,       // User's email
+            username,        // User's username
+            caption,         // Caption entered by the user
+            tags,            // Tags obtained from ML Kit
+            'video',         // Media type is 'video'
+            (progress: number) => {
+              console.log(`Upload progress: ${progress}%`);
+            }
+          );
+  
+          console.log('Video upload successful');
+  
+          // Increment Badge Counts
+          badgeStore.incrementCount('memeCreationCount', userEmail);
+          badgeStore.incrementCount('memeUploadCount', userEmail);
+        } catch (error) {
+          console.error('Upload failed:', error);
+          Toast.show({
+            type: 'error',
+            text1: 'Upload Failed',
+            text2: 'Please try again later.',
+          });
+        }
+      })();
+  
+      // Do not await the above async function; let it run in the background
     }
+  };
+  
+
+  const handleScanComplete = () => {
+    setIsScanning(false);
+    Toast.show({
+      type: 'success',
+      text1: 'Meme Uploaded',
+      text2: 'Your meme is being processed and will be available shortly.',
+    });
+    navigation.goBack(); // Navigate away immediately
   };
 
   const renderMediaPreview = () => {
@@ -311,37 +347,63 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
     switch (media.type) {
       case 'image':
         return (
-          <View style={styles.mediaContainer}>
+          <View
+            style={styles.mediaContainer}
+            onLayout={(event) => {
+              const { height } = event.nativeEvent.layout;
+              setMediaContainerHeight(height);
+            }}
+          >
             <Image source={{ uri: media.uri }} style={styles.media} resizeMode="contain" />
-          </View>
-        );
-      case 'video':
-        return (
-          <View style={styles.mediaContainer}>
-            <TouchableOpacity
-              onPress={() => {
-                setShouldPlay((prev) => !prev);
-              }}
-              style={styles.media}
-            >
-              <Video
-                ref={videoRef}
-                source={{ uri: media.uri }}
-                style={styles.media}
-                resizeMode={ResizeMode.CONTAIN}
-                isLooping
-                shouldPlay={shouldPlay}
-                isMuted={false}
-                volume={1}
+            {isScanning && (
+              <VideoScanner
+                isScanning={isScanning}
+                containerHeight={mediaContainerHeight}
+                onScanComplete={handleScanComplete} // Pass the callback
               />
-            </TouchableOpacity>
+            )}
           </View>
         );
-      default:
-        return null;
-    }
-  };
-
+        case 'video':
+          return (
+            <View
+              style={styles.mediaContainer}
+              onLayout={(event) => {
+                const { height } = event.nativeEvent.layout;
+                setMediaContainerHeight(height);
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => {
+                  setShouldPlay((prev) => !prev);
+                }}
+                style={styles.media}
+              >
+                <Video
+                  ref={videoRef}
+                  source={{ uri: media.uri }}
+                  style={styles.media}
+                  resizeMode={ResizeMode.CONTAIN}
+                  isLooping
+                  shouldPlay={shouldPlay}
+                  isMuted={false}
+                  volume={1}
+                />
+              </TouchableOpacity>
+              {isScanning && (
+                <VideoScanner
+                  isScanning={isScanning}
+                  containerHeight={mediaContainerHeight}
+                  onScanComplete={handleScanComplete} // Pass the callback
+                />
+              )}
+            </View>
+          );
+        default:
+          return null;
+      }
+    };
+  
   const handleMediaEditorComplete = (
     editedUri: string,
     text: string,
@@ -380,99 +442,287 @@ const MemeUpload: React.FC<MemeUploadProps> = ({
     onImageSelect(false);
   };
 
+  const toggleAIMode = () => {
+    // Placeholder function for toggleAIMode
+    console.log('toggleAIMode function called');
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDarkMode ? '#1e1e1e' : '#494949' }}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        {isCameraMode ? (
-          device ? (
-            <View style={styles.fullScreenCameraContainer}>
-              <Camera
-                style={styles.fullScreenCamera}
-                device={device}
-                isActive={true}
-                ref={cameraRef}
-                photo={true}
-              />
-              <TouchableOpacity style={styles.flipButton} onPress={flipCamera}>
-                <FontAwesomeIcon icon={faSyncAlt} size={30} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.captureButton} onPress={captureImage} />
-              <TouchableOpacity style={styles.closeButton} onPress={toggleCameraMode}>
-                <FontAwesomeIcon icon={faTimes} size={30} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <Text>Loading camera...</Text>
-          )
-        ) : isEditing && media ? (
-          <MediaEditor
-            media={media}
-            setMedia={setMedia}
-            onComplete={handleMediaEditorComplete}
-            onCancel={handleMediaEditorCancel}
-          />
-        ) : (
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
-            {media ? (
-              <>
-                {renderMediaPreview()}
-                <TouchableOpacity style={styles.clearButton} onPress={clearMedia}>
-                  <FontAwesomeIcon icon={faTimes} size={20} color="#fff" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDarkMode ? '#1C1C1C' : '#494949' }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          {isCameraMode ? (
+            device ? (
+              <View style={styles.fullScreenCameraContainer}>
+                <Camera
+                  style={styles.fullScreenCamera}
+                  device={device}
+                  isActive={true}
+                  ref={cameraRef}
+                  photo={true}
+                />
+                <TouchableOpacity style={styles.flipButton} onPress={flipCamera}>
+                  <FontAwesomeIcon icon={faSyncAlt} size={30} color="#fff" />
                 </TouchableOpacity>
-                {media.type === 'video' && (
-                  <VideoScanner
-                    isScanning={isScanning}
-                    containerHeight={styles.mediaContainer.height}
-                  />
-                )}
-                <View style={styles.captionContainer}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Add a caption..."
-                    placeholderTextColor="#999"
-                    value={caption}
-                    onChangeText={setCaption}
-                    multiline
-                    blurOnSubmit={true}
-                    onSubmitEditing={Keyboard.dismiss}
-                  />
-                  <TouchableOpacity
-                    style={styles.uploadButton}
-                    onPress={handleUpload}
-                    disabled={!media}
-                  >
-                    <Text style={styles.buttonText}>Upload Meme</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <View style={styles.selectionContainer}>
-                <Text style={styles.selectionTitle}>Select an Option</Text>
-                <View style={styles.optionGrid}>
-                  <TouchableOpacity onPress={pickMedia} style={styles.optionCard}>
-                    <FontAwesomeIcon icon={faUpload} size={40} color="#1bd40b" />
-                    <Text style={styles.optionText}>Upload Media</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={toggleCameraMode} style={styles.optionCard}>
-                    <FontAwesomeIcon icon={faCamera} size={40} color="#1bd40b" />
-                    <Text style={styles.optionText}>Take Photo</Text>
-                  </TouchableOpacity>
-                  {/* Future option for pasting a link */}
-                  <TouchableOpacity
-                    disabled={true}
-                    style={[styles.optionCard, styles.disabledCard]}
-                  >
-                    <FontAwesomeIcon icon={faUpload} size={40} color="#555" />
-                    <Text style={styles.optionTextDisabled}>Paste Link</Text>
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity style={styles.captureButton} onPress={captureImage} />
+                <TouchableOpacity style={styles.closeButton} onPress={toggleCameraMode}>
+                  <FontAwesomeIcon icon={faTimes} size={30} color="#fff" />
+                </TouchableOpacity>
               </View>
-            )}
-          </ScrollView>
-        )}
-      </TouchableWithoutFeedback>
+            ) : (
+              <Text>Loading camera...</Text>
+            )
+          ) : isEditing && media ? (
+            <MediaEditor
+              media={media}
+              setMedia={setMedia}
+              onComplete={handleMediaEditorComplete}
+              onCancel={handleMediaEditorCancel}
+              isDarkMode={isDarkMode}
+            />
+          ) : (
+            <View style={{ flex: 1 }}>
+              {media ? (
+                <>
+                  {renderMediaPreview()}
+                  <TouchableOpacity style={styles.clearButton} onPress={clearMedia}>
+                    <FontAwesomeIcon icon={faTimes} size={20} color="#fff" />
+                  </TouchableOpacity>
+                  {isScanning && (
+                    <View style={styles.scanningOverlay}>
+                      <ActivityIndicator size="large" color="#1bd40b" />
+                      <Text style={styles.scanningText}>Processing video...</Text>
+                    </View>
+                  )}
+                  <View style={styles.captionContainer}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Add a caption (optional)"
+                      placeholderTextColor="#999"
+                      value={caption}
+                      onChangeText={setCaption}
+                      multiline
+                      blurOnSubmit={true}
+                      onSubmitEditing={Keyboard.dismiss}
+                    />
+                    <TouchableOpacity
+                      style={styles.uploadButton}
+                      onPress={handleUpload}
+                      disabled={!media || isScanning}
+                    >
+                      <Text style={styles.buttonText}>Upload Meme</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                // Selection options
+                <View style={styles.selectionContainer}>
+                  <Text style={styles.selectionTitle}>This better be funny!</Text>
+                  <View style={styles.optionGrid}>
+                    <TouchableOpacity onPress={pickMedia} style={styles.optionCard}>
+                      <FontAwesomeIcon icon={faUpload} size={40} color="#1bd40b" />
+                      <Text style={styles.optionText}>Upload Media</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={toggleCameraMode} style={styles.optionCard}>
+                      <FontAwesomeIcon icon={faCamera} size={40} color="#1bd40b" />
+                      <Text style={styles.optionText}>Take Photo</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={toggleAIMode} style={styles.optionCard}>
+                      <FontAwesomeIcon icon={faSearch} size={40} color="#00FF00" />
+                      <Text style={styles.optionText}>Find Image</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      disabled={true}
+                      style={[styles.optionCard]}
+                    >
+                      <FontAwesomeIcon icon={faUpload} size={40} color="#555" />
+                      <Text style={styles.optionTextDisabled}>Paste Link</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
+
+
+const styles = StyleSheet.create({
+
+  scanningOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 20,
+  },
+  scanningText: {
+    marginTop: 10,
+    color: '#fff',
+    fontSize: 16,
+  },
+  container: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  selectionContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  selectionTitle: {
+    fontSize: 28,
+    color: '#FFF',
+    marginTop: -60,
+    marginBottom: 50,
+    fontWeight: 'bold',
+    textShadowColor: '#000',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 5,
+    textAlign: 'center',
+  },
+  optionGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    width: '100%',
+    paddingHorizontal: 24,
+  },
+  optionCard: {
+    width: '45%',
+    backgroundColor: '#333333',
+    borderRadius: 20,
+    paddingVertical: 20,
+    alignItems: 'center',
+    marginBottom: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  optionText: {
+    marginTop: 10,
+    color: '#999999',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  optionTextDisabled: {
+    marginTop: 10,
+    color: '#555',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  mediaContainer: {
+    width: '100%',
+    height: windowHeight * 0.62,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    marginBottom: 25,
+  },
+  media: {
+    width: '100%',
+    height: '100%',
+  },
+  fullScreenCameraContainer: {
+    width: windowWidth,
+    height: windowHeight,
+    position: 'absolute',
+    top: -100,
+    left: 0,
+    backgroundColor: '#000',
+  },
+  fullScreenCamera: {
+    width: windowWidth,
+    height: windowHeight,
+  },
+  flipButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 25,
+  },
+  captureButton: {
+    position: 'absolute',
+    bottom: 50,
+    alignSelf: 'center',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 6,
+    borderColor: '#fff',
+    backgroundColor: 'transparent',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 25,
+  },
+  captionContainer: {
+    width: '100%',
+    paddingHorizontal: 24,
+  },
+  input: {
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 16,
+    color: '#fff',
+    width: '100%',
+    borderBottomWidth: 3,
+    borderColor: '#1bd40b',
+    marginBottom: 30,
+  },
+  uploadButton: {
+    backgroundColor: '#1bd40b',
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+    width: '100%',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  clearButton: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 20,
+    padding: 5,
+    zIndex: 10,
+  },
+  overlayText: {
+    position: 'absolute',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+});
 
 export default MemeUpload;

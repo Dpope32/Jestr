@@ -7,19 +7,24 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1C1C1C',
-    padding: 20,
+  },
+  bigContainer: {
+    flex: 1,
+    backgroundColor: '#1C1C1C',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   preferencesContainer: {
     marginTop: 10,
     backgroundColor: '#2A2A2A',
     borderRadius: 10,
-    padding: 15,
+    padding: 22,
   },
   preferenceItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 14,
   },
   preferenceText: {
     color: '#FFFFFF',
@@ -43,16 +48,17 @@ export const styles = StyleSheet.create({
   },
   whiteText: {
     color: '#FFF',
-    marginBottom: 0,
+    marginBottom: 10,
   },
   inputsContainer: {
     width: '100%',
     marginTop: 4,
+    paddingHorizontal: 10
   },
   label: {
     color: '#FFFFFF',
     fontSize: 16,
-    marginBottom: 5,
+    marginBottom: 15,
   },
   errorText: {
     color: 'red',
@@ -67,10 +73,11 @@ export const styles = StyleSheet.create({
   button: {
     width: '100%',
     marginTop: 20,
+    paddingVertical: 20,
   },
   gradient: {
     borderRadius: 8,
-    padding: 10,
+    paddingVertical: 20,
     alignItems: 'center',
   },
   buttonText: {

@@ -182,7 +182,7 @@ const getConversations = async (userID) => {
         );
 
         // 2b. Fetch last message
-        const lastMessage = conversationData?.LastMessage || { Content: { type: 'text', message: 'No message' }, Timestamp: '' };
+        let lastMessage = conversationData?.LastMessage || { Content: { type: 'text', message: 'No message' }, Timestamp: '' };
         if (conversationData && conversationData.LastMessage) {
           // Ensure LastMessage.Content is a JSON string representing an object
           if (typeof conversationData.LastMessage.Content === 'string') {

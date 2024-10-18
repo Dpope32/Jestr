@@ -320,7 +320,25 @@ export const handler = async (event) => {
         try {
           const result = await addFollow(followerId, followeeId);
           if (result.success) {
-            return createResponse(200, result.message);
+            // Fetch updated counts
+            const followeeProfile = await docClient.send(
+              new GetCommand({
+                TableName: 'Profiles',
+                Key: { email: followeeId },
+              })
+            );
+      
+            const followerProfile = await docClient.send(
+              new GetCommand({
+                TableName: 'Profiles',
+                Key: { email: followerId },
+              })
+            );
+      
+            return createResponse(200, result.message, {
+              followersCount: followeeProfile.Item?.FollowersCount || 0,
+              followingCount: followerProfile.Item?.FollowingCount || 0,
+            });
           } else {
             return createResponse(400, result.message);
           }

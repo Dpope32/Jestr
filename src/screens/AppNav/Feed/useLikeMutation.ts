@@ -1,11 +1,11 @@
+// src/screens/AppNav/Feed/useLikeMutation.ts
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useUpdateMemeReaction } from '../../../services/reactionServices';
 import { Badge } from '../Badges/Badges.types';
 import { useBadgeStore } from '../../../stores/badgeStore';
+import { API_URL } from '../../../services/config';
 
 export const useLikeMutation = (userEmail: string) => {
   const queryClient = useQueryClient();
-  const updateMemeReactionMutation = useUpdateMemeReaction();
   const badgeStore = useBadgeStore();
 
   return useMutation<
@@ -19,31 +19,49 @@ export const useLikeMutation = (userEmail: string) => {
       incrementDownloads: boolean;
     }
   >({
-    mutationFn: (variables) => {
-      console.log('Mutation function called with variables:', variables);
-      return updateMemeReactionMutation.mutateAsync(variables);
+    mutationFn: async ({ memeID, incrementLikes, email, doubleLike, incrementDownloads }) => {
+      const response = await fetch(`${API_URL}/updateMemeReaction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operation: 'updateMemeReaction',
+          memeID,
+          incrementLikes,
+          doubleLike,
+          incrementDownloads,
+          email,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update meme reaction');
+      }
+
+      return response.json();
     },
     onSuccess: (data, variables) => {
-      console.log('onSuccess called with data:', data);
-      console.log('onSuccess called with variables:', variables);
-
       badgeStore.incrementCount('likeCount', userEmail);
       const queryKey = ['memez', userEmail];
       queryClient.setQueryData(queryKey, (oldData: any) => {
-       // console.log('oldData before updating:', oldData);
-
         if (!oldData) return oldData;
 
         const updatedPages = oldData.pages.map((page: any) => {
           const updatedMemes = page.memes.map((meme: any) => {
             if (meme.memeID === variables.memeID) {
-              const newLikeCount =
-                meme.likeCount + (variables.incrementLikes ? 1 : -1);
-           //   console.log('Updating meme like count for memeID:', meme.memeID, 'New likeCount:', newLikeCount);
+              const currentLikeCount =
+                typeof meme.likeCount === 'number' ? meme.likeCount : Number(meme.likeCount) || 0;
+              const newLikeCount = variables.incrementLikes
+                ? currentLikeCount + 1
+                : currentLikeCount - 1;
+              const finalLikeCount = newLikeCount < 0 ? 0 : newLikeCount;
+
+              console.log(
+                `Updating Meme ID: ${meme.memeID}, Current Like Count: ${currentLikeCount}, New Like Count: ${finalLikeCount}`
+              );
 
               return {
                 ...meme,
-                likeCount: newLikeCount,
+                likeCount: finalLikeCount,
                 likedByUser: variables.incrementLikes,
               };
             }
@@ -53,11 +71,11 @@ export const useLikeMutation = (userEmail: string) => {
         });
 
         const updatedData = { ...oldData, pages: updatedPages };
-      //  console.log('Updated data after setQueryData:', updatedData);
+      //  console.log(`Old data: ${JSON.stringify(oldData)}`);
+      //  console.log(`Updated data: ${JSON.stringify(updatedData)}`);
         return updatedData;
       });
 
-      // Handle the badgeEarned logic here if needed
       if (data.badgeEarned) {
         console.log('Badge earned:', data.badgeEarned);
       }

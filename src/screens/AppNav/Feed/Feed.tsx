@@ -1,13 +1,7 @@
 // Feed.tsx
 
 import React, {useState, useCallback, useEffect, useRef} from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  RefreshControl,
-  Platform,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, RefreshControl, Platform} from 'react-native';
 import {FlatList, AppState, Animated} from 'react-native';
 import {Video, ResizeMode} from 'expo-av';
 import {Image} from 'react-native';
@@ -15,9 +9,10 @@ import {LinearGradient} from 'expo-linear-gradient';
 import {useQueryClient} from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
+import * as Haptics from 'expo-haptics';
 // import {StatusBar} from 'expo-status-bar';
 
-import {User, Meme, ShareType} from '../../../types/types';
+import {Meme, ShareType} from '../../../types/types';
 import styles, {
   ListEmptyComponent,
   screenHeight,
@@ -40,12 +35,6 @@ import {LongPressModal} from '../../../components/MediaPlayer/LongPress/LongPres
 import ShareModal from '../../../components/Modals/ShareModal';
 import CommentFeed from '../../../components/Modals/CommentFeed/CommentFeed';
 
-import {
-  checkBadgeEligibility,
-  awardBadge,
-} from '../../../services/badgeServices';
-import {useBadgeStore} from '../../../stores/badgeStore';
-
 const viewabilityConfig = {itemVisiblePercentThreshold: 50};
 
 const Feed: React.FC = () => {
@@ -57,16 +46,14 @@ const Feed: React.FC = () => {
   const bgdCol = isDarkMode ? '#1C1C1C' : '#1C1C1C';
   const tabBarHeight = useBottomTabBarHeight();
 
-  const heightItem = Platform.select({
-    ios: screenHeight,
-    android: screenHeight + tabBarHeight,
-  });
+  const heightItem = Platform.select({ ios: screenHeight, android: screenHeight + tabBarHeight});
 
   const video = useRef<Video>(null);
   const lastViewedIndexRef = useRef(0);
   const lastTap = useRef<number>(0);
   const blurOpacity = useRef(new Animated.Value(0)).current;
-
+  const setIsFirstLongLaunch = useUserStore(state => state.setIsFirstLongLaunch);
+  
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [lastViewedIndex, setLastViewedIndex] = useState(0);
   const [lastViewedMemeId, setLastViewedMemeId] = useState<string | null>(null);
@@ -122,32 +109,35 @@ const Feed: React.FC = () => {
     lastViewedMemeId,
   });
 
-  // EFFECT: Prune cache on fresh data
-  useEffect(() => {
-    if (data) {
-      pruneCache(queryClient, userEmail, lastViewedIndexRef.current);
-    }
-  }, [data, queryClient, userEmail]);
+// EFFECT: Prune cache on fresh data
+// had to comment this out it was throwing an error about reformating timestamp empty
+//something to do with the pruning effect of memes 
+//useEffect(() => {
+ // if (data) {
+  //  pruneCache(queryClient, userEmail, lastViewedIndexRef.current);
+  //}
+//}, [data, queryClient, userEmail]);
 
-  // EFFECT: Save last viewed index and memeId when app goes to background
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', nextAppState => {
-      if (nextAppState === 'background') {
-        storage.set('LAST_VIEWED_INDEX', lastViewedIndex.toString());
-        if (memes[lastViewedIndex]?.memeID) {
-          storage.set('LAST_VIEWED_MEME_ID', memes[lastViewedIndex].memeID);
-        }
-
-        // Prune the cache when app goes to background
-        pruneCache(queryClient, userEmail, lastViewedIndex);
+// EFFECT: Save last viewed index and memeId when app goes to background
+useEffect(() => {
+  const subscription = AppState.addEventListener('change', nextAppState => {
+    if (nextAppState === 'background') {
+      storage.set('LAST_VIEWED_INDEX', lastViewedIndex.toString());
+      if (memes[lastViewedIndex]?.memeID) {
+        storage.set('LAST_VIEWED_MEME_ID', memes[lastViewedIndex].memeID);
       }
-    });
-    return () => {
-      subscription.remove();
-    };
-  }, [lastViewedIndex, memes, userEmail, queryClient]);
+
+      // Prune the cache when app goes to background
+      pruneCache(queryClient, userEmail, lastViewedIndex);
+    }
+  });
+  return () => {
+    subscription.remove();
+  };
+}, [lastViewedIndex, memes, userEmail, queryClient]);
 
   const handleDoubleTap = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const incrementLikes = !memes[lastViewedIndex]?.likedByUser;
     likeMutation.mutate({
       memeID: memes[lastViewedIndex]?.memeID as string,
@@ -172,6 +162,7 @@ const Feed: React.FC = () => {
 
   const handleDownloadPress = useCallback(async () => {
     try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await updateMemeReaction({
         memeID: memes[lastViewedIndex].memeID,
         incrementLikes: false,
@@ -187,6 +178,7 @@ const Feed: React.FC = () => {
         topOffset: 30,
       });
     } catch (error) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       console.error('Download Reaction Error:', error);
       Toast.show({
         type: 'error',
@@ -204,14 +196,13 @@ const Feed: React.FC = () => {
   const handleShare = useCallback(
     async (type: ShareType, username?: string, message?: string) => {
       try {
-        // Implement your share functionality here
-        // Example:
-        // await handleShareMeme(type, selectedMeme?.url, username, message);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
           type: 'success',
           text1: 'Shared Successfully',
         });
       } catch (error) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         console.error('Share Error:', error);
         Toast.show({
           type: 'error',
@@ -224,6 +215,7 @@ const Feed: React.FC = () => {
   );
 
   const toggleCommentFeed = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsCommentFeedVisible(prev => !prev);
   }, []);
 
@@ -299,6 +291,7 @@ const Feed: React.FC = () => {
       };
 
       const handleLongPress = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         setSelectedMeme(item);
         setIsLongPressModalVisible(true);
       };
@@ -309,6 +302,7 @@ const Feed: React.FC = () => {
           handleDoubleTap();
         } else {
           lastTap.current = now;
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
       };
 
@@ -456,11 +450,9 @@ const Feed: React.FC = () => {
             url: selectedMeme.url,
           }}
           onSaveToProfile={handleDownloadPress}
-          onShare={() => setShowShareModal(true)}
           onReport={() => {
-            // Implement report functionality
             Toast.show({
-              type: 'info',
+              type: 'success',
               text1: 'Reported',
               text2: 'Meme has been reported.',
             });

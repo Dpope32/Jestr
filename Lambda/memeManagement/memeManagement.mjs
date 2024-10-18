@@ -1,5 +1,5 @@
 
-import { awardBadge, getUserBadges } from "../memeProcessing/badgeServices.mjs"; 
+import { awardBadge, getUserBadges } from "./badgeServices.mjs"; 
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {

@@ -1,4 +1,6 @@
-import React, {useState, useEffect} from 'react';
+// Comment.tsx
+
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,9 +20,9 @@ import {
   faCopy,
   faClock,
 } from '@fortawesome/free-solid-svg-icons';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import moment from 'moment';
-import {CommentType} from '../../../types/types';
+import { CommentType } from '../../../types/types';
 import styles from './Comment.styles';
 import * as Clipboard from 'expo-clipboard';
 
@@ -140,14 +142,14 @@ const Comment: React.FC<CommentProps> = ({
       'Delete Comment',
       'Are you sure you want to delete this comment?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => onDelete(comment.commentID),
         },
       ],
-      {cancelable: true},
+      { cancelable: true },
     );
     setIsModalVisible(false);
   };
@@ -166,11 +168,11 @@ const Comment: React.FC<CommentProps> = ({
           style={[
             styles.commentContainer,
             depth > 0 && styles.replyContainer,
-            {backgroundColor: interpolatedColor},
+            { backgroundColor: interpolatedColor },
           ]}>
           <Image
             source={
-              comment.profilePicUrl ? {uri: comment.profilePicUrl} : DefaultPfp
+              comment.profilePicUrl ? { uri: comment.profilePicUrl } : DefaultPfp
             }
             style={styles.profilePic}
           />
@@ -212,7 +214,7 @@ const Comment: React.FC<CommentProps> = ({
         </Animated.View>
       </TouchableOpacity>
 
-      {comment.replies.length > 0 && (
+      {comment.replies && comment.replies.length > 0 && (
         <TouchableOpacity
           onPress={toggleReplies}
           style={styles.viewRepliesButton}>
@@ -226,7 +228,7 @@ const Comment: React.FC<CommentProps> = ({
       {showReplies &&
         comment.replies.map(reply => (
           <Comment
-            key={reply.commentID}
+            key={reply.commentID} // Ensure unique key
             comment={reply}
             onReply={onReply}
             onDelete={onDelete}

@@ -61,7 +61,7 @@ export const sendMessage = async (
       }
   
       const responseData = await response.json();
-      console.log('Full API Response:', responseData);
+      console.log('Full API Response:', JSON.stringify(responseData, null, 2));
       if (responseData.data && Array.isArray(responseData.data.conversations)) {
         return responseData.data.conversations;
       } else {

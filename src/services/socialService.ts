@@ -68,6 +68,7 @@ const organizeCommentsIntoThreads = (
 
   return topLevelComments;
 };
+
 export const addFollow = async (followerId: string, followeeId: string) => {
   const followData = {
     operation: 'addFollow',
@@ -87,22 +88,24 @@ export const addFollow = async (followerId: string, followeeId: string) => {
       },
     );
 
-    if (response.ok) {
-      const result = await response.json();
+    const result = await response.json();
+
+    if (response.ok && result.success) {
       return {
         success: true,
         followersCount: result.followersCount,
         followingCount: result.followingCount,
       };
     } else {
-      console.error('Failed to add follow');
-      return {success: false};
+      console.error('Failed to add follow:', result.message || 'Unknown error');
+      return { success: false, message: result.message || 'Failed to add follow' };
     }
   } catch (error) {
     console.error('Error adding follow:', error);
-    return {success: false};
+    return { success: false, message: (error as Error).message };
   }
 };
+
 
 export const removeFollow = async (
   unfollowerId: string,

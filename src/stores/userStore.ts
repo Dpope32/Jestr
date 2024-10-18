@@ -1,8 +1,9 @@
-import {create} from 'zustand';
-import {immer} from 'zustand/middleware/immer';
-import {persist, createJSONStorage} from 'zustand/middleware';
-import {Meme, ProfileImage} from '../types/types';
+import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { Meme, ProfileImage } from '../types/types';
 import zustandMMKVStorage from '../utils/zustandMMKVStorage';
+import logger from '../utils/logger';
 
 export interface UserState {
   isFirstLaunch: boolean;
@@ -15,9 +16,8 @@ export interface UserState {
   displayName: string;
   bio: string;
   creationDate: string;
-  CreationDate?: string;
-  followersCount: number;
   FollowersCount?: number;
+  followersCount: number;
   darkMode: boolean;
   followingCount: number;
   FollowingCount?: number;
@@ -43,60 +43,66 @@ export interface UserState {
   toggleDarkMode: () => void;
 }
 
-export const useUserStore = create(
+export const useUserStore = create<UserState>()(
   persist(
-    immer<UserState>(set => ({
+    immer<UserState>((set, get) => ({
       isFirstLaunch: true,
       isFirstLongLaunch: true,
-      setIsFirstLongLaunch: isFirstLongLaunch => set({isFirstLongLaunch}),
-      setIsFirstLaunch: isFirstLaunch => set({isFirstLaunch}),
+      setIsFirstLongLaunch: (isFirstLongLaunch) => set({ isFirstLongLaunch }),
+      setIsFirstLaunch: (isFirstLaunch) => set({ isFirstLaunch }),
       bio: '',
       username: '',
       displayName: '',
       email: '',
       followersCount: 0,
       followingCount: 0,
-      setFollowersCount: count => set({followersCount: count}),
-      setFollowingCount: count => set({followingCount: count}),
+      setFollowersCount: (count) => set({ followersCount: count }),
+      setFollowingCount: (count) => set({ followingCount: count }),
       incrementFollowersCount: () =>
-        set(state => ({followersCount: state.followersCount + 1})),
+        set((state) => ({
+          followersCount: state.followersCount + 1,
+        })),
       decrementFollowersCount: () =>
-        set(state => ({followersCount: Math.max(0, state.followersCount - 1)})),
+        set((state) => ({
+          followersCount: Math.max(0, state.followersCount - 1),
+        })),
       incrementFollowingCount: () =>
-        set(state => ({followingCount: state.followingCount + 1})),
+        set((state) => ({
+          followingCount: state.followingCount + 1,
+        })),
       decrementFollowingCount: () =>
-        set(state => ({followingCount: Math.max(0, state.followingCount - 1)})),
+        set((state) => ({
+          followingCount: Math.max(0, state.followingCount - 1),
+        })),
       creationDate: '',
       tempPassword: '',
-      setTempPassword: (password: string) => set({tempPassword: password}),
+      setTempPassword: (password) => set({ tempPassword: password }),
       profilePic: null,
       headerPic: null,
       darkMode: false,
       likesPublic: true,
-      setDarkMode: (darkMode: boolean) => set({darkMode}),
-      setBio: (bio: string) => set({bio}),
-      setHeaderPic: (headerPic: string | ProfileImage | null) =>
-        set({headerPic}),
-      setProfilePic: (profilePic: string | ProfileImage | null) => {
-        // Fallback to a default image if `profilePic` is empty
+      setDarkMode: (darkMode) => set({ darkMode }),
+      setBio: (bio) => set({ bio }),
+      setHeaderPic: (headerPic) => set({ headerPic }),
+      setProfilePic: (profilePic) => {
         if (typeof profilePic === 'string' && !profilePic.trim()) {
           profilePic = null;
         }
-        set({profilePic});
+        set({ profilePic });
       },
-      setUserDetails: details =>
-        set(state => ({
+      setUserDetails: (details) =>
+        set((state) => ({
           ...state,
           email: details.email ?? state.email,
           username: details.username ?? state.username,
           displayName: details.displayName ?? state.displayName,
           bio: details.bio ?? state.bio,
           creationDate:
-            details.creationDate ?? details.CreationDate ?? state.creationDate,
+            details.creationDate ?? state.creationDate,
           followersCount:
             details.FollowersCount ??
-            details.FollowersCount ??
-            state.FollowersCount,
+            details.followersCount ??
+            state.followersCount,
           followingCount:
             details.followingCount ??
             details.FollowingCount ??
@@ -123,10 +129,11 @@ export const useUserStore = create(
           isAdmin: undefined,
           userId: undefined,
         }),
-        isDarkMode: false,
-        setIsDarkMode: (isDarkMode: boolean) => set({ isDarkMode }),
-        toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
-      })),
+      isDarkMode: false,
+      setIsDarkMode: (isDarkMode) => set({ isDarkMode }),
+      toggleDarkMode: () =>
+        set((state) => ({ isDarkMode: !state.isDarkMode })),
+    })),
     {
       name: 'user-storage',
       storage: createJSONStorage(() => zustandMMKVStorage),

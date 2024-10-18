@@ -8,6 +8,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
+    marginTop: height * 0.1,
   },
   blurView: {
     ...StyleSheet.absoluteFillObject,
@@ -22,18 +23,18 @@ export const styles = StyleSheet.create({
   },
   modalContainer: {
     width: width * 0.9,
-    backgroundColor: 'rgba(70, 70, 70, 0.95)', // Semi-transparent dark background
+    backgroundColor: 'rgba(45, 45, 45, 0.99)',
     borderRadius: 20,
-    paddingVertical: height * 0.025,
-    paddingHorizontal: width * 0.05,
+    paddingVertical: height * 0.001,
+    paddingHorizontal: width * 0.1,
     alignItems: 'center',
   },
   memePreview: {
     width: '100%',
-    height: height * 0.35,
+    height: height * 0.5 - 40,
     borderRadius: 15,
     overflow: 'hidden',
-    marginBottom: height * 0.025,
+    marginBottom: height * 0.001,
   },
   memeImage: {
     width: '100%',
@@ -46,21 +47,21 @@ export const styles = StyleSheet.create({
     width: '100%',
   },
   option: {
-    width: '33%',
+    width: '20%',
     alignItems: 'center',
-    marginBottom: height * 0.02,
+    marginBottom: height * 0.05,
+    marginTop: height * -0.02,
   },
   iconContainer: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
   optionText: {
     color: '#fff',
-    fontSize: width * 0.032,
+    fontSize: width * 0.028,
     textAlign: 'center',
-    marginTop: height * 0.005,
   },
 });
 

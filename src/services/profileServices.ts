@@ -35,15 +35,11 @@ export const handleCompleteProfile = async (
         ? await fileToBase64(await compressImage(headerPicAsset))
         : null;
   
-      // Get the current access token
       let accessToken = await SecureStore.getItemAsync('accessToken');
-      console.log(
-        'Retrieved access token:',
-        accessToken ? 'Token exists' : 'No token',
-      );
+      //console.log( 'Retrieved access token:', accessToken ? 'Token exists' : 'No token',);
   
       if (!accessToken) {
-        console.log('No access token found, attempting to fetch a new session');
+      //  console.log('No access token found, attempting to fetch a new session');
         const {tokens} = await fetchAuthSession();
         const newAccessToken = tokens?.accessToken?.toString();
         if (newAccessToken) {
@@ -67,7 +63,7 @@ export const handleCompleteProfile = async (
         notificationsEnabled: preferences.notificationsEnabled,
       };
   
-      console.log('Sending profile data to API');
+    //  console.log('Sending profile data to API');
       const response = await fetch(
         'https://uxn7b7ubm7.execute-api.us-east-2.amazonaws.com/Test/completeProfile',
         {
@@ -87,8 +83,8 @@ export const handleCompleteProfile = async (
       }
   
       const responseData = await response.json();
-      console.log('Profile data updated successfully');
-      console.log('API response:', responseData);
+     // console.log('Profile data updated successfully');
+    //  console.log('API response:', responseData);
       // console.log('Response data:', responseData);
   
       if (!response.ok) {
@@ -143,13 +139,13 @@ export const handleCompleteProfile = async (
             'accessToken',
             responseData.data.accessToken,
           );
-          console.log('Token stored successfully');
+        //  console.log('Token stored successfully');
         } else {
           const {tokens} = await fetchAuthSession();
           const accessToken = tokens?.accessToken?.toString();
           if (accessToken) {
             await SecureStore.setItemAsync('accessToken', accessToken);
-            console.log('Token stored successfully from session');
+       //     console.log('Token stored successfully from session');
           } else {
             console.warn('No access token available to store');
           }

@@ -10,7 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { BlurView } from 'expo-blur';
 import LottieView from 'lottie-react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faMoon, faHeart, faBell } from '@fortawesome/free-solid-svg-icons';
+import { faMoon, faHeart } from '@fortawesome/free-solid-svg-icons';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -24,9 +24,10 @@ import { useTheme } from '../../../theme/ThemeContext';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { useSettingsStore } from '../../../stores/settingsStore';
 import { CompleteProfileNavRouteProp } from '../../../navigation/NavTypes/AuthStackTypes';
-import PushNotificationManager from '../../../services/PushNotificationManager'; // Import the manager
-import useImagePicker from '../../../utils/useImagePicker'; // Custom hook for image picking
-import { styles } from './CompleteProfileStyles'; // Import the styles
+import PushNotificationManager from '../../../services/PushNotificationManager'; 
+import useImagePicker from '../../../utils/useImagePicker'; 
+import { styles } from './CompleteProfileStyles'; 
+import SignupSuccessModal  from '../../../components/Modals/SignupSuccessModal';
 
 const CompleteProfileScreen: React.FC = () => {
   const route = useRoute<CompleteProfileNavRouteProp>();
@@ -38,12 +39,11 @@ const CompleteProfileScreen: React.FC = () => {
 
   const email = route.params?.email;
   const { isDarkMode, setIsDarkMode } = useUserStore();
-
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [darkMode, setDarkModeLocal] = useState(isDarkMode);
 
   const { pickImage } = useImagePicker(); // Use the custom hook
 
@@ -69,8 +69,7 @@ const CompleteProfileScreen: React.FC = () => {
   }, []);
 
   const handleDarkModeToggle = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
+    setIsDarkMode(!isDarkMode);
   };
 
   const handleImagePick = useCallback(async (type: 'header' | 'profile') => {
@@ -92,7 +91,7 @@ const CompleteProfileScreen: React.FC = () => {
       const validHeaderPic =
         headerPic && typeof headerPic !== 'string' ? headerPic : null;
 
-      setDarkMode?.(darkMode);
+      setDarkMode?.(isDarkMode);
       updatePrivacySafety({
         likesPublic: privacySafety.likesPublic,
         allowDMsFromEveryone: privacySafety.allowDMsFromEveryone,
@@ -105,11 +104,11 @@ const CompleteProfileScreen: React.FC = () => {
         validProfilePic,
         validHeaderPic,
         bio,
-        () => {}, // This is the setSuccessModalVisible function
+        setIsSuccessModalVisible,
         {
-          darkMode,
+          darkMode: isDarkMode,
           likesPublic: privacySafety.likesPublic,
-          notificationsEnabled: pushEnabled, // Use pushEnabled from store
+          notificationsEnabled: pushEnabled, 
         },
       );
 
@@ -153,7 +152,7 @@ const CompleteProfileScreen: React.FC = () => {
       keyboardShouldPersistTaps="handled"
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View>
+        <View style={styles.bigContainer}>
           <HeaderPicUpload onHeaderPicChange={() => handleImagePick('header')} />
           <ProfilePicUpload onProfilePicChange={() => handleImagePick('profile')} />
           <View style={styles.inputsContainer}>
@@ -175,7 +174,7 @@ const CompleteProfileScreen: React.FC = () => {
             />
             <InputField
               label="Bio"
-              placeholder="Enter your bio"
+              placeholder="Enter your bio (optional)"
               labelStyle={styles.whiteText}
               value={bio}
               onChangeText={text => setBio?.(text)}
@@ -190,10 +189,10 @@ const CompleteProfileScreen: React.FC = () => {
               <FontAwesomeIcon icon={faMoon} size={24} color="#1bd40b" />
               <Text style={styles.preferenceText}>Dark Mode</Text>
               <Switch
-                value={darkMode}
+                value={isDarkMode}
                 onValueChange={handleDarkModeToggle}
                 trackColor={{ false: '#767577', true: '#1bd40b' }}
-                thumbColor={darkMode ? '#f4f3f4' : '#f4f3f4'}
+                thumbColor={isDarkMode ? '#f4f3f4' : '#f4f3f4'}
                 accessibilityLabel="Dark Mode Switch"
                 accessibilityRole="switch"
               />
@@ -236,7 +235,13 @@ const CompleteProfileScreen: React.FC = () => {
 
           {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
+        
       </TouchableWithoutFeedback>
+      
+      <SignupSuccessModal
+        visible={isSuccessModalVisible}
+        onClose={() => setIsSuccessModalVisible(false)}
+      />
     </KeyboardAwareScrollView>
   );
 };
